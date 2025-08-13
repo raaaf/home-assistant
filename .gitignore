@@ -1,0 +1,120 @@
+# Home Assistant Configuration Files
+secrets.yaml
+known_devices.yaml
+ip_bans.yaml
+.ip_authenticated.yaml
+.config_entries.json
+entity_registry.yaml
+google_calendars.yaml
+home-assistant.env
+home-assistant.*
+.homekit.state
+*.conf
+*.uuid
+
+# Logs
+logs/
+*.log
+*.log.*
+*.fault
+
+# Databases
+*.db*
+*.db-shm*
+*.db-wal*
+*.db-journal
+*.sqlite
+zigbee.db*
+
+# Caches and Tokens
+.storage/
+.cloud/
+.cache/
+*.google.token
+.google.token
+.spotify-token-cache
+.mercedesme-token-cache
+.ring_cache.pickle
+abodepy_cache.pickle
+.pc-session
+*.pickle
+.HA_VERSION
+
+# Backups and Downloads
+backups/
+*.backup
+downloads/
+
+# Media and TTS
+tts/
+www/icons/
+www/floorplans/
+www/community/
+image/
+
+# Custom Components
+custom_components/hacs/
+
+# Face Recognition
+dlib_faces/
+dlib_nofaces/
+dlib_known_faces/
+dlib_unknown_faces/
+
+# ESPHome
+esphome/
+esphome/.esphome/
+
+# Other integrations
+ui_lovelace_minimalist/
+diyhue/
+icloud/
+
+# Service Account Files
+SERVICE_ACCOUNT.json
+life360.sh
+
+# Temporary files
+deps/
+*.tmp
+*.temp
+*.txt
+*.xml
+*.json
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Windows
+desktop.ini
+
+# Linux
+*~
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Certificates
+*.pem
+*.key
+*.crt
+*.csr
+
+# Package files
+google*.deb
