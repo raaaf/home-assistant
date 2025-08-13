@@ -12,7 +12,7 @@
 - name: rafael
   platform: group
   services:
-    - service: mobile_app_macbook_pro
+    - service: mobile_app_macbook_pro_rafael
     - service: mobile_app_iphone_rafael
 
 - name: alex
