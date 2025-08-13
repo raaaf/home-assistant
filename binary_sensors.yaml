@@ -1,0 +1,77 @@
+# ============================================================================
+# BINARY SENSORS FOR ALWAYS-ON DEVICES
+# ============================================================================
+
+- platform: template
+  sensors:
+    # Netzwerk-Infrastruktur
+    fritzbox_7590_ax_running:
+      friendly_name: "FRITZ!Box 7590 AX Running"
+      value_template: "on"
+      device_class: running
+      icon_template: "mdi:router-wireless"
+
+    fritzrepeater_1200_ax_running:
+      friendly_name: "FRITZ!Repeater 1200 AX Running"
+      value_template: "on"
+      device_class: running
+      icon_template: "mdi:wifi-strength-4"
+
+    fritzrepeater_2400_running:
+      friendly_name: "FRITZ!Repeater 2400 Running"
+      value_template: "on"
+      device_class: running
+      icon_template: "mdi:wifi-strength-4"
+
+    # Smart Home Zentrale
+    synology_ds720_running:
+      friendly_name: "Synology DS720+ Running"
+      value_template: "on"
+      device_class: running
+      icon_template: "mdi:nas"
+
+    nuki_bridge_running:
+      friendly_name: "Nuki Bridge Running"
+      value_template: "on"
+      device_class: running
+      icon_template: "mdi:bridge"
+
+    # Überwachung
+    camera_schlafzimmer_running:
+      friendly_name: "Kamera Schlafzimmer Running"
+      value_template: "on"
+      device_class: running
+      icon_template: "mdi:camera"
+
+    camera_wohnzimmer_running:
+      friendly_name: "Kamera Wohnzimmer Running"
+      value_template: "on"
+      device_class: running
+      icon_template: "mdi:camera"
+
+    # Haushaltsgeräte
+    wasserspender_running:
+      friendly_name: "Wasserspender Running"
+      value_template: "on"
+      device_class: running
+      icon_template: "mdi:water-pump"
+
+    futterspender_running:
+      friendly_name: "Futterspender Running"
+      value_template: "on"
+      device_class: running
+      icon_template: "mdi:bowl-mix"
+
+    kuehlschrank_running:
+      friendly_name: "Kühlschrank Running"
+      value_template: "on"
+      device_class: running
+      icon_template: "mdi:fridge"
+
+    # Zustandsabhängige Geräte
+    luefter_waschzimmer_active:
+      friendly_name: "Lüfter Waschzimmer Active"
+      value_template: "{{ is_state('input_select.trockner', 'Arbeitet') }}"
+      device_class: running
+      icon_template: "mdi:fan"
+      availability_template: "{{ states('input_select.trockner') not in ['unknown', 'unavailable'] }}"

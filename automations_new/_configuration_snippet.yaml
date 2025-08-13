@@ -1,0 +1,5 @@
+# Home Assistant Automation Configuration
+# Organized structure replacing single automations.yaml
+
+# Use include_dir_merge_list to load all automation files
+automation: !include_dir_merge_list automations_new/

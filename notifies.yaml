@@ -1,0 +1,63 @@
+# ============================================================================
+# NOTIFICATION SERVICES CONFIGURATION
+# ============================================================================
+
+# Mobile App Notification Groups
+- name: family
+  platform: group
+  services:
+    - service: mobile_app_iphone_rafael
+    - service: mobile_app_alex_iphone
+
+- name: rafael
+  platform: group
+  services:
+    - service: mobile_app_macbook_pro
+    - service: mobile_app_iphone_rafael
+
+- name: alex
+  platform: group
+  services:
+    - service: mobile_app_macbook_air_von_alexandra
+    - service: mobile_app_alex_iphone
+
+# Email Notifications
+- name: rafael_mail
+  platform: smtp
+  server: "smtp.gmail.com"
+  port: 587
+  timeout: 15
+  sender: "raaaf.de@gmail.com"
+  encryption: starttls
+  username: "raaaf.de@gmail.com"
+  password: !secret gmail_app_password
+  recipient:
+    - "a@rafaelalex.de"
+  sender_name: "Smart Home - Alex & Rafael"
+
+# Additional notification services
+- name: alex_mail
+  platform: smtp
+  server: "smtp.gmail.com"
+  port: 587
+  timeout: 15
+  sender: "raaaf.de@gmail.com"
+  encryption: starttls
+  username: "raaaf.de@gmail.com"
+  password: !secret gmail_app_password
+  recipient:
+    - "alex@rafaelalex.de"
+  sender_name: "Smart Home - Alex & Rafael"
+
+- name: critical_alerts
+  platform: group
+  services:
+    - service: mobile_app_iphone_rafael
+    - service: mobile_app_alex_iphone
+    - service: rafael_mail
+
+- name: admin_only
+  platform: group
+  services:
+    - service: mobile_app_iphone_rafael
+    - service: rafael_mail

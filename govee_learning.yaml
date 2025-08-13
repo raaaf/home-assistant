@@ -1,0 +1,15 @@
+33:C0:D4:AD:FC:00:FC:BB:
+  set_brightness_max: 100
+  get_brightness_max: 100
+  before_set_brightness_turn_on: false
+  config_offline_is_off: false
+43:1F:D0:C9:07:C7:78:92:
+  set_brightness_max: 100
+  get_brightness_max: 100
+  before_set_brightness_turn_on: false
+  config_offline_is_off: false
+CC:14:D0:C9:07:C6:2D:76:
+  set_brightness_max: 100
+  get_brightness_max: 100
+  before_set_brightness_turn_on: false
+  config_offline_is_off: false
