@@ -3,130 +3,296 @@
 # Part of Home Assistant configuration
 
 - id: '1692862614295'
-  alias: Notifications » Robbi
-  description: Überwacht Staubsauger-Roboter und erstellt Aufgaben für Wartung (Filter,
-    Bürsten, Sensoren)
+  alias: "Benachrichtigung » Robbi Wartung"
+  description: "Überwacht Staubsauger-Roboter und erstellt Wartungsaufgaben (Filter, Bürsten, Sensoren) mit TTS-Ansagen bei kritischen Werten"
   triggers:
   - trigger: template
-    value_template: '{{ state_attr(''vacuum.robbi_2'', ''brush_cleaner.brush_life_level'')
-      | int(100) < 10 }}
-
-      '
-    id: main-brush
+    value_template: >-
+      {% set level = state_attr('vacuum.robbi_2', 'brush_cleaner.brush_life_level') %}
+      {{ level is not none and level | int(100) < 10 }}
+    id: hauptbueste
   - trigger: template
-    value_template: '{{ state_attr(''vacuum.robbi_2'', ''brush_life_level-10-2'')
-      | int(100) < 10 }}
-
-      '
-    id: side-brush
+    value_template: >-
+      {% set level = state_attr('vacuum.robbi_2', 'brush_life_level-10-2') %}
+      {{ level is not none and level | int(100) < 10 }}
+    id: seitenbueste
   - trigger: template
-    value_template: '{{ state_attr(''vacuum.robbi_2'', ''filter.filter_life_level'')
-      | int(100) < 10 }}
-
-      '
+    value_template: >-
+      {% set level = state_attr('vacuum.robbi_2', 'filter.filter_life_level') %}
+      {{ level is not none and level | int(100) < 10 }}
     id: filter
   - trigger: template
-    value_template: "{{ state_attr('vacuum.robbi_2', 'props') is not none and \n \
-      \  state_attr('vacuum.robbi_2', 'props').water_shortage_status | default(0)\
-      \ == 1 }}\n"
-    id: water-tank
+    value_template: >-
+      {% set props = state_attr('vacuum.robbi_2', 'props') %}
+      {{ props is not none and 
+         props.water_shortage_status | default(0) == 1 }}
+    id: wassertank
   - trigger: template
-    value_template: "{{ state_attr('vacuum.robbi_2', 'props') is not none and \n \
-      \  state_attr('vacuum.robbi_2', 'props').sensor_dirty_time | int(9999) < 5000\
-      \ }}\n"
-    id: sensor
+    value_template: >-
+      {% set props = state_attr('vacuum.robbi_2', 'props') %}
+      {{ props is not none and 
+         props.sensor_dirty_time | int(9999) < 5000 }}
+    id: sensoren
   conditions:
-  - alias: Nicht öfter als alle 12 Stunden triggern
+  - alias: "Nicht öfter als alle 12 Stunden triggern"
     condition: template
-    value_template: '{% set last = state_attr(''automation.notifications_robbi'',
-      ''last_triggered'') %} {{ last is none or (now() - last).total_seconds() > 12
-      * 60 * 60 }}
-
-      '
-  - alias: Robbi ist verfügbar (nicht unbekannt/unavailable)
+    value_template: >-
+      {% set last = state_attr('automation.benachrichtigung_robbi_wartung', 'last_triggered') %}
+      {{ last is none or (now() - last).total_seconds() > 43200 }}
+  - alias: "Robbi ist verfügbar (nicht unbekannt/unavailable)"
     condition: template
-    value_template: '{{ states(''vacuum.robbi_2'') not in [''unknown'', ''unavailable'']
-      }}
-
-      '
+    value_template: >-
+      {{ states('vacuum.robbi_2') not in ['unknown', 'unavailable'] }}
   actions:
   - choose:
-    - alias: Hauptbürste wechseln
+    - alias: "Hauptbürste wechseln"
       conditions:
       - condition: trigger
-        id: main-brush
+        id: hauptbueste
       sequence:
-      - action: script.turn_on
-        target:
-          entity_id: script.xtodo_create_todo
-        data:
-          variables:
-            todo: Robbi » Hauptbürste wechseln ({{ state_attr('vacuum.robbi_2', 'brush_cleaner.brush_life_level')
-              | int(0) }}% verbleibend)
-    - alias: Seitenbürste wechseln
+      - parallel:
+        # Todo erstellen
+        - action: script.turn_on
+          target:
+            entity_id: script.xtodo_create_todo
+          data:
+            variables:
+              todo: >-
+                Robbi » Hauptbürste wechseln ({{ 
+                  state_attr('vacuum.robbi_2', 'brush_cleaner.brush_life_level') | int(0) 
+                }}% verbleibend)
+        # Parallel: TTS Ansage + Persistent Notification
+        - parallel:
+            # TTS Ansage bei kritischem Wert (<5%)
+            - if:
+                - condition: template
+                  value_template: >-
+                    {{ state_attr('vacuum.robbi_2', 'brush_cleaner.brush_life_level') | int(100) < 5 }}
+              then:
+                - action: script.hausgeraete_ansage
+                  data:
+                    message: "Robbi braucht dringend eine neue Hauptbürste"
+                    priority: "kritisch"
+            
+            # Always create persistent notification as backup
+            - action: persistent_notification.create
+              data:
+                notification_id: "robbi_hauptbueste"
+                title: "🤖 Robbi Wartung"
+                message: >-
+                  Hauptbürste wechseln ({{ 
+                    state_attr('vacuum.robbi_2', 'brush_cleaner.brush_life_level') | int(0) 
+                  }}% verbleibend)
+    
+    - alias: "Seitenbürste wechseln"
       conditions:
       - condition: trigger
-        id: side-brush
+        id: seitenbueste
       sequence:
-      - action: script.turn_on
-        target:
-          entity_id: script.xtodo_create_todo
-        data:
-          variables:
-            todo: Robbi » Seitenbürste wechseln ({{ state_attr('vacuum.robbi_2', 'brush_life_level-10-2')
-              | int(0) }}% verbleibend)
-    - alias: Filter wechseln
+      - parallel:
+        # Todo erstellen
+        - action: script.turn_on
+          target:
+            entity_id: script.xtodo_create_todo
+          data:
+            variables:
+              todo: >-
+                Robbi » Seitenbürste wechseln ({{ 
+                  state_attr('vacuum.robbi_2', 'brush_life_level-10-2') | int(0) 
+                }}% verbleibend)
+        # TTS Ansage bei kritischem Wert (<5%)
+        - if:
+            - condition: template
+              value_template: >-
+                {{ state_attr('vacuum.robbi_2', 'brush_life_level-10-2') | int(100) < 5 }}
+          then:
+            - action: script.hausgeraete_ansage
+              data:
+                message: "Robbi braucht dringend eine neue Seitenbürste"
+                priority: "kritisch"
+        # Fallback persistent notification
+        - if:
+            - condition: template
+              value_template: >-
+                {{ states('script.xtodo_create_todo') in ['unknown', 'unavailable'] }}
+          then:
+            - action: persistent_notification.create
+              data:
+                notification_id: "robbi_seitenbueste"
+                title: "🤖 Robbi Wartung"
+                message: >-
+                  Seitenbürste wechseln ({{ 
+                    state_attr('vacuum.robbi_2', 'brush_life_level-10-2') | int(0) 
+                  }}% verbleibend)
+    
+    - alias: "Filter wechseln"
       conditions:
       - condition: trigger
         id: filter
       sequence:
-      - action: script.turn_on
-        target:
-          entity_id: script.xtodo_create_todo
-        data:
-          variables:
-            todo: Robbi » Filter wechseln ({{ state_attr('vacuum.robbi_2', 'filter.filter_life_level')
-              | int(0) }}% verbleibend)
-    - alias: Wassertank auffüllen
+      - parallel:
+        # Todo erstellen
+        - action: script.turn_on
+          target:
+            entity_id: script.xtodo_create_todo
+          data:
+            variables:
+              todo: >-
+                Robbi » Filter wechseln ({{ 
+                  state_attr('vacuum.robbi_2', 'filter.filter_life_level') | int(0) 
+                }}% verbleibend)
+        # TTS Ansage bei kritischem Wert (<5%)
+        - if:
+            - condition: template
+              value_template: >-
+                {{ state_attr('vacuum.robbi_2', 'filter.filter_life_level') | int(100) < 5 }}
+          then:
+            - action: script.hausgeraete_ansage
+              data:
+                message: "Robbi braucht dringend einen neuen Filter"
+                priority: "kritisch"
+        # Fallback persistent notification
+        - if:
+            - condition: template
+              value_template: >-
+                {{ states('script.xtodo_create_todo') in ['unknown', 'unavailable'] }}
+          then:
+            - action: persistent_notification.create
+              data:
+                notification_id: "robbi_filter"
+                title: "🤖 Robbi Wartung"
+                message: >-
+                  Filter wechseln ({{ 
+                    state_attr('vacuum.robbi_2', 'filter.filter_life_level') | int(0) 
+                  }}% verbleibend)
+    
+    - alias: "Wassertank auffüllen"
       conditions:
       - condition: trigger
-        id: water-tank
+        id: wassertank
       sequence:
-      - action: script.turn_on
-        target:
-          entity_id: script.xtodo_create_todo
-        data:
-          variables:
-            todo: Robbi » Wassertank ist leer - auffüllen
-    - alias: Sensoren reinigen
+      - parallel:
+        # Todo erstellen
+        - action: script.turn_on
+          target:
+            entity_id: script.xtodo_create_todo
+          data:
+            variables:
+              todo: "Robbi » Wassertank ist leer - auffüllen"
+        # TTS Ansage (Wassertank ist immer kritisch)
+        - action: script.hausgeraete_ansage
+          data:
+            message: "Der Wassertank von Robbi ist leer und muss aufgefüllt werden"
+            priority: "kritisch"
+        # Fallback persistent notification
+        - if:
+            - condition: template
+              value_template: >-
+                {{ states('script.xtodo_create_todo') in ['unknown', 'unavailable'] }}
+          then:
+            - action: persistent_notification.create
+              data:
+                notification_id: "robbi_wassertank"
+                title: "🤖 Robbi Wartung"
+                message: "Wassertank ist leer - auffüllen"
+    
+    - alias: "Sensoren reinigen"
       conditions:
       - condition: trigger
-        id: sensor
+        id: sensoren
       sequence:
-      - action: script.turn_on
-        target:
-          entity_id: script.xtodo_create_todo
-        data:
-          variables:
-            todo: Robbi » Sensoren reinigen ({{ state_attr('vacuum.robbi_2', 'props').sensor_dirty_time
-              | default('unbekannt') }} verbleibend)
+      - parallel:
+        # Todo erstellen
+        - action: script.turn_on
+          target:
+            entity_id: script.xtodo_create_todo
+          data:
+            variables:
+              todo: >-
+                Robbi » Sensoren reinigen ({{ 
+                  state_attr('vacuum.robbi_2', 'props').sensor_dirty_time | default('unbekannt') 
+                }} verbleibend)
+        # TTS Ansage für Sensoren-Reinigung
+        - action: script.hausgeraete_ansage
+          data:
+            message: "Robbi's Sensoren müssen gereinigt werden"
+            priority: "normal"
+        # Fallback persistent notification
+        - if:
+            - condition: template
+              value_template: >-
+                {{ states('script.xtodo_create_todo') in ['unknown', 'unavailable'] }}
+          then:
+            - action: persistent_notification.create
+              data:
+                notification_id: "robbi_sensoren"
+                title: "🤖 Robbi Wartung"
+                message: >-
+                  Sensoren reinigen ({{ 
+                    state_attr('vacuum.robbi_2', 'props').sensor_dirty_time | default('unbekannt') 
+                  }} verbleibend)
+    default:
+    # Fallback wenn unbekannter Trigger
+    - action: persistent_notification.create
+      data:
+        notification_id: "robbi_wartung_error"
+        title: "⚠️ Robbi Automation Fehler"
+        message: "Unbekannter Wartungstrigger ausgelöst"
   mode: single
 - id: '1692862723924'
-  alias: Notification » Luftreiniger
-  description: Erstellt Aufgabe wenn Luftreiniger-Filter unter 10% Lebensdauer
+  alias: "Benachrichtigung » Luftreiniger Filter"
+  description: "Erstellt Wartungsaufgabe wenn Luftreiniger-Filter unter 10% Lebensdauer mit TTS-Ansage bei kritischen Werten"
   triggers:
   - trigger: numeric_state
     entity_id: sensor.zhimi_vb4_bce4_filter_life_level
     below: 10
+    id: filter_wartung
   conditions:
-  - condition: template
-    value_template: " {% set last = state_attr('automation.notification_luftreiniger',\
-      \ 'last_triggered') %}\n    {{ last is none or (now() - last).total_seconds()\
-      \ > 12 * 60 * 60 }}"
+  - alias: "Nicht öfter als alle 12 Stunden triggern"
+    condition: template
+    value_template: >-
+      {% set last = state_attr('automation.benachrichtigung_luftreiniger_filter', 'last_triggered') %}
+      {{ last is none or (now() - last).total_seconds() > 43200 }}
+  - alias: "Luftreiniger ist verfügbar"
+    condition: template
+    value_template: >-
+      {{ states('sensor.zhimi_vb4_bce4_filter_life_level') not in ['unknown', 'unavailable'] }}
   actions:
-  - entity_id: script.xtodo_create_todo
-    data:
-      variables:
-        todo: Luftreiniger benötigt neuen Filter
-    action: script.turn_on
+  - parallel:
+      # Todo erstellen
+      - action: script.turn_on
+        target:
+          entity_id: script.xtodo_create_todo
+        data:
+          variables:
+            todo: >-
+              Luftreiniger » Filter wechseln ({{ 
+                states('sensor.zhimi_vb4_bce4_filter_life_level') | int(0) 
+              }}% verbleibend)
+      
+      # TTS Ansage bei kritischem Wert (<5%)
+      - if:
+          - condition: template
+            value_template: >-
+              {{ states('sensor.zhimi_vb4_bce4_filter_life_level') | int(100) < 5 }}
+        then:
+          - action: script.hausgeraete_ansage
+            data:
+              message: "Der Luftreiniger braucht dringend einen neuen Filter"
+              priority: "kritisch"
+      
+      # Fallback persistent notification
+      - if:
+          - condition: template
+            value_template: >-
+              {{ states('script.xtodo_create_todo') in ['unknown', 'unavailable'] }}
+        then:
+          - action: persistent_notification.create
+            data:
+              notification_id: "luftreiniger_filter"
+              title: "🌬️ Luftreiniger Wartung"
+              message: >-
+                Filter wechseln ({{ 
+                  states('sensor.zhimi_vb4_bce4_filter_life_level') | int(0) 
+                }}% verbleibend)
   mode: single

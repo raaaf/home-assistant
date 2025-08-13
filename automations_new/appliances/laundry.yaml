@@ -3,190 +3,248 @@
 # Part of Home Assistant configuration
 
 - id: '1661933181865'
-  alias: Notifications » Waschmaschine
-  description: Überwacht den Waschmaschinen-Status via Stromverbrauch und sendet Benachrichtigungen
+  alias: "Benachrichtigung » Waschmaschine Status"
+  description: "Überwacht Waschmaschinen-Status via Stromverbrauch mit HomePod-Ansagen und Benachrichtigungen"
   triggers:
-  - above: 10
-    entity_id:
-    - sensor.steckdose_waschmaschine_power
+  - trigger: numeric_state
+    entity_id: sensor.steckdose_waschmaschine_power
+    above: 10
     for:
-      hours: 0
-      minutes: 0
       seconds: 5
     id: arbeitet
-    trigger: numeric_state
-  - entity_id:
-    - sensor.steckdose_waschmaschine_power
-    for:
-      hours: 0
-      minutes: 5
-      seconds: 0
-    id: fertig
-    below: 7
+  - trigger: numeric_state
+    entity_id: sensor.steckdose_waschmaschine_power
     above: 1.1
-    trigger: numeric_state
-  - entity_id:
-    - sensor.steckdose_waschmaschine_power
+    below: 7
     for:
-      hours: 0
       minutes: 5
-      seconds: 0
-    id: aus
+    id: fertig
+  - trigger: numeric_state
+    entity_id: sensor.steckdose_waschmaschine_power
     below: 1
-    trigger: numeric_state
+    for:
+      minutes: 5
+    id: aus
   conditions:
-  - condition: template
-    value_template: " {% set last = state_attr('automation.waschmaschine_arbeitet',\
-      \ 'last_triggered') %}\n    {{ last is none or (now() - last).total_seconds()\
-      \ > 12 * 60 }}"
-    enabled: false
+  - alias: "Stromverbrauchssensor ist verfügbar"
+    condition: template
+    value_template: >-
+      {{ states('sensor.steckdose_waschmaschine_power') not in ['unknown', 'unavailable'] }}
   actions:
   - choose:
-    - conditions:
+    - alias: "Waschmaschine arbeitet"
+      conditions:
       - condition: trigger
         id: arbeitet
       sequence:
-      - data:
-          option: Arbeitet
+      - action: input_select.select_option
         target:
           entity_id: input_select.waschmaschine
-        action: input_select.select_option
-    - conditions:
+        data:
+          option: "Arbeitet"
+    
+    - alias: "Waschmaschine ist fertig"
+      conditions:
       - condition: trigger
         id: fertig
       - condition: state
         entity_id: input_select.waschmaschine
-        state: Arbeitet
+        state: "Arbeitet"
       sequence:
-      - data:
-          option: Fertig
+      # Status auf Fertig setzen
+      - action: input_select.select_option
         target:
           entity_id: input_select.waschmaschine
-        action: input_select.select_option
-      - if:
-        - condition: state
-          entity_id: person.rafael
-          state: home
-        then:
-        - data:
-            title: Waschmaschine ist fertig
-            message: ({{ now().strftime('%H:%M Uhr, %d.%m.%Y') }})
+        data:
+          option: "Fertig"
+      
+      # Parallel: HomePod Ansage + Mobile Benachrichtigungen + Persistent Notification
+      - parallel:
+          # HomePod Ansage (kritisch - immer außer Ruhezeiten)
+          - action: script.hausgeraete_ansage
             data:
-              push:
-                interruption-level: critical
-          action: notify.rafael
-      - if:
-        - condition: state
-          entity_id: person.alex
-          state: home
-        then:
-        - data:
-            title: Waschmaschine ist fertig
-            message: ({{ now().strftime('%H:%M Uhr, %d.%m.%Y') }})
+              message: "Die Waschmaschine ist fertig"
+              priority: "kritisch"
+          
+          # Mobile Benachrichtigungen (nur wenn zuhause)
+          - if:
+              - condition: state
+                entity_id: person.rafael
+                state: home
+            then:
+              - action: notify.rafael
+                data:
+                  title: "🧺 Waschmaschine ist fertig"
+                  message: "Fertig um {{ now().strftime('%H:%M Uhr') }}"
+                  data:
+                    push:
+                      interruption-level: critical
+          
+          - if:
+              - condition: state
+                entity_id: person.alex
+                state: home
+            then:
+              - action: notify.alex
+                data:
+                  title: "🧺 Waschmaschine ist fertig"
+                  message: "Fertig um {{ now().strftime('%H:%M Uhr') }}"
+                  data:
+                    push:
+                      interruption-level: critical
+          
+          # Persistent Notification als Fallback/Backup
+          - action: persistent_notification.create
             data:
-              push:
-                interruption-level: critical
-          action: notify.alex
-    - conditions:
+              notification_id: "waschmaschine_fertig"
+              title: "🧺 Waschmaschine ist fertig"
+              message: "Die Waschmaschine wurde um {{ now().strftime('%H:%M Uhr') }} fertig"
+    
+    - alias: "Waschmaschine aus"
+      conditions:
       - condition: trigger
         id: aus
       sequence:
-      - data:
-          option: Aus
+      - action: input_select.select_option
         target:
           entity_id: input_select.waschmaschine
-        action: input_select.select_option
-    default: []
+        data:
+          option: "Aus"
+      
+      # Persistent notification entfernen wenn vorhanden
+      - action: persistent_notification.dismiss
+        data:
+          notification_id: "waschmaschine_fertig"
+    
+    default:
+    # Fallback bei unbekanntem Trigger
+    - action: persistent_notification.create
+      data:
+        notification_id: "waschmaschine_error"
+        title: "⚠️ Waschmaschine Fehler"
+        message: "Unbekannter Status-Trigger bei {{ now().strftime('%H:%M Uhr') }}"
 - id: '1661934852025'
-  alias: Notifications » Trockner
-  description: Überwacht den Trockner-Status via Stromverbrauch und sendet Benachrichtigungen
+  alias: "Benachrichtigung » Trockner Status"
+  description: "Überwacht Trockner-Status via Stromverbrauch mit HomePod-Ansagen und Benachrichtigungen"
   triggers:
-  - entity_id: sensor.trockner_current_consumption
+  - trigger: numeric_state
+    entity_id: sensor.trockner_current_consumption
     above: 10
     for:
       seconds: 30
     id: arbeitet
-    trigger: numeric_state
-  - entity_id: sensor.trockner_current_consumption
+  - trigger: numeric_state
+    entity_id: sensor.trockner_current_consumption
     above: 1.3
     below: 7
     for:
       minutes: 1
       seconds: 30
     id: fertig
-    trigger: numeric_state
-  - entity_id: sensor.trockner_current_consumption
+  - trigger: numeric_state
+    entity_id: sensor.trockner_current_consumption
     below: 1.2
     for:
       minutes: 5
     id: aus
-    trigger: numeric_state
-  conditions: []
+  conditions:
+  - alias: "Stromverbrauchssensor ist verfügbar"
+    condition: template
+    value_template: >-
+      {{ states('sensor.trockner_current_consumption') not in ['unknown', 'unavailable'] }}
   actions:
   - choose:
-    - conditions:
+    - alias: "Trockner arbeitet"
+      conditions:
       - condition: trigger
         id: arbeitet
       sequence:
-      - target:
+      - action: input_select.select_option
+        target:
           entity_id: input_select.trockner
         data:
-          option: Arbeitet
-        action: input_select.select_option
-    - conditions:
+          option: "Arbeitet"
+    
+    - alias: "Trockner ist fertig"
+      conditions:
       - condition: trigger
         id: fertig
       - condition: state
         entity_id: input_select.trockner
-        state: Arbeitet
+        state: "Arbeitet"
       sequence:
-      - target:
+      # Status auf Fertig setzen
+      - action: input_select.select_option
+        target:
           entity_id: input_select.trockner
         data:
-          option: Fertig
-        action: input_select.select_option
-      - data:
-          notification_id: trockner_fertig
-          title: 🧺 Trockner ist fertig
-          message: Der Trockner wurde um {{ now().strftime('%H:%M Uhr') }} fertig.
-        action: persistent_notification.create
+          option: "Fertig"
+      
+      # Parallel: HomePod Ansage + Mobile Benachrichtigungen + Persistent Notification
       - parallel:
-        - if:
-          - condition: state
-            entity_id: person.rafael
-            state: home
-          then:
-          - data:
-              title: 🧺 Trockner ist fertig
-              message: Der Trockner ist fertig! ({{ now().strftime('%H:%M Uhr') }})
-              data:
-                push:
-                  interruption-level: critical
-            action: notify.rafael
-        - if:
-          - condition: state
-            entity_id: person.alex
-            state: home
-          then:
-          - data:
-              title: 🧺 Trockner ist fertig
-              message: Der Trockner ist fertig! ({{ now().strftime('%H:%M Uhr') }})
-              data:
-                push:
-                  interruption-level: critical
-            action: notify.alex
-    - conditions:
+          # HomePod Ansage (kritisch - Arbeitszimmer da näher zur Waschküche)
+          - action: script.hausgeraete_ansage
+            data:
+              message: "Der Trockner ist fertig"
+              priority: "kritisch"
+          
+          # Mobile Benachrichtigungen (nur wenn zuhause)
+          - if:
+              - condition: state
+                entity_id: person.rafael
+                state: home
+            then:
+              - action: notify.rafael
+                data:
+                  title: "🧺 Trockner ist fertig"
+                  message: "Der Trockner ist fertig! ({{ now().strftime('%H:%M Uhr') }})"
+                  data:
+                    push:
+                      interruption-level: critical
+          
+          - if:
+              - condition: state
+                entity_id: person.alex
+                state: home
+            then:
+              - action: notify.alex
+                data:
+                  title: "🧺 Trockner ist fertig"
+                  message: "Der Trockner ist fertig! ({{ now().strftime('%H:%M Uhr') }})"
+                  data:
+                    push:
+                      interruption-level: critical
+          
+          # Persistent Notification als Fallback/Backup
+          - action: persistent_notification.create
+            data:
+              notification_id: "trockner_fertig"
+              title: "🧺 Trockner ist fertig"
+              message: "Der Trockner wurde um {{ now().strftime('%H:%M Uhr') }} fertig"
+    
+    - alias: "Trockner aus"
+      conditions:
       - condition: trigger
         id: aus
       sequence:
-      - target:
+      - action: input_select.select_option
+        target:
           entity_id: input_select.trockner
         data:
-          option: Aus
-        action: input_select.select_option
-      - data:
-          notification_id: trockner_fertig
-        action: persistent_notification.dismiss
+          option: "Aus"
+      
+      # Persistent notification entfernen wenn vorhanden
+      - action: persistent_notification.dismiss
+        data:
+          notification_id: "trockner_fertig"
+    
+    default:
+    # Fallback bei unbekanntem Trigger
+    - action: persistent_notification.create
+      data:
+        notification_id: "trockner_error"
+        title: "⚠️ Trockner Fehler"
+        message: "Unbekannter Status-Trigger bei {{ now().strftime('%H:%M Uhr') }}"
   mode: single
   max_exceeded: silent
 - id: '1682954529440'

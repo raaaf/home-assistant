@@ -3,48 +3,101 @@
 # Part of Home Assistant configuration
 
 - id: '1692865865168'
-  alias: Notifications » Futterspender
-  description: Überwacht Futterspender und benachrichtigt bei Reinigungs- und Filterwechselbedarf
+  alias: "Benachrichtigung » Futterspender Wartung"
+  description: "Überwacht Futterspender und erstellt Wartungsaufgaben bei Reinigungs- und Filterwechselbedarf mit HomePod-Ansagen"
   triggers:
-  - entity_id:
-    - sensor.mmgg_fi1_2081_cleantime
-    to: '1'
-    id: clean
+  - trigger: state
+    entity_id: sensor.mmgg_fi1_2081_cleantime
     attribute: clearnserve.cleantime
-    trigger: state
-  - entity_id:
-    - sensor.mmgg_fi1_2081_desiccant_left_time
+    to: '1'
+    id: reinigung
+  - trigger: state
+    entity_id: sensor.mmgg_fi1_2081_desiccant_left_time
+    attribute: clearnserve.cleantime
     to: '1'
     id: filter
-    attribute: clearnserve.cleantime
-    trigger: state
   conditions:
-  - condition: template
-    value_template: " {% set last = state_attr('automation.notifications_futterspender',\
-      \ 'last_triggered') %}\n    {{ last is none or (now() - last).total_seconds()\
-      \ > 12 * 60 * 60 }}"
+  - alias: "Nicht öfter als alle 12 Stunden triggern"
+    condition: template
+    value_template: >-
+      {% set last = state_attr('automation.benachrichtigung_futterspender_wartung', 'last_triggered') %}
+      {{ last is none or (now() - last).total_seconds() > 43200 }}
+  - alias: "Futterspender-Sensoren sind verfügbar"
+    condition: template
+    value_template: >-
+      {{ states('sensor.mmgg_fi1_2081_cleantime') not in ['unknown', 'unavailable'] and
+         states('sensor.mmgg_fi1_2081_desiccant_left_time') not in ['unknown', 'unavailable'] }}
   actions:
   - choose:
-    - conditions:
+    - alias: "Filter ersetzen"
+      conditions:
       - condition: trigger
-        id:
-        - filter
+        id: filter
       sequence:
-      - data:
-          variables:
-            todo: Futterspender » Filter ersetzen
-        target:
-          entity_id: script.xtodo_create_todo
-        action: script.turn_on
-    - conditions:
+      - parallel:
+          # Todo erstellen
+          - action: script.turn_on
+            target:
+              entity_id: script.xtodo_create_todo
+            data:
+              variables:
+                todo: "Futterspender » Filter ersetzen"
+          
+          # HomePod Ansage
+          - action: script.hausgeraete_ansage
+            data:
+              message: "Der Filter im Futterspender muss ersetzt werden"
+              priority: "normal"
+          
+          # Fallback persistent notification
+          - if:
+              - condition: template
+                value_template: >-
+                  {{ states('script.xtodo_create_todo') in ['unknown', 'unavailable'] }}
+            then:
+              - action: persistent_notification.create
+                data:
+                  notification_id: "futterspender_filter"
+                  title: "🐾 Futterspender Wartung"
+                  message: "Filter ersetzen"
+    
+    - alias: "Futterspender reinigen"
+      conditions:
       - condition: trigger
-        id:
-        - clean
+        id: reinigung
       sequence:
-      - data:
-          variables:
-            todo: Futterspender » Reinigen
-        target:
-          entity_id: script.xtodo_create_todo
-        action: script.turn_on
+      - parallel:
+          # Todo erstellen
+          - action: script.turn_on
+            target:
+              entity_id: script.xtodo_create_todo
+            data:
+              variables:
+                todo: "Futterspender » Reinigen"
+          
+          # HomePod Ansage
+          - action: script.hausgeraete_ansage
+            data:
+              message: "Der Futterspender muss gereinigt werden"
+              priority: "normal"
+          
+          # Fallback persistent notification
+          - if:
+              - condition: template
+                value_template: >-
+                  {{ states('script.xtodo_create_todo') in ['unknown', 'unavailable'] }}
+            then:
+              - action: persistent_notification.create
+                data:
+                  notification_id: "futterspender_reinigung"
+                  title: "🐾 Futterspender Wartung"
+                  message: "Futterspender reinigen"
+    
+    default:
+    # Fallback bei unbekanntem Trigger
+    - action: persistent_notification.create
+      data:
+        notification_id: "futterspender_error"
+        title: "⚠️ Futterspender Fehler"
+        message: "Unbekannter Wartungstrigger ausgelöst"
   mode: single
