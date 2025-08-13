@@ -1,4 +1,17 @@
-# Home Assistant Configuration Files
+# Ignore everything by default
+*
+
+# Allow specific configuration files in root
+!*.yaml
+!*.yml
+!CLAUDE.md
+!.gitignore
+
+# Allow automations directory and all its contents
+!automations_new/
+!automations_new/**
+
+# BUT exclude sensitive files even if they match allowed patterns
 secrets.yaml
 known_devices.yaml
 ip_bans.yaml
@@ -12,21 +25,20 @@ home-assistant.*
 *.conf
 *.uuid
 
-# Logs
-logs/
+# Always exclude these regardless of pattern matches
 *.log
 *.log.*
 *.fault
-
-# Databases
 *.db*
 *.db-shm*
 *.db-wal*
 *.db-journal
 *.sqlite
-zigbee.db*
-
-# Caches and Tokens
+*.backup
+*.tmp
+*.temp
+*.pickle
+.HA_VERSION
 .storage/
 .cloud/
 .cache/
@@ -37,84 +49,3 @@ zigbee.db*
 .ring_cache.pickle
 abodepy_cache.pickle
 .pc-session
-*.pickle
-.HA_VERSION
-
-# Backups and Downloads
-backups/
-*.backup
-downloads/
-
-# Media and TTS
-tts/
-www/icons/
-www/floorplans/
-www/community/
-image/
-
-# Custom Components
-custom_components/hacs/
-
-# Face Recognition
-dlib_faces/
-dlib_nofaces/
-dlib_known_faces/
-dlib_unknown_faces/
-
-# ESPHome
-esphome/
-esphome/.esphome/
-
-# Other integrations
-ui_lovelace_minimalist/
-diyhue/
-icloud/
-
-# Service Account Files
-SERVICE_ACCOUNT.json
-life360.sh
-
-# Temporary files
-deps/
-*.tmp
-*.temp
-*.txt
-*.xml
-*.json
-
-# Python cache
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-
-# macOS
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# Windows
-desktop.ini
-
-# Linux
-*~
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Certificates
-*.pem
-*.key
-*.crt
-*.csr
-
-# Package files
-google*.deb
