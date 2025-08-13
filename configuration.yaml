@@ -113,17 +113,7 @@ recorder:
       - sensor.*_rssi
       - sensor.*_linkquality
 
-# History optimization (mirrors recorder excludes)
-history:
-  exclude:
-    domains:
-      - automation
-      - updater
-      - scene
-      - script
-    entity_globs:
-      - sensor.*_battery_level
-      - sensor.*_rssi
+# History configuration - filtering handled by recorder configuration
 
 # ============================================================================
 # COMMUNICATION & NOTIFICATIONS

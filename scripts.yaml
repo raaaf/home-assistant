@@ -507,3 +507,289 @@ fade_volume:
       level: debug
   icon: mdi:tune-vertical
   description: Smooth volume fading with multiple curve options
+
+test_debug:
+  alias: "Debug Test"
+  sequence:
+    - action: system_log.write
+      data:
+        message: "Debug Test Script Executed"
+        level: warning
+
+hausgeraete_ansage:
+  alias: "Hausgeräte Ansage"
+  description: "Intelligente Sprachansage mit automatischer HomePod-Auswahl basierend auf Tageszeit und Priorität"
+  icon: mdi:speaker-message
+  mode: single
+  fields:
+    message:
+      description: "Nachricht zum Vorlesen"
+      example: "Die Waschmaschine ist fertig"
+      required: true
+      selector:
+        text:
+    priority:
+      description: "Prioritätsstufe der Ansage"
+      default: "normal"
+      selector:
+        select:
+          options:
+            - "kritisch"
+            - "normal" 
+            - "info"
+  variables:
+    # Zeit-basierte Lautstärke-Berechnung
+    current_hour: "{{ now().hour }}"
+    is_quiet_time: "{{ now().hour >= 20 or now().hour < 8 }}"
+    current_volume: "{{ state_attr('media_player.homepod_wohnzimmer', 'volume_level') | float(0.6) }}"
+    
+    tts_volume: >-
+      {% set hour = now().hour %}
+      {% if hour >= 20 or hour < 8 %}
+        {% if priority == 'kritisch' %}
+          {{ 0.40 }}
+        {% else %}
+          {{ 0.30 }}
+        {% endif %}
+      {% elif priority == 'kritisch' %}
+        {{ 0.70 }}
+      {% elif priority == 'normal' %}
+        {{ 0.60 }}
+      {% else %}
+        {{ 0.50 }}
+      {% endif %}
+    
+    # Alle HomePods
+    all_homepods:
+      - "media_player.homepod_kuche"
+      - "media_player.homepod_arbeitszimmer" 
+      - "media_player.homepod_badezimmer"
+      - "media_player.homepod_kinderzimmer"
+      - "media_player.homepod_schlafzimmer"
+      - "media_player.homepod_wohnzimmer"
+    
+    
+    # Spielende HomePods (für Pause/Resume)
+    playing_homepods: >-
+      {% set playing = [] %}
+      {% for hp in all_homepods %}
+        {% if states(hp) == 'playing' %}
+          {% set playing = playing + [hp] %}
+        {% endif %}
+      {% endfor %}
+      {{ playing }}
+
+  sequence:
+    # Debug: Log script start
+    - action: system_log.write
+      data:
+        message: "SCRIPT START: {{ message }} - {{ priority }} at {{ now().hour }}:{{ now().minute }}"
+        level: warning
+    
+
+    # Debug: Log current state
+    - action: system_log.write
+      data:
+        message: >-
+          TTS Script: Zeit={{ now().hour }}, Priority={{ priority }}
+        level: info
+    
+    # Find currently playing HomePods
+    - variables:
+        playing_homepods: >-
+          {% set ns = namespace(playing=[]) %}
+          {% for hp in all_homepods %}
+            {% if states(hp) == 'playing' %}
+              {% set ns.playing = ns.playing + [hp] %}
+            {% endif %}
+          {% endfor %}
+          {{ ns.playing }}
+    
+    # Debug: Log what we found
+    - action: system_log.write
+      data:
+        message: "TTS: Found {{ playing_homepods|length }} playing HomePods: {{ playing_homepods }}"
+        level: info
+    
+    # Debug: Check each HomePod individually
+    - action: system_log.write
+      data:
+        message: >-
+          HomePod States: 
+          Kuche={{ states('media_player.homepod_kuche') }}, 
+          Wohnz={{ states('media_player.homepod_wohnzimmer') }}, 
+          Bad={{ states('media_player.homepod_badezimmer') }},
+          Arbeit={{ states('media_player.homepod_arbeitszimmer') }},
+          Kind={{ states('media_player.homepod_kinderzimmer') }},
+          Schlaf={{ states('media_player.homepod_schlafzimmer') }}
+        level: info
+    
+    # Check if we have playing HomePods AND a matching pattern
+    - variables:
+        # Pre-calculate toggle to determine if we should do TTS
+        resume_toggle: >-
+          {% set pods = playing_homepods | sort %}
+          {% set all_pods = ['media_player.homepod_arbeitszimmer', 'media_player.homepod_badezimmer', 'media_player.homepod_kinderzimmer', 'media_player.homepod_kuche', 'media_player.homepod_schlafzimmer', 'media_player.homepod_wohnzimmer'] | sort %}
+          {% set living_area = ['media_player.homepod_badezimmer', 'media_player.homepod_kuche', 'media_player.homepod_wohnzimmer'] | sort %}
+          {% set main_floor = ['media_player.homepod_kuche', 'media_player.homepod_wohnzimmer'] | sort %}
+          {% set bedrooms = ['media_player.homepod_kinderzimmer', 'media_player.homepod_schlafzimmer'] | sort %}
+          {% set night = ['media_player.homepod_badezimmer', 'media_player.homepod_schlafzimmer'] | sort %}
+          {% set work = ['media_player.homepod_arbeitszimmer'] %}
+          
+          {% if pods == all_pods %}
+            input_boolean.resume_music_all
+          {% elif pods == living_area %}
+            input_boolean.resume_music_living_area
+          {% elif pods == main_floor %}
+            input_boolean.resume_music_main_floor
+          {% elif pods == bedrooms %}
+            input_boolean.resume_music_bedrooms
+          {% elif pods == night %}
+            input_boolean.resume_music_night
+          {% elif pods == work %}
+            input_boolean.resume_music_work
+          {% else %}
+            none
+          {% endif %}
+    
+    - choose:
+      # Option A: We have playing HomePods AND a matching toggle pattern - do TTS
+      - conditions:
+          - condition: template
+            value_template: "{{ playing_homepods | length > 0 and resume_toggle != 'none' }}"
+        sequence:
+          # Store original volume levels
+          - variables:
+              original_volumes: >-
+                {% set ns = namespace(volumes={}) %}
+                {% for hp in playing_homepods %}
+                  {% set vol = state_attr(hp, 'volume_level') | float(0.6) %}
+                  {% set ns.volumes = dict(ns.volumes, **{hp: vol}) %}
+                {% endfor %}
+                {{ ns.volumes }}
+          
+          # Step 1: Pause music
+          - action: media_player.media_pause
+            target:
+              entity_id: "{{ playing_homepods }}"
+          
+          # Step 2: Volume up
+          - action: media_player.volume_set
+            data:
+              entity_id: "{{ playing_homepods }}"
+              volume_level: "{{ tts_volume }}"
+          
+          # Step 3: Short delay
+          - delay:
+              milliseconds: 500
+          
+          # Step 4: TTS
+          - action: tts.google_translate_say
+            data:
+              entity_id: "{{ playing_homepods }}"
+              message: "{{ message }}"
+              language: "de"
+          
+          # Step 5: Wait for TTS to finish
+          - delay:
+              seconds: "{{ ((message | string | length) / 7) | int + 6 }}"
+          
+          # Step 6: Restore original volumes
+          - action: system_log.write
+            data:
+              message: "TTS Volumes: Restoring volumes {{ original_volumes }}"
+              level: warning
+          
+          - repeat:
+              for_each: "{{ playing_homepods }}"
+              sequence:
+                - variables:
+                    restore_volume: "{{ original_volumes[repeat.item] | float(0.6) }}"
+                
+                - action: media_player.volume_set
+                  data:
+                    entity_id: "{{ repeat.item }}"
+                    volume_level: "{{ restore_volume }}"
+          
+          # Step 7: Resume music via HomeKit toggle
+          - action: system_log.write
+            data:
+              message: "TTS Resume: HomePods={{ playing_homepods|sort }}, Selected toggle={{ resume_toggle }}"
+              level: warning
+          
+          - delay:
+              seconds: 2
+          
+          # Trigger the selected toggle
+          - action: input_boolean.turn_on
+            target:
+              entity_id: "{{ resume_toggle }}"
+          
+          # Turn it back off after delay
+          - delay:
+              milliseconds: 500
+          
+          - action: input_boolean.turn_off
+            target:
+              entity_id: "{{ resume_toggle }}"
+          
+          - action: system_log.write
+            data:
+              message: "TTS Resume: Triggered {{ resume_toggle }}"
+              level: warning
+          
+          # Always create persistent notification as backup
+          - action: persistent_notification.create
+            data:
+              notification_id: "appliance_{{ now().strftime('%Y%m%d_%H%M%S') }}"
+              title: "🏠 {{ message }}"
+              message: "Ansage um {{ now().strftime('%H:%M Uhr') }} (TTS + HomeKit)"
+      
+      # Option B: No matching pattern OR no playing HomePods - send notifications
+      default:
+        - action: system_log.write
+          data:
+            message: >-
+              TTS Fallback: HomePods={{ playing_homepods|length }}, 
+              Toggle={{ resume_toggle }}, sending notifications instead
+            level: warning
+        
+        - parallel:
+            - if:
+                - condition: state
+                  entity_id: person.rafael
+                  state: home
+              then:
+                - action: notify.rafael
+                  data:
+                    title: "🏠 {{ message }}"
+                    message: >-
+                      {% if playing_homepods | length == 0 %}
+                        Keine HomePods spielen gerade Musik
+                      {% else %}
+                        HomePod-Kombination nicht erkannt, TTS deaktiviert
+                      {% endif %}
+            
+            - if:
+                - condition: state
+                  entity_id: person.alex
+                  state: home
+              then:
+                - action: notify.alex
+                  data:
+                    title: "🏠 {{ message }}"
+                    message: >-
+                      {% if playing_homepods | length == 0 %}
+                        Keine HomePods spielen gerade Musik
+                      {% else %}
+                        HomePod-Kombination nicht erkannt, TTS deaktiviert
+                      {% endif %}
+        
+        # Always create persistent notification as backup
+        - action: persistent_notification.create
+          data:
+            notification_id: "appliance_{{ now().strftime('%Y%m%d_%H%M%S') }}"
+            title: "🏠 {{ message }}"
+            message: >-
+              Benachrichtigung um {{ now().strftime('%H:%M Uhr') }} 
+              ({% if playing_homepods | length == 0 %}Keine Musik{% else %}Unbekannte HomePod-Kombination{% endif %})
