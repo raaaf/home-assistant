@@ -1,0 +1,296 @@
+# ============================================================================
+# LEGACY PLATFORM SENSORS
+# ============================================================================
+
+# Zeit und Datum
+- platform: time_date
+  display_options:
+    - "date"
+    - "date_time_iso"
+
+# Waste Collection Schedule - Übersicht
+- platform: waste_collection_schedule
+  name: next_collection
+  value_template: '{{ value.types | join(", ") }}'
+
+# Waste Collection Schedule - Einzelne Müllarten
+- platform: waste_collection_schedule
+  name: Restmuell
+  details_format: "upcoming"
+  value_template: &waste_days_template >
+    {% if value.daysTo == 0 %}
+      Heute
+    {% elif value.daysTo == 1 %}
+      Morgen
+    {% else %}
+      in {{ value.daysTo }} Tagen
+    {% endif %}
+  types:
+    - Restmuell
+
+- platform: waste_collection_schedule
+  name: Bioabfall
+  details_format: "upcoming"
+  value_template: *waste_days_template
+  types:
+    - Bioabfall
+
+- platform: waste_collection_schedule
+  name: Altpapier
+  details_format: "upcoming"
+  value_template: *waste_days_template
+  types:
+    - Papier
+
+- platform: waste_collection_schedule
+  name: Gelbersack
+  details_format: "upcoming"
+  value_template: *waste_days_template
+  types:
+    - GelberSack
+
+# History Stats - Heizungen (je Raum)
+- platform: history_stats
+  name: Heizung Arbeitszimmer An
+  entity_id: switch.heizung_schlafzimmer # Hinweis: Entity ID scheint falsch zu sein
+  state: "on"
+  type: time
+  start: "{{ now().replace(hour=0, minute=0, second=0) }}"
+  end: "{{ now() }}"
+
+- platform: history_stats
+  name: Heizung Badezimmer An
+  entity_id: switch.heizung_badezimmer
+  state: "on"
+  type: time
+  start: "{{ now().replace(hour=0, minute=0, second=0) }}"
+  end: "{{ now() }}"
+
+- platform: history_stats
+  name: Heizung Flur An
+  entity_id: switch.heizung_flur
+  state: "on"
+  type: time
+  start: "{{ now().replace(hour=0, minute=0, second=0) }}"
+  end: "{{ now() }}"
+
+- platform: history_stats
+  name: Heizung Wohnzimmer An
+  entity_id: switch.heizung_wohnzimmer
+  state: "on"
+  type: time
+  start: "{{ now().replace(hour=0, minute=0, second=0) }}"
+  end: "{{ now() }}"
+
+- platform: history_stats
+  name: Heizung Kinderzimmer An
+  entity_id: switch.heizung_kinderzimmer
+  state: "on"
+  type: time
+  start: "{{ now().replace(hour=0, minute=0, second=0) }}"
+  end: "{{ now() }}"
+
+# ============================================================================
+# MODERNE TEMPLATE SENSORS
+# ============================================================================
+
+# Solar und Energie
+- platform: template
+  sensors:
+    solarproduktion_gestern:
+      friendly_name: "Solarproduktion gestern"
+      unit_of_measurement: "kWh"
+      device_class: energy
+      value_template: >-
+        {% set today = now().date() %}
+        {% set yesterday = (today - timedelta(days=1)).isoformat() %}
+        {% set stats = state_attr('sensor.dtu_ac_daily_energy', 'statistics') %}
+        {% if stats %}
+          {% set match = stats | selectattr('start', 'defined') | selectattr('start', 'search', yesterday) | list %}
+          {% if match and match[0]['sum'] is defined %}
+            {{ (match[0]['sum'] / 1000) | round(2) }}
+          {% else %}
+            0
+          {% endif %}
+        {% else %}
+          0
+        {% endif %}
+
+    # Astronomie und Wetter
+    sun_azimuth:
+      friendly_name: "Sun Azimuth"
+      unit_of_measurement: "°"
+      icon_template: mdi:sun-angle
+      value_template: "{{ (state_attr('sun.sun', 'azimuth') | float(0) - 10) | round(0) }}"
+
+    sunlight_pct:
+      friendly_name: "Sunlight Percentage"
+      unit_of_measurement: "%"
+      icon_template: mdi:weather-sunny
+      value_template: >-
+        {% set elevation = state_attr('sun.sun', 'elevation') | float(0) %}
+        {% set cloud_coverage = state_attr('weather.fuerth_bayern', 'cloud_coverage') | float(0) %}
+        {% set cloud_factor = (1 - (0.75 * (cloud_coverage / 100) ** 3)) %}
+        {% set min_elevation = -6 %}
+        {% set max_elevation = 90 %}
+        {% set adjusted_elevation = elevation - min_elevation %}
+        {% set adjusted_elevation = [adjusted_elevation, 0] | max %}
+        {% set adjusted_elevation = [adjusted_elevation, max_elevation - min_elevation] | min %}
+        {% set adjusted_elevation = adjusted_elevation / (max_elevation - min_elevation) %}
+        {% set adjusted_elevation = adjusted_elevation * 100 %}
+        {% set brightness = adjusted_elevation * cloud_factor %}
+        {{ brightness | round }}
+
+    night_state:
+      friendly_name: "Night State"
+      icon_template: mdi:weather-night
+      value_template: "{{ 1 if is_state('sun.sun', 'below_horizon') else 0 }}"
+
+    # Smart Home Status
+    count_lights_on:
+      friendly_name: "Lights On Count"
+      icon_template: mdi:ceiling-light
+      unit_of_measurement: "Lichter"
+      value_template: >
+        {{ states.light | selectattr('state', 'eq', 'on') | list | count }}
+
+    # Wetter und Kleidung
+    what_to_wear_outside:
+      friendly_name: "Wear Outside"
+      icon_template: mdi:hanger
+      value_template: >-
+        {% set temp = state_attr('weather.fuerth_bayern', 'temperature') | float(20) %}
+        {% if temp <= 5 %}
+          Winterjacke + Handschuhe
+        {% elif temp <= 14 %}
+          Pullover
+        {% elif temp <= 18 %}
+          Dünne Jacke
+        {% else %}
+          T-Shirt
+        {% endif %}
+
+    # ============================================================================
+    # STATUS SENSORS FÜR POWERCALC (ohne device_class)
+    # ============================================================================
+
+    # Netzwerk-Infrastruktur
+    fritzbox_7590_ax_always_on:
+      friendly_name: "FRITZ!Box 7590 AX Always On"
+      value_template: "on"
+      icon_template: "mdi:router-wireless"
+
+    fritzrepeater_1200_ax_always_on:
+      friendly_name: "FRITZ!Repeater 1200 AX Always On"
+      value_template: "on"
+      icon_template: "mdi:wifi-strength-4"
+
+    fritzrepeater_2400_always_on:
+      friendly_name: "FRITZ!Repeater 2400 Always On"
+      value_template: "on"
+      icon_template: "mdi:wifi-strength-4"
+
+    # Smart Home Zentrale
+    synology_ds720_always_on:
+      friendly_name: "Synology DS720+ Always On"
+      value_template: "on"
+      icon_template: "mdi:nas"
+
+    nuki_bridge_always_on:
+      friendly_name: "Nuki Bridge Always On"
+      value_template: "on"
+      icon_template: "mdi:bridge"
+
+    # Überwachung
+    camera_schlafzimmer_always_on:
+      friendly_name: "Kamera Schlafzimmer Always On"
+      value_template: "on"
+      icon_template: "mdi:camera"
+
+    camera_wohnzimmer_always_on:
+      friendly_name: "Kamera Wohnzimmer Always On"
+      value_template: "on"
+      icon_template: "mdi:camera"
+
+    # Haushaltsgeräte
+    wasserspender_always_on:
+      friendly_name: "Wasserspender Always On"
+      value_template: "on"
+      icon_template: "mdi:water-pump"
+
+    futterspender_always_on:
+      friendly_name: "Futterspender Always On"
+      value_template: "on"
+      icon_template: "mdi:bowl-mix"
+
+    kuehlschrank_always_on:
+      friendly_name: "Kühlschrank Always On"
+      value_template: "on"
+      icon_template: "mdi:fridge"
+
+    # Zustandsabhängige Geräte
+    luefter_waschzimmer_running:
+      friendly_name: "Lüfter Waschzimmer Running"
+      value_template: "{{ is_state('input_select.trockner', 'Arbeitet') }}"
+      icon_template: "mdi:fan"
+      availability_template: "{{ states('input_select.trockner') not in ['unknown', 'unavailable'] }}"
+
+    # ============================================================================
+    # NETZ EINSPEISUNG/BEZUG SENSORS (Phase-Based Calculation)
+    # ============================================================================
+    
+    stromzahler_saldiert:
+      friendly_name: "Stromzähler Saldiert"
+      unit_of_measurement: "W"
+      device_class: power
+      icon_template: "mdi:counter"
+      value_template: >
+        {% set phase_a = states('sensor.strommesser_phase_a_active_power')|float(0) %}
+        {% set phase_b = states('sensor.strommesser_phase_b_active_power')|float(0) %}
+        {% set phase_c = states('sensor.strommesser_phase_c_active_power')|float(0) %}
+        {{ (phase_a + phase_b + phase_c)|round(1) }}
+      availability_template: >
+        {{ states('sensor.strommesser_phase_a_active_power') not in ['unknown', 'unavailable'] 
+           and states('sensor.strommesser_phase_b_active_power') not in ['unknown', 'unavailable']
+           and states('sensor.strommesser_phase_c_active_power') not in ['unknown', 'unavailable'] }}
+
+    netzbezug:
+      friendly_name: "Netzbezug"
+      unit_of_measurement: "W"
+      device_class: power
+      icon_template: "mdi:transmission-tower-import"
+      value_template: >
+        {% set saldiert = states('sensor.stromzahler_saldiert')|float(0) %}
+        {% if saldiert > 0 %}
+          {{ saldiert }}
+        {% else %}
+          0
+        {% endif %}
+      availability_template: "{{ states('sensor.stromzahler_saldiert') not in ['unknown', 'unavailable'] }}"
+
+    einspeisung:
+      friendly_name: "Einspeisung"
+      unit_of_measurement: "W"
+      device_class: power
+      icon_template: "mdi:transmission-tower-export"
+      value_template: >
+        {% set saldiert = states('sensor.stromzahler_saldiert')|float(0) %}
+        {% if saldiert < 0 %}
+          {{ saldiert|abs }}
+        {% else %}
+          0
+        {% endif %}
+      availability_template: "{{ states('sensor.stromzahler_saldiert') not in ['unknown', 'unavailable'] }}"
+
+    hausverbrauch_gesamt:
+      friendly_name: "Hausverbrauch Gesamt"
+      unit_of_measurement: "W"
+      device_class: power
+      icon_template: "mdi:home-lightning-bolt"
+      value_template: >
+        {% set saldiert = states('sensor.stromzahler_saldiert')|float(0) %}
+        {% set bkw = states('sensor.steckdose_bkk_power')|float(0) %}
+        {{ (saldiert + bkw)|round(1) }}
+      availability_template: >
+        {{ states('sensor.stromzahler_saldiert') not in ['unknown', 'unavailable'] 
+           and states('sensor.steckdose_bkk_power') not in ['unknown', 'unavailable'] }}

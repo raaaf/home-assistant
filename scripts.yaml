@@ -1,0 +1,509 @@
+light_toggle_with_settings:
+  alias: Licht umschalten mit Einstellungen
+  description: Schaltet Licht ein/aus mit konfigurierbaren Helligkeit und Farbtemperatur
+  icon: mdi:lightbulb
+  mode: single
+  fields:
+    entity:
+      description: Entity ID des Lichts
+      example: light.wohnzimmer
+      required: true
+      selector:
+        entity:
+          domain: light
+    brightness_pct:
+      description: Helligkeit in Prozent (1-100)
+      example: 80
+      default: 100
+      selector:
+        number:
+          min: 1
+          max: 100
+          unit_of_measurement: '%'
+    color_temp:
+      description: Farbtemperatur in Mired
+      example: 350
+      selector:
+        number:
+          min: 153
+          max: 500
+          unit_of_measurement: mired
+  sequence:
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ states(entity) == ''off'' }}'
+      sequence:
+      - action: light.turn_on
+        target:
+          entity_id: '{{ entity }}'
+        data:
+          brightness_pct: '{{ brightness_pct | int(100) }}'
+          transition: 0.1
+      - delay:
+          milliseconds: 100
+      - if:
+        - condition: template
+          value_template: '{{ color_temp is defined }}'
+        then:
+        - action: light.turn_on
+          target:
+            entity_id: '{{ entity }}'
+          data:
+            color_temp: '{{ color_temp | int }}'
+            transition: 0.1
+    default:
+    - action: light.turn_off
+      target:
+        entity_id: '{{ entity }}'
+brightness_increase:
+  alias: Helligkeit erhöhen
+  description: Erhöht die Helligkeit aller eingeschalteten Lichter um 25
+  icon: mdi:brightness-6
+  mode: single
+  fields:
+    entity_ids:
+      description: Liste der Licht-Entitäten
+      example: light.wohnzimmer,light.kuche
+      required: true
+      selector:
+        entity:
+          domain: light
+          multiple: true
+  sequence:
+  - variables:
+      entities_on: "{{ expand(entity_ids) \n   | selectattr('state', 'eq', 'on') \n
+        \  | map(attribute='entity_id') \n   | list }}\n"
+      new_brightness: "{% if entities_on | count > 0 %}\n  {{ (state_attr(entities_on
+        | first, 'brightness') | int(0) + 64) | min(255) }}\n{% else %}\n  128\n{%
+        endif %}\n"
+  - condition: template
+    value_template: '{{ entities_on | count > 0 }}'
+  - action: light.turn_on
+    target:
+      entity_id: '{{ entities_on }}'
+    data:
+      brightness: '{{ new_brightness }}'
+brightness_decrease:
+  alias: Helligkeit verringern
+  description: Verringert die Helligkeit aller eingeschalteten Lichter um 25
+  icon: mdi:brightness-4
+  mode: single
+  fields:
+    entity_ids:
+      description: Liste der Licht-Entitäten
+      example: light.wohnzimmer,light.kuche
+      required: true
+      selector:
+        entity:
+          domain: light
+          multiple: true
+  sequence:
+  - variables:
+      entities_on: "{{ expand(entity_ids) \n   | selectattr('state', 'eq', 'on') \n
+        \  | map(attribute='entity_id') \n   | list }}\n"
+      new_brightness: "{% if entities_on | count > 0 %}\n  {{ (state_attr(entities_on
+        | first, 'brightness') | int(255) - 64) | max(1) }}\n{% else %}\n  64\n{%
+        endif %}\n"
+  - condition: template
+    value_template: '{{ entities_on | count > 0 }}'
+  - action: light.turn_on
+    target:
+      entity_id: '{{ entities_on }}'
+    data:
+      brightness: '{{ new_brightness }}'
+sunrise_simulator:
+  alias: Sonnenaufgang Simulator
+  description: Simuliert einen sanften Sonnenaufgang mit konfigurierbarer Dauer
+  icon: mdi:weather-sunset-up
+  mode: single
+  fields:
+    target:
+      description: Ziel-Lichter oder Area
+      example: light.schlafzimmer,bedroom
+      required: true
+    duration:
+      description: Dauer in Minuten
+      example: 15
+      default: 10
+      selector:
+        number:
+          min: 1
+          max: 60
+          unit_of_measurement: min
+    max_brightness:
+      description: Maximale Helligkeit in Prozent
+      example: 80
+      default: 100
+      selector:
+        number:
+          min: 1
+          max: 100
+          unit_of_measurement: '%'
+  variables:
+    duration_min: '{{ duration | int(10) }}'
+    max_bright: '{{ max_brightness | int(100) | min(100) }}'
+    target_lights: "{% if target in area_entities('') | map('area_name') | list %}\n
+      \ {{ area_entities(target) | select('match', '^light\\.') | list }}\n{% else
+      %}\n  {{ expand(target) | selectattr('domain', 'eq', 'light') | map(attribute='entity_id')
+      | list }}\n{% endif %}\n"
+    steps: 20
+    step_duration: '{{ (duration_min * 60 / steps) | int }}'
+  sequence:
+  - condition: template
+    value_template: '{{ target_lights | count > 0 }}'
+  - action: light.turn_on
+    target:
+      entity_id: '{{ target_lights }}'
+    data:
+      brightness_pct: 1
+      rgb_color:
+      - 255
+      - 100
+      - 0
+  - repeat:
+      count: '{{ steps }}'
+      sequence:
+      - variables:
+          current_step: '{{ repeat.index }}'
+          brightness: '{{ (current_step * max_bright / steps) | int | max(1) }}'
+          red: '{{ 255 }}'
+          green: '{{ (100 + (current_step * 155 / steps)) | int | min(255) }}'
+          blue: '{{ (current_step * 255 / steps * 0.3) | int | min(255) }}'
+      - action: light.turn_on
+        target:
+          entity_id: '{{ target_lights }}'
+        data:
+          brightness_pct: '{{ brightness }}'
+          rgb_color:
+          - '{{ red }}'
+          - '{{ green }}'
+          - '{{ blue }}'
+          transition: '{{ step_duration }}'
+      - delay:
+          seconds: '{{ step_duration }}'
+robbi_go_to_kitchen:
+  alias: Robbi in die Küche
+  description: Sendet Robbi zur Küchenreinigung mit leisem Modus
+  icon: mdi:robot-vacuum
+  mode: single
+  sequence:
+  - condition: template
+    value_template: '{{ states(''vacuum.robbi_2'') not in [''unknown'', ''unavailable'']
+      }}'
+  - action: vacuum.set_fan_speed
+    target:
+      entity_id: vacuum.robbi_2
+    data:
+      fan_speed: Silent
+  - action: vacuum.send_command
+    target:
+      entity_id: vacuum.robbi_2
+    data:
+      command: app_goto_target
+      params:
+      - 31279
+      - 24178
+alarm_activate:
+  alias: Alarm aktivieren
+  description: Aktiviert Sicherheitsalarm mit Licht- und Audioeffekten
+  icon: mdi:alarm-light
+  mode: single
+  sequence:
+  - condition: state
+    entity_id: alarm_control_panel.alarmo
+    state: triggered
+    enabled: true
+  - action: scene.create
+    data:
+      scene_id: alarm_restore_scene
+      snapshot_entities:
+      - light.alle_flur_lichter
+      - light.alle_schlafzimmer_lichter
+      - light.alle_wohnzimmer_lichter
+      - light.alle_kuche_lichter
+      - light.alle_badezimmer_lichter
+      - light.alle_kinderzimmer_lichter
+      - light.alle_arbeitszimmer_lichter
+      - light.alle_flur_nachtlichter
+  - parallel:
+    - sequence:
+      - alias: Adaptive Lighting ausschalten
+        action: switch.turn_off
+        target:
+          entity_id:
+          - switch.adaptive_lighting_arbeitszimmer
+          - switch.adaptive_lighting_flur
+          - switch.adaptive_lighting_kueche
+          - switch.adaptive_lighting_wohnzimmer
+          - switch.adaptive_lighting_badezimmer
+        data: {}
+      - alias: Alle Lichter rot blinken lassen
+        repeat:
+          while:
+          - condition: state
+            entity_id: alarm_control_panel.alarmo
+            state: triggered
+          sequence:
+          - action: light.turn_on
+            target:
+              entity_id:
+              - light.alle_flur_lichter
+              - light.alle_schlafzimmer_lichter
+              - light.alle_wohnzimmer_lichter
+              - light.alle_kuche_lichter
+              - light.alle_badezimmer_lichter
+              - light.alle_kinderzimmer_lichter
+              - light.alle_arbeitszimmer_lichter
+              - light.alle_flur_nachtlichter
+            data:
+              rgb_color:
+              - 255
+              - 0
+              - 0
+              brightness_pct: 100
+              transition: 0
+          - delay:
+              milliseconds: 500
+          - action: light.turn_on
+            target:
+              entity_id:
+              - light.alle_flur_lichter
+              - light.alle_schlafzimmer_lichter
+              - light.alle_wohnzimmer_lichter
+              - light.alle_kuche_lichter
+              - light.alle_badezimmer_lichter
+              - light.alle_kinderzimmer_lichter
+              - light.alle_arbeitszimmer_lichter
+              - light.alle_flur_nachtlichter
+            data:
+              brightness_pct: 10
+              transition: 0
+          - delay:
+              milliseconds: 500
+    - sequence:
+      - alias: Lautstärke auf Maximum
+        action: media_player.volume_set
+        target:
+          entity_id: media_player.homepod_badezimmer
+        data:
+          volume_level: 1
+      - alias: Sirene in Schleife abspielen
+        repeat:
+          while:
+          - condition: state
+            entity_id: alarm_control_panel.alarmo
+            state: triggered
+          sequence:
+          - action: media_player.play_media
+            data:
+              media_content_id: media-source://media_source/local/Synology/Mountain
+                Audio - Alarm.mp3
+              media_content_type: audio/x-wav
+            target:
+              entity_id: media_player.homepods
+          - delay:
+              seconds: 5
+  fields:
+    test_mode:
+      description: Testmodus - leiser Alarm und kürzere Dauer
+      example: false
+      default: false
+      selector:
+        boolean:
+alarm_deactivate:
+  alias: Alarm deaktivieren
+  description: Deaktiviert Alarm und stellt ursprünglichen Zustand wieder her
+  icon: mdi:alarm-light-outline
+  mode: single
+  sequence:
+  - action: media_player.media_stop
+    target:
+      entity_id: media_player.homepod_badezimmer
+    data: {}
+  - action: media_player.volume_set
+    data:
+      volume_level: "{% if now().hour >= 22 or now().hour < 7 %}\n  0.2\n{% else %}\n
+        \ 0.4\n{% endif %}\n"
+    target:
+      entity_id: media_player.homepods
+  - action: scene.turn_on
+    target:
+      entity_id: scene.alarm_restore_scene
+    data: {}
+  - delay:
+      seconds: 2
+  - action: switch.turn_on
+    target:
+      entity_id:
+      - switch.adaptive_lighting_arbeitszimmer
+      - switch.adaptive_lighting_flur
+      - switch.adaptive_lighting_kueche
+      - switch.adaptive_lighting_wohnzimmer
+      - switch.adaptive_lighting_badezimmer
+    data: {}
+tts_random_greeting:
+  alias: TTS Zufällige Begrüßung
+  description: Spielt eine zufällige Begrüßung über TTS ab
+  icon: mdi:account-voice
+  mode: single
+  fields:
+    speaker:
+      description: Ziel-Lautsprecher
+      example: media_player.homepod_wohnzimmer_balkon
+      default: media_player.homepod_wohnzimmer_balkon
+      required: true
+      selector:
+        entity:
+          domain: media_player
+  sequence:
+  - action: tts.picotts_say
+    target:
+      entity_id: '{{ speaker }}'
+    data:
+      message: "{{ [\"Hallo Hand\", \"Hallo Maus\", \"Hallo Hase\", \n    \"Willkommen
+        zu Hause\", \"Schön dass du da bist\"] | random }}\n"
+      language: de-DE
+notification_with_icon:
+  alias: Benachrichtigung mit Icon
+  description: Sendet formatierte Benachrichtigung an Gerät
+  icon: mdi:message-alert
+  mode: parallel
+  max: 10
+  fields:
+    title:
+      description: Titel der Benachrichtigung
+      example: Smart Home Alert
+      required: true
+    message:
+      description: Nachrichtentext
+      example: Fenster ist offen
+      required: true
+    icon:
+      description: Icon für die Benachrichtigung
+      example: mdi:window-open
+      default: mdi:information
+    icon_color:
+      description: Icon-Farbe als RGB-Array
+      example: '[255, 0, 0]'
+      default: '[0, 123, 255]'
+    timeout_seconds:
+      description: Timeout in Sekunden
+      example: 30
+      default: 10
+      selector:
+        number:
+          min: 5
+          max: 300
+          unit_of_measurement: s
+  sequence:
+  - action: notify.mobile_app_alex_iphone
+    data:
+      title: '{{ title }}'
+      message: '{{ message }}'
+      data:
+        notification_icon: '{{ icon }}'
+        color: '{{ icon_color | default([0, 123, 255]) }}'
+        timeout: '{{ timeout_seconds | int(10) }}'
+        tag: smart_home_notification
+fade_volume:
+  alias: Fade Volume
+  mode: restart
+  fields:
+    target_player:
+      name: Target media player
+      description: Target media player of volume fade.
+      required: true
+      example: media_player.wohnzimmer_homepod
+      selector:
+        entity:
+          domain: media_player
+    target_volume:
+      name: Target volume
+      description: Volume the media play will be at the end of the fade duration.
+      required: true
+      default: 0.5
+      example: '0.5'
+      selector:
+        number:
+          max: 1
+          min: 0
+          step: 0.01
+          mode: slider
+    duration:
+      name: Fade duration
+      description: Length of time in seconds the fade should take.
+      required: true
+      default: 5
+      example: '5'
+      selector:
+        number:
+          mode: box
+          min: 0
+          max: 100000
+          unit_of_measurement: s
+    curve:
+      name: Fade curve algorithm
+      description: Shape of the fade curve to apply.
+      required: true
+      default: logarithmic
+      example: logarithmic
+      selector:
+        select:
+          options:
+          - logarithmic
+          - bezier
+          - linear
+  variables:
+    steps_per_second: 10
+    total_steps: '{{ (steps_per_second * duration) | int(0) }}'
+    start_volume: "{% set current = state_attr(target_player, 'volume_level') | float(0)
+      %} {% if current < 0.01 %}\n  0\n{% else %}\n  {{ current }}\n{% endif %}\n"
+    volume_diff: '{{ (target_volume - start_volume) | float(0) }}'
+  sequence:
+  - if:
+    - condition: template
+      value_template: '{{ start_volume < 0.01 and volume_diff > 0 }}'
+    then:
+    - action: media_player.volume_set
+      data:
+        entity_id: '{{ target_player }}'
+        volume_level: 0
+    - delay: '00:00:00.5'
+  - repeat:
+      while:
+      - condition: template
+        value_template: '{{ repeat.index <= total_steps }}'
+      - condition: template
+        value_template: '{{ ((state_attr(target_player, ''volume_level'') | float(0)
+          - target_volume) | abs) > 0.001 }}'
+      sequence:
+      - action: media_player.volume_set
+        data:
+          entity_id: '{{ target_player }}'
+          volume_level: "{% set progress = repeat.index / total_steps %} {% set current_start
+            = state_attr(target_player, 'volume_level') | float(0) %}\n{# Sicherheit:
+            Nie über Ziel hinaus #} {% if progress >= 1 %}\n  {{ target_volume }}\n{%
+            else %}\n  {% if curve == 'logarithmic' %}\n    {# Verbesserte logarithmische
+            Kurve - startet bei 0 #}\n    {% set log_value = (progress * progress
+            * progress) %}\n    {{ (start_volume + log_value * volume_diff) | float(0)
+            | round(3) }}\n  {% elif curve == 'bezier' %}\n    {# Smooth S-Kurve #}\n
+            \   {% set bezier_value = progress * progress * (3 - 2 * progress) %}\n
+            \   {{ (start_volume + bezier_value * volume_diff) | float(0) | round(3)
+            }}\n  {% else %}\n    {# Linear #}\n    {{ (start_volume + progress *
+            volume_diff) | float(0) | round(3) }}\n  {% endif %}\n{% endif %}"
+      - delay:
+          milliseconds: '{{ (1000 / steps_per_second) | int }}'
+  - action: media_player.volume_set
+    data:
+      entity_id: '{{ target_player }}'
+      volume_level: '{{ target_volume }}'
+  - action: system_log.write
+    data:
+      message: 'Fade completed: {{ target_player }}  from {{ start_volume }} to {{
+        target_volume }}  in {{ duration }}s using {{ curve }} curve
+
+        '
+      level: debug
+  icon: mdi:tune-vertical
+  description: Smooth volume fading with multiple curve options

@@ -1,0 +1,349 @@
+# ============================================================================
+# HOME ASSISTANT CORE CONFIGURATION
+# ============================================================================
+
+# Configure a default setup of Home Assistant (frontend, api, etc)
+default_config:
+
+homeassistant:
+  # Multi-Factor Authentication
+  auth_mfa_modules:
+    - type: totp
+
+  # External URL for secure access
+  external_url: "https://ha.rafaelalex.de"
+
+  # Authentication providers
+  auth_providers:
+    - type: trusted_networks
+      trusted_networks:
+        - 192.168.178.0/24
+        - 127.0.0.1
+        - ::1
+      allow_bypass_login: false
+    - type: homeassistant
+
+  # REMINDERS / TODO SYSTEM
+  packages:
+    xtodo:
+      input_text:
+        xtodo_todos:
+          name: "Pending todos"
+          initial: ""
+          max: 255 # iOS sync limitation
+
+      script:
+        xtodo_create_todo:
+          alias: "Create new TODO"
+          mode: single
+          fields:
+            todo:
+              description: "Todo text to add"
+              example: "Buy groceries"
+              required: true
+          sequence:
+            - condition: template
+              value_template: "{{ todo is defined and todo | length > 0 }}"
+              alias: "Validate todo input"
+            - action: input_text.set_value
+              target:
+                entity_id: input_text.xtodo_todos
+              data:
+                value: >-
+                  {% set current = states('input_text.xtodo_todos') %}
+                  {% if current | length > 0 %}
+                    {{ current }}\n{{ todo }}
+                  {% else %}
+                    {{ todo }}
+                  {% endif %}
+
+# ============================================================================
+# NETWORK & SECURITY
+# ============================================================================
+
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 172.30.33.0/24
+    - 127.0.0.1
+    - 192.168.178.72
+    - 192.168.188.118
+    - ::1
+  ip_ban_enabled: true
+  login_attempts_threshold: 5
+  # SSL certificates (uncomment when using)
+  # ssl_certificate: /ssl/fullchain.pem
+  # ssl_key: /ssl/privkey.pem
+
+# ============================================================================
+# LOGGING & MONITORING
+# ============================================================================
+
+logger:
+  default: error
+  logs:
+    homeassistant.components: warning
+    homeassistant.components.http: error
+    homeassistant.components.automation: info
+    homeassistant.components.script: info
+    homeassistant.components.template: warning
+    homeassistant.components.mqtt: warning
+    homeassistant.components.recorder: warning
+    homeassistant.components.powercalc: info
+
+# Database optimization
+recorder:
+  purge_keep_days: 30
+  auto_purge: true
+  commit_interval: 30
+  db_url: !secret db_url
+  exclude:
+    domains:
+      - automation
+      - updater
+      - device_tracker
+      - persistent_notification
+      - script
+    entities:
+      - sensor.last_boot
+      - sensor.date
+      - sensor.time
+    entity_globs:
+      - sensor.*_battery_level
+      - sensor.*_rssi
+      - sensor.*_linkquality
+
+# History optimization (mirrors recorder excludes)
+history:
+  exclude:
+    domains:
+      - automation
+      - updater
+      - scene
+      - script
+    entity_globs:
+      - sensor.*_battery_level
+      - sensor.*_rssi
+
+# ============================================================================
+# COMMUNICATION & NOTIFICATIONS
+# ============================================================================
+
+mobile_app:
+cloud:
+
+# Text-to-Speech
+tts:
+  - platform: google_translate
+    cache: true
+    cache_dir: /tmp/tts
+    time_memory: 300
+  - platform: picotts
+    language: "de-DE"
+    cache: true
+
+# Notifications
+notify: !include notifies.yaml
+
+# Telegram (disabled)
+# telegram_bot:
+#   - platform: polling
+#     api_key: !secret telegram_api_key
+#     allowed_chat_ids:
+#       - 6310607652
+
+# ============================================================================
+# USER INTERFACE
+# ============================================================================
+
+frontend:
+  themes: !include_dir_merge_named themes
+
+# ============================================================================
+# EXTERNAL INTEGRATIONS
+# ============================================================================
+
+# Waste Collection Schedule
+waste_collection_schedule:
+  sources:
+    - name: abfallwirtschaft_fuerth_eu
+      args:
+        id: 102471001
+      customize:
+        - type: Restabfall
+          alias: Restmuell
+          icon: mdi:trash-can
+        - type: Bioabfall
+          alias: Bioabfall
+          icon: mdi:recycle
+        - type: Altpapier
+          alias: Papier
+          icon: mdi:newspaper
+        - type: "Gelber Sack"
+          alias: GelberSack
+          icon: mdi:recycle-variant
+  fetch_time: "04:00"
+  day_switch_time: "10:00"
+
+# Adaptive Lighting
+adaptive_lighting: !include adaptive_lighting.yaml
+
+# Power Calculation
+powercalc:
+  enable_autodiscovery: true
+  create_utility_meters: true
+  utility_meter_types:
+    - daily
+    - weekly
+    - monthly
+  power_sensor_naming: "{} Power"
+  power_sensor_friendly_naming: "{} Power"
+  energy_sensor_naming: "{} Energy"
+  energy_sensor_friendly_naming: "{} Energy"
+  energy_sensor_precision: 2
+  power_sensor_precision: 2
+  #sensors: !include powercalc.yaml
+
+# ============================================================================
+# TEMPLATE SENSORS
+# ============================================================================
+
+template:
+  # Vacuum/Robot sensors
+  - sensor:
+      - name: "Xiaomi Vacuum Charging State"
+        unique_id: xiaomi_vacuum_charging_state
+        icon: "mdi:battery-charging-medium"
+        state: >
+          {% if states('vacuum.robbi_2') == 'docked' %}
+            {% if state_attr('vacuum.robbi_2', 'battery_level') | int(0) < 100 %}
+              charging
+            {% else %}
+              docked
+            {% endif %}
+          {% elif states('vacuum.robbi_2') == 'cleaning' %}
+            cleaning
+          {% elif states('vacuum.robbi_2') == 'returning' %}
+            returning
+          {% else %}
+            idle
+          {% endif %}
+
+  # Time-based sensors
+  - sensor:
+      - name: "WakeUp Light Timestamp"
+        unique_id: wakeup_light_timestamp
+        device_class: timestamp
+        state: >
+          {% if is_state("binary_sensor.workday_sensor", "on") %}
+            {{ today_at(states('input_datetime.aufwachzeit_arbeitstag')) }}
+          {% else %}
+            {{ today_at(states('input_datetime.aufwachzeit_freier_tag')) }}
+          {% endif %}
+        availability: >
+          {{ states('binary_sensor.workday_sensor') not in ['unknown', 'unavailable'] and
+             states('input_datetime.aufwachzeit_arbeitstag') not in ['unknown', 'unavailable'] and
+             states('input_datetime.aufwachzeit_freier_tag') not in ['unknown', 'unavailable'] }}
+
+      - name: "Einschlafzeit Timestamp"
+        unique_id: einschlafzeit_timestamp
+        device_class: timestamp
+        state: >
+          {% if is_state("binary_sensor.tomorrow_workday_sensor", "on") %}
+            {{ today_at(states('input_datetime.einschlafzeit_arbeitstag')) }}
+          {% else %}
+            {{ today_at(states('input_datetime.einschlafzeit_freier_tag')) }}
+          {% endif %}
+        availability: >
+          {{ states('binary_sensor.tomorrow_workday_sensor') not in ['unknown', 'unavailable'] and
+             states('input_datetime.einschlafzeit_arbeitstag') not in ['unknown', 'unavailable'] and
+             states('input_datetime.einschlafzeit_freier_tag') not in ['unknown', 'unavailable'] }}
+
+  # Weather forecast sensor with trigger
+  - trigger:
+      - platform: time_pattern
+        minutes: "/30" # Every 30 minutes instead of every minute
+      - platform: homeassistant
+        event: start
+      - platform: event
+        event_type: event_template_reloaded
+    action:
+      - action: weather.get_forecasts
+        target:
+          entity_id: weather.fuerth_bayern
+        data:
+          type: daily
+        response_variable: daily_forecast
+    sensor:
+      - name: "Fürth Daily Forecast"
+        unique_id: fuerth_bayern_daily
+        state: "{{ states('weather.fuerth_bayern') }}"
+        attributes:
+          temperature: "{{ state_attr('weather.fuerth_bayern', 'temperature') }}"
+          dew_point: "{{ state_attr('weather.fuerth_bayern', 'dew_point') }}"
+          temperature_unit: "{{ state_attr('weather.fuerth_bayern', 'temperature_unit') }}"
+          humidity: "{{ state_attr('weather.fuerth_bayern', 'humidity') }}"
+          cloud_coverage: "{{ state_attr('weather.fuerth_bayern', 'cloud_coverage') }}"
+          pressure: "{{ state_attr('weather.fuerth_bayern', 'pressure') }}"
+          pressure_unit: "{{ state_attr('weather.fuerth_bayern', 'pressure_unit') }}"
+          wind_bearing: "{{ state_attr('weather.fuerth_bayern', 'wind_bearing') }}"
+          wind_gust_speed: "{{ state_attr('weather.fuerth_bayern', 'wind_gust_speed') }}"
+          wind_speed: "{{ state_attr('weather.fuerth_bayern', 'wind_speed') }}"
+          wind_speed_unit: "{{ state_attr('weather.fuerth_bayern', 'wind_speed_unit') }}"
+          visibility: "{{ state_attr('weather.fuerth_bayern', 'visibility') }}"
+          visibility_unit: "{{ state_attr('weather.fuerth_bayern', 'visibility_unit') }}"
+          precipitation: "{{ state_attr('weather.fuerth_bayern', 'precipitation') }}"
+          precipitation_unit: "{{ state_attr('weather.fuerth_bayern', 'precipitation_unit') }}"
+          forecast: "{{ daily_forecast['weather.fuerth_bayern'].forecast[:5] }}"
+
+utility_meter:
+  ac_energy_daily:
+    source: sensor.ac_total_energy
+    name: "AC Energie Täglich"
+    cycle: daily
+    
+  taglicher_netzbezug:
+    source: sensor.netzbezug_energie
+    name: "Täglicher Netzbezug"
+    cycle: daily
+    
+  tagliche_einspeisung:
+    source: sensor.einspeisung_energie
+    name: "Tägliche Einspeisung"
+    cycle: daily
+    
+  monatlicher_netzbezug:
+    source: sensor.netzbezug_energie
+    name: "Monatlicher Netzbezug"
+    cycle: monthly
+    
+  monatliche_einspeisung:
+    source: sensor.einspeisung_energie
+    name: "Monatliche Einspeisung"
+    cycle: monthly
+
+# ============================================================================
+# EXTERNAL FILE INCLUDES
+# ============================================================================
+
+automation: !include_dir_merge_list automations_new/
+script: !include scripts.yaml
+scene: !include scenes.yaml
+sensor: !include sensors.yaml
+binary_sensor: !include binary_sensors.yaml
+group: !include groups.yaml
+light: !include lights.yaml
+timer: !include timers.yaml
+climate: !include climates.yaml
+
+# ============================================================================
+# SYSTEM FEATURES
+# ============================================================================
+
+python_script:
+system_health:
+energy:
+backup:
+
+
+  
