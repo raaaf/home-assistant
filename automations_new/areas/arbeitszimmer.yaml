@@ -65,10 +65,6 @@
         target:
           entity_id: input_boolean.arbeit
         data: {}
-      - action: switch.turn_off
-        target:
-          entity_id: switch.adaptive_lighting_arbeitszimmer
-        data: {}
       - delay:
           seconds: 0.5
       - action: light.turn_on
