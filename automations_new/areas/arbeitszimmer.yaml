@@ -37,8 +37,8 @@
     - not_home
     - unknown
     id: gaming-off
-  conditions: []
-  actions:
+  condition: []
+  action:
   - choose:
     - alias: Arbeit einschalten
       conditions:
@@ -88,8 +88,8 @@
             id: gaming-off
         - alias: Alle Arbeits- und Gaming-Geräte sind aus
           condition: template
-          value_template: "{{ states('input_boolean.gaming') == 'off' and\n   states('binary_sensor.macbook_air_von_alexandra_active')\
-            \ == 'off' and\n   states('binary_sensor.macbook_pro_rafael_active') ==\
+          value_template: "{{ has_value('input_boolean.gaming') and states('input_boolean.gaming') == 'off' and\n   has_value('binary_sensor.macbook_air_von_alexandra_active') and states('binary_sensor.macbook_air_von_alexandra_active')\
+            \ == 'off' and\n   has_value('binary_sensor.macbook_pro_rafael_active') and states('binary_sensor.macbook_pro_rafael_active') ==\
             \ 'off' }}\n"
       sequence:
       - action: input_boolean.turn_off

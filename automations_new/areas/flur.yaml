@@ -8,7 +8,7 @@
     > 20 für je 1 Minute). Verhindert unnötige Schaltzyklen durch Hysterese.
 
     '
-  triggers:
+  trigger:
   - trigger: numeric_state
     entity_id: sensor.zhimi_vb4_bce4_pm25_density
     below: 10
@@ -21,8 +21,8 @@
     for:
       minutes: 1
     id: poor
-  conditions: []
-  actions:
+  condition: []
+  action:
   - choose:
     - alias: Luftqualität exzellent - Luftreiniger ausschalten
       conditions:
@@ -34,8 +34,7 @@
         state: 'on'
       - alias: Sensor ist verfügbar
         condition: template
-        value_template: '{{ states(''sensor.zhimi_vb4_bce4_pm25_density'') not in
-          [''unknown'', ''unavailable''] }}
+        value_template: '{{ has_value(''sensor.zhimi_vb4_bce4_pm25_density'') }}
 
           '
       sequence:
@@ -53,8 +52,7 @@
         state: 'off'
       - alias: Sensor ist verfügbar
         condition: template
-        value_template: '{{ states(''sensor.zhimi_vb4_bce4_pm25_density'') not in
-          [''unknown'', ''unavailable''] }}
+        value_template: '{{ has_value(''sensor.zhimi_vb4_bce4_pm25_density'') }}
 
           '
       sequence:
@@ -96,7 +94,7 @@
   alias: Flur » Robbi
   description: Steuert Staubsauger-Roboter mit verschiedenen Reinigungsplänen und
     Sonderreinigungen
-  triggers:
+  trigger:
   - trigger: time
     at: 06:00:00
     id: reset
@@ -115,8 +113,8 @@
     entity_id: vacuum.robbi_2
     to: returning
     id: empty
-  conditions: []
-  actions:
+  condition: []
+  action:
   - choose:
     - alias: Täglicher Reset um 6:00 Uhr
       conditions:
@@ -166,8 +164,7 @@
         state: 'off'
       - alias: Robbi ist verfügbar
         condition: template
-        value_template: '{{ states(''vacuum.robbi_2'') not in [''unknown'', ''unavailable'',
-          ''cleaning'', ''returning''] }}
+        value_template: '{{ has_value(''vacuum.robbi_2'') and states(''vacuum.robbi_2'') not in [''cleaning'', ''returning''] }}
 
           '
       sequence:
@@ -200,8 +197,7 @@
         state: 'off'
       - alias: Robbi ist verfügbar
         condition: template
-        value_template: '{{ states(''vacuum.robbi_2'') not in [''unknown'', ''unavailable'',
-          ''cleaning'', ''returning''] }}
+        value_template: '{{ has_value(''vacuum.robbi_2'') and states(''vacuum.robbi_2'') not in [''cleaning'', ''returning''] }}
 
           '
       sequence:
@@ -237,7 +233,7 @@
         state: 'on'
       - alias: Reinigung dauerte mindestens 15 Minuten
         condition: template
-        value_template: '{{ states(''sensor.roborock_a27_737e_props_clean_time'')
+        value_template: '{{ has_value(''sensor.roborock_a27_737e_props_clean_time'') and states(''sensor.roborock_a27_737e_props_clean_time'')
           | int(0) >= 15 }}
 
           '
@@ -247,8 +243,7 @@
         before: '20:00:00'
       - alias: Robbi ist verfügbar für Küche
         condition: template
-        value_template: '{{ states(''vacuum.robbi_2'') not in [''unknown'', ''unavailable'',
-          ''cleaning''] }}
+        value_template: '{{ has_value(''vacuum.robbi_2'') and states(''vacuum.robbi_2'') not in [''cleaning''] }}
 
           '
       sequence:

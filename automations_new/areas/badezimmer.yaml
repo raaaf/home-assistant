@@ -8,7 +8,7 @@
     an, <59 % aus)
 
     '
-  triggers:
+  trigger:
   - entity_id: sensor.badezimmer_temperatur_und_luftfeuchtigkeit_humidity
     above: 65
     id: above
@@ -45,7 +45,7 @@
 - id: '1647715674725'
   alias: Scenen » Sauna
   description: Aktiviert Sauna-Modus mit spezieller Beleuchtung, Lüftung und Rollosteuerung
-  triggers:
+  trigger:
   - entity_id:
     - input_boolean.sauna
     to: 'on'
@@ -117,7 +117,7 @@
 - id: '1662822489094'
   alias: Scenen » Baden
   description: Aktiviert Bade-Modus mit spezieller Beleuchtung und deaktiviert Bewegungsmelder
-  triggers:
+  trigger:
   - entity_id:
     - input_boolean.baden
     to: 'on'
@@ -220,7 +220,7 @@
   alias: Dusche » Licht, Lüftung und Duschzeit
   description: Steuert Licht und Lüftung beim Duschen, misst Duschzeit und sendet
     Benachrichtigung.
-  triggers:
+  trigger:
   - entity_id: binary_sensor.badezimmer_vibration
     to: 'on'
     id: vibration_detected
@@ -341,7 +341,7 @@
 - id: '1744713746266'
   alias: Scenen » Duschen
   description: Aktiviert spezielle Badezimmerbeleuchtung fürs Duschen
-  triggers:
+  trigger:
   - entity_id:
     - input_boolean.duschen
     to: 'on'
@@ -414,7 +414,7 @@
   alias: Scenen » Duschen Blinklicht
   description: Blinkt alle 5 Minuten aktive Badezimmerlichter, wenn Duschen aktiv
     ist
-  triggers:
+  trigger:
   - minutes: /5
     trigger: time_pattern
   conditions:
@@ -447,7 +447,7 @@
 - id: '1745925395920'
   alias: Motion » Dusche
   description: 'Bewegungsgesteuertes Licht für die Dusche'
-  triggers:
+  trigger:
   - trigger: state
     entity_id:
     - binary_sensor.motion_dusche_occupancy

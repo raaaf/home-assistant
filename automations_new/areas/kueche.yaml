@@ -5,7 +5,7 @@
 - id: '1664992050125'
   alias: Scenen » Küche
   description: Aktiviert spezielle Küchenbeleuchtung für Kochmodus
-  triggers:
+  trigger:
   - entity_id:
     - input_boolean.kochen
     to: 'on'
@@ -16,8 +16,8 @@
     to: 'off'
     id: 'off'
     trigger: state
-  conditions: []
-  actions:
+  condition: []
+  action:
   - choose:
     - conditions:
       - condition: trigger
@@ -122,7 +122,7 @@
 - id: '1744713615211'
   alias: Scenen » Essen
   description: Aktiviert spezielle Küchenbeleuchtung für Kochmodus
-  triggers:
+  trigger:
   - entity_id:
     - input_boolean.essen
     to: 'on'
@@ -133,8 +133,8 @@
     to: 'off'
     id: 'off'
     trigger: state
-  conditions: []
-  actions:
+  condition: []
+  action:
   - choose:
     - conditions:
       - condition: trigger

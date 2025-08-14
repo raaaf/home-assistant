@@ -43,7 +43,7 @@
     und Uhrzeit (23 Uhr), nur im Sommer bei gutem Wetter und wenn jemand da ist.
 
     '
-  triggers:
+  trigger:
   - entity_id: sun.sun
     attribute: elevation
     below: -5
@@ -52,7 +52,7 @@
   - at: '23:00:00'
     id: licht-aus
     trigger: time
-  conditions:
+  condition:
   - condition: state
     entity_id: sensor.season
     state: summer
@@ -69,7 +69,7 @@
     - partlycloudy
     - windy
     - windy-variant
-  actions:
+  action:
   - choose:
     - conditions:
       - condition: trigger

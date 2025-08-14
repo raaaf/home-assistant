@@ -5,7 +5,7 @@
 - id: '1642114646798'
   alias: Wohnzimmer » Film
   description: Aktiviert Kinomodus mit Ambilight wenn Medien abgespielt werden
-  triggers:
+  trigger:
   - entity_id:
     - media_player.denon_avr_x3200w
     to: 'off'
@@ -163,7 +163,7 @@
 - id: '1671133998236'
   alias: Wohnzimmer » Weihnachtsbaum
   description: Steuert Weihnachtsbaum-Beleuchtung mit erweiterten Features
-  triggers:
+  trigger:
   - event: sunset
     offset: -00:30:00
     id: sunset
@@ -266,7 +266,7 @@
   alias: Scenen » Party Wohnzimmer
   description: Aktiviert Party-Modus im Wohnzimmer mit dynamischer Beleuchtung und
     deaktivierten Bewegungsmeldern
-  triggers:
+  trigger:
   - entity_id:
     - input_boolean.party_wohnzimmer
     to: 'on'
@@ -364,7 +364,7 @@
 - id: '1744714272996'
   alias: Scenen » Esstisch reinigen
   description: 'Helles Licht zum Reinigen des Esstisch Bereichs'
-  triggers:
+  trigger:
   - entity_id:
     - input_boolean.esstisch
     to: 'on'

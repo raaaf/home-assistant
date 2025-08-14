@@ -41,7 +41,7 @@
     - Jahreszeit und Monat - Sonnenuntergang - Wetter und Helligkeit - Temperatur
 
     '
-  triggers:
+  trigger:
   - at: 00:10:00
     trigger: time
   conditions: []
@@ -52,16 +52,16 @@
       basis_aufwach_schultag: 06:30:00
       basis_aufwach_wochenende: 07:00:00
       aktueller_monat: '{{ now().month | int }}'
-      aussentemperatur: '{{ state_attr(''weather.fuerth_bayern'', ''temperature'')
-        | float(20) }}'
-      helligkeit_draussen: '{{ states(''sensor.balkon_motion_illuminance'') | float(100)
-        }}'
-      wetter: '{{ states(''weather.fuerth_bayern'') }}'
+      aussentemperatur: '{% if has_value(''weather.fuerth_bayern'') %}{{ state_attr(''weather.fuerth_bayern'', ''temperature'')
+        | float(20) }}{% else %}20{% endif %}'
+      helligkeit_draussen: '{% if has_value(''sensor.balkon_motion_illuminance'') %}{{ states(''sensor.balkon_motion_illuminance'') | float(100)
+        }}{% else %}100{% endif %}'
+      wetter: '{% if has_value(''weather.fuerth_bayern'') %}{{ states(''weather.fuerth_bayern'') }}{% else %}sunny{% endif %}'
       sonnenuntergang_zeit: "{% set su = state_attr('sun.sun', 'next_setting') %}\
         \ {% if su %}\n  {{ (su | as_datetime | as_local).strftime('%H:%M') }}\n{%\
         \ else %}\n  20:00\n{% endif %}\n"
-      helligkeit_offset: "{% set lux = states('sensor.balkon_motion_illuminance')\
-        \ | float(100) %} {% if lux < 10 %}\n  {{ -20 }}\n{% elif lux < 50 %}\n  {{\
+      helligkeit_offset: "{% if has_value('sensor.balkon_motion_illuminance') %}{% set lux = states('sensor.balkon_motion_illuminance')\
+        \ | float(100) %}{% else %}{% set lux = 100 %} {% if lux < 10 %}\n  {{ -20 }}\n{% elif lux < 50 %}\n  {{\
         \ -10 }}\n{% elif lux < 200 %}\n  {{ 0 }}\n{% elif lux < 1000 %}\n  {{ 10\
         \ }}\n{% else %}\n  {{ 15 }}\n{% endif %}\n"
       saison_offset_einschlaf: "{% set m = now().month | int %} {% if m == 12 or m\
@@ -81,13 +81,13 @@
         \ < 19 %}\n    {{ 0 }}\n  {% elif stunde < 20 %}\n    {{ 10 }}\n  {% elif\
         \ stunde < 21 %}\n    {{ 20 }}\n  {% else %}\n    {{ 30 }}\n  {% endif %}\n\
         {% else %}\n  {{ 0 }}\n{% endif %}\n"
-      wetter_offset: "{% set w = states('weather.fuerth_bayern') %} {% set temp =\
-        \ state_attr('weather.fuerth_bayern', 'temperature') | float(20) %} {% if\
+      wetter_offset: "{% if has_value('weather.fuerth_bayern') %}{% set w = states('weather.fuerth_bayern') %} {% set temp =\
+        \ state_attr('weather.fuerth_bayern', 'temperature') | float(20) %}{% else %}{% set w = 'sunny' %}{% set temp = 20 %} {% if\
         \ w == 'rainy' or w == 'pouring' or w == 'lightning-rainy' %}\n  {{ -15 }}\n\
         {% elif w == 'sunny' and temp > 25 %}\n  {{ 15 }}\n{% elif w == 'partlycloudy'\
         \ and temp > 25 %}\n  {{ 10 }}\n{% else %}\n  {{ 0 }}\n{% endif %}\n"
-      temp_offset: "{% set t = state_attr('weather.fuerth_bayern', 'temperature')\
-        \ | float(20) %} {% if t < 5 %}\n  {{ -10 }}\n{% elif t > 28 %}\n  {{ 20 }}\n\
+      temp_offset: "{% if has_value('weather.fuerth_bayern') %}{% set t = state_attr('weather.fuerth_bayern', 'temperature')\
+        \ | float(20) %}{% else %}{% set t = 20 %} {% if t < 5 %}\n  {{ -10 }}\n{% elif t > 28 %}\n  {{ 20 }}\n\
         {% else %}\n  {{ 0 }}\n{% endif %}\n"
       gesamt_offset_einschlaf_schultag: '{% set total = saison_offset_einschlaf|int
         + sonnenuntergang_offset|int + helligkeit_offset|int + wetter_offset|int +

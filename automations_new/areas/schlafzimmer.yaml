@@ -52,18 +52,18 @@
     wenn sie wieder verfügbar sind – aber nur wenn jemand zu Hause ist.
 
     '
-  triggers:
+  trigger:
   - entity_id: switch.schlafzimmer_steckdose
     from: unavailable
     trigger: state
   - entity_id: switch.arbeitszimmer_steckdose
     from: unavailable
     trigger: state
-  conditions:
+  condition:
   - condition: state
     entity_id: input_boolean.alle_sind_weg
     state: 'off'
-  actions:
+  action:
   - choose:
     - conditions:
       - condition: state
