@@ -25,7 +25,7 @@
     value_template: >-
       {% set props = state_attr('vacuum.robbi_2', 'props') %}
       {{ props is not none and 
-         props.sensor_dirty_time | int(9999) < 5000 }}
+         props.get('sensor_dirty_time', 9999) | int(9999) < 5000 }}
     id: sensoren
   conditions:
   - alias: "Nicht öfter als alle 12 Stunden triggern"
@@ -174,7 +174,7 @@
             variables:
               todo: >-
                 Robbi » Sensoren reinigen ({{ 
-                  state_attr('vacuum.robbi_2', 'props').sensor_dirty_time | default('unbekannt') 
+                  state_attr('vacuum.robbi_2', 'props').get('sensor_dirty_time', 'unbekannt') 
                 }} verbleibend)
         # TTS Ansage für Sensoren-Reinigung
         - action: script.hausgeraete_ansage
@@ -193,7 +193,7 @@
                 title: "🤖 Robbi Wartung"
                 message: >-
                   Sensoren reinigen ({{ 
-                    state_attr('vacuum.robbi_2', 'props').sensor_dirty_time | default('unbekannt') 
+                    state_attr('vacuum.robbi_2', 'props').get('sensor_dirty_time', 'unbekannt') 
                   }} verbleibend)
     default:
     # Fallback wenn unbekannter Trigger

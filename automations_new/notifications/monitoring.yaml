@@ -111,7 +111,7 @@
   alias: Helper » Unbekannte Geräte reparieren
   description: Versucht Geräte mit 'unknown' Status zu reaktivieren
   triggers:
-  - minutes: /60
+  - minutes: 0
     trigger: time_pattern
   - event: start
     trigger: homeassistant
@@ -123,10 +123,10 @@
       unknown_count: '{{ unknown_devices | length }}'
   - condition: template
     value_template: "{{ unknown_count | int > 0 }}"
-  - data:
+  - action: system_log.write
+    data:
       message: Found {{ unknown_count }} devices with unknown state - attempting recovery
       level: info
-    action: system_log.write
   - if:
     - condition: template
       value_template: '{{ unknown_devices | selectattr(''entity_id'', ''match'', ''.*_motion_.*|.*_kontaktsensor_.*'')
@@ -134,13 +134,13 @@
 
         '
     then:
-    - data:
+    - action: system_log.write
+      data:
         message: "ZHA permit mode activated for unknown motion/contact sensors (60s)"
         level: warning
-      action: system_log.write
-    - data:
+    - action: zha.permit
+      data:
         duration: 60
-      action: zha.permit
     - delay: 00:00:02
     - action: homeassistant.update_entity
       target:
@@ -191,10 +191,10 @@
         \ 'last_triggered') %}\n    {{ last is none or (now() - last).total_seconds()\
         \ > 3600 }}"
     then:
-    - data:
+    - action: system_log.write
+      data:
         message: Außensensor offline - prüfe Batterie!
         level: warning
-      action: system_log.write
     - parallel:
         # TTS Ansage über HomePods
         - action: script.hausgeraete_ansage

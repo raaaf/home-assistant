@@ -6,6 +6,8 @@
   alias: Helpers » Fenster / Türen
   description: Intelligente Warnanzeige für offene Fenster/Türen mit Eskalation, Wetterberücksichtigung
     und adaptiver Beleuchtung
+  mode: restart
+  max_exceeded: silent
   triggers:
   - trigger: state
     entity_id: binary_sensor.fenster_tueren
@@ -71,17 +73,19 @@
         state: 'on'
       sequence:
       - alias: Push-Benachrichtigung beim Verlassen
-        action: notify.family
-        data:
-          title: 🏠 Fenster/Türen noch offen!
-          message: 'Beim Verlassen des Hauses: {{ open_elements }} {% if is_cold_outside
-            %}(Außentemperatur: {{ states(''sensor.temperatur_aussen'') }}°C){% endif
-            %}{% if is_bad_weather %} - Schlechtes Wetter!{% endif %}
-
-            '
+        if:
+        - condition: template
+          value_template: '{{ has_value(''notify.family'') }}'
+        then:
+        - action: notify.family
           data:
-            priority: high
-            tag: fenster_tueren_verlassen
+            title: 🏠 Fenster/Türen noch offen!
+            message: 'Beim Verlassen des Hauses: {{ open_elements }} {% if is_cold_outside
+              %}(Außentemperatur: {{ states(''sensor.temperatur_aussen'') }}°C){% endif
+              %}{% if is_bad_weather %} - Schlechtes Wetter!{% endif %}'
+            data:
+              priority: high
+              tag: fenster_tueren_verlassen
       - alias: Verlassen mit offenen Fenstern loggen
         action: logbook.log
         data:
@@ -99,10 +103,7 @@
         state: 'off'
       - alias: Aqara Hub ist verfügbar
         condition: template
-        value_template: '{{ states(''light.aqara_hub_lightbulb'') not in [''unknown'',
-          ''unavailable''] }}
-
-          '
+        value_template: '{{ has_value(''light.aqara_hub_lightbulb'') }}'
       - alias: Warnung auch nachts nur bei kritischen Situationen
         condition: or
         conditions:
@@ -123,10 +124,8 @@
           brightness_pct: "{% if is_critical_situation %}\n  60\n{% elif is_night_quiet_hours\
             \ %}\n  15  # Gedämpft nachts\n{% else %}\n  {{ min(25 + (open_duration_minutes\
             \ * 2), 50) | int }}\n{% endif %}\n"
-          effect: '{{ ''colorloop'' if (heating_active and (is_cold_outside or is_bad_weather))
-            else ''none'' }}
-
-            '
+          effect: '{{ ''color_loop'' if (is_critical_situation and heating_active)
+            else ''none'' }}'
       - alias: Pulsierende Warnung bei kritischen Bedingungen
         if:
         - condition: template
@@ -167,10 +166,7 @@
         state: 'off'
       - alias: Aqara Hub ist verfügbar
         condition: template
-        value_template: '{{ states(''light.aqara_hub_lightbulb'') not in [''unknown'',
-          ''unavailable''] }}
-
-          '
+        value_template: '{{ has_value(''light.aqara_hub_lightbulb'') }}'
       sequence:
       - alias: Intensivere Warnbeleuchtung
         action: light.turn_on
@@ -184,9 +180,7 @@
           brightness_pct: '{{ 80 if is_critical_situation else 60 }}
 
             '
-          effect: '{{ ''colorloop'' if is_critical_situation else ''none'' }}
-
-            '
+          effect: '{{ ''color_loop'' if is_critical_situation else ''none'' }}'
       - alias: Eskalation in Logbuch eintragen
         action: logbook.log
         data:
@@ -202,10 +196,7 @@
         id: closed
       - alias: Aqara Hub ist verfügbar
         condition: template
-        value_template: '{{ states(''light.aqara_hub_lightbulb'') not in [''unknown'',
-          ''unavailable''] }}
-
-          '
+        value_template: '{{ has_value(''light.aqara_hub_lightbulb'') }}'
       sequence:
       - alias: Warnbeleuchtung ausschalten
         action: light.turn_off
@@ -223,10 +214,7 @@
     - alias: Fehlerbehandlung - Hub nicht verfügbar
       conditions:
       - condition: template
-        value_template: '{{ states(''light.aqara_hub_lightbulb'') in [''unknown'',
-          ''unavailable''] }}
-
-          '
+        value_template: '{{ not has_value(''light.aqara_hub_lightbulb'') }}'
       - alias: Jemand ist zuhause (keine Alternative bei Abwesenheit)
         condition: state
         entity_id: input_boolean.alle_sind_weg
@@ -238,10 +226,7 @@
           name: Fenster/Türen Warnung Fehler
           message: 'Aqara Hub nicht verfügbar - Warnung konnte nicht {{ ''aktiviert''
             if trigger.id == ''open'' else ''deaktiviert'' }} werden. Status: {{ states(''light.aqara_hub_lightbulb'')
-            }}.
-
-            '
-  mode: restart
+            }}.'
 - id: '1740754575040'
   alias: System » Zentrale Fehlerbehandlung
   description: Verarbeitet alle Systemfehler zentral und reagiert entsprechend
@@ -252,56 +237,59 @@
     - input_text.fehlerprotokoll
     trigger: state
   conditions:
-  - condition: template
-    value_template: '{{ trigger.platform == ''event'' or (trigger.platform == ''state''
-      and trigger.to_state.state != trigger.from_state.state) }}'
-  - condition: state
-    entity_id: input_boolean.fehlerbenachrichtigungen_aktiv
-    state: 'on'
+  - "{{ trigger.platform == 'event' or (trigger.platform == 'state'
+      and trigger.to_state.state != trigger.from_state.state) }}"
   actions:
   - variables:
       error_message: "{% if trigger.platform == 'event' %}\n  {{ trigger.event.data.message\
         \ }}\n{% else %}\n  {{ trigger.to_state.state }}\n{% endif %}\n"
       error_severity: "{% if trigger.platform == 'event' %}\n  {{ trigger.event.data.severity\
-        \ | default('Warnung') }}\n{% else %}\n  {{ states('input_select.fehlerbenachrichtigungen_aktiv')\
-        \ }}\n{% endif %}\n"
+        \ | default('Warnung') }}\n{% else %}\n  {{ 'Info' }}\n{% endif %}"
       error_entity: "{% if trigger.platform == 'event' %}\n  {{ trigger.event.data.entity_id\
-        \ | default('unbekannt') }}\n{% else %}\n  {{ trigger.event.data.entity_id\
-        \ | default('unbekannt') }}\n{% endif %}\n"
+        \ | default('unbekannt') }}\n{% else %}\n  {{ trigger.entity_id | default('unbekannt') }}\n{% endif %}"
   - data:
       name: Systemfehler
       message: '{{ error_severity }}: {{ error_message }} ({{ error_entity }})'
     action: logbook.log
-  - choose:
-    - conditions:
+  - if:
       - condition: template
-        value_template: '{{ error_severity == ''Kritisch'' }}'
-      sequence:
-      - data:
-          title: ⚠️ KRITISCHER FEHLER ⚠️
-          message: '{{ error_message }}'
-          data:
-            push:
-              interruption-level: critical
-        action: notify.family
-    - conditions:
-      - condition: template
-        value_template: '{{ error_severity == ''Warnung'' }}'
-      sequence:
-      - data:
-          title: ⚠️ System-Warnung
-          message: '{{ error_message }}'
-          data:
-            push:
-              interruption-level: time-sensitive
-        action: notify.family
-    default:
-    - data:
-        title: ℹ️ System-Info
-        message: '{{ error_message }}'
+        value_template: '{{ has_value(''notify.admin_only'') }}'
+    then:
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ error_severity == 'Kritisch' }}"
+            sequence:
+            - action: notify.admin_only
+              data:
+                title: ⚠️ KRITISCHER FEHLER ⚠️
+                message: '{{ error_message }}'
+                data:
+                  push:
+                    interruption-level: critical
+          - conditions:
+              - condition: template
+                value_template: "{{ error_severity == 'Warnung' }}"
+            sequence:
+            - action: notify.admin_only
+              data:
+                title: ⚠️ System-Warnung
+                message: '{{ error_message }}'
+                data:
+                  push:
+                    interruption-level: time-sensitive
+        default:
+          - action: notify.admin_only
+            data:
+              title: ℹ️ System-Info
+              message: '{{ error_message }}'
+              data:
+                push:
+                  interruption-level: passive
+    else:
+      - action: logbook.log
         data:
-          push:
-            interruption-level: passive
-      action: notify.family
+          name: Benachrichtigung Fehler
+          message: 'Admin notification service nicht verfügbar für Fehler: {{ error_message }}'
   mode: queued
   max: 10

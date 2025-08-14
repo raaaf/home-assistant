@@ -1,0 +1,239 @@
+# System - Monitor.yaml
+# System health monitoring and performance tracking
+# Part of Home Assistant configuration
+
+- id: 'system_health_monitor'
+  alias: System » Health Monitor
+  description: Überwacht Systemzustand, Performance und kritische Metriken
+  mode: queued
+  max: 5
+  triggers:
+  - trigger: time_pattern
+    minutes: "/15"
+    id: periodic_check
+  - trigger: numeric_state
+    entity_id: sensor.processor_use
+    above: 90
+    for: "00:05:00"
+    id: high_cpu
+  - trigger: numeric_state
+    entity_id: sensor.memory_use_percent
+    above: 90
+    for: "00:05:00" 
+    id: high_memory
+  - trigger: numeric_state
+    entity_id: sensor.disk_use_percent_home
+    above: 90
+    id: high_disk
+  - trigger: state
+    entity_id:
+      - sensor.hacs
+      - sensor.supervisor_updates
+    id: updates_available
+  conditions: []  # Always enabled
+  actions:
+  - variables:
+      cpu_usage: "{{ states('sensor.processor_use') | float(0) }}"
+      memory_usage: "{{ states('sensor.memory_use_percent') | float(0) }}"
+      disk_usage: "{{ states('sensor.disk_use_percent_home') | float(0) }}"
+      uptime_hours: "{{ (now().timestamp() - as_timestamp(states('sensor.uptime'))) / 3600 }}"
+      is_quiet_hours: "{{ now().hour >= 22 or now().hour < 6 }}"  # Fixed quiet hours
+  - choose:
+    # Critical resource usage - immediate notification
+    - conditions: 
+      - "{{ trigger.id in ['high_cpu', 'high_memory', 'high_disk'] }}"
+      - condition: template
+        value_template: "{{ has_value('notify.admin_only') }}"
+      sequence:
+      - action: notify.admin_only
+        data:
+          title: "🚨 Kritische Systemauslastung!"
+          message: >
+            {% if trigger.id == 'high_cpu' %}
+              CPU-Auslastung: {{ cpu_usage }}% (>90% für 5+ Min)
+            {% elif trigger.id == 'high_memory' %}
+              RAM-Auslastung: {{ memory_usage }}% (>90% für 5+ Min)
+            {% elif trigger.id == 'high_disk' %}
+              Festplatte: {{ disk_usage }}% (>90%)
+            {% endif %}
+          data:
+            priority: high
+            tag: system_critical
+
+    # Updates available
+    - conditions:
+      - "{{ trigger.id == 'updates_available' }}"
+      - condition: template
+        value_template: "{{ not is_quiet_hours }}"
+      - condition: template
+        value_template: "{{ has_value('notify.admin_only') }}"
+      sequence:
+      - action: notify.admin_only
+        data:
+          title: "📦 Updates verfügbar"
+          message: >
+            {% if is_number(states('sensor.hacs')) and states('sensor.hacs') | int > 0 %}
+              HACS: {{ states('sensor.hacs') }} Updates verfügbar
+            {% endif %}
+            {% if is_number(states('sensor.supervisor_updates')) and states('sensor.supervisor_updates') | int > 0 %}
+              System: {{ states('sensor.supervisor_updates') }} Updates verfügbar
+            {% endif %}
+          data:
+            tag: system_updates
+
+    # Periodic health check
+    - conditions:
+      - "{{ trigger.id == 'periodic_check' }}"
+      sequence:
+# System status stored in logbook only (no input_text helper)
+
+      # Log health check results
+      - action: logbook.log
+        data:
+          name: System Health Check
+          message: >
+            CPU: {{ cpu_usage }}% | RAM: {{ memory_usage }}%
+            | Disk: {{ disk_usage }}% | Uptime: {{ uptime_hours | round(1) }}h
+
+      # Warning for sustained high usage (not critical threshold)
+      - if:
+        - condition: template
+          value_template: "{{ cpu_usage > 75 or memory_usage > 75 }}"
+        - condition: template
+          value_template: "{{ not is_quiet_hours }}"
+        - condition: template
+          value_template: "{{ has_value('notify.admin_only') }}"
+        then:
+        - action: notify.admin_only
+          data:
+            title: "⚠️ Erhöhte Systemauslastung"
+            message: >
+              CPU: {{ cpu_usage }}%, RAM: {{ memory_usage }}%
+              System läuft seit {{ uptime_hours | round(1) }} Stunden
+            data:
+              tag: system_warning
+
+    # Error handling
+    default:
+    - action: logbook.log
+      data:
+        name: System Monitor Fehler  
+        message: "Unbekannter Trigger: {{ trigger.id }}"
+
+- id: 'system_integration_monitor'
+  alias: System » Integration Monitor  
+  description: Überwacht den Status kritischer Integrationen und meldet Ausfälle
+  mode: queued
+  max: 3
+  triggers:
+  - trigger: state
+    entity_id:
+      # Critical integrations to monitor
+      - binary_sensor.aqara_hub_connection
+      - binary_sensor.router_connection
+      - binary_sensor.internet_connection
+    from: 'on'
+    to: 'off'
+    for: "00:02:00"
+    id: integration_offline
+  - trigger: state
+    entity_id:
+      - binary_sensor.aqara_hub_connection
+      - binary_sensor.router_connection  
+      - binary_sensor.internet_connection
+    from: 'off'
+    to: 'on'
+    id: integration_online
+  conditions: []  # Always enabled
+  actions:
+  - variables:
+      failed_integration: "{{ trigger.to_state.name }}"
+      is_quiet_hours: "{{ now().hour >= 22 or now().hour < 6 }}"  # Fixed quiet hours
+  - choose:
+    # Integration went offline
+    - conditions:
+      - "{{ trigger.id == 'integration_offline' }}"
+      - condition: template
+        value_template: "{{ not is_quiet_hours }}"
+      - condition: template
+        value_template: "{{ has_value('notify.admin_only') }}"
+      sequence:
+      - action: notify.admin_only
+        data:
+          title: "🔌 Integration ausgefallen"
+          message: "{{ failed_integration }} ist seit 2+ Minuten offline"
+          data:
+            priority: high
+            tag: "integration_{{ trigger.entity_id.split('.')[1] }}"
+
+    # Integration came back online
+    - conditions:
+      - "{{ trigger.id == 'integration_online' }}"
+      - condition: template
+        value_template: "{{ has_value('notify.admin_only') }}"
+      sequence:
+      - action: notify.admin_only
+        data:
+          title: "✅ Integration wiederhergestellt"
+          message: "{{ failed_integration }} ist wieder online"
+          data:
+            tag: "integration_{{ trigger.entity_id.split('.')[1] }}"
+
+  # Always log integration status changes
+  - action: logbook.log
+    data:
+      name: Integration Monitor
+      message: >
+        {{ failed_integration }} ist {{ 'offline' if trigger.to_state.state == 'off' else 'online' }}
+
+- id: 'system_database_maintenance'  
+  alias: System » Database Maintenance
+  description: Automatische Datenbankwartung und -optimierung
+  mode: single
+  triggers:
+  - trigger: time
+    at: "03:00:00"
+    id: daily_maintenance
+  - trigger: numeric_state
+    entity_id: sensor.database_size
+    above: 1000  # MB
+    id: large_database
+  conditions:
+  - condition: state
+    entity_id: input_boolean.system_monitoring_enabled  
+    state: 'on'
+  actions:
+  - variables:
+      db_size_mb: "{{ states('sensor.database_size') | float(0) }}"
+      purge_days: 7  # Keep 7 days of history
+  - choose:
+    # Daily maintenance
+    - conditions:
+      - "{{ trigger.id == 'daily_maintenance' }}"
+      sequence:
+      - action: recorder.purge
+        data:
+          keep_days: "{{ purge_days }}"
+          repack: true
+      - action: logbook.log
+        data:
+          name: Database Maintenance
+          message: >
+            Automatische DB-Bereinigung durchgeführt
+            | Größe vorher: {{ db_size_mb }}MB
+            | Aufbewahrung: {{ purge_days }} Tage
+
+    # Large database warning
+    - conditions:
+      - "{{ trigger.id == 'large_database' }}"
+      - condition: template
+        value_template: "{{ has_value('notify.admin_only') }}"
+      sequence:
+      - action: notify.admin_only
+        data:
+          title: "💾 Datenbank wird groß"
+          message: >
+            Datenbankgröße: {{ db_size_mb }}MB
+            Erwäge Anpassung der recorder-Konfiguration
+          data:
+            tag: database_size

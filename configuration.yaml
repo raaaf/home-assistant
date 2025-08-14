@@ -352,6 +352,7 @@ light: !include lights.yaml
 timer: !include timers.yaml
 climate: !include climates.yaml
 
+
 # ============================================================================
 # SYSTEM FEATURES
 # ============================================================================
