@@ -51,10 +51,14 @@
           condition: state
           entity_id: binary_sensor.workday_sensor
           state: 'on'
+        - condition: template
+          value_template: "{{ has_value('binary_sensor.workday_sensor') }}"
         - alias: Jemand ist zu Hause
           condition: state
           entity_id: input_boolean.alle_sind_weg
           state: 'off'
+        - condition: template
+          value_template: "{{ has_value('input_boolean.alle_sind_weg') }}"
         then:
         - alias: Adaptive Beleuchtung Helligkeit temporär deaktivieren
           action: switch.turn_off
@@ -91,9 +95,8 @@
           data:
             brightness_pct: 100
             transition: 900
-        - alias: 'Alternative: Sunrise Simulator Script (deaktiviert)'
-          action: script.sunrise_simulator
-          enabled: false
+        # Alternative: Sunrise Simulator Script (deaktiviert)
+        # - action: script.sunrise_simulator
           data:
             duration: 30
             target:
@@ -101,9 +104,8 @@
             - light.alle_kinderzimmer_lichter
             - light.alle_arbeitszimmer_lichter
             max_brightness: 100
-        - alias: 10 Minuten warten (deaktiviert)
-          delay: 00:10:00
-          enabled: false
+        # 10 Minuten warten (deaktiviert)
+        # - delay: 00:10:00
         - alias: Motion-Automationen wieder aktivieren
           action: automation.turn_on
           target:
@@ -238,12 +240,15 @@
       - condition: state
         entity_id: binary_sensor.workday_sensor
         state: 'on'
+      - condition: template
+        value_template: "{{ has_value('binary_sensor.workday_sensor') }}"
       - condition: state
         entity_id: input_boolean.alle_sind_weg
         state: 'off'
+      - condition: template
+        value_template: "{{ has_value('input_boolean.alle_sind_weg') }}"
       sequence:
       - action: automation.turn_off
-        metadata: {}
         target:
           entity_id:
           - automation.1692710690350
@@ -252,7 +257,6 @@
         data:
           stop_actions: true
       - action: switch.turn_off
-        metadata: {}
         data: {}
         target:
           entity_id:
@@ -269,14 +273,19 @@
           - condition: state
             entity_id: input_boolean.gaming
             state: 'off'
+          - condition: template
+            value_template: "{{ has_value('input_boolean.gaming') }}"
           - condition: state
             entity_id: input_boolean.party
             state: 'off'
+          - condition: template
+            value_template: "{{ has_value('input_boolean.party') }}"
           - condition: state
             entity_id: input_boolean.lesen
             state: 'off'
+          - condition: template
+            value_template: "{{ has_value('input_boolean.lesen') }}"
       - action: automation.turn_on
-        metadata: {}
         target:
           entity_id:
           - automation.1692710690350
@@ -284,7 +293,6 @@
           - automation.1678724233791
         data: {}
       - action: switch.turn_on
-        metadata: {}
         data: {}
         target:
           entity_id:

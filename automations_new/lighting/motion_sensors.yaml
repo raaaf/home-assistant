@@ -11,56 +11,62 @@
   - entity_id: sensor.sunlight_pct
     above: 20
     trigger: numeric_state
-    enabled: true
   - entity_id: sensor.sunlight_pct
     below: 15
     trigger: numeric_state
-    enabled: true
-  - entity_id:
-    - sensor.balkon_motion_illuminance
-    above: 450
-    trigger: numeric_state
-    enabled: false
-    for:
-      hours: 0
-      minutes: 1
-      seconds: 0
-  - entity_id:
-    - sensor.balkon_motion_illuminance
-    below: 400
-    trigger: numeric_state
-    enabled: false
-    for:
-      hours: 0
-      minutes: 1
-      seconds: 0
+  # Balcony illuminance triggers disabled - using sunlight percentage instead
+  # - entity_id:
+  #   - sensor.balkon_motion_illuminance
+  #   above: 450
+  #   trigger: numeric_state
+  #   enabled: false
+  #   for:
+  #     hours: 0
+  #     minutes: 1
+  #     seconds: 0
+  # - entity_id:
+  #   - sensor.balkon_motion_illuminance
+  #   below: 400
+  #   trigger: numeric_state
+  #   enabled: false
+  #   for:
+  #     hours: 0
+  #     minutes: 1
+  #     seconds: 0
   conditions: []
   actions:
   - choose:
     - conditions:
       - condition: or
         conditions:
-        - condition: numeric_state
-          entity_id: sensor.sunlight_pct
-          above: 20
-          enabled: true
-        - condition: numeric_state
-          entity_id: sensor.balkon_motion_illuminance
-          above: 450
-          enabled: true
+        - condition: and
+          conditions:
+          - condition: numeric_state
+            entity_id: sensor.sunlight_pct
+            above: 20
+          - condition: template
+            value_template: "{{ has_value('sensor.sunlight_pct') }}"
+        # Balcony illuminance condition disabled
+        # - condition: and
+        #   conditions:
+        #   - condition: numeric_state
+        #     entity_id: sensor.balkon_motion_illuminance
+        #     above: 450
+        #   - condition: template
+        #     value_template: "{{ has_value('sensor.balkon_motion_illuminance') }}"
       sequence:
       - data:
           stop_actions: true
         target:
           entity_id:
-          - automation.1672929418223
-          - automation.motion_balkon
-          - automation.1745924154398
-          - automation.motion_flur_wohnung
-          - automation.1672931243226
-          - automation.arbeitszimmer_motion
-          - automation.1692710690350
-          - automation.1678724233791
+          - automation.1672929418223  # Kitchen motion sensor
+          - automation.motion_balkon  # Balcony motion sensor
+          - automation.1745924154398  # Bathroom motion sensor
+          - automation.motion_flur_wohnung  # Hallway motion sensor
+          - automation.1672931243226  # Living room motion sensor
+          - automation.arbeitszimmer_motion  # Office motion sensor
+          - automation.1692710690350  # Additional motion sensor
+          - automation.1678724233791  # Bedroom motion sensor
         action: automation.turn_off
       - target:
           entity_id:
@@ -86,25 +92,33 @@
     - conditions:
       - condition: or
         conditions:
-        - condition: numeric_state
-          entity_id: sensor.sunlight_pct
-          below: 15
-          enabled: true
-        - condition: numeric_state
-          entity_id: sensor.balkon_motion_illuminance
-          below: 400
-          enabled: false
+        - condition: and
+          conditions:
+          - condition: numeric_state
+            entity_id: sensor.sunlight_pct
+            below: 15
+          - condition: template
+            value_template: "{{ has_value('sensor.sunlight_pct') }}"
+        # Balcony illuminance condition disabled
+        # - condition: and
+        #   conditions:
+        #   - condition: numeric_state
+        #     entity_id: sensor.balkon_motion_illuminance
+        #     below: 400
+        #   - condition: template
+        #     value_template: "{{ has_value('sensor.balkon_motion_illuminance') }}"
       sequence:
       - target:
           entity_id:
-          - automation.1672929418223
-          - automation.motion_balkon
-          - automation.1745924154398
-          - automation.motion_flur_wohnung
-          - automation.1672931243226
-          - automation.arbeitszimmer_motion
-          - automation.1692710690350
-          - automation.1678724233791
+          - automation.1672929418223  # Kitchen motion sensor
+          - automation.motion_balkon  # Balcony motion sensor
+          - automation.1745924154398  # Bathroom motion sensor
+          - automation.motion_flur_wohnung  # Hallway motion sensor
+          - automation.1672931243226  # Living room motion sensor
+          - automation.arbeitszimmer_motion  # Office motion sensor
+          - automation.1692710690350  # Additional motion sensor
+          - automation.1678724233791  # Bedroom motion sensor
         action: automation.turn_on
         data: {}
   mode: restart
+  max_exceeded: silent

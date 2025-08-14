@@ -25,30 +25,22 @@
       seconds: 0
   actions:
   - variables:
-      motion_sensor: '{{ trigger.entity_id }}'
-      motion_area: '{{ area_id(motion_sensor) or ''unknown'' }}'
-      entities_in_area: '{{ area_entities(motion_area) if motion_area != ''unknown''
-        else [] }}'
-      lights_in_area: "{{ expand(entities_in_area)\n   | selectattr('domain', 'eq',\
-        \ 'light')\n   | selectattr('state', 'eq', 'on')\n   | rejectattr('state',\
-        \ 'in', ['unavailable', 'unknown'])\n   | map(attribute='entity_id') | list\
-        \ }}\n"
+      motion_sensor: '{{ trigger.entity_id if has_value(trigger.entity_id) else "unknown" }}'
+      motion_area: '{{ area_id(motion_sensor) if motion_sensor != "unknown" and has_value(motion_sensor) else "unknown" }}'
+      entities_in_area: '{{ area_entities(motion_area) if motion_area != "unknown" and has_value(motion_area) else [] }}'
+      lights_in_area: "{% if entities_in_area %}{{ expand(entities_in_area) | selectattr('domain', 'eq', 'light') | selectattr('state', 'eq', 'on') | rejectattr('state', 'in', ['unavailable', 'unknown']) | map(attribute='entity_id') | list }}{% else %}[]{% endif %}"
       excluded_lights:
       - light.hyperhdr
       - light.lichterkette
       - light.schwarze_stehlampe
-      lights_to_turn_off: '{{ lights_in_area | reject(''in'', excluded_lights) | list
-        }}
-
-        '
-      area_name: '{{ area_name(motion_area) if motion_area != ''unknown'' else ''Unbekannter
-        Bereich'' }}'
+      lights_to_turn_off: '{{ lights_in_area | reject("in", excluded_lights) | list if lights_in_area else [] }}'
+      area_name: '{{ area_name(motion_area) if motion_area != "unknown" and has_value(motion_area) else "Unbekannter Bereich" }}'
   - choose:
     - alias: Lichter ausschalten wenn vorhanden und Area bekannt
       conditions:
       - alias: Area wurde gefunden
         condition: template
-        value_template: '{{ motion_area != ''unknown'' }}'
+        value_template: '{{ motion_area != "unknown" and has_value(motion_area) }}'
       - alias: Es gibt Lichter zum Ausschalten
         condition: template
         value_template: '{{ lights_to_turn_off | length > 0 }}'
@@ -56,6 +48,8 @@
         condition: state
         entity_id: input_boolean.schlafenszeit
         state: 'off'
+      - condition: template
+        value_template: "{{ has_value('input_boolean.schlafenszeit') }}"
       sequence:
       - alias: Lichter in Area ausschalten
         action: light.turn_off
@@ -76,7 +70,7 @@
         condition: or
         conditions:
         - condition: template
-          value_template: '{{ motion_area == ''unknown'' }}'
+          value_template: '{{ motion_area == "unknown" or not has_value(motion_area) }}'
         - condition: template
           value_template: '{{ lights_to_turn_off | length == 0 }}'
       sequence:

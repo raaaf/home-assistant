@@ -131,7 +131,7 @@
   max_color_temp: 5000 # Moderate for children's activities
   prefer_rgb_color: false
   sleep_brightness: 8 # Very low for children's sleep
-  sleep_color_temp: 1000 # Keep extra warm for children
+  sleep_color_temp: 1800 # Optimal circadian rhythm for children
   sleep_transition: 120 # Gentle transition for kids
   transition_until_sleep: true
   min_sunrise_time: "05:00:00"
@@ -309,7 +309,7 @@
   max_color_temp: 5000
   prefer_rgb_color: false
   sleep_brightness: 8 # Very low for nighttime navigation
-  sleep_color_temp: 1000 # Keep very warm for hallway safety
+  sleep_color_temp: 1800 # Optimal circadian rhythm for nighttime navigation
   sleep_transition: 30 # Quick transition for transitional space
   transition_until_sleep: true
   min_sunrise_time: "05:00:00"
@@ -346,7 +346,7 @@
   max_color_temp: 5000 # Moderate maximum for outdoor
   prefer_rgb_color: false
   sleep_brightness: 10 # Minimal outdoor lighting
-  sleep_color_temp: 1000
+  sleep_color_temp: 1800 # Optimal circadian rhythm for outdoor evening
   sleep_transition: 90
   transition_until_sleep: false # No sleep transition for outdoor
   min_sunrise_time: "05:30:00"
@@ -365,4 +365,4 @@
   intercept: true
   multi_light_intercept: true
   include_config_in_attributes: true
-  brightness_mode: "linear" # Linear progression for outdoor
+  brightness_mode: "tanh" # Smooth transitions for outdoor
