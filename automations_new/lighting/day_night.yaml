@@ -52,13 +52,11 @@
           entity_id: binary_sensor.workday_sensor
           state: 'on'
         - condition: template
-          value_template: "{{ has_value('binary_sensor.workday_sensor') }}"
+          value_template: "{{ has_value('binary_sensor.workday_sensor') and has_value('input_boolean.alle_sind_weg') }}"
         - alias: Jemand ist zu Hause
           condition: state
           entity_id: input_boolean.alle_sind_weg
           state: 'off'
-        - condition: template
-          value_template: "{{ has_value('input_boolean.alle_sind_weg') }}"
         then:
         - alias: Adaptive Beleuchtung Helligkeit temporär deaktivieren
           action: switch.turn_off
@@ -97,13 +95,13 @@
             transition: 900
         # Alternative: Sunrise Simulator Script (deaktiviert)
         # - action: script.sunrise_simulator
-          data:
-            duration: 30
-            target:
-            - light.alle_schlafzimmer_lichter
-            - light.alle_kinderzimmer_lichter
-            - light.alle_arbeitszimmer_lichter
-            max_brightness: 100
+        #   data:
+        #     duration: 30
+        #     target:
+        #     - light.alle_schlafzimmer_lichter
+        #     - light.alle_kinderzimmer_lichter
+        #     - light.alle_arbeitszimmer_lichter
+        #     max_brightness: 100
         # 10 Minuten warten (deaktiviert)
         # - delay: 00:10:00
         - alias: Motion-Automationen wieder aktivieren
@@ -241,12 +239,10 @@
         entity_id: binary_sensor.workday_sensor
         state: 'on'
       - condition: template
-        value_template: "{{ has_value('binary_sensor.workday_sensor') }}"
+        value_template: "{{ has_value('binary_sensor.workday_sensor') and has_value('input_boolean.alle_sind_weg') }}"
       - condition: state
         entity_id: input_boolean.alle_sind_weg
         state: 'off'
-      - condition: template
-        value_template: "{{ has_value('input_boolean.alle_sind_weg') }}"
       sequence:
       - action: automation.turn_off
         target:
@@ -270,21 +266,11 @@
       - alias: Check if other scenes need motion sensors disabled
         condition: and
         conditions:
-          - condition: state
-            entity_id: input_boolean.gaming
-            state: 'off'
           - condition: template
-            value_template: "{{ has_value('input_boolean.gaming') }}"
-          - condition: state
-            entity_id: input_boolean.party
-            state: 'off'
-          - condition: template
-            value_template: "{{ has_value('input_boolean.party') }}"
-          - condition: state
-            entity_id: input_boolean.lesen
-            state: 'off'
-          - condition: template
-            value_template: "{{ has_value('input_boolean.lesen') }}"
+            value_template: >-
+              {{ has_value('input_boolean.gaming') and states('input_boolean.gaming') == 'off' and
+                 has_value('input_boolean.party') and states('input_boolean.party') == 'off' and
+                 has_value('input_boolean.lesen') and states('input_boolean.lesen') == 'off' }}
       - action: automation.turn_on
         target:
           entity_id:

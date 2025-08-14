@@ -15,9 +15,9 @@
           title: 👉 Nicht erreichbare Geräte
           message: '{{entities}}'
       monday_enabled: true
-      tuesday_enabled: false  
+      tuesday_enabled: true
       wednesday_enabled: true
-      thursday_enabled: false
+      thursday_enabled: true
       friday_enabled: true
       saturday_enabled: false
       sunday_enabled: false

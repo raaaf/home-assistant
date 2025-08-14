@@ -278,7 +278,7 @@
       hours: 0
       minutes: 30
       seconds: 0
-    id: ausschlaten
+    id: ausschalten
     trigger: state
   conditions: []
   actions:
@@ -302,7 +302,7 @@
     - conditions:
       - condition: trigger
         id:
-        - ausschlaten
+        - ausschalten
       sequence:
       - action: switch.turn_off
         target:

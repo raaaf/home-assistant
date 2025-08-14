@@ -28,11 +28,6 @@
           entity_id: switch.luefter_badezimmer
         action: switch.turn_on
         data: {}
-      - delay:
-          minutes: 30
-      - target:
-          entity_id: switch.luefter_badezimmer
-        action: switch.turn_off
     - conditions:
       - condition: trigger
         id: below
@@ -41,7 +36,8 @@
           entity_id: switch.luefter_badezimmer
         action: switch.turn_off
         data: {}
-  mode: restart
+  mode: single
+  max_exceeded: silent
 - id: '1647715674725'
   alias: Scenen » Sauna
   description: Aktiviert Sauna-Modus mit spezieller Beleuchtung, Lüftung und Rollosteuerung

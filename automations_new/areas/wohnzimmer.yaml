@@ -181,9 +181,11 @@
     trigger: state
   conditions:
   - condition: template
-    value_template: "{% set today = now().strftime('%m-%d') %} {% set start = start_date\
-      \ %} {% set end = end_date %} {{ \n  (start <= today <= '12-31') or \n  ('01-01'\
-      \ <= today <= end)\n}}\n"
+    value_template: >-
+      {% set today = now().strftime('%m-%d') %}
+      {% set start = '11-24' %}
+      {% set end = '01-06' %}
+      {{ (today >= start) or (today <= end) }}
   actions:
   - choose:
     - conditions:
