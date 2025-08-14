@@ -27,19 +27,38 @@
       {% set last = state_attr('automation.notifications_heizung_4_stunden', 'last_triggered') %}
       {{ last is none or (now() - last).total_seconds() > 12 * 60 * 60 }}
   actions:
-  - data:
-      title: 'Heizung: {{ trigger.entity_id | regex_replace(''^sensor.heizung_'',
-        '''') | regex_replace(''_an$'', '''') | replace(''_'', '' '') | title }}
+  - parallel:
+      # TTS Ansage über HomePods
+      - action: script.hausgeraete_ansage
+        data:
+          message: >-
+            Die Heizung im {{ trigger.entity_id | regex_replace('^sensor.heizung_', '') | regex_replace('_an$', '') | replace('_', ' ') | title }}
+            läuft seit über 4 Stunden
+          priority: "normal"
+      
+      # Mobile Benachrichtigung
+      - action: notify.rafael
+        data:
+          title: 'Heizung: {{ trigger.entity_id | regex_replace(''^sensor.heizung_'',
+            '''') | regex_replace(''_an$'', '''') | replace(''_'', '' '') | title }}
 
-        '
-      message: 'Seit mehr als 4 Stunden aktiv (aktuell {{ trigger.to_state.state }}
-        h).
+            '
+          message: 'Seit mehr als 4 Stunden aktiv (aktuell {{ trigger.to_state.state }}
+            h).
 
-        '
-      data:
-        push:
-          interruption-level: critical
-    action: notify.rafael
+            '
+          data:
+            push:
+              interruption-level: critical
+      
+      # Persistent Notification als Backup
+      - action: persistent_notification.create
+        data:
+          notification_id: "heizung_warnung_{{ trigger.entity_id | regex_replace('^sensor.heizung_', '') }}"
+          title: "🔥 Heizung läuft zu lange"
+          message: >-
+            {{ trigger.entity_id | regex_replace('^sensor.heizung_', '') | regex_replace('_an$', '') | replace('_', ' ') | title }}
+            seit {{ trigger.to_state.state }} Stunden aktiv
   mode: single
 - id: '1738322846270'
   alias: Notification » Stromverbrauch gestern

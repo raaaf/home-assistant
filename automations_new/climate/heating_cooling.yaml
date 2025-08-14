@@ -679,19 +679,34 @@
       \ %} {% if forecast and forecast | length > 0 %}\n  {{ forecast[0].templow <\
       \ 0 }}\n{% else %}\n  false\n{% endif %}\n"
   actions:
-  - data:
-      title: Frostwarnung für die Blumen
-      message: '⚠️ Es wird kalt: In der Nacht sind Frostwerte unter 0°C vorhergesagt!
-        Bitte Blumen abdecken.
+  - parallel:
+      # TTS Ansage über HomePods
+      - action: script.hausgeraete_ansage
+        data:
+          message: "Achtung Frostwarnung! Es wird heute Nacht unter null Grad. Bitte die Blumen abdecken"
+          priority: "kritisch"
+      
+      # Mobile Benachrichtigung
+      - action: notify.alex
+        data:
+          title: Frostwarnung für die Blumen
+          message: '⚠️ Es wird kalt: In der Nacht sind Frostwerte unter 0°C vorhergesagt!
+            Bitte Blumen abdecken.
 
-        '
-      data:
-        push:
-          sound:
-            name: default
-            critical: 1
-            volume: 1
-    action: notify.alex
+            '
+          data:
+            push:
+              sound:
+                name: default
+                critical: 1
+                volume: 1
+      
+      # Persistent Notification als Backup
+      - action: persistent_notification.create
+        data:
+          notification_id: "frostwarnung_{{ now().strftime('%Y%m%d') }}"
+          title: "❄️ Frostwarnung für die Blumen"
+          message: "In der Nacht sind Frostwerte unter 0°C vorhergesagt! Blumen abdecken."
   mode: single
 - id: '1749643406352'
   alias: Ventilator » Individuelle Raumsteuerung (Optimiert)

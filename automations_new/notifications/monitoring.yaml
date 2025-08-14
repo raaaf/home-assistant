@@ -180,8 +180,23 @@
         message: Außensensor offline - prüfe Batterie!
         level: warning
       action: system_log.write
-    - data:
-        title: ⚠️ Außensensor offline
-        message: Der Außensensor liefert keine Daten. Batterie prüfen!
-      action: notify.mobile_app_iphone_rafael
+    - parallel:
+        # TTS Ansage über HomePods
+        - action: script.hausgeraete_ansage
+          data:
+            message: "Der Außensensor ist offline. Bitte die Batterie prüfen"
+            priority: "normal"
+        
+        # Mobile Benachrichtigung
+        - action: notify.mobile_app_iphone_rafael
+          data:
+            title: ⚠️ Außensensor offline
+            message: Der Außensensor liefert keine Daten. Batterie prüfen!
+        
+        # Persistent Notification als Backup
+        - action: persistent_notification.create
+          data:
+            notification_id: "aussensensor_offline"
+            title: "🌡️ Außensensor offline"
+            message: "Der Außensensor liefert keine Daten. Batterie prüfen!"
   mode: single
