@@ -8,15 +8,14 @@
     (>24°C und >29°C)
 
     '
-  triggers:
+  trigger:
   - at: 03:00:00
     trigger: time
-  conditions: []
-  actions:
+  condition: []
+  action:
   - if:
     - condition: template
-      value_template: '{{ state_attr(''sensor.fuerth_daily'', ''forecast'')[0].temperature
-        > 29 }}
+      value_template: '{{ has_value(''sensor.fuerth_daily'') and state_attr(''sensor.fuerth_daily'', ''forecast'') is not none and state_attr(''sensor.fuerth_daily'', ''forecast'') | length > 0 and state_attr(''sensor.fuerth_daily'', ''forecast'')[0].temperature > 29 }}
 
         '
     then:
@@ -29,8 +28,7 @@
       action: input_boolean.turn_off
   - if:
     - condition: template
-      value_template: '{{ 24 < state_attr(''sensor.fuerth_daily'', ''forecast'')[0].temperature
-        <= 29 }}
+      value_template: '{{ has_value(''sensor.fuerth_daily'') and state_attr(''sensor.fuerth_daily'', ''forecast'') is not none and state_attr(''sensor.fuerth_daily'', ''forecast'') | length > 0 and 24 < state_attr(''sensor.fuerth_daily'', ''forecast'')[0].temperature <= 29 }}
 
         '
     then:
@@ -48,7 +46,7 @@
     Cool-Modus (aktive Kühlung)  23-25°C: Fan-Modus (nur Luftzirkulation)  < 23°C:
     Aus  MODUS: Cool/Fan Mode mit Silent Fan NEU: AC geht nur an wenn Außentemperatur
     > 24°C'
-  triggers:
+  trigger:
   - entity_id:
     - input_boolean.arbeit
     - input_boolean.gaming
@@ -89,11 +87,11 @@
     trigger: state
     for: 00:02:00
     id: temp-check
-  conditions:
+  condition:
   - condition: state
     entity_id: input_boolean.alle_sind_weg
     state: 'off'
-  actions:
+  action:
   - variables:
       arbeit_aktiv: '{{ is_state(''input_boolean.arbeit'', ''on'') }}'
       gaming_aktiv: '{{ is_state(''input_boolean.gaming'', ''on'') }}'
@@ -101,19 +99,19 @@
       irgendein_modus_aktiv: '{{ arbeit_aktiv or gaming_aktiv or schlafenszeit_aktiv
         }}'
       raum_temp: "{% set qingping = states('sensor.qingping_air_monitor_lite_temperature')\
-        \ %} {% if qingping not in ['unknown', 'unavailable', 'none'] %}\n  {{ qingping\
+        \ %} {% if has_value('sensor.qingping_air_monitor_lite_temperature') %}\n  {{ qingping\
         \ | float(25) }}\n{% else %}\n  {{ states('sensor.ac_indoor_temperature')\
-        \ | float(25) }}\n{% endif %}\n"
-      außen_temp: '{{ state_attr(''weather.fuerth_bayern'', ''temperature'') | float(20)
+        \ | float(25) if has_value('sensor.ac_indoor_temperature') else 25 }}\n{% endif %}\n"
+      außen_temp: '{{ state_attr(''weather.fuerth_bayern'', ''temperature'') | float(20) if has_value(''weather.fuerth_bayern'') else 20
         }}'
       außen_warm_genug: '{{ außen_temp > 24 }}'
       verwendeter_sensor: "{% set qingping = states('sensor.qingping_air_monitor_lite_temperature')\
-        \ %} {% if qingping not in ['unknown', 'unavailable', 'none'] %}\n  Qingping\n\
+        \ %} {% if has_value('sensor.qingping_air_monitor_lite_temperature') %}\n  Qingping\n\
         {% else %}\n  AC Indoor (Fallback)\n{% endif %}\n"
-      ac_laeuft: '{{ states(''climate.ac'') not in [''off'', ''unknown'', ''unavailable'']
+      ac_laeuft: '{{ has_value(''climate.ac'') and states(''climate.ac'') not in [''off'', ''unknown'', ''unavailable'']
         }}'
-      aktueller_modus: '{{ states(''climate.ac'') }}'
-      aktueller_preset: '{{ state_attr(''climate.ac'', ''preset_mode'') }}'
+      aktueller_modus: '{{ states(''climate.ac'') if has_value(''climate.ac'') else ''off'' }}'
+      aktueller_preset: '{{ state_attr(''climate.ac'', ''preset_mode'') if has_value(''climate.ac'') else ''none'' }}'
   - choose:
     - conditions:
       - condition: trigger
@@ -314,7 +312,7 @@
     Anwesenheit mit optimierten Triggern und adaptiver Temperatur
 
     '
-  triggers:
+  trigger:
   - entity_id: sensor.temperatur_aussen
     above: 21
     for:
@@ -352,7 +350,7 @@
   - event: start
     id: startup
     trigger: homeassistant
-  conditions:
+  condition:
   - condition: or
     conditions:
     - condition: trigger
@@ -378,7 +376,7 @@
           - alle-da
           - nachts
           - tagsüber
-  actions:
+  action:
   - variables:
       climate_entities:
       - climate.badezimmer
@@ -386,15 +384,14 @@
       - climate.kinderzimmer
       - climate.schlafzimmer
       - climate.wohnzimmer
-      current_temp: "{% set temp = states('sensor.temperatur_aussen') %} {% if temp\
-        \ in ['unknown', 'unavailable'] %}\n  unbekannt\n{% else %}\n  {{ temp | float(10)\
+      current_temp: "{% set temp = states('sensor.temperatur_aussen') %} {% if not has_value('sensor.temperatur_aussen') %}\n  unbekannt\n{% else %}\n  {{ temp | float(10)\
         \ | round(1) }}°C\n{% endif %}\n"
       adaptive_temp_home: "{% set temp = states('sensor.temperatur_aussen') %}\n{%\
-        \ if temp in ['unknown', 'unavailable'] %}\n  21\n{% elif temp | float(10)\
+        \ if not has_value('sensor.temperatur_aussen') %}\n  21\n{% elif temp | float(10)\
         \ > 15 %}\n  20\n{% elif temp | float(10) > 10 %}\n  21\n{% else %}\n  22\n\
         {% endif %}\n"
       adaptive_temp_eco: "{% set temp = states('sensor.temperatur_aussen') %}\n{%\
-        \ if temp in ['unknown', 'unavailable'] %}\n  19\n{% elif temp | float(10)\
+        \ if not has_value('sensor.temperatur_aussen') %}\n  19\n{% elif temp | float(10)\
         \ > 15 %}\n  18\n{% elif temp | float(10) > 10 %}\n  19\n{% else %}\n  20\n\
         {% endif %}\n"
       adaptive_temp_away: 16
@@ -619,11 +616,11 @@
     (arbeitstags oder freier Tag) und 60 Minuten später Bewegung erkannt wird.
 
     '
-  triggers:
+  trigger:
   - entity_id: binary_sensor.motion_dusche_occupancy
     to: 'on'
     trigger: state
-  conditions:
+  condition:
   - condition: state
     entity_id: input_boolean.alle_sind_weg
     state: 'off'
@@ -631,14 +628,13 @@
     entity_id: switch.heizung_steckdose
     state: 'off'
   - condition: template
-    value_template: "{% if is_state('binary_sensor.workday_sensor', 'on') %}\n  {%\
-      \ set start = states('input_datetime.aufwachzeit_arbeitstag') %}\n{% else %}\n\
-      \  {% set start = states('input_datetime.aufwachzeit_freier_tag') %}\n{% endif\
-      \ %} {% set today = now().strftime('%Y-%m-%d') %} {% set start_dt = strptime(today\
-      \ ~ ' ' ~ start, '%Y-%m-%d %H:%M:%S') %} {% set start_ts = as_timestamp(start_dt)\
-      \ %} {% set end_ts = start_ts + 3600 %} {{ start_ts <= now().timestamp() < end_ts\
-      \ }}\n"
-  actions:
+    value_template: "{% if has_value('binary_sensor.workday_sensor') and has_value('input_datetime.aufwachzeit_arbeitstag') and has_value('input_datetime.aufwachzeit_freier_tag') %}\n  {% if is_state('binary_sensor.workday_sensor', 'on') %}\n    {%\
+      \ set start = states('input_datetime.aufwachzeit_arbeitstag') %}\n  {% else %}\n\
+      \    {% set start = states('input_datetime.aufwachzeit_freier_tag') %}\n  {% endif\
+      \ %}\n  {% set today = now().strftime('%Y-%m-%d') %}\n  {% set start_dt = strptime(today\
+      \ ~ ' ' ~ start, '%Y-%m-%d %H:%M:%S') %}\n  {% set start_ts = as_timestamp(start_dt)\
+      \ %}\n  {% set end_ts = start_ts + 3600 %}\n  {{ start_ts <= now().timestamp() < end_ts }}\n{% else %}\n  false\n{% endif %}\n"
+  action:
   - target:
       entity_id: switch.heizung_steckdose
     action: switch.turn_on
@@ -668,17 +664,15 @@
     Frost geben soll
 
     '
-  triggers:
+  trigger:
   - at: '10:00:00'
     trigger: time
   - at: '15:00:00'
     trigger: time
-  conditions:
+  condition:
   - condition: template
-    value_template: "{% set forecast = state_attr('sensor.fuerth_daily', 'forecast')\
-      \ %} {% if forecast and forecast | length > 0 %}\n  {{ forecast[0].templow <\
-      \ 0 }}\n{% else %}\n  false\n{% endif %}\n"
-  actions:
+    value_template: "{% if has_value('sensor.fuerth_daily') and state_attr('sensor.fuerth_daily', 'forecast') is not none %}\n  {% set forecast = state_attr('sensor.fuerth_daily', 'forecast') %}\n  {% if forecast and forecast | length > 0 %}\n    {{ forecast[0].templow < 0 }}\n  {% else %}\n    false\n  {% endif %}\n{% else %}\n  false\n{% endif %}\n"
+  action:
   - parallel:
       # TTS Ansage über HomePods
       - action: script.hausgeraete_ansage
@@ -714,7 +708,7 @@
     Schlafenszeit automatisch, sonst manuell
 
     '
-  triggers:
+  trigger:
   - entity_id: sensor.arbeitszimmer_temperatur
     above: 22
     for: 00:02:00
@@ -750,8 +744,8 @@
   - entity_id: climate.ac
     trigger: state
     id: ac-status-change
-  conditions: []
-  actions:
+  condition: []
+  action:
   - variables:
       arbeit_fan: fan.zhimi_za4_2dca_fan
       kinder_fan: fan.zhimi_za4_fb1b_fan
@@ -759,7 +753,7 @@
       schlafenszeit_aktiv: '{{ is_state(''input_boolean.schlafenszeit'', ''on'') }}'
       ac_laeuft: '{{ states(''climate.ac'') in [''cool'', ''heat'', ''dry'', ''fan_only'']
         }}'
-      ac_temperatur: '{{ state_attr(''climate.ac'', ''current_temperature'') | float(25)
+      ac_temperatur: '{{ state_attr(''climate.ac'', ''current_temperature'') | float(25) if has_value(''climate.ac'') else 25
         }}'
   - choose:
     - conditions:
@@ -776,7 +770,7 @@
         - condition: template
           value_template: '{{ not ac_laeuft }}'
         - condition: template
-          value_template: '{{ ac_laeuft and states(''sensor.arbeitszimmer_temperatur'')|float(22)
+          value_template: '{{ ac_laeuft and has_value(''sensor.arbeitszimmer_temperatur'') and states(''sensor.arbeitszimmer_temperatur'')|float(22)
             > 24 }}'
       - action: fan.turn_on
         target:
@@ -784,19 +778,13 @@
         data: {}
       - action: fan.set_percentage
         data:
-          percentage: "{% set temp = states('sensor.arbeitszimmer_temperatur')|float(22)\
-            \ %} {% if ac_laeuft %}\n  {# Mit AC: Niedrigere Stufen für Luftzirkulation\
-            \ #}\n  {% if temp > 28 %} 75\n  {% elif temp > 26 %} 50\n  {% elif temp\
-            \ > 24 %} 25\n  {% else %} 25\n  {% endif %}\n{% else %}\n  {# Ohne AC:\
-            \ Normale Stufen #}\n  {% if temp > 28 %} 100\n  {% elif temp > 26 %}\
-            \ 75\n  {% elif temp > 24 %} 50\n  {% else %} 25\n  {% endif %}\n{% endif\
-            \ %}\n"
+          percentage: "{% if has_value('sensor.arbeitszimmer_temperatur') %}\n  {% set temp = states('sensor.arbeitszimmer_temperatur')|float(22) %}\n  {% if ac_laeuft %}\n    {# Mit AC: Niedrigere Stufen für Luftzirkulation #}\n    {% if temp > 28 %} 75\n    {% elif temp > 26 %} 50\n    {% elif temp > 24 %} 25\n    {% else %} 25\n    {% endif %}\n  {% else %}\n    {# Ohne AC: Normale Stufen #}\n    {% if temp > 28 %} 100\n    {% elif temp > 26 %} 75\n    {% elif temp > 24 %} 50\n    {% else %} 25\n    {% endif %}\n  {% endif %}\n{% else %}\n  25\n{% endif %}\n"
         target:
           entity_id: '{{ arbeit_fan }}'
       - action: notify.persistent_notification
         data:
           title: 🌡️ Ventilator Arbeitszimmer
-          message: 'Eingeschaltet - Temperatur: {{ states(''sensor.arbeitszimmer_temperatur'')
+          message: 'Eingeschaltet - Temperatur: {{ states(''sensor.arbeitszimmer_temperatur'') if has_value(''sensor.arbeitszimmer_temperatur'') else ''N/A''
             }}°C {{ ''Mit AC-Unterstützung'' if ac_laeuft else ''Standalone'' }}
 
             '
@@ -820,12 +808,7 @@
       sequence:
       - action: fan.set_percentage
         data:
-          percentage: "{% set temp = states('sensor.arbeitszimmer_temperatur')|float(22)\
-            \ %} {% if ac_laeuft %}\n  {% if temp > 28 %} 75\n  {% elif temp > 26\
-            \ %} 50\n  {% elif temp > 24 %} 25\n  {% elif temp > 22 %} 25\n  {% else\
-            \ %} 25\n  {% endif %}\n{% else %}\n  {% if temp > 28 %} 100\n  {% elif\
-            \ temp > 26 %} 75\n  {% elif temp > 24 %} 50\n  {% elif temp > 22 %} 25\n\
-            \  {% else %} 25\n  {% endif %}\n{% endif %}\n"
+          percentage: "{% if has_value('sensor.arbeitszimmer_temperatur') %}\n  {% set temp = states('sensor.arbeitszimmer_temperatur')|float(22) %}\n  {% if ac_laeuft %}\n    {% if temp > 28 %} 75\n    {% elif temp > 26 %} 50\n    {% elif temp > 24 %} 25\n    {% elif temp > 22 %} 25\n    {% else %} 25\n    {% endif %}\n  {% else %}\n    {% if temp > 28 %} 100\n    {% elif temp > 26 %} 75\n    {% elif temp > 24 %} 50\n    {% elif temp > 22 %} 25\n    {% else %} 25\n    {% endif %}\n  {% endif %}\n{% else %}\n  25\n{% endif %}\n"
         target:
           entity_id: '{{ arbeit_fan }}'
     - conditions:
@@ -843,9 +826,11 @@
         data: {}
       - action: fan.set_percentage
         data:
-          percentage: '{% set temp = states(''sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature'')|float(22)
-            %} {# Sanfte Stufen für Kinder #} {% if temp > 28 %} 50 {% elif temp >
-            26 %} 35 {% elif temp > 24 %} 25 {% else %} 20 {% endif %}
+          percentage: '{% if has_value(''sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature'') %}
+            {% set temp = states(''sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature'')|float(22) %}
+            {# Sanfte Stufen für Kinder #}
+            {% if temp > 28 %} 50 {% elif temp > 26 %} 35 {% elif temp > 24 %} 25 {% else %} 20 {% endif %}
+            {% else %} 20 {% endif %}
 
             '
         target:
@@ -874,9 +859,10 @@
       sequence:
       - action: fan.set_percentage
         data:
-          percentage: '{% set temp = states(''sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature'')|float(22)
-            %} {% if temp > 28 %} 50 {% elif temp > 26 %} 35 {% elif temp > 24 %}
-            25 {% elif temp > 22 %} 20 {% else %} 20 {% endif %}
+          percentage: '{% if has_value(''sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature'') %}
+            {% set temp = states(''sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature'')|float(22) %}
+            {% if temp > 28 %} 50 {% elif temp > 26 %} 35 {% elif temp > 24 %} 25 {% elif temp > 22 %} 20 {% else %} 20 {% endif %}
+            {% else %} 20 {% endif %}
 
             '
         target:
@@ -901,11 +887,7 @@
       sequence:
       - action: fan.set_percentage
         data:
-          percentage: "{% set temp = states('sensor.arbeitszimmer_temperatur')|float(22)\
-            \ %} {% if ac_laeuft %}\n  {% if temp > 28 %} 75\n  {% elif temp > 26\
-            \ %} 50\n  {% elif temp > 24 %} 25\n  {% else %} 25\n  {% endif %}\n{%\
-            \ else %}\n  {% if temp > 28 %} 100\n  {% elif temp > 26 %} 75\n  {% elif\
-            \ temp > 24 %} 50\n  {% else %} 25\n  {% endif %}\n{% endif %}\n"
+          percentage: "{% if has_value('sensor.arbeitszimmer_temperatur') %}\n  {% set temp = states('sensor.arbeitszimmer_temperatur')|float(22) %}\n  {% if ac_laeuft %}\n    {% if temp > 28 %} 75\n    {% elif temp > 26 %} 50\n    {% elif temp > 24 %} 25\n    {% else %} 25\n    {% endif %}\n  {% else %}\n    {% if temp > 28 %} 100\n    {% elif temp > 26 %} 75\n    {% elif temp > 24 %} 50\n    {% else %} 25\n    {% endif %}\n  {% endif %}\n{% else %}\n  25\n{% endif %}\n"
         target:
           entity_id: '{{ arbeit_fan }}'
     - conditions:

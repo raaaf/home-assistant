@@ -6,7 +6,7 @@
   alias: Rollos » All in one (Optimiert)
   description: 'Intelligente Rollosteuerung basierend auf: - Tageszeit und Aufwachzeiten
     - Sonnenstand (Azimuth & Elevation) - Temperaturvorhersage - Anwesenheit'
-  triggers:
+  trigger:
   - id: morgens-arbeitstag
     trigger: time
     at:
@@ -41,14 +41,14 @@
     to: 'on'
     id: schlafenszeit
     trigger: state
-  conditions: []
-  actions:
+  condition: []
+  action:
   - variables:
-      wird_sehr_heiss: '{{ is_state(''input_boolean.heute_wird_es_sehr_heiss_werden'',
+      wird_sehr_heiss: '{{ has_value(''input_boolean.heute_wird_es_sehr_heiss_werden'') and is_state(''input_boolean.heute_wird_es_sehr_heiss_werden'',
         ''on'') }}'
-      wird_heiss: '{{ is_state(''input_boolean.heute_wird_es_heiss_werden'', ''on'')
+      wird_heiss: '{{ has_value(''input_boolean.heute_wird_es_heiss_werden'') and is_state(''input_boolean.heute_wird_es_heiss_werden'', ''on'')
         }}'
-      ist_arbeitstag: '{{ is_state(''binary_sensor.workday_sensor'', ''on'') }}'
+      ist_arbeitstag: '{{ has_value(''binary_sensor.workday_sensor'') and is_state(''binary_sensor.workday_sensor'', ''on'') }}'
       position_schlaf_kinder: "{% if wird_sehr_heiss %}\n  5\n{% elif wird_heiss %}\n\
         \  25\n{% else %}\n  100\n{% endif %}\n"
       position_arbeit: 1
