@@ -34,7 +34,7 @@
           stop_actions: true
         target:
           entity_id:
-          - automation.1696241451967  # Helper » Workday Musik
+          - automation.1696241451967  # Helper » Workday Musik - Automatic workday music
         action: automation.turn_off
       - target:
           entity_id:
@@ -47,7 +47,7 @@
       sequence:
       - target:
           entity_id:
-          - automation.1696241451967  # Helper » Workday Musik
+          - automation.1696241451967  # Helper » Workday Musik - Automatic workday music
         action: automation.turn_on
       - target:
           entity_id:
@@ -60,9 +60,13 @@
       - condition: state
         entity_id: lock.smart_lock_pro
         state: unlocked
+      - condition: template
+        value_template: "{{ has_value('lock.smart_lock_pro') }}"
       - condition: state
         entity_id: input_boolean.alle_sind_weg
         state: 'on'
+      - condition: template
+        value_template: "{{ has_value('input_boolean.alle_sind_weg') }}"
       sequence:
       - target:
           entity_id: lock.smart_lock_pro
@@ -120,15 +124,14 @@
           stop_actions: true
         target:
           entity_id:
-          - automation.1672931243226
-          - automation.motion_flur_wohnung
-          - automation.1678724233791
-          - automation.1672929418223
-          - automation.1745924154398
-          - automation.arbeitszimmer_motion
-          - automation.1692710690350
-          - automation.motion_haustur
-        enabled: true
+          - automation.1672931243226  # Motion sensor automation (living room)
+          - automation.motion_flur_wohnung  # Hallway motion sensor
+          - automation.1678724233791  # Bedroom motion sensor  
+          - automation.1672929418223  # Kitchen motion sensor
+          - automation.1745924154398  # Bathroom motion sensor
+          - automation.arbeitszimmer_motion  # Office motion sensor
+          - automation.1692710690350  # Additional motion sensor
+          - automation.motion_haustur  # Front door motion sensor
         action: automation.turn_off
       - action: scene_presets.start_dynamic_scene
         data:
@@ -158,15 +161,14 @@
           stop_actions: true
         target:
           entity_id:
-          - automation.1672931243226
-          - automation.motion_flur_wohnung
-          - automation.1678724233791
-          - automation.1672929418223
-          - automation.1745924154398
-          - automation.arbeitszimmer_motion
-          - automation.1692710690350
-          - automation.motion_haustur
-        enabled: true
+          - automation.1672931243226  # Motion sensor automation (living room)
+          - automation.motion_flur_wohnung  # Hallway motion sensor
+          - automation.1678724233791  # Bedroom motion sensor  
+          - automation.1672929418223  # Kitchen motion sensor
+          - automation.1745924154398  # Bathroom motion sensor
+          - automation.arbeitszimmer_motion  # Office motion sensor
+          - automation.1692710690350  # Additional motion sensor
+          - automation.motion_haustur  # Front door motion sensor
         action: automation.turn_on
       - action: light.turn_off
         data:
@@ -205,7 +207,7 @@
       - alias: Bewegungsmelder Schlafzimmer deaktivieren
         action: automation.turn_off
         target:
-          entity_id: automation.1678724233791
+          entity_id: automation.1678724233791  # Bedroom motion sensor
         data:
           stop_actions: true
       - alias: Alle Arbeitslichter ausschalten
@@ -221,8 +223,8 @@
           conditions:
           - alias: Es ist dunkel (Sonne unter oder Schlafenszeit)
             condition: template
-            value_template: "{{ state_attr('sun.sun', 'elevation') < 0 or \n   is_state('input_boolean.schlafenszeit',\
-              \ 'on') }}\n"
+            value_template: "{{ has_value('sun.sun') and (state_attr('sun.sun', 'elevation') < 0 or \n   (has_value('input_boolean.schlafenszeit') and is_state('input_boolean.schlafenszeit',\
+              \ 'on'))) }}\n"
           - alias: Vor 21 Uhr
             condition: template
             value_template: '{{ now().hour < 21 }}'
@@ -238,8 +240,8 @@
           conditions:
           - alias: Es ist dunkel (Sonne unter oder Schlafenszeit)
             condition: template
-            value_template: "{{ state_attr('sun.sun', 'elevation') < 0 or \n   is_state('input_boolean.schlafenszeit',\
-              \ 'on') }}\n"
+            value_template: "{{ has_value('sun.sun') and (state_attr('sun.sun', 'elevation') < 0 or \n   (has_value('input_boolean.schlafenszeit') and is_state('input_boolean.schlafenszeit',\
+              \ 'on'))) }}\n"
           - alias: Nach 21 Uhr
             condition: template
             value_template: '{{ now().hour >= 21 }}'
@@ -261,12 +263,12 @@
       - alias: Bewegungsmelder Schlafzimmer aktivieren
         action: automation.turn_on
         target:
-          entity_id: automation.1678724233791
+          entity_id: automation.1678724233791  # Bedroom motion sensor
         data: {}
       - alias: Nur ausschalten wenn es dunkel ist
         condition: template
-        value_template: "{{ state_attr('sun.sun', 'elevation') < 0 or \n   is_state('input_boolean.schlafenszeit',\
-          \ 'on') }}\n"
+        value_template: "{{ has_value('sun.sun') and (state_attr('sun.sun', 'elevation') < 0 or \n   (has_value('input_boolean.schlafenszeit') and is_state('input_boolean.schlafenszeit',\
+          \ 'on'))) }}\n"
       - alias: Alle Arbeitslichter ausschalten
         action: light.turn_off
         target:
