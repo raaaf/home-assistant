@@ -690,9 +690,29 @@ hausgeraete_ansage:
               message: "{{ message }}"
               language: "de"
           
-          # Step 5: Wait for TTS to finish
-          - delay:
-              seconds: "{{ ((message | string | length) / 7) | int + 6 }}"
+          # Step 5: Calculate TTS duration and wait for completion
+          - variables:
+              tts_duration: >-
+                {% set words = message.split() | length %}
+                {% set words_per_second = 2.5 %}
+                {% set base_delay = 2 %}
+                {% set calculated = (words / words_per_second) + base_delay %}
+                {% set minimum = 3 %}
+                {% set maximum = 30 %}
+                {{ [maximum, [calculated, minimum] | max] | min }}
+          
+          # Wait for TTS to actually finish by monitoring HomePod states
+          - wait_template: >-
+              {% set all_idle = namespace(value=true) %}
+              {% for hp in playing_homepods %}
+                {% if states(hp) == 'playing' %}
+                  {% set all_idle.value = false %}
+                {% endif %}
+              {% endfor %}
+              {{ all_idle.value }}
+            timeout:
+              seconds: "{{ tts_duration | int(10) }}"
+            continue_on_timeout: true
           
           # Step 6: Restore original volumes
           - action: system_log.write
