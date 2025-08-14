@@ -40,11 +40,9 @@
     weekday:
     - sun
   actions:
-  - metadata: {}
+  - action: homeassistant.restart
     data: {}
-    action: homeassistant.restart
   - action: input_boolean.turn_off
-    metadata: {}
     data: {}
     target:
       entity_id: input_boolean.dusche_aktiv
@@ -64,7 +62,6 @@
     - sun
   actions:
   - action: button.press
-    metadata: {}
     data: {}
     target:
       entity_id:
@@ -85,106 +82,27 @@
   - condition: time
     after: 06:00:00
     before: '22:00:00'
+  variables:
+    media_players:
+      - media_player.apple_tv
+      - media_player.denon_avr_x3200w
+      - media_player.homepod_badezimmer
+      - media_player.homepod_kinderzimmer
+      - media_player.homepod_kuche
+      - media_player.homepod_schlafzimmer
+      - media_player.homepod_wohnzimmer
+      - media_player.homepod_arbeitszimmer
+      - media_player.smarttv_4k
+      - media_player.wohnzimmer
+    idle_players: >
+      {{ media_players | select('has_value') | reject('is_state', 'playing') | list }}
   actions:
-  - choose:
-    - conditions:
-      - condition: not
-        conditions:
-        - condition: state
-          entity_id: media_player.apple_tv
-          state: playing
+  - repeat:
+      count: "{{ idle_players | length }}"
       sequence:
-      - target:
-          entity_id: media_player.apple_tv
-        action: homeassistant.update_entity
-    - conditions:
-      - condition: not
-        conditions:
-        - condition: state
-          entity_id: media_player.denon_avr_x3200w
-          state: playing
-      sequence:
-      - target:
-          entity_id: media_player.denon_avr_x3200w
-        action: homeassistant.update_entity
-    - conditions:
-      - condition: not
-        conditions:
-        - condition: state
-          entity_id: media_player.homepod_badezimmer
-          state: playing
-      sequence:
-      - target:
-          entity_id: media_player.homepod_badezimmer
-        action: homeassistant.update_entity
-    - conditions:
-      - condition: not
-        conditions:
-        - condition: state
-          entity_id: media_player.homepod_kinderzimmer
-          state: playing
-      sequence:
-      - target:
-          entity_id: media_player.homepod_kinderzimmer
-        action: homeassistant.update_entity
-    - conditions:
-      - condition: not
-        conditions:
-        - condition: state
-          entity_id: media_player.homepod_kuche
-          state: playing
-      sequence:
-      - target:
-          entity_id: media_player.homepod_kuche
-        action: homeassistant.update_entity
-    - conditions:
-      - condition: not
-        conditions:
-        - condition: state
-          entity_id: media_player.homepod_schlafzimmer
-          state: playing
-      sequence:
-      - target:
-          entity_id: media_player.homepod_schlafzimmer
-        action: homeassistant.update_entity
-    - conditions:
-      - condition: not
-        conditions:
-        - condition: state
-          entity_id: media_player.homepod_wohnzimmer
-          state: playing
-      sequence:
-      - target:
-          entity_id: media_player.homepod_wohnzimmer
-        action: homeassistant.update_entity
-    - conditions:
-      - condition: not
-        conditions:
-        - condition: state
-          entity_id: media_player.homepod_arbeitszimmer
-          state: playing
-      sequence:
-      - target:
-          entity_id: media_player.homepod_arbeitszimmer
-        action: homeassistant.update_entity
-    - conditions:
-      - condition: not
-        conditions:
-        - condition: state
-          entity_id: media_player.smarttv_4k
-          state: playing
-      sequence:
-      - target:
-          entity_id: media_player.smarttv_4k
-        action: homeassistant.update_entity
-    - conditions:
-      - condition: not
-        conditions:
-        - condition: state
-          entity_id: media_player.wohnzimmer
-          state: playing
-      sequence:
-      - target:
-          entity_id: media_player.wohnzimmer
-        action: homeassistant.update_entity
+      - condition: template
+        value_template: "{{ repeat.index <= (idle_players | length) }}"
+      - action: homeassistant.update_entity
+        target:
+          entity_id: "{{ idle_players[repeat.index - 1] }}"
   mode: single

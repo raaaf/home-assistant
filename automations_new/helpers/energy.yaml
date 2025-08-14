@@ -12,16 +12,6 @@
     below: 25
     id: rennsemmel-battery
     trigger: numeric_state
-  - entity_id: sensor.rennsemmel_remaining_range
-    below: 10
-    id: rennsemmel-range
-    enabled: false
-    trigger: numeric_state
-  - entity_id: sensor.butzabatza_remaining_range
-    below: 10
-    id: butzabatza-range
-    enabled: false
-    trigger: numeric_state
   - entity_id: sensor.butzabatza_remaining_battery
     below: 25
     id: butzabatza-battery
@@ -103,23 +93,14 @@
     trigger: time
   conditions:
   - condition: template
-    value_template: '{{ states(''sensor.dtu_ac_daily_energy'') not in [''unknown'',
-      ''unavailable''] }}
-
-      '
+    value_template: '{{ has_value("sensor.dtu_ac_daily_energy") and states("sensor.dtu_ac_daily_energy") not in ["unknown", "unavailable"] }}'
   actions:
   - data:
       entity_id: input_number.solarproduktion_gestern
-      value: '{{ (states(''sensor.dtu_ac_daily_energy'') | float(0) / 1000) | round(2)
-        }}
-
-        '
+      value: '{{ (states("sensor.dtu_ac_daily_energy") | float(0) / 1000) | round(2) if has_value("sensor.dtu_ac_daily_energy") else 0 }}'
     action: input_number.set_value
   - data:
-      message: 'Solarproduktion gespeichert: {{ (states(''sensor.dtu_ac_daily_energy'')
-        | float(0) / 1000) | round(2) }} kWh
-
-        '
+      message: 'Solarproduktion gespeichert: {{ (states("sensor.dtu_ac_daily_energy") | float(0) / 1000) | round(2) if has_value("sensor.dtu_ac_daily_energy") else 0 }} kWh'
       name: Solar Helper
       domain: automation
     action: logbook.log

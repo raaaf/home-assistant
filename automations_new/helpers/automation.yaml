@@ -16,9 +16,13 @@
   - condition: state
     entity_id: input_boolean.alle_sind_weg
     state: 'off'
+  - condition: template
+    value_template: "{{ has_value('input_boolean.alle_sind_weg') }}"
   - condition: state
     entity_id: binary_sensor.workday_sensor
     state: 'on'
+  - condition: template
+    value_template: "{{ has_value('binary_sensor.workday_sensor') }}"
   - condition: time
     after: 05:00:00
     before: '10:00:00'
@@ -113,7 +117,7 @@
       - data: {}
         action: automation.turn_off
         target:
-          entity_id: automation.1692710690350
+          entity_id: automation.1692710690350  # Additional motion sensor
       - action: scene_presets.start_dynamic_scene
         data:
           preset_id: 8f55e62a-e5f8-456a-9e8b-61f314bd4e99
@@ -133,7 +137,7 @@
       - data: {}
         action: automation.turn_on
         target:
-          entity_id: automation.1692710690350
+          entity_id: automation.1692710690350  # Additional motion sensor
     - conditions:
       - condition: trigger
         id:
@@ -167,9 +171,13 @@
   - condition: state
     entity_id: input_boolean.alle_sind_weg
     state: 'off'
+  - condition: template
+    value_template: "{{ has_value('input_boolean.alle_sind_weg') }}"
   - condition: state
     entity_id: binary_sensor.workday_sensor
     state: 'on'
+  - condition: template
+    value_template: "{{ has_value('binary_sensor.workday_sensor') }}"
   actions:
   - choose:
     - conditions:
@@ -181,7 +189,6 @@
         state: 'on'
       sequence:
       - action: light.turn_on
-        metadata: {}
         data:
           rgb_color:
           - 0
@@ -199,7 +206,6 @@
         state: 'on'
       sequence:
       - action: light.turn_on
-        metadata: {}
         data:
           rgb_color:
           - 247
@@ -218,7 +224,6 @@
         state: 'on'
       sequence:
       - action: light.turn_on
-        metadata: {}
         data:
           rgb_color:
           - 255
