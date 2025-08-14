@@ -14,12 +14,13 @@
         data:
           title: 👉 Nicht erreichbare Geräte
           message: '{{entities}}'
+      monday_enabled: true
+      tuesday_enabled: false  
+      wednesday_enabled: true
+      thursday_enabled: false
+      friday_enabled: true
       saturday_enabled: false
       sunday_enabled: false
-      tuesday_enabled: false
-      thursday_enabled: false
-      monday_enabled: true
-      friday_enabled: true
 - id: '1665868733806'
   alias: Notification » Luftfeuchtigkeit 15:00
   description: Sendet tägliche Benachrichtigung bei Luftfeuchtigkeit über 60%
@@ -38,7 +39,7 @@
         - sensor.temperatur_aussen_sonnenaufgang_humidity
         - sensor.temperatur_aussen_sonnenuntergang_humidity
 - id: '1726065861905'
-  alias: Notifications » Low Battery
+  alias: Notifications » Niedriger Batteriestand
   description: Benachrichtigt bei niedrigem Batteriestand (unter 10%) von Geräten
   use_blueprint:
     path: Blackshome/low-battery-notifications-and-actions.yaml
@@ -48,8 +49,8 @@
       include_persistent_notification: enable_persistent_notification
       battery_level: 10
 - id: '1754479299582'
-  alias: Watchman Monitor - Combined
-  description: Run scheduled checks and alert on sensor issues
+  alias: Watchman » Sensor Überwachung
+  description: Führt geplante Prüfungen aus und warnt bei Sensor-Problemen
   triggers:
   - at: 09:00:00
     id: scheduled_morning
@@ -88,14 +89,18 @@
       - condition: trigger
         id: sensor_change
       - condition: template
-        value_template: '{{ states(''sensor.watchman_missing_entities'') | int > 0
-          }}'
+        value_template: '{{ states(''sensor.watchman_missing_entities'') not in [''unknown'', ''unavailable''] 
+          and states(''sensor.watchman_missing_entities'') | int(0) > 0 }}'
       sequence:
+      - condition: template
+        value_template: " {% set last = state_attr('automation.watchman_monitor_combined',\
+          \ 'last_triggered') %}\n    {{ last is none or (now() - last).total_seconds()\
+          \ > 3600 }}"
       - action: notify.mobile_app_iphone_rafael
         data:
-          title: ⚠️ Sensor Issues Detected
-          message: '{{ states(''sensor.watchman_missing_entities'') }} entities are
-            missing/unavailable. Check Watchman report for details.
+          title: ⚠️ Sensor Probleme erkannt
+          message: '{{ states(''sensor.watchman_missing_entities'') | int(0) }} Entitäten sind
+            nicht verfügbar. Prüfe den Watchman Bericht für Details.
 
             '
           data:
@@ -103,10 +108,10 @@
             group: sensor_health
   mode: single
 - id: '1754557053144'
-  alias: Helper » Fix Unknown Devices
+  alias: Helper » Unbekannte Geräte reparieren
   description: Versucht Geräte mit 'unknown' Status zu reaktivieren
   triggers:
-  - minutes: /30
+  - minutes: /60
     trigger: time_pattern
   - event: start
     trigger: homeassistant
@@ -116,8 +121,10 @@
       unknown_devices: "{{ states | selectattr('state', 'eq', 'unknown') \n   | rejectattr('domain',\
         \ 'in', ['automation', 'script', 'scene']) \n   | list }}\n"
       unknown_count: '{{ unknown_devices | length }}'
+  - condition: template
+    value_template: "{{ unknown_count | int > 0 }}"
   - data:
-      message: Found {{ unknown_count }} devices with unknown state
+      message: Found {{ unknown_count }} devices with unknown state - attempting recovery
       level: info
     action: system_log.write
   - if:
@@ -128,13 +135,17 @@
         '
     then:
     - data:
-        duration: 0
+        message: "ZHA permit mode activated for unknown motion/contact sensors (60s)"
+        level: warning
+      action: system_log.write
+    - data:
+        duration: 60
       action: zha.permit
     - delay: 00:00:02
-    - target:
+    - action: homeassistant.update_entity
+      target:
         entity_id: "{{ unknown_devices \n   | selectattr('entity_id', 'match', '.*_motion_.*|.*_kontaktsensor_.*')\
-          \ \n   | map(attribute='entity_id') \n   | list }}\n   \n"
-      action: homeassistant.update_entity
+          \ \n   | map(attribute='entity_id') \n   | list }}\n"
   - if:
     - condition: template
       value_template: '{{ unknown_devices | selectattr(''entity_id'', ''match'', ''light\.alle_.*'')
@@ -144,17 +155,17 @@
     then:
     - action: group.reload
     - delay: 00:00:02
-    - target:
+    - action: light.turn_on
+      target:
         entity_id: "{{ unknown_devices \n   | selectattr('entity_id', 'match', 'light\\\
           .alle_.*') \n   | map(attribute='entity_id') \n   | list }}\n"
       data:
         brightness: 1
-      action: light.turn_on
     - delay: 00:00:01
-    - target:
+    - action: light.turn_off
+      target:
         entity_id: "{{ unknown_devices \n   | selectattr('entity_id', 'match', 'light\\\
-          .alle_.*') \n   | map(attribute='entity_id') \n   | list }}\n   \n"
-      action: light.turn_off
+          .alle_.*') \n   | map(attribute='entity_id') \n   | list }}\n"
   - if:
     - condition: template
       value_template: '{{ unknown_devices | selectattr(''domain'', ''eq'', ''cover'')
@@ -162,19 +173,23 @@
 
         '
     then:
-    - target:
+    - action: cover.stop_cover
+      target:
         entity_id: "{{ unknown_devices \n   | selectattr('domain', 'eq', 'cover')\
           \ \n   | map(attribute='entity_id') \n   | list }}\n"
       continue_on_error: true
-      action: cover.stop_cover
-    - target:
+    - action: homeassistant.update_entity
+      target:
         entity_id: "{{ unknown_devices \n   | selectattr('domain', 'eq', 'cover')\
-          \ \n   | map(attribute='entity_id') \n   | list }}\n   \n"
-      action: homeassistant.update_entity
+          \ \n   | map(attribute='entity_id') \n   | list }}\n"
   - if:
     - condition: state
       entity_id: sensor.luftfeuchtigkeit_aussen
       state: unknown
+    - condition: template
+      value_template: " {% set last = state_attr('automation.helper_fix_unknown_devices',\
+        \ 'last_triggered') %}\n    {{ last is none or (now() - last).total_seconds()\
+        \ > 3600 }}"
     then:
     - data:
         message: Außensensor offline - prüfe Batterie!
@@ -186,6 +201,7 @@
           data:
             message: "Der Außensensor ist offline. Bitte die Batterie prüfen"
             priority: "normal"
+          continue_on_error: true
         
         # Mobile Benachrichtigung
         - action: notify.mobile_app_iphone_rafael

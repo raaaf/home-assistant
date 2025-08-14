@@ -108,6 +108,7 @@ recorder:
       - sensor.last_boot
       - sensor.date
       - sensor.time
+      - sensor.roborock_a27_737e_status  # Excluded due to state list too long (>255 chars)
     entity_globs:
       - sensor.*_battery_level
       - sensor.*_rssi
@@ -218,6 +219,31 @@ template:
           {% else %}
             idle
           {% endif %}
+
+      - name: "Roborock Status Simplified"
+        unique_id: roborock_status_simplified
+        icon: "mdi:robot-vacuum"
+        state: >
+          {% set vacuum_state = states('vacuum.robbi_2') %}
+          {% if vacuum_state == 'docked' %}
+            docked
+          {% elif vacuum_state == 'cleaning' %}
+            cleaning
+          {% elif vacuum_state == 'returning' %}
+            returning
+          {% elif vacuum_state == 'paused' %}
+            paused
+          {% elif vacuum_state == 'error' %}
+            error
+          {% elif vacuum_state == 'idle' %}
+            idle
+          {% elif vacuum_state in ['unknown', 'unavailable'] %}
+            unavailable
+          {% else %}
+            {{ vacuum_state }}
+          {% endif %}
+        availability: >
+          {{ states('vacuum.robbi_2') not in ['unknown', 'unavailable'] }}
 
   # Time-based sensors
   - sensor:

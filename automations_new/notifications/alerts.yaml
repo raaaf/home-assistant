@@ -10,7 +10,11 @@
     from: 'off'
     to: 'on'
     trigger: state
-  conditions: []
+  conditions:
+  - condition: template
+    value_template: " {% set last = state_attr('automation.notification_es_hat_geklingelt',\
+      \ 'last_triggered') %}\n    {{ last is none or (now() - last).total_seconds()\
+      \ > 30 }}"
   actions:
   - data:
       title: Haustür Klingel
@@ -51,33 +55,37 @@
         id:
         - wasser-leer
       sequence:
-      - entity_id: script.xtodo_create_todo
+      - action: script.turn_on
+        target:
+          entity_id: script.xtodo_create_todo
         data:
           variables:
             todo: Wasserspender » Braucht Wasser
-        action: script.turn_on
+        continue_on_error: true
     - conditions:
       - condition: trigger
         id:
         - pumpe
       sequence:
-      - data:
-          variables:
-            todo: Wasserspender » Pumpe prüfen
+      - action: script.turn_on
         target:
           entity_id: script.xtodo_create_todo
-        action: script.turn_on
+        data:
+          variables:
+            todo: Wasserspender » Pumpe prüfen
+        continue_on_error: true
     - conditions:
       - condition: trigger
         id:
         - clean
       sequence:
-      - data:
-          variables:
-            todo: Wasserspender » Reinigen
+      - action: script.turn_on
         target:
           entity_id: script.xtodo_create_todo
-        action: script.turn_on
+        data:
+          variables:
+            todo: Wasserspender » Reinigen
+        continue_on_error: true
   mode: single
 - id: '1700477276036'
   alias: Notification » Season Change
@@ -116,13 +124,19 @@
     above: 1800
     for:
       hours: 0
-      minutes: 0
+      minutes: 5
       seconds: 0
     trigger: numeric_state
-  conditions: []
+  conditions:
+  - condition: template
+    value_template: "{{ states('sensor.qingping_air_monitor_lite_co2_carbon_dioxide') not in ['unknown', 'unavailable'] }}"
+  - condition: template
+    value_template: " {% set last = state_attr('automation.notification_co2_zu_hoch',\
+      \ 'last_triggered') %}\n    {{ last is none or (now() - last).total_seconds()\
+      \ > 30 * 60 }}"
   actions:
   - data:
-      message: Der Wert liegt aktuell bei {{ states('sensor.qingping_air_monitor_lite_co2_carbon_dioxide')
+      message: Der Wert liegt aktuell bei {{ states('sensor.qingping_air_monitor_lite_co2_carbon_dioxide') | int(0)
         }} ppm!
       title: CO2 zu hoch - Fenster auf im Arbeitszimmer
       data:
@@ -143,6 +157,8 @@
       seconds: 30
   conditions:
   - condition: template
+    value_template: "{{ states('sensor.temperatur_aussen') not in ['unknown', 'unavailable'] }}"
+  - condition: template
     value_template: " {% set last = state_attr('automation.notifications_temperatur_aussen',\
       \ 'last_triggered') %}\n    {{ last is none or (now() - last).total_seconds()\
       \ > 12 * 60 * 60 }}"
@@ -150,7 +166,7 @@
   - metadata: {}
     data:
       title: Aussentemperatur erreicht 30°!
-      message: Sonnenaufgang » {{ states('sensor.temperatur_aussen_sonnenaufgang_temperature')}}
-        und Sonnenuntergang » {{ states('sensor.temperatur_aussen_sonnenuntergang_temperature')}}!
+      message: Sonnenaufgang » {{ states('sensor.temperatur_aussen_sonnenaufgang_temperature') | float(0) | round(1) }}°C
+        und Sonnenuntergang » {{ states('sensor.temperatur_aussen_sonnenuntergang_temperature') | float(0) | round(1) }}°C!
     action: notify.family
   mode: single
