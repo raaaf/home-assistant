@@ -61,7 +61,7 @@
         \ {% if su %}\n  {{ (su | as_datetime | as_local).strftime('%H:%M') }}\n{%\
         \ else %}\n  20:00\n{% endif %}\n"
       helligkeit_offset: "{% if has_value('sensor.balkon_motion_illuminance') %}{% set lux = states('sensor.balkon_motion_illuminance')\
-        \ | float(100) %}{% else %}{% set lux = 100 %} {% if lux < 10 %}\n  {{ -20 }}\n{% elif lux < 50 %}\n  {{\
+        \ | float(100) %}{% else %}{% set lux = 100 %}{% endif %} {% if lux < 10 %}\n  {{ -20 }}\n{% elif lux < 50 %}\n  {{\
         \ -10 }}\n{% elif lux < 200 %}\n  {{ 0 }}\n{% elif lux < 1000 %}\n  {{ 10\
         \ }}\n{% else %}\n  {{ 15 }}\n{% endif %}\n"
       saison_offset_einschlaf: "{% set m = now().month | int %} {% if m == 12 or m\
@@ -82,12 +82,12 @@
         \ stunde < 21 %}\n    {{ 20 }}\n  {% else %}\n    {{ 30 }}\n  {% endif %}\n\
         {% else %}\n  {{ 0 }}\n{% endif %}\n"
       wetter_offset: "{% if has_value('weather.fuerth_bayern') %}{% set w = states('weather.fuerth_bayern') %} {% set temp =\
-        \ state_attr('weather.fuerth_bayern', 'temperature') | float(20) %}{% else %}{% set w = 'sunny' %}{% set temp = 20 %} {% if\
+        \ state_attr('weather.fuerth_bayern', 'temperature') | float(20) %}{% else %}{% set w = 'sunny' %}{% set temp = 20 %}{% endif %} {% if\
         \ w == 'rainy' or w == 'pouring' or w == 'lightning-rainy' %}\n  {{ -15 }}\n\
         {% elif w == 'sunny' and temp > 25 %}\n  {{ 15 }}\n{% elif w == 'partlycloudy'\
         \ and temp > 25 %}\n  {{ 10 }}\n{% else %}\n  {{ 0 }}\n{% endif %}\n"
       temp_offset: "{% if has_value('weather.fuerth_bayern') %}{% set t = state_attr('weather.fuerth_bayern', 'temperature')\
-        \ | float(20) %}{% else %}{% set t = 20 %} {% if t < 5 %}\n  {{ -10 }}\n{% elif t > 28 %}\n  {{ 20 }}\n\
+        \ | float(20) %}{% else %}{% set t = 20 %}{% endif %} {% if t < 5 %}\n  {{ -10 }}\n{% elif t > 28 %}\n  {{ 20 }}\n\
         {% else %}\n  {{ 0 }}\n{% endif %}\n"
       gesamt_offset_einschlaf_schultag: '{% set total = saison_offset_einschlaf|int
         + sonnenuntergang_offset|int + helligkeit_offset|int + wetter_offset|int +

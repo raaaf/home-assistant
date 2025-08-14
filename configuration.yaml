@@ -109,10 +109,16 @@ recorder:
       - sensor.date
       - sensor.time
       - sensor.roborock_a27_737e_status  # Excluded due to state list too long (>255 chars)
+      # Exclude specific problematic energy sensors that cause utility meter errors
+      - sensor.homepod_arbeitszimmer_energy
+      - sensor.kamera_schlafzimmer_energy
     entity_globs:
       - sensor.*_battery_level
       - sensor.*_rssi
       - sensor.*_linkquality
+      # Exclude specific problematic utility meter sensors
+      - sensor.homepod_*_energy_*
+      - sensor.kamera_*_energy_*
 
 # History configuration - filtering handled by recorder configuration
 
@@ -193,7 +199,9 @@ powercalc:
   energy_sensor_friendly_naming: "{} Energy"
   energy_sensor_precision: 2
   power_sensor_precision: 2
-  #sensors: !include powercalc.yaml
+  # Handle edge cases and errors gracefully
+  disable_extended_attributes: true
+  ignore_unavailable_state: true
 
 # ============================================================================
 # TEMPLATE SENSORS
@@ -361,6 +369,10 @@ python_script:
 system_health:
 energy:
 backup:
+
+# System Monitor integration must be configured via UI
+# Go to Settings > Devices & Services > Add Integration > System Monitor
+# This will create entities like sensor.processor_use_percent, etc.
 
 
   

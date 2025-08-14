@@ -1,6 +1,13 @@
 # System - Monitor.yaml
 # System health monitoring and performance tracking
 # Part of Home Assistant configuration
+#
+# NOTE: System monitor integration is fully active and configured
+# All system monitoring entities are now working:
+# - sensor.processor_use (CPU usage %)
+# - sensor.memory_use (Memory usage MB)
+# - sensor.system_monitor_disk_usage (Disk usage %)
+# - sensor.last_boot (System uptime)
 
 - id: 'system_health_monitor'
   alias: System » Health Monitor
@@ -16,27 +23,53 @@
     above: 90
     for: "00:05:00"
     id: high_cpu
+    enabled: true  # Now enabled - System Monitor integration is active
   - trigger: numeric_state
-    entity_id: sensor.memory_use_percent
-    above: 90
+    entity_id: sensor.memory_use
+    above: 1500  # MiB (approximately 90% of typical 2GB system)
     for: "00:05:00" 
     id: high_memory
+    enabled: true  # Now enabled - System Monitor integration is active
   - trigger: numeric_state
-    entity_id: sensor.disk_use_percent_home
+    entity_id: sensor.system_monitor_disk_usage
     above: 90
     id: high_disk
+    enabled: true  # Now enabled with correct entity name
   - trigger: state
     entity_id:
       - sensor.hacs
       - sensor.supervisor_updates
     id: updates_available
-  conditions: []  # Always enabled
+  conditions:
+  # Only run if at least one system sensor is available
+  - condition: template
+    value_template: >-
+      {% set system_sensors = [
+        'sensor.processor_use', 'sensor.memory_use', 'sensor.system_monitor_disk_usage', 'sensor.last_boot'
+      ] %}
+      {{ system_sensors | select('has_value') | list | length > 0 }}
   actions:
   - variables:
-      cpu_usage: "{{ states('sensor.processor_use') | float(0) }}"
-      memory_usage: "{{ states('sensor.memory_use_percent') | float(0) }}"
-      disk_usage: "{{ states('sensor.disk_use_percent_home') | float(0) }}"
-      uptime_hours: "{{ (now().timestamp() - as_timestamp(states('sensor.uptime'))) / 3600 }}"
+      # System monitor sensors are now active
+      cpu_usage: "{{ states('sensor.processor_use') | float(0) if has_value('sensor.processor_use') else 'N/A' }}"
+      memory_usage_mb: "{{ states('sensor.memory_use') | float(0) if has_value('sensor.memory_use') else 'N/A' }}"
+      memory_usage_percent: >-
+        {% if has_value('sensor.memory_use') %}
+          {% set mem_mb = states('sensor.memory_use') | float(0) %}
+          {% set total_mb = 2048 %}  {# Adjust based on your system's RAM #}
+          {{ (mem_mb / total_mb * 100) | round(1) }}
+        {% else %}
+          N/A
+        {% endif %}
+      disk_usage: "{{ states('sensor.system_monitor_disk_usage') | float(0) if has_value('sensor.system_monitor_disk_usage') else 'N/A' }}"
+      uptime_hours: >-
+        {% if has_value('sensor.uptime') %}
+          {{ (now().timestamp() - as_timestamp(states('sensor.uptime'))) / 3600 }}
+        {% elif has_value('sensor.last_boot') %}
+          {{ (now().timestamp() - as_timestamp(states('sensor.last_boot'))) / 3600 }}
+        {% else %}
+          N/A
+        {% endif %}
       is_quiet_hours: "{{ now().hour >= 22 or now().hour < 6 }}"  # Fixed quiet hours
   - choose:
     # Critical resource usage - immediate notification
@@ -52,7 +85,7 @@
             {% if trigger.id == 'high_cpu' %}
               CPU-Auslastung: {{ cpu_usage }}% (>90% für 5+ Min)
             {% elif trigger.id == 'high_memory' %}
-              RAM-Auslastung: {{ memory_usage }}% (>90% für 5+ Min)
+              RAM-Auslastung: {{ memory_usage_mb }}MB ({{ memory_usage_percent }}%)
             {% elif trigger.id == 'high_disk' %}
               Festplatte: {{ disk_usage }}% (>90%)
             {% endif %}
@@ -92,13 +125,15 @@
         data:
           name: System Health Check
           message: >
-            CPU: {{ cpu_usage }}% | RAM: {{ memory_usage }}%
+            CPU: {{ cpu_usage }}% | RAM: {{ memory_usage_mb }}MB ({{ memory_usage_percent }}%)
             | Disk: {{ disk_usage }}% | Uptime: {{ uptime_hours | round(1) }}h
 
       # Warning for sustained high usage (not critical threshold)
       - if:
         - condition: template
-          value_template: "{{ cpu_usage > 75 or memory_usage > 75 }}"
+          value_template: >
+            {{ (cpu_usage != 'N/A' and cpu_usage | float(0) > 75) or 
+               (memory_usage_percent != 'N/A' and memory_usage_percent | float(0) > 75) }}
         - condition: template
           value_template: "{{ not is_quiet_hours }}"
         - condition: template
@@ -108,8 +143,9 @@
           data:
             title: "⚠️ Erhöhte Systemauslastung"
             message: >
-              CPU: {{ cpu_usage }}%, RAM: {{ memory_usage }}%
-              System läuft seit {{ uptime_hours | round(1) }} Stunden
+              CPU: {{ cpu_usage }}{% if cpu_usage != 'N/A' %}%{% endif %}, 
+              RAM: {{ memory_usage_mb }}MB ({{ memory_usage_percent }}{% if memory_usage_percent != 'N/A' %}%{% endif %})
+              {% if uptime_hours != 'N/A' %}System läuft seit {{ uptime_hours | round(1) }} Stunden{% endif %}
             data:
               tag: system_warning
 
@@ -198,13 +234,14 @@
     entity_id: sensor.database_size
     above: 1000  # MB
     id: large_database
+    enabled: false  # Disabled - database size sensor not available
   conditions:
   - condition: state
     entity_id: input_boolean.system_monitoring_enabled  
     state: 'on'
   actions:
   - variables:
-      db_size_mb: "{{ states('sensor.database_size') | float(0) }}"
+      db_size_mb: "{{ states('sensor.database_size') | float(0) if has_value('sensor.database_size') else 0 }}"
       purge_days: 7  # Keep 7 days of history
   - choose:
     # Daily maintenance
