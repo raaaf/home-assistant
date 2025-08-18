@@ -134,37 +134,205 @@
         {% else %}
           0
         {% endif %}
+      
+      # EcoFlow Statistiken vom Vortag
+      ecoflow_ladezyklen_gestern: >-
+        {% set state = states('counter.ecoflow_ladezyklen_heute') %}
+        {{ state if state not in ['unknown', 'unavailable'] else 0 }}
+      
+      ecoflow_entladezyklen_gestern: >-
+        {% set state = states('counter.ecoflow_entladezyklen_heute') %}
+        {{ state if state not in ['unknown', 'unavailable'] else 0 }}
+      
+      ecoflow_current_soc: >-
+        {% set soc = state_attr('sensor.stream_pro', 'state_of_charge') %}
+        {{ soc if soc is not none else 0 }}
+      
+      ecoflow_automation_aktiv: >-
+        {{ 'an' if is_state('input_boolean.ecoflow_automation_enabled', 'on') else 'aus' }}
+      
+      ecoflow_gesamt_zyklen: >-
+        {{ (ecoflow_ladezyklen_gestern|int(0) + ecoflow_entladezyklen_gestern|int(0)) }}
+      
+      # Berechnung PV-Überschuss Nutzung durch EcoFlow
+      vermiedene_einspeisung: >-
+        {% set zyklen = ecoflow_ladezyklen_gestern|int(0) %}
+        {% set min_laufzeit = states('input_number.ecoflow_min_laufzeit')|float(10) %}
+        {% set avg_ladeleistung = 400 %}
+        {{ ((zyklen * min_laufzeit * avg_ladeleistung) / 1000) | round(2) if zyklen > 0 else 0 }}
+      
+      ecoflow_effizienz: >-
+        {% set vermieden = vermiedene_einspeisung|float(0) %}
+        {% set solar = solarproduktion_gestern|float(0) %}
+        {{ ((vermieden / solar * 100) | round(1)) if solar > 0 and vermieden > 0 else 0 }}
   - data:
-      title: ⚡ Stromverbrauch {{ datum_gestern }}
-      message: '**📊 Verbrauch:** 🔌 Gesamt (Brutto): {{ verbrauch_brutto }} kWh 🔌 Netzbezug
-        (Netto): {{ verbrauch_netto }} kWh ⏳ Ø pro Stunde: {{ durchschnitt_pro_stunde
-        }} kWh
+      title: ⚡ Energie-Bilanz {{ datum_gestern }}
+      message: >-
+        **📊 Verbrauch:**
+        🔌 Gesamt (Brutto): {{ verbrauch_brutto }} kWh
+        🔌 Netzbezug (Netto): {{ verbrauch_netto }} kWh
+        ⏳ Ø pro Stunde: {{ durchschnitt_pro_stunde }} kWh
 
-        **❄️ Klimaanlage:** Verbrauch: {{ ac_verbrauch_gestern }} kWh ({{ ac_anteil_prozent
-        }}% vom Gesamtverbrauch) Kosten: {{ ac_kosten_gestern }} € Geschätzte Laufzeit:
-        {{ ac_laufzeit_stunden }} Stunden
+        **❄️ Klimaanlage:**
+        Verbrauch: {{ ac_verbrauch_gestern }} kWh ({{ ac_anteil_prozent }}% vom Gesamtverbrauch)
+        Kosten: {{ ac_kosten_gestern }} €
+        Geschätzte Laufzeit: {{ ac_laufzeit_stunden }} Stunden
 
-        **☀️ Solar:** Produktion: {{ solarproduktion_gestern }} kWh Selbstnutzung:
-        100% angenommen
+        **🔋 EcoFlow STREAM Pro:**
+        Aktueller Ladestand: {{ ecoflow_current_soc }}%
+        Ladezyklen: {{ ecoflow_ladezyklen_gestern }}x
+        Entladezyklen: {{ ecoflow_entladezyklen_gestern }}x
+        Vermiedene Einspeisung: {{ vermiedene_einspeisung }} kWh
+        {% if ecoflow_effizienz|float(0) > 0 %}PV-Nutzungseffizienz: {{ ecoflow_effizienz }}%
+        {% endif %}Automation: {{ ecoflow_automation_aktiv }}
 
-        **💰 Kosten:** ({{ strompreis }} €/kWh) Ohne Solar: {{ kosten_ohne_solar }}
-        € Ersparnis: −{{ ersparnis_gestern }} € ➔ Tatsächlich: {{ kosten_nach_solar
-        }} €
+        **☀️ Solar:**
+        Produktion: {{ solarproduktion_gestern }} kWh
+        {% if vermiedene_einspeisung|float(0) > 0 %}Direktnutzung: {{ (solarproduktion_gestern|float(0) - vermiedene_einspeisung|float(0))|round(2) }} kWh
+        Gespeichert (EcoFlow): {{ vermiedene_einspeisung }} kWh
+        {% else %}Direktnutzung: {{ solarproduktion_gestern }} kWh (angenommen)
+        {% endif %}
 
-        **📈 Effizienz:** Autarkiegrad: {{ ((solarproduktion_gestern / verbrauch_brutto
-        * 100) | round(0)) }}%
+        **💰 Kosten:** ({{ strompreis }} €/kWh)
+        Ohne Solar: {{ kosten_ohne_solar }} €
+        Ersparnis: −{{ ersparnis_gestern }} €
+        ➔ Tatsächlich: {{ kosten_nach_solar }} €
 
-        '
+        **📈 Effizienz:**
+        Autarkiegrad: {{ ((solarproduktion_gestern / verbrauch_brutto * 100) | round(0)) }}%
+        {% if ecoflow_gesamt_zyklen|int(0) > 0 %}EcoFlow-Zyklen: {{ ecoflow_gesamt_zyklen }}
+        {% endif %}
     action: persistent_notification.create
   - data:
-      message: 'Tagesstatistik {{ datum_gestern }}:   Verbrauch {{ verbrauch_brutto
-        }} kWh (Netto: {{ verbrauch_netto }} kWh),   AC-Verbrauch {{ ac_verbrauch_gestern
-        }} kWh ({{ ac_anteil_prozent }}%), Solar {{ solarproduktion_gestern }} kWh,   Kosten
-        {{ kosten_nach_solar }} € (Ersparnis: {{ ersparnis_gestern }} €),   Autarkiegrad
-        {{ ((solarproduktion_gestern / verbrauch_brutto * 100) | round(0)) }}%
-
-        '
-      name: Stromstatistik
-      domain: sensor
+      message: >-
+        Tagesstatistik {{ datum_gestern }}: 
+        Verbrauch {{ verbrauch_brutto }} kWh (Netto: {{ verbrauch_netto }} kWh), 
+        AC-Verbrauch {{ ac_verbrauch_gestern }} kWh ({{ ac_anteil_prozent }}%), 
+        Solar {{ solarproduktion_gestern }} kWh{% if vermiedene_einspeisung|float(0) > 0 %} (EcoFlow: {{ vermiedene_einspeisung }} kWh){% endif %}, 
+        Kosten {{ kosten_nach_solar }} € (Ersparnis: {{ ersparnis_gestern }} €), 
+        Autarkiegrad {{ ((solarproduktion_gestern / verbrauch_brutto * 100) | round(0)) }}%{% if ecoflow_gesamt_zyklen|int(0) > 0 %}, 
+        EcoFlow: {{ ecoflow_ladezyklen_gestern }}L/{{ ecoflow_entladezyklen_gestern }}E Zyklen{% endif %}
+      name: Energie-Bilanz
+      domain: automation
     action: logbook.log
   mode: single
+
+- id: 'ecoflow_status_benachrichtigung'
+  alias: Notification » EcoFlow Status Updates
+  description: >
+    Sendet Benachrichtigungen bei wichtigen EcoFlow-Events wie 
+    Vollladung, kritischem Batteriestand oder Systemfehlern
+  triggers:
+    # EcoFlow voll geladen
+    - platform: numeric_state
+      entity_id: sensor.stream_system_3683_power_battery_soc
+      above: 95
+      id: vollladung
+    
+    # EcoFlow kritisch niedrig
+    - platform: numeric_state
+      entity_id: sensor.stream_system_3683_power_battery_soc
+      below: 15
+      for:
+        minutes: 10
+      id: kritisch_niedrig
+    
+    # Automation automatisch deaktiviert (Sicherheit)
+    - platform: state
+      entity_id: input_boolean.ecoflow_automation_enabled
+      to: 'off'
+      for:
+        minutes: 2
+      id: automation_deaktiviert
+    
+    # Zu viele Zyklen am Tag
+    - platform: numeric_state
+      entity_id: counter.ecoflow_ladezyklen_heute
+      above: 15
+      id: viele_zyklen
+  conditions:
+    # Nur zwischen 8:00 und 22:00 Uhr benachrichtigen
+    - condition: time
+      after: '08:00:00'
+      before: '22:00:00'
+  actions:
+    - choose:
+        # EcoFlow vollständig geladen
+        - conditions:
+            - condition: trigger
+              id: vollladung
+            - condition: state
+              entity_id: input_boolean.ecoflow_lademodus_aktiv
+              state: 'on'
+          sequence:
+            - parallel:
+                - action: notify.rafael
+                  data:
+                    title: "🔋 EcoFlow vollgeladen"
+                    message: >
+                      STREAM Pro ist bei {{ trigger.to_state.state }}% angelangt.
+                      {{ states('counter.ecoflow_ladezyklen_heute') }} Ladezyklen heute.
+                    data:
+                      push:
+                        interruption-level: passive
+                
+                - action: logbook.log
+                  data:
+                    message: >
+                      EcoFlow STREAM Pro vollgeladen: {{ trigger.to_state.state }}%
+                    name: EcoFlow Status
+                    domain: automation
+
+        # Kritisch niedriger Batteriestand
+        - conditions:
+            - condition: trigger
+              id: kritisch_niedrig
+          sequence:
+            - parallel:
+                - action: notify.rafael
+                  data:
+                    title: "⚠️ EcoFlow Batterie niedrig"
+                    message: >
+                      STREAM Pro nur noch {{ trigger.to_state.state }}% geladen!
+                      Nachtmodus: {{ 'aktiv' if is_state('input_boolean.ecoflow_nachtmodus_aktiv', 'on') else 'inaktiv' }}
+                    data:
+                      push:
+                        interruption-level: time-sensitive
+                
+                - action: logbook.log
+                  data:
+                    message: >
+                      ⚠️ EcoFlow STREAM Pro kritisch niedrig: {{ trigger.to_state.state }}%
+                    name: EcoFlow Warning
+                    domain: automation
+
+        # Automation wurde deaktiviert
+        - conditions:
+            - condition: trigger
+              id: automation_deaktiviert
+          sequence:
+            - action: notify.rafael
+              data:
+                title: "🔧 EcoFlow Automation deaktiviert"
+                message: >
+                  Die EcoFlow-Steuerung wurde deaktiviert. 
+                  Lade-/Entladezyklen heute: {{ states('counter.ecoflow_ladezyklen_heute') }}/{{ states('counter.ecoflow_entladezyklen_heute') }}
+                data:
+                  push:
+                    interruption-level: active
+
+        # Viele Schaltzyklen
+        - conditions:
+            - condition: trigger
+              id: viele_zyklen
+          sequence:
+            - action: notify.rafael
+              data:
+                title: "📊 EcoFlow viele Zyklen"
+                message: >
+                  Bereits {{ trigger.to_state.state }} Ladezyklen heute.
+                  Automation wird bei 20 Zyklen automatisch deaktiviert.
+                data:
+                  push:
+                    interruption-level: passive
+  mode: restart

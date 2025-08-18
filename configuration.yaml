@@ -347,6 +347,85 @@ utility_meter:
     cycle: monthly
 
 # ============================================================================
+# ECOFLOW PV-ÜBERSCHUSS HELPER ENTITIES
+# ============================================================================
+
+input_number:
+  ecoflow_min_pv_ueberschuss:
+    name: "EcoFlow Min PV-Überschuss zum Laden"
+    min: 50
+    max: 1000
+    step: 50
+    initial: 100
+    unit_of_measurement: "W"
+    icon: "mdi:solar-power"
+    
+  ecoflow_max_netzbezug:
+    name: "EcoFlow Max Netzbezug vor Stopp"
+    min: 0
+    max: 200
+    step: 10
+    initial: 50
+    unit_of_measurement: "W"
+    icon: "mdi:transmission-tower-import"
+    
+  ecoflow_min_soc_nacht:
+    name: "EcoFlow Min SoC für Nachtentladung"
+    min: 10
+    max: 50
+    step: 5
+    initial: 20
+    unit_of_measurement: "%"
+    icon: "mdi:battery-outline"
+    
+  ecoflow_min_laufzeit:
+    name: "EcoFlow Mindestlaufzeit"
+    min: 5
+    max: 30
+    step: 5
+    initial: 10
+    unit_of_measurement: "min"
+    icon: "mdi:clock-outline"
+    
+  ecoflow_letzter_soc:
+    name: "EcoFlow letzter bekannter SoC"
+    min: 0
+    max: 100
+    step: 1
+    initial: 50
+    unit_of_measurement: "%"
+    icon: "mdi:battery-50"
+
+input_boolean:
+  ecoflow_nachtmodus_aktiv:
+    name: "EcoFlow Nachtmodus aktiv"
+    initial: false
+    icon: "mdi:weather-night"
+    
+  ecoflow_lademodus_aktiv:
+    name: "EcoFlow Lademodus aktiv"
+    initial: false
+    icon: "mdi:battery-charging"
+    
+  ecoflow_automation_enabled:
+    name: "EcoFlow Automation aktiviert"
+    initial: true
+    icon: "mdi:autorenew"
+
+counter:
+  ecoflow_ladezyklen_heute:
+    name: "EcoFlow Ladezyklen heute"
+    initial: 0
+    step: 1
+    icon: "mdi:counter"
+    
+  ecoflow_entladezyklen_heute:
+    name: "EcoFlow Entladezyklen heute"
+    initial: 0
+    step: 1
+    icon: "mdi:battery-arrow-down"
+
+# ============================================================================
 # EXTERNAL FILE INCLUDES
 # ============================================================================
 
@@ -360,6 +439,16 @@ light: !include lights.yaml
 timer: !include timers.yaml
 climate: !include climates.yaml
 
+# Dashboard Konfiguration
+lovelace:
+  mode: storage
+  dashboards:
+    pv-ueberschuss:
+      mode: yaml
+      title: PV-Überschuss Steuerung
+      icon: mdi:solar-power
+      show_in_sidebar: true
+      filename: dashboards/pv_ueberschuss_dashboard.yaml
 
 # ============================================================================
 # SYSTEM FEATURES

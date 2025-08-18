@@ -82,6 +82,7 @@
           message: Wie wäre es mit laden?
         action: notify.rafael
   mode: restart
+
 - id: '1745924954227'
   alias: Helper » Speichere Solarproduktion gestern
   description: 'Speichert die Tagesproduktion der Solaranlage kurz vor Mitternacht
@@ -99,9 +100,262 @@
       entity_id: input_number.solarproduktion_gestern
       value: '{{ (states("sensor.dtu_ac_daily_energy") | float(0) / 1000) | round(2) if has_value("sensor.dtu_ac_daily_energy") else 0 }}'
     action: input_number.set_value
-  - data:
-      message: 'Solarproduktion gespeichert: {{ (states("sensor.dtu_ac_daily_energy") | float(0) / 1000) | round(2) if has_value("sensor.dtu_ac_daily_energy") else 0 }} kWh'
-      name: Solar Helper
-      domain: automation
-    action: logbook.log
+
+# ============================================================================
+# ECOFLOW PV-ÜBERSCHUSS STEUERUNG V3
+# ============================================================================
+
+- id: 'ecoflow_pv_steuerung_v3'
+  alias: 'EcoFlow » PV-Überschuss Steuerung V3'
+  description: 'Lädt bei Überschuss (SoC<80%), entlädt abends (SoC>20%)'
   mode: single
+  
+  triggers:
+    - platform: time_pattern
+      minutes: "/2"  # Alle 2 Minuten prüfen
+    
+    - platform: state
+      entity_id: sensor.einspeisung
+    
+    - platform: state
+      entity_id: sensor.stream_system_3683_power_battery_soc
+  
+  conditions:
+    - condition: state
+      entity_id: input_boolean.ecoflow_automation_enabled
+      state: 'on'
+  
+  actions:
+    # SoC speichern wenn Steckdose an und Wert verfügbar
+    - if:
+        - condition: state
+          entity_id: switch.steckdose_bkk
+          state: 'on'
+        - condition: template
+          value_template: >
+            {{ states('sensor.stream_system_3683_power_battery_soc') 
+               not in ['unknown', 'unavailable'] }}
+      then:
+        - service: input_number.set_value
+          data:
+            entity_id: input_number.ecoflow_letzter_soc
+            value: "{{ states('sensor.stream_system_3683_power_battery_soc')|float(50) }}"
+    
+    # Entscheidungslogik
+    - choose:
+        # LADEN bei Überschuss
+        - conditions:
+            - condition: state
+              entity_id: sensor.ecoflow_soll_laden
+              state: 'True'
+            - condition: state
+              entity_id: switch.steckdose_bkk
+              state: 'off'
+          sequence:
+            - service: switch.turn_on
+              entity_id: switch.steckdose_bkk
+            - service: counter.increment
+              entity_id: counter.ecoflow_ladezyklen_heute
+            - service: persistent_notification.create
+              data:
+                notification_id: "ecoflow_laden"
+                title: "🔋 EcoFlow lädt"
+                message: >
+                  SoC: {{ states('sensor.ecoflow_aktueller_soc') }}%
+                  Überschuss: {{ states('sensor.einspeisung') }}W
+        
+        # ENTLADEN abends/nachts
+        - conditions:
+            - condition: state
+              entity_id: sensor.ecoflow_soll_entladen
+              state: 'True'
+            - condition: state
+              entity_id: switch.steckdose_bkk
+              state: 'off'
+          sequence:
+            - service: switch.turn_on
+              entity_id: switch.steckdose_bkk
+            - service: counter.increment
+              entity_id: counter.ecoflow_entladezyklen_heute
+            - service: persistent_notification.create
+              data:
+                notification_id: "ecoflow_entladen"
+                title: "🌙 EcoFlow entlädt"
+                message: >
+                  SoC: {{ states('sensor.ecoflow_aktueller_soc') }}%
+        
+        # AUSSCHALTEN wenn nichts zu tun
+        - conditions:
+            - condition: state
+              entity_id: switch.steckdose_bkk
+              state: 'on'
+            - condition: template
+              value_template: >
+                {{ not is_state('sensor.ecoflow_soll_laden', 'True') 
+                   and not is_state('sensor.ecoflow_soll_entladen', 'True') }}
+          sequence:
+            - service: switch.turn_off
+              entity_id: switch.steckdose_bkk
+            - service: persistent_notification.create
+              data:
+                notification_id: "ecoflow_pause"
+                title: "⏸️ EcoFlow pausiert"
+                message: >
+                  SoC: {{ states('sensor.ecoflow_aktueller_soc') }}%
+
+- id: 'ecoflow_sicherheit_v3'
+  alias: 'EcoFlow » Sicherheitsabschaltung V3'
+  description: 'Stoppt bei SoC-Grenzen und Fehlern'
+  mode: single
+  
+  triggers:
+    # SoC >= 80%
+    - platform: numeric_state
+      entity_id: sensor.stream_system_3683_power_battery_soc
+      above: 79
+      id: 'soc_voll'
+    
+    # SoC <= 20%
+    - platform: numeric_state
+      entity_id: sensor.stream_system_3683_power_battery_soc
+      below: 21
+      id: 'soc_leer'
+    
+    # Hoher Netzbezug trotz EcoFlow (wenn weder laden noch entladen gewünscht)
+    - platform: template
+      value_template: >
+        {{ is_state('switch.steckdose_bkk', 'on') 
+           and states('sensor.netzbezug')|float(0) > 200
+           and not is_state('sensor.ecoflow_soll_laden', 'True')
+           and not is_state('sensor.ecoflow_soll_entladen', 'True') }}
+      for: "00:02:00"
+      id: 'netzbezug_fehler'
+  
+  conditions:
+    - condition: state
+      entity_id: switch.steckdose_bkk
+      state: 'on'
+  
+  actions:
+    - service: switch.turn_off
+      entity_id: switch.steckdose_bkk
+    
+    - service: persistent_notification.create
+      data:
+        notification_id: "ecoflow_sicherheit"
+        title: "⚠️ EcoFlow Sicherheitsstopp"
+        message: >
+          {% if trigger.id == 'soc_voll' %}
+          Batterie voll ({{ states('sensor.stream_system_3683_power_battery_soc') }}%)
+          {% elif trigger.id == 'soc_leer' %}
+          Batterie leer ({{ states('sensor.stream_system_3683_power_battery_soc') }}%)
+          {% else %}
+          Unerwarteter Netzbezug trotz EcoFlow
+          {% endif %}
+
+- id: 'ecoflow_taegliches_reset_v3'
+  alias: 'EcoFlow » Tägliches Reset V3'
+  description: 'Setzt täglich um Mitternacht die EcoFlow-Zähler zurück'
+  mode: single
+  
+  triggers:
+    - platform: time
+      at: "00:00:30"
+  
+  conditions:
+    - condition: state
+      entity_id: input_boolean.ecoflow_automation_enabled
+      state: 'on'
+  
+  actions:
+    # Statistik-Nachricht senden
+    - service: persistent_notification.create
+      data:
+        notification_id: "ecoflow_tagesbilanz"
+        title: "📊 EcoFlow Tagesbilanz"
+        message: >
+          Ladezyklen: {{ states('counter.ecoflow_ladezyklen_heute') }}
+          Entladezyklen: {{ states('counter.ecoflow_entladezyklen_heute') }}
+          SoC: {{ states('sensor.ecoflow_aktueller_soc') }}%
+    
+    # Zähler zurücksetzen
+    - service: counter.reset
+      entity_id: counter.ecoflow_ladezyklen_heute
+    
+    - service: counter.reset
+      entity_id: counter.ecoflow_entladezyklen_heute
+    
+    # Modi zurücksetzen
+    - service: input_boolean.turn_off
+      entity_id: input_boolean.ecoflow_lademodus_aktiv
+    
+    - service: input_boolean.turn_off
+      entity_id: input_boolean.ecoflow_nachtmodus_aktiv
+
+- id: 'ecoflow_notfall_sicherheit_v3'
+  alias: 'EcoFlow » Notfall-Sicherheit V3'
+  description: 'Deaktiviert System bei zu vielen Schaltzyklen oder Sensorfehlern'
+  mode: single
+  
+  triggers:
+    # Zu viele Schaltzyklen pro Tag
+    - platform: numeric_state
+      entity_id: counter.ecoflow_ladezyklen_heute
+      above: 20
+      id: 'zu_viele_zyklen'
+    
+    # EcoFlow-Integration oder Stromzähler nicht verfügbar
+    - platform: template
+      value_template: >
+        {{ states('sensor.stream_system_3683_power_battery_soc') in ['unknown', 'unavailable']
+           or states('sensor.einspeisung') in ['unknown', 'unavailable'] }}
+      for: "00:05:00"
+      id: 'sensoren_fehler'
+  
+  conditions:
+    - condition: state
+      entity_id: input_boolean.ecoflow_automation_enabled
+      state: 'on'
+  
+  actions:
+    - choose:
+        # Zu viele Schaltzyklen
+        - conditions:
+            - condition: trigger
+              id: 'zu_viele_zyklen'
+          sequence:
+            - service: input_boolean.turn_off
+              entity_id: input_boolean.ecoflow_automation_enabled
+            
+            - service: switch.turn_off
+              entity_id: switch.steckdose_bkk
+            
+            - service: persistent_notification.create
+              data:
+                notification_id: "ecoflow_notfall"
+                title: "🚨 EcoFlow Notfallabschaltung"
+                message: >
+                  Automation deaktiviert - Zu viele Schaltzyklen heute: 
+                  {{ states('counter.ecoflow_ladezyklen_heute') }}
+        
+        # EcoFlow-Integration oder Stromzähler nicht verfügbar
+        - conditions:
+            - condition: trigger
+              id: 'sensoren_fehler'
+          sequence:
+            - service: switch.turn_off
+              entity_id: switch.steckdose_bkk
+            
+            - service: input_boolean.turn_off
+              entity_id: input_boolean.ecoflow_lademodus_aktiv
+            
+            - service: input_boolean.turn_off
+              entity_id: input_boolean.ecoflow_nachtmodus_aktiv
+            
+            - service: persistent_notification.create
+              data:
+                notification_id: "ecoflow_sensoren_fehler"
+                title: "⚠️ EcoFlow Sensorenfehler"
+                message: >
+                  Notabschaltung - Sensor nicht verfügbar: 
+                  EcoFlow SoC oder Einspeisung

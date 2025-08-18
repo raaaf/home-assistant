@@ -294,3 +294,92 @@
       availability_template: >
         {{ states('sensor.stromzahler_saldiert') not in ['unknown', 'unavailable'] 
            and states('sensor.steckdose_bkk_power') not in ['unknown', 'unavailable'] }}
+
+    # ============================================================================
+    # ECOFLOW PV-ÜBERSCHUSS TEMPLATE SENSOREN
+    # ============================================================================
+
+    ecoflow_pv_produktion_aktiv:
+      friendly_name: "EcoFlow PV Produktion aktiv"
+      icon_template: "mdi:weather-sunny"
+      value_template: >
+        {% set hour = now().hour %}
+        {% set pv_power = states('sensor.steckdose_bkk_power')|float(0) %}
+        {{ (hour >= 6 and hour < 21) or pv_power > 50 }}
+      availability_template: "{{ states('sensor.steckdose_bkk_power') not in ['unknown', 'unavailable'] }}"
+
+    ecoflow_aktueller_soc:
+      friendly_name: "EcoFlow aktueller SoC"
+      unit_of_measurement: "%"
+      device_class: battery
+      icon_template: "mdi:battery"
+      value_template: >
+        {% if is_state('switch.steckdose_bkk', 'on') 
+           and states('sensor.stream_system_3683_power_battery_soc') not in ['unknown', 'unavailable'] %}
+          {{ states('sensor.stream_system_3683_power_battery_soc')|float(50) }}
+        {% else %}
+          {{ states('input_number.ecoflow_letzter_soc')|float(50) }}
+        {% endif %}
+      availability_template: >
+        {{ states('input_number.ecoflow_letzter_soc') not in ['unknown', 'unavailable'] }}
+
+    ecoflow_soll_laden:
+      friendly_name: "EcoFlow soll laden"
+      icon_template: "mdi:battery-plus"
+      value_template: >
+        {% set soc = states('sensor.ecoflow_aktueller_soc')|float(50) %}
+        {% set ueberschuss = states('sensor.einspeisung')|float(0) %}
+        {% set pv_aktiv = states('sensor.inverter_ac_power')|float(0) > 50 %}
+        {% set automation_enabled = is_state('input_boolean.ecoflow_automation_enabled', 'on') %}
+        {{ automation_enabled and pv_aktiv and soc < 80 and ueberschuss > 100 }}
+      availability_template: >
+        {{ states('sensor.einspeisung') not in ['unknown', 'unavailable'] 
+           and states('sensor.ecoflow_aktueller_soc') not in ['unknown', 'unavailable'] }}
+
+    ecoflow_soll_entladen:
+      friendly_name: "EcoFlow soll entladen"
+      icon_template: "mdi:battery-arrow-down"
+      value_template: >
+        {% set soc = states('sensor.ecoflow_aktueller_soc')|float(50) %}
+        {% set hour = now().hour %}
+        {% set pv_aktiv = states('sensor.inverter_ac_power')|float(0) > 50 %}
+        {% set automation_enabled = is_state('input_boolean.ecoflow_automation_enabled', 'on') %}
+        {{ automation_enabled and not pv_aktiv and (18 <= hour or hour < 6) and soc > 20 }}
+      availability_template: >
+        {{ states('sensor.ecoflow_aktueller_soc') not in ['unknown', 'unavailable'] 
+           and states('sensor.inverter_ac_power') not in ['unknown', 'unavailable'] }}
+
+    ecoflow_tagesphase:
+      friendly_name: "EcoFlow Tagesphase"
+      icon_template: >
+        {% set hour = now().hour %}
+        {% set pv_aktiv = states('sensor.inverter_ac_power')|float(0) > 50 %}
+        {% if pv_aktiv %}mdi:white-balance-sunny
+        {% elif 18 <= hour or hour < 6 %}mdi:weather-night
+        {% else %}mdi:pause-circle
+        {% endif %}
+      value_template: >
+        {% set hour = now().hour %}
+        {% set pv_aktiv = states('sensor.inverter_ac_power')|float(0) > 50 %}
+        {% if pv_aktiv %}Laden-möglich
+        {% elif 18 <= hour or hour < 6 %}Entladen-Zeit
+        {% else %}Pause
+        {% endif %}
+      availability_template: >
+        {{ states('sensor.inverter_ac_power') not in ['unknown', 'unavailable'] }}
+
+    ecoflow_verfuegbarer_ueberschuss:
+      friendly_name: "EcoFlow verfügbarer PV-Überschuss"
+      unit_of_measurement: "W"
+      device_class: power
+      icon_template: "mdi:solar-power-variant"
+      value_template: >
+        {% set einspeisung = states('sensor.einspeisung')|float(0) %}
+        {% set schwelle = states('input_number.ecoflow_min_pv_ueberschuss')|float(100) %}
+        {% if einspeisung >= schwelle %}
+          {{ (einspeisung - schwelle)|round(0) }}
+        {% else %}
+          0
+        {% endif %}
+      availability_template: >
+        {{ states('sensor.einspeisung') not in ['unknown', 'unavailable'] }}
