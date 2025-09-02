@@ -252,6 +252,28 @@ template:
           {% endif %}
         availability: >
           {{ states('vacuum.robbi_2') not in ['unknown', 'unavailable'] }}
+      - name: "Roborock A27 Status Fixed"
+        unique_id: roborock_a27_status_fixed
+        icon: "mdi:robot-vacuum"
+        state: >
+          {% set vacuum = states('vacuum.robbi_2') %}
+          {% if vacuum == 'docked' %}
+            Docked
+          {% elif vacuum == 'cleaning' %}
+            Cleaning
+          {% elif vacuum == 'returning' %}
+            Returning
+          {% elif vacuum == 'paused' %}
+            Paused
+          {% elif vacuum == 'error' %}
+            Error
+          {% elif vacuum == 'idle' %}
+            Idle
+          {% else %}
+            {{ vacuum | title }}
+          {% endif %}
+        availability: >
+          {{ states('vacuum.robbi_2') not in ['unknown', 'unavailable'] }}
 
   # Time-based sensors
   - sensor:
@@ -326,67 +348,15 @@ utility_meter:
     name: "AC Energie Täglich"
     cycle: daily
     
-  taglicher_netzbezug:
-    source: sensor.netzbezug_energie
-    name: "Täglicher Netzbezug"
-    cycle: daily
-    
-  tagliche_einspeisung:
-    source: sensor.einspeisung_energie
-    name: "Tägliche Einspeisung"
-    cycle: daily
-    
-  monatlicher_netzbezug:
-    source: sensor.netzbezug_energie
-    name: "Monatlicher Netzbezug"
-    cycle: monthly
-    
-  monatliche_einspeisung:
-    source: sensor.einspeisung_energie
-    name: "Monatliche Einspeisung"
-    cycle: monthly
+  # Utility Meter für Energy müssen Integration Sensoren verwenden
+  # Diese werden automatisch durch Home Assistant Energy Dashboard erstellt
+  # Falls sie nicht existieren, können sie über Settings > Energy konfiguriert werden
 
 # ============================================================================
-# ECOFLOW PV-ÜBERSCHUSS HELPER ENTITIES
+# ECOFLOW MONITORING HELPER ENTITIES - Nur essentiell für Monitoring
 # ============================================================================
 
 input_number:
-  ecoflow_min_pv_ueberschuss:
-    name: "EcoFlow Min PV-Überschuss zum Laden"
-    min: 50
-    max: 1000
-    step: 50
-    initial: 100
-    unit_of_measurement: "W"
-    icon: "mdi:solar-power"
-    
-  ecoflow_max_netzbezug:
-    name: "EcoFlow Max Netzbezug vor Stopp"
-    min: 0
-    max: 200
-    step: 10
-    initial: 50
-    unit_of_measurement: "W"
-    icon: "mdi:transmission-tower-import"
-    
-  ecoflow_min_soc_nacht:
-    name: "EcoFlow Min SoC für Nachtentladung"
-    min: 10
-    max: 50
-    step: 5
-    initial: 20
-    unit_of_measurement: "%"
-    icon: "mdi:battery-outline"
-    
-  ecoflow_min_laufzeit:
-    name: "EcoFlow Mindestlaufzeit"
-    min: 5
-    max: 30
-    step: 5
-    initial: 10
-    unit_of_measurement: "min"
-    icon: "mdi:clock-outline"
-    
   ecoflow_letzter_soc:
     name: "EcoFlow letzter bekannter SoC"
     min: 0
@@ -395,35 +365,17 @@ input_number:
     initial: 50
     unit_of_measurement: "%"
     icon: "mdi:battery-50"
-
+    
 input_boolean:
-  ecoflow_nachtmodus_aktiv:
-    name: "EcoFlow Nachtmodus aktiv"
-    initial: false
-    icon: "mdi:weather-night"
-    
-  ecoflow_lademodus_aktiv:
-    name: "EcoFlow Lademodus aktiv"
-    initial: false
-    icon: "mdi:battery-charging"
-    
-  ecoflow_automation_enabled:
-    name: "EcoFlow Automation aktiviert"
+  ecoflow_monitoring_aktiv:
+    name: "EcoFlow Monitoring aktiviert"
     initial: true
-    icon: "mdi:autorenew"
-
-counter:
-  ecoflow_ladezyklen_heute:
-    name: "EcoFlow Ladezyklen heute"
-    initial: 0
-    step: 1
-    icon: "mdi:counter"
+    icon: "mdi:monitor-eye"
     
-  ecoflow_entladezyklen_heute:
-    name: "EcoFlow Entladezyklen heute"
-    initial: 0
-    step: 1
-    icon: "mdi:battery-arrow-down"
+  ecoflow_steckdosen_warnung_aktiv:
+    name: "Steckdosen-Warnung aktiviert"
+    initial: true
+    icon: "mdi:alert-circle-outline"
 
 # ============================================================================
 # EXTERNAL FILE INCLUDES
@@ -443,9 +395,9 @@ climate: !include climates.yaml
 lovelace:
   mode: storage
   dashboards:
-    pv-ueberschuss:
+    ecoflow-monitor:
       mode: yaml
-      title: PV-Überschuss Steuerung
+      title: EcoFlow Monitor
       icon: mdi:solar-power
       show_in_sidebar: true
       filename: dashboards/pv_ueberschuss_dashboard.yaml

@@ -296,8 +296,9 @@
            and states('sensor.steckdose_bkk_power') not in ['unknown', 'unavailable'] }}
 
     # ============================================================================
-    # ECOFLOW PV-ÜBERSCHUSS TEMPLATE SENSOREN
+    # ECOFLOW MONITORING TEMPLATE SENSOREN - NUR ANZEIGE, KEINE STEUERUNG!
     # ============================================================================
+    # WICHTIG: Diese Sensoren steuern NICHTS mehr - nur Monitoring/Dashboard!
 
     ecoflow_pv_produktion_aktiv:
       friendly_name: "EcoFlow PV Produktion aktiv"
@@ -323,63 +324,77 @@
       availability_template: >
         {{ states('input_number.ecoflow_letzter_soc') not in ['unknown', 'unavailable'] }}
 
-    ecoflow_soll_laden:
-      friendly_name: "EcoFlow soll laden"
-      icon_template: "mdi:battery-plus"
-      value_template: >
-        {% set soc = states('sensor.ecoflow_aktueller_soc')|float(50) %}
-        {% set ueberschuss = states('sensor.einspeisung')|float(0) %}
-        {% set pv_aktiv = states('sensor.inverter_ac_power')|float(0) > 50 %}
-        {% set automation_enabled = is_state('input_boolean.ecoflow_automation_enabled', 'on') %}
-        {{ automation_enabled and pv_aktiv and soc < 80 and ueberschuss > 100 }}
-      availability_template: >
-        {{ states('sensor.einspeisung') not in ['unknown', 'unavailable'] 
-           and states('sensor.ecoflow_aktueller_soc') not in ['unknown', 'unavailable'] }}
-
-    ecoflow_soll_entladen:
-      friendly_name: "EcoFlow soll entladen"
-      icon_template: "mdi:battery-arrow-down"
-      value_template: >
-        {% set soc = states('sensor.ecoflow_aktueller_soc')|float(50) %}
-        {% set hour = now().hour %}
-        {% set pv_aktiv = states('sensor.inverter_ac_power')|float(0) > 50 %}
-        {% set automation_enabled = is_state('input_boolean.ecoflow_automation_enabled', 'on') %}
-        {{ automation_enabled and not pv_aktiv and (18 <= hour or hour < 6) and soc > 20 }}
-      availability_template: >
-        {{ states('sensor.ecoflow_aktueller_soc') not in ['unknown', 'unavailable'] 
-           and states('sensor.inverter_ac_power') not in ['unknown', 'unavailable'] }}
+# Würde-laden/entladen Indikatoren entfernt - EcoFlow entscheidet automatisch
 
     ecoflow_tagesphase:
-      friendly_name: "EcoFlow Tagesphase"
+      friendly_name: "EcoFlow Tagesphase (Monitoring)"
       icon_template: >
-        {% set hour = now().hour %}
-        {% set pv_aktiv = states('sensor.inverter_ac_power')|float(0) > 50 %}
-        {% if pv_aktiv %}mdi:white-balance-sunny
-        {% elif 18 <= hour or hour < 6 %}mdi:weather-night
-        {% else %}mdi:pause-circle
+        {% set wuerde_laden = is_state('sensor.ecoflow_wuerde_laden', 'true') %}
+        {% set wuerde_entladen = is_state('sensor.ecoflow_wuerde_entladen', 'true') %}
+        {% set steckdose_an = is_state('switch.steckdose_bkk', 'on') %}
+        {% if not steckdose_an %}mdi:alert-circle
+        {% elif wuerde_laden %}mdi:battery-charging-50
+        {% elif wuerde_entladen %}mdi:battery-arrow-down
+        {% else %}mdi:battery-50
         {% endif %}
       value_template: >
-        {% set hour = now().hour %}
-        {% set pv_aktiv = states('sensor.inverter_ac_power')|float(0) > 50 %}
-        {% if pv_aktiv %}Laden-möglich
-        {% elif 18 <= hour or hour < 6 %}Entladen-Zeit
-        {% else %}Pause
+        {% set wuerde_laden = is_state('sensor.ecoflow_wuerde_laden', 'true') %}
+        {% set wuerde_entladen = is_state('sensor.ecoflow_wuerde_entladen', 'true') %}
+        {% set steckdose_an = is_state('switch.steckdose_bkk', 'on') %}
+        {% if not steckdose_an %}⚠️ STECKDOSE AUS - PV stillgelegt!
+        {% elif wuerde_laden %}PV-Überschuss (Auto-Ladung)
+        {% elif wuerde_entladen %}Nacht-Entladung (Automatisch)
+        {% else %}Pause - EcoFlow regelt selbst
         {% endif %}
       availability_template: >
-        {{ states('sensor.inverter_ac_power') not in ['unknown', 'unavailable'] }}
+        {{ states('sensor.inverter_ac_power') not in ['unknown', 'unavailable'] 
+           and states('switch.steckdose_bkk') not in ['unknown', 'unavailable'] }}
 
-    ecoflow_verfuegbarer_ueberschuss:
-      friendly_name: "EcoFlow verfügbarer PV-Überschuss"
-      unit_of_measurement: "W"
-      device_class: power
-      icon_template: "mdi:solar-power-variant"
+# Verfügbarer Überschuss entfernt - EcoFlow nutzt automatisch allen verfügbaren Überschuss
+
+    # ============================================================================
+    # ECOFLOW STATISTIK-SENSOREN - Geschätzte Werte für Monitoring
+    # ============================================================================
+    
+    pv_eigenverbrauch_quote:
+      friendly_name: "PV-Eigenverbrauchsquote"
+      unit_of_measurement: "%"
+      icon_template: "mdi:home-lightning-bolt"
       value_template: >
-        {% set einspeisung = states('sensor.einspeisung')|float(0) %}
-        {% set schwelle = states('input_number.ecoflow_min_pv_ueberschuss')|float(100) %}
-        {% if einspeisung >= schwelle %}
-          {{ (einspeisung - schwelle)|round(0) }}
+        {% set pv_heute = states('sensor.solarproduktion_gestern')|float(0) %}
+        {% set einspeisung_heute = state_attr('sensor.tagliche_einspeisung', 'last_period')|float(0) if state_attr('sensor.tagliche_einspeisung', 'last_period') is not none else 0 %}
+        {% if pv_heute > 0 %}
+          {{ ((1 - einspeisung_heute/pv_heute) * 100)|round(1) }}
         {% else %}
           0
         {% endif %}
       availability_template: >
-        {{ states('sensor.einspeisung') not in ['unknown', 'unavailable'] }}
+        {{ states('sensor.solarproduktion_gestern') not in ['unknown', 'unavailable'] }}
+
+# EcoFlow Effizienz-Sensor entfernt - Nicht mehr relevant bei automatischer Regelung
+
+    ecoflow_system_status:
+      friendly_name: "EcoFlow System Status"
+      icon_template: >
+        {% set steckdose_an = is_state('switch.steckdose_bkk', 'on') %}
+        {% set monitoring_aktiv = is_state('input_boolean.ecoflow_monitoring_aktiv', 'on') %}
+        {% set pv_power = states('sensor.inverter_ac_power')|float(0) %}
+        {% if not steckdose_an %}mdi:alert-circle
+        {% elif not monitoring_aktiv %}mdi:monitor-off
+        {% elif pv_power > 50 %}mdi:solar-power
+        {% else %}mdi:home-battery
+        {% endif %}
+      value_template: >
+        {% set steckdose_an = is_state('switch.steckdose_bkk', 'on') %}
+        {% set monitoring_aktiv = is_state('input_boolean.ecoflow_monitoring_aktiv', 'on') %}
+        {% set pv_power = states('sensor.inverter_ac_power')|float(0) %}
+        {% set soc = states('sensor.ecoflow_aktueller_soc')|float(50) %}
+        {% if not steckdose_an %}KRITISCH - Steckdose AUS
+        {% elif not monitoring_aktiv %}Monitoring inaktiv
+        {% elif pv_power > 50 %}PV aktiv - EcoFlow Auto-Modus
+        {% elif soc > 20 %}Bereit für Nacht-Entladung
+        {% else %}Akku niedrig - Schonmodus
+        {% endif %}
+      availability_template: >
+        {{ states('switch.steckdose_bkk') not in ['unknown', 'unavailable']
+           and states('input_boolean.ecoflow_monitoring_aktiv') not in ['unknown', 'unavailable'] }}

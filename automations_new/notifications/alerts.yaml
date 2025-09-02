@@ -14,16 +14,127 @@
   - condition: template
     value_template: " {% set last = state_attr('automation.notification_es_hat_geklingelt',\
       \ 'last_triggered') %}\n    {{ last is none or (now() - last).total_seconds()\
-      \ > 30 }}"
+      \ > 60 }}"
   actions:
-  - data:
-      title: Haustür Klingel
-      message: '{{ now().strftime(''%H:%M Uhr, %d.%m.%Y'') }}'
-      data:
-        push:
-          interruption-level: critical
-    action: notify.family
+  - variables:
+      rafael_zuhause: "{{ is_state('person.rafael', 'home') }}"
+      alex_zuhause: "{{ is_state('person.alex', 'home') }}"
+      niemand_zuhause: "{{ is_state('input_boolean.alle_sind_weg', 'on') }}"
+      ist_dunkel: "{{ is_state('input_boolean.es_ist_dunkel', 'on') }}"
+      anwesenheits_status: >
+        {% if rafael_zuhause and alex_zuhause %}
+          Beide zuhause
+        {% elif rafael_zuhause %}
+          Rafael zuhause
+        {% elif alex_zuhause %}
+          Alex zuhause
+        {% else %}
+          Niemand zuhause
+        {% endif %}
+  - choose:
+    - alias: "Beide sind zuhause"
+      conditions:
+      - condition: template
+        value_template: "{{ rafael_zuhause and alex_zuhause }}"
+      sequence:
+      - action: notify.mobile_app_macbook_pro_rafael
+        data:
+          title: "🔔 Haustür Klingel"
+          message: "{{ now().strftime('%A, %H:%M Uhr, %d.%m.%Y') }} - {{ anwesenheits_status }}"
+          data:
+            push:
+              interruption-level: critical
+      - action: notify.mobile_app_macbook_air_von_alexandra
+        data:
+          title: "🔔 Haustür Klingel"
+          message: "{{ now().strftime('%A, %H:%M Uhr, %d.%m.%Y') }} - {{ anwesenheits_status }}"
+          data:
+            push:
+              interruption-level: critical
+    - alias: "Nur Rafael ist zuhause"
+      conditions:
+      - condition: template
+        value_template: "{{ rafael_zuhause and not alex_zuhause }}"
+      sequence:
+      - action: notify.mobile_app_macbook_pro_rafael
+        data:
+          title: "🔔 Haustür Klingel"
+          message: "{{ now().strftime('%A, %H:%M Uhr, %d.%m.%Y') }} - {{ anwesenheits_status }}"
+          data:
+            push:
+              interruption-level: critical
+    - alias: "Nur Alex ist zuhause"
+      conditions:
+      - condition: template
+        value_template: "{{ alex_zuhause and not rafael_zuhause }}"
+      sequence:
+      - action: notify.mobile_app_macbook_air_von_alexandra
+        data:
+          title: "🔔 Haustür Klingel"
+          message: "{{ now().strftime('%A, %H:%M Uhr, %d.%m.%Y') }} - {{ anwesenheits_status }}"
+          data:
+            push:
+              interruption-level: critical
+    - alias: "Niemand ist zuhause"
+      conditions:
+      - condition: template
+        value_template: "{{ niemand_zuhause }}"
+      sequence:
+      - action: notify.mobile_app_iphone_rafael
+        data:
+          title: "🔔 Haustür Klingel"
+          message: "{{ now().strftime('%A, %H:%M Uhr, %d.%m.%Y') }} - {{ anwesenheits_status }}"
+          data:
+            push:
+              interruption-level: critical
+  - alias: "Lichter blinken lassen (nur tagsüber)"
+    choose:
+    - conditions:
+      - condition: template
+        value_template: "{{ not ist_dunkel }}"
+      sequence:
+      - variables:
+          urspruenglicher_lichtzustand: "{{ states('light.alle_arbeitszimmer_lichter') }}"
+          urspruengliche_helligkeit: "{{ state_attr('light.alle_arbeitszimmer_lichter', 'brightness') | int(0) }}"
+      - alias: "3x blinken"
+        repeat:
+          count: 3
+          sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.alle_arbeitszimmer_lichter
+            data:
+              brightness_pct: 100
+              transition: 0
+          - delay:
+              milliseconds: 500
+          - action: light.turn_off
+            target:
+              entity_id: light.alle_arbeitszimmer_lichter
+            data:
+              transition: 0
+          - delay:
+              milliseconds: 500
+      - alias: "Ursprünglichen Lichtzustand wiederherstellen"
+        choose:
+        - conditions:
+          - condition: template
+            value_template: "{{ urspruenglicher_lichtzustand == 'on' }}"
+          sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.alle_arbeitszimmer_lichter
+            data:
+              brightness: "{{ urspruengliche_helligkeit }}"
+              transition: 1
+        default:
+        - action: light.turn_off
+          target:
+            entity_id: light.alle_arbeitszimmer_lichter
+          data:
+            transition: 1
   mode: single
+  max_exceeded: silent
 - id: '1692865362999'
   alias: Notification » Wasserspender
   description: Überwacht Wasserspender und benachrichtigt bei leerem Tank, Pumpenprobleme

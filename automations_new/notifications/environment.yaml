@@ -70,17 +70,17 @@
     trigger: time
   conditions:
   - condition: template
-    value_template: "{{ state_attr('sensor.taglicher_netzbezug','last_period')\
-      \ is not none\n   and states('sensor.solarproduktion_gestern') not in\
-      \ ['unknown', 'unavailable']\n   and states('sensor.butzabatza_electricity_price') not in\
-      \ ['unknown', 'unavailable']\n   and state_attr('sensor.ac_current_energy','last_period')\
-      \ is not none }}\n"
+    value_template: >
+      {{ states('sensor.solarproduktion_gestern') not in ['unknown', 'unavailable']
+         and state_attr('sensor.ac_energy_daily','last_period') is not none }}
   actions:
   - variables:
-      verbrauch_netto: '{{ state_attr(''sensor.taglicher_netzbezug'',''last_period'')
-        | float(0) | round(2) }}
-
-        '
+      verbrauch_netto: >-
+        {% if state_attr('sensor.taglicher_netzbezug','last_period') is not none %}
+          {{ state_attr('sensor.taglicher_netzbezug','last_period') | float(0) | round(2) }}
+        {% else %}
+          0
+        {% endif %}
       solarproduktion_gestern: '{{ states(''sensor.solarproduktion_gestern'')
         | float(0) }}
 
@@ -89,8 +89,12 @@
         }}
 
         '
-      strompreis: '{{ states(''sensor.butzabatza_electricity_price'') | float(0.30)
-        }}
+      strompreis: >-
+        {% if states('sensor.butzabatza_electricity_price') not in ['unknown', 'unavailable'] %}
+          {{ states('sensor.butzabatza_electricity_price') | float(0.30) }}
+        {% else %}
+          0.30
+        {% endif %}
 
         '
       kosten_ohne_solar: '{{ (verbrauch_brutto * strompreis) | round(2) }}
@@ -108,11 +112,11 @@
       datum_gestern: '{{ (now() - timedelta(days=1)).strftime(''%d.%m.%Y'') }}
 
         '
-      ac_verbrauch_gestern: '{{ state_attr(''sensor.ac_current_energy'',''last_period'')
+      ac_verbrauch_gestern: '{{ state_attr(''sensor.ac_energy_daily'',''last_period'')
         | float(0) | round(2) }}
 
         '
-      ac_kosten_gestern: '{{ (state_attr(''sensor.ac_current_energy'',''last_period'')
+      ac_kosten_gestern: '{{ (state_attr(''sensor.ac_energy_daily'',''last_period'')
         | float(0) * strompreis) | round(2) }}
 
         '
@@ -145,8 +149,8 @@
         {{ state if state not in ['unknown', 'unavailable'] else 0 }}
       
       ecoflow_current_soc: >-
-        {% set soc = state_attr('sensor.stream_pro', 'state_of_charge') %}
-        {{ soc if soc is not none else 0 }}
+        {% set soc = states('sensor.ecoflow_aktueller_soc')|float(0) %}
+        {{ soc if soc > 0 else 0 }}
       
       ecoflow_automation_aktiv: >-
         {{ 'an' if is_state('input_boolean.ecoflow_automation_enabled', 'on') else 'aus' }}

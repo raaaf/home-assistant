@@ -78,8 +78,8 @@
           level: info
       - action: watchman.report
         data:
-          send_notification: true
           parse_config: true
+          create_file: true
         continue_on_error: true
       - action: system_log.write
         data:
