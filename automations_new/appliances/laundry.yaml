@@ -58,40 +58,24 @@
         data:
           option: "Fertig"
       
-      # Parallel: HomePod Ansage + Mobile Benachrichtigungen + Persistent Notification
+      # Mobile Benachrichtigungen + Persistent Notification
       - parallel:
-          # HomePod Ansage (kritisch - immer außer Ruhezeiten)
-          - action: script.hausgeraete_ansage
+          # Mobile Benachrichtigungen (kritisch - funktioniert überall)
+          - action: notify.rafael
             data:
-              message: "Die Waschmaschine ist fertig"
-              priority: "kritisch"
+              title: "🧺 Waschmaschine ist fertig"
+              message: "Fertig um {{ now().strftime('%H:%M Uhr') }}"
+              data:
+                push:
+                  interruption-level: critical
           
-          # Mobile Benachrichtigungen (nur wenn zuhause)
-          - if:
-              - condition: state
-                entity_id: person.rafael
-                state: home
-            then:
-              - action: notify.rafael
-                data:
-                  title: "🧺 Waschmaschine ist fertig"
-                  message: "Fertig um {{ now().strftime('%H:%M Uhr') }}"
-                  data:
-                    push:
-                      interruption-level: critical
-          
-          - if:
-              - condition: state
-                entity_id: person.alex
-                state: home
-            then:
-              - action: notify.alex
-                data:
-                  title: "🧺 Waschmaschine ist fertig"
-                  message: "Fertig um {{ now().strftime('%H:%M Uhr') }}"
-                  data:
-                    push:
-                      interruption-level: critical
+          - action: notify.alex
+            data:
+              title: "🧺 Waschmaschine ist fertig"
+              message: "Fertig um {{ now().strftime('%H:%M Uhr') }}"
+              data:
+                push:
+                  interruption-level: critical
           
           # Persistent Notification als Fallback/Backup
           - action: persistent_notification.create
@@ -180,40 +164,24 @@
         data:
           option: "Fertig"
       
-      # Parallel: HomePod Ansage + Mobile Benachrichtigungen + Persistent Notification
+      # Mobile Benachrichtigungen + Persistent Notification
       - parallel:
-          # HomePod Ansage (kritisch - Arbeitszimmer da näher zur Waschküche)
-          - action: script.hausgeraete_ansage
+          # Mobile Benachrichtigungen (kritisch - funktioniert überall)
+          - action: notify.rafael
             data:
-              message: "Der Trockner ist fertig"
-              priority: "kritisch"
+              title: "🧺 Trockner ist fertig"
+              message: "Der Trockner ist fertig! ({{ now().strftime('%H:%M Uhr') }})"
+              data:
+                push:
+                  interruption-level: critical
           
-          # Mobile Benachrichtigungen (nur wenn zuhause)
-          - if:
-              - condition: state
-                entity_id: person.rafael
-                state: home
-            then:
-              - action: notify.rafael
-                data:
-                  title: "🧺 Trockner ist fertig"
-                  message: "Der Trockner ist fertig! ({{ now().strftime('%H:%M Uhr') }})"
-                  data:
-                    push:
-                      interruption-level: critical
-          
-          - if:
-              - condition: state
-                entity_id: person.alex
-                state: home
-            then:
-              - action: notify.alex
-                data:
-                  title: "🧺 Trockner ist fertig"
-                  message: "Der Trockner ist fertig! ({{ now().strftime('%H:%M Uhr') }})"
-                  data:
-                    push:
-                      interruption-level: critical
+          - action: notify.alex
+            data:
+              title: "🧺 Trockner ist fertig"
+              message: "Der Trockner ist fertig! ({{ now().strftime('%H:%M Uhr') }})"
+              data:
+                push:
+                  interruption-level: critical
           
           # Persistent Notification als Fallback/Backup
           - action: persistent_notification.create

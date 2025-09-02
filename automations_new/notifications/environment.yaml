@@ -75,147 +75,110 @@
          and state_attr('sensor.ac_energy_daily','last_period') is not none }}
   actions:
   - variables:
+      # Check if we have historical data or need to use current values
+      has_historical_data: >-
+        {{ state_attr('sensor.taglicher_netzbezug','last_period') is not none 
+           and state_attr('sensor.taglicher_netzbezug','last_period') | float(0) > 0 }}
+      
       verbrauch_netto: >-
-        {% if state_attr('sensor.taglicher_netzbezug','last_period') is not none %}
-          {{ state_attr('sensor.taglicher_netzbezug','last_period') | float(0) | round(2) }}
+        {% set last = state_attr('sensor.taglicher_netzbezug','last_period') %}
+        {% if last is not none and last | float(0) > 0 %}
+          {{ last | float(0) | round(1) }}
         {% else %}
-          0
+          {{ states('sensor.taglicher_netzbezug') | float(0) | round(1) }}
         {% endif %}
-      solarproduktion_gestern: '{{ states(''sensor.solarproduktion_gestern'')
-        | float(0) }}
-
-        '
-      verbrauch_brutto: '{{ (verbrauch_netto + solarproduktion_gestern) | round(2)
-        }}
-
-        '
+      
+      solarproduktion_gestern: >-
+        {% set stored = states('sensor.solarproduktion_gestern') | float(0) %}
+        {% if stored > 0 %}
+          {{ stored | round(1) }}
+        {% else %}
+          {% set current = states('sensor.dtu_ac_daily_energy') | float(0) %}
+          {{ (current / 1000) | round(1) if current > 0 else 0 }}
+        {% endif %}
+      
+      verbrauch_brutto: '{{ (verbrauch_netto + solarproduktion_gestern) | round(1) }}'
       strompreis: >-
         {% if states('sensor.butzabatza_electricity_price') not in ['unknown', 'unavailable'] %}
           {{ states('sensor.butzabatza_electricity_price') | float(0.30) }}
         {% else %}
           0.30
         {% endif %}
-
-        '
-      kosten_ohne_solar: '{{ (verbrauch_brutto * strompreis) | round(2) }}
-
-        '
-      ersparnis_gestern: '{{ (solarproduktion_gestern * strompreis) | round(2) }}
-
-        '
-      kosten_nach_solar: '{{ (verbrauch_netto * strompreis) | round(2) }}
-
-        '
-      durchschnitt_pro_stunde: '{{ (verbrauch_netto / 24) | round(2) }}
-
-        '
-      datum_gestern: '{{ (now() - timedelta(days=1)).strftime(''%d.%m.%Y'') }}
-
-        '
-      ac_verbrauch_gestern: '{{ state_attr(''sensor.ac_energy_daily'',''last_period'')
-        | float(0) | round(2) }}
-
-        '
-      ac_kosten_gestern: '{{ (state_attr(''sensor.ac_energy_daily'',''last_period'')
-        | float(0) * strompreis) | round(2) }}
-
-        '
+      kosten_ohne_solar: '{{ (verbrauch_brutto * strompreis) | round(2) }}'
+      ersparnis_gestern: '{{ (solarproduktion_gestern * strompreis) | round(2) }}'
+      kosten_nach_solar: '{{ (verbrauch_netto * strompreis) | round(2) }}'
+      datum_gestern: '{{ (now() - timedelta(days=1)).strftime(''%d.%m.%Y'') }}'
+      
+      # Eigenverbrauchsquote berechnen
+      eigenverbrauch_quote: >-
+        {% set solar = solarproduktion_gestern | float(0) %}
+        {% set netto = verbrauch_netto | float(0) %}
+        {% set brutto = verbrauch_brutto | float(0) %}
+        {% if solar > 0 and brutto > 0 %}
+          {{ ((solar / brutto * 100) | round(0)) }}
+        {% else %}
+          0
+        {% endif %}
+      
+      # AC Verbrauch nur wenn signifikant
+      ac_verbrauch_gestern: >-
+        {% set last = state_attr('sensor.ac_energy_daily','last_period') %}
+        {% if last is not none and last | float(0) > 0 %}
+          {{ last | float(0) | round(1) }}
+        {% else %}
+          {{ states('sensor.ac_energy_daily') | float(0) | round(1) }}
+        {% endif %}
       ac_anteil_prozent: >-
         {% set brutto = verbrauch_brutto | float(0) %}
         {% set ac_usage = ac_verbrauch_gestern | float(0) %}
         {% if brutto > 0 and ac_usage >= 0 %}
-          {{ ((ac_usage / brutto) * 100) | round(1) }}
-        {% else %}
-          0
-        {% endif %}
-      ac_laufzeit_stunden: >-
-        {% set avg_power = states('sensor.ac_power') | float(0) %}
-        {% set ac_usage = ac_verbrauch_gestern | float(0) %}
-        {% if avg_power > 50 and ac_usage > 0 %}
-          {{ (ac_usage * 1000 / avg_power) | round(1) }}
-        {% elif ac_usage > 0.1 %}
-          {{ (ac_usage * 1000 / 800) | round(1) }}
+          {{ ((ac_usage / brutto) * 100) | round(0) }}
         {% else %}
           0
         {% endif %}
       
-      # EcoFlow Statistiken vom Vortag
+      # EcoFlow Basis-Statistiken
       ecoflow_ladezyklen_gestern: >-
         {% set state = states('counter.ecoflow_ladezyklen_heute') %}
         {{ state if state not in ['unknown', 'unavailable'] else 0 }}
-      
       ecoflow_entladezyklen_gestern: >-
         {% set state = states('counter.ecoflow_entladezyklen_heute') %}
         {{ state if state not in ['unknown', 'unavailable'] else 0 }}
-      
       ecoflow_current_soc: >-
         {% set soc = states('sensor.ecoflow_aktueller_soc')|float(0) %}
         {{ soc if soc > 0 else 0 }}
-      
-      ecoflow_automation_aktiv: >-
-        {{ 'an' if is_state('input_boolean.ecoflow_automation_enabled', 'on') else 'aus' }}
-      
-      ecoflow_gesamt_zyklen: >-
-        {{ (ecoflow_ladezyklen_gestern|int(0) + ecoflow_entladezyklen_gestern|int(0)) }}
-      
-      # Berechnung PV-Überschuss Nutzung durch EcoFlow
-      vermiedene_einspeisung: >-
-        {% set zyklen = ecoflow_ladezyklen_gestern|int(0) %}
-        {% set min_laufzeit = states('input_number.ecoflow_min_laufzeit')|float(10) %}
-        {% set avg_ladeleistung = 400 %}
-        {{ ((zyklen * min_laufzeit * avg_ladeleistung) / 1000) | round(2) if zyklen > 0 else 0 }}
-      
-      ecoflow_effizienz: >-
-        {% set vermieden = vermiedene_einspeisung|float(0) %}
-        {% set solar = solarproduktion_gestern|float(0) %}
-        {{ ((vermieden / solar * 100) | round(1)) if solar > 0 and vermieden > 0 else 0 }}
   - data:
-      title: ⚡ Energie-Bilanz {{ datum_gestern }}
+      title: ⚡ Energie-Bilanz {{ datum_gestern }}{{ ' (Test)' if not has_historical_data else '' }}
       message: >-
-        **📊 Verbrauch:**
-        🔌 Gesamt (Brutto): {{ verbrauch_brutto }} kWh
-        🔌 Netzbezug (Netto): {{ verbrauch_netto }} kWh
-        ⏳ Ø pro Stunde: {{ durchschnitt_pro_stunde }} kWh
-
-        **❄️ Klimaanlage:**
-        Verbrauch: {{ ac_verbrauch_gestern }} kWh ({{ ac_anteil_prozent }}% vom Gesamtverbrauch)
-        Kosten: {{ ac_kosten_gestern }} €
-        Geschätzte Laufzeit: {{ ac_laufzeit_stunden }} Stunden
-
-        **🔋 EcoFlow STREAM Pro:**
-        Aktueller Ladestand: {{ ecoflow_current_soc }}%
-        Ladezyklen: {{ ecoflow_ladezyklen_gestern }}x
-        Entladezyklen: {{ ecoflow_entladezyklen_gestern }}x
-        Vermiedene Einspeisung: {{ vermiedene_einspeisung }} kWh
-        {% if ecoflow_effizienz|float(0) > 0 %}PV-Nutzungseffizienz: {{ ecoflow_effizienz }}%
-        {% endif %}Automation: {{ ecoflow_automation_aktiv }}
+        {% if not has_historical_data %}*⚠️ Aktuelle Werte - Testmodus*
+        
+        {% endif %}**📊 Verbrauch:**
+        Gesamt: {{ verbrauch_brutto }} kWh
+        Netzbezug: {{ verbrauch_netto }} kWh
 
         **☀️ Solar:**
         Produktion: {{ solarproduktion_gestern }} kWh
-        {% if vermiedene_einspeisung|float(0) > 0 %}Direktnutzung: {{ (solarproduktion_gestern|float(0) - vermiedene_einspeisung|float(0))|round(2) }} kWh
-        Gespeichert (EcoFlow): {{ vermiedene_einspeisung }} kWh
-        {% else %}Direktnutzung: {{ solarproduktion_gestern }} kWh (angenommen)
-        {% endif %}
+        Eigenverbrauch: {{ eigenverbrauch_quote }}%
 
-        **💰 Kosten:** ({{ strompreis }} €/kWh)
-        Ohne Solar: {{ kosten_ohne_solar }} €
-        Ersparnis: −{{ ersparnis_gestern }} €
-        ➔ Tatsächlich: {{ kosten_nach_solar }} €
+        **💰 Kosten:**
+        Tatsächlich: {{ kosten_nach_solar }} €
+        Ersparnis: {{ ersparnis_gestern }} €
 
-        **📈 Effizienz:**
-        Autarkiegrad: {{ ((solarproduktion_gestern / verbrauch_brutto * 100) | round(0)) }}%
-        {% if ecoflow_gesamt_zyklen|int(0) > 0 %}EcoFlow-Zyklen: {{ ecoflow_gesamt_zyklen }}
+        **🔋 EcoFlow:**
+        Ladestand: {{ ecoflow_current_soc }}%
+        Zyklen: {{ ecoflow_ladezyklen_gestern }}↑ / {{ ecoflow_entladezyklen_gestern }}↓
+        {% if ac_anteil_prozent|int(0) >= 10 %}
+        **❄️ Klimaanlage:** {{ ac_verbrauch_gestern }} kWh ({{ ac_anteil_prozent }}%)
         {% endif %}
     action: persistent_notification.create
   - data:
       message: >-
         Tagesstatistik {{ datum_gestern }}: 
         Verbrauch {{ verbrauch_brutto }} kWh (Netto: {{ verbrauch_netto }} kWh), 
-        AC-Verbrauch {{ ac_verbrauch_gestern }} kWh ({{ ac_anteil_prozent }}%), 
-        Solar {{ solarproduktion_gestern }} kWh{% if vermiedene_einspeisung|float(0) > 0 %} (EcoFlow: {{ vermiedene_einspeisung }} kWh){% endif %}, 
+        Solar {{ solarproduktion_gestern }} kWh, 
+        Eigenverbrauch {{ eigenverbrauch_quote }}%, 
         Kosten {{ kosten_nach_solar }} € (Ersparnis: {{ ersparnis_gestern }} €), 
-        Autarkiegrad {{ ((solarproduktion_gestern / verbrauch_brutto * 100) | round(0)) }}%{% if ecoflow_gesamt_zyklen|int(0) > 0 %}, 
-        EcoFlow: {{ ecoflow_ladezyklen_gestern }}L/{{ ecoflow_entladezyklen_gestern }}E Zyklen{% endif %}
+        EcoFlow: {{ ecoflow_ladezyklen_gestern }}↑/{{ ecoflow_entladezyklen_gestern }}↓ @ {{ ecoflow_current_soc }}%
       name: Energie-Bilanz
       domain: automation
     action: logbook.log

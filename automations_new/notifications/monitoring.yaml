@@ -216,3 +216,127 @@
             title: "🌡️ Außensensor offline"
             message: "Der Außensensor liefert keine Daten. Batterie prüfen!"
   mode: single
+- id: '1725893400001'
+  alias: Security » Haustür Überwachung
+  description: Überwacht Haustür bei Abwesenheit und trackt Besuchsdauer
+  triggers:
+    - entity_id: binary_sensor.haustur_kontaktsensor_contact
+      from: 'off'
+      to: 'on'
+      id: door_opened
+      trigger: state
+    - entity_id: binary_sensor.haustur_kontaktsensor_contact
+      from: 'on'
+      to: 'off'
+      id: door_closed
+      trigger: state
+  conditions: []
+  actions:
+    - variables:
+        beide_weg: "{{ is_state('input_boolean.alle_sind_weg', 'on') }}"
+        besucher_inside: "{{ is_state('input_boolean.haustur_besucher_inside', 'on') }}"
+        aktueller_zeitstempel: "{{ now() }}"
+        formatierte_zeit: "{{ now().strftime('%A, %H:%M Uhr, %d.%m.%Y') }}"
+    - choose:
+        - alias: "Tür öffnet sich - beide sind weg"
+          conditions:
+            - condition: trigger
+              id: door_opened
+            - condition: template
+              value_template: "{{ beide_weg }}"
+          sequence:
+            - if:
+                - condition: template
+                  value_template: "{{ not besucher_inside }}"
+              then:
+                - action: input_boolean.turn_on
+                  target:
+                    entity_id: input_boolean.haustur_besucher_inside
+                - action: input_datetime.set_datetime
+                  target:
+                    entity_id: input_datetime.haustur_eingang_zeit
+                  data:
+                    datetime: "{{ aktueller_zeitstempel }}"
+                - action: input_datetime.set_datetime
+                  target:
+                    entity_id: input_datetime.haustur_letzter_eingang
+                  data:
+                    datetime: "{{ aktueller_zeitstempel }}"
+                - action: notify.family
+                  data:
+                    title: "🚨 Haustür geöffnet"
+                    message: >
+                      Die Haustür wurde um {{ formatierte_zeit }} geöffnet,
+                      obwohl niemand zuhause ist!
+                    data:
+                      tag: door_security
+                      group: security_alerts
+                      push:
+                        interruption-level: critical
+                - action: system_log.write
+                  data:
+                    message: >
+                      SECURITY: Haustür geöffnet bei Abwesenheit um {{ aktueller_zeitstempel }}
+                    level: warning
+        - alias: "Tür schließt sich - Besucher verlässt Haus"
+          conditions:
+            - condition: trigger
+              id: door_closed
+            - condition: template
+              value_template: "{{ beide_weg and besucher_inside }}"
+          sequence:
+            - variables:
+                eingang_zeit: "{{ states('input_datetime.haustur_eingang_zeit') }}"
+                besuchsdauer_sekunden: >
+                  {{ (as_timestamp(now()) - as_timestamp(states('input_datetime.haustur_eingang_zeit'))) | int }}
+                besuchsdauer_minuten: "{{ (besuchsdauer_sekunden / 60) | round(1) }}"
+                besuchsdauer_stunden: "{{ (besuchsdauer_sekunden / 3600) | round(1) }}"
+                formatierte_dauer: >
+                  {% if besuchsdauer_sekunden < 60 %}
+                    {{ besuchsdauer_sekunden }} Sekunden
+                  {% elif besuchsdauer_sekunden < 3600 %}
+                    {{ besuchsdauer_minuten }} Minuten
+                  {% else %}
+                    {{ besuchsdauer_stunden }} Stunden
+                  {% endif %}
+            - action: input_boolean.turn_off
+              target:
+                entity_id: input_boolean.haustur_besucher_inside
+            - action: input_text.set_value
+              target:
+                entity_id: input_text.haustur_besucher_dauer
+              data:
+                value: "{{ formatierte_dauer }}"
+            - action: notify.family
+              data:
+                title: "👋 Besucher hat das Haus verlassen"
+                message: >
+                  Jemand war {{ formatierte_dauer }} im Haus
+                  ({{ eingang_zeit.split(' ')[1][:5] }} - {{ aktueller_zeitstempel.strftime('%H:%M') }} Uhr)
+                data:
+                  tag: door_security
+                  group: security_alerts
+                  push:
+                    interruption-level: active
+            - action: system_log.write
+              data:
+                message: >
+                  SECURITY: Besucher hat Haus verlassen. Dauer: {{ formatierte_dauer }}
+                level: info
+        - alias: "Tür öffnet sich - jemand kommt nach Hause"
+          conditions:
+            - condition: trigger
+              id: door_opened
+            - condition: template
+              value_template: "{{ not beide_weg }}"
+          sequence:
+            - action: input_datetime.set_datetime
+              target:
+                entity_id: input_datetime.haustur_letzter_eingang
+              data:
+                datetime: "{{ aktueller_zeitstempel }}"
+            - action: system_log.write
+              data:
+                message: "INFO: Haustür geöffnet - jemand ist zuhause"
+                level: info
+  mode: restart

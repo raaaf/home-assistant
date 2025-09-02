@@ -376,6 +376,28 @@ input_boolean:
     name: "Steckdosen-Warnung aktiviert"
     initial: true
     icon: "mdi:alert-circle-outline"
+    
+  haustur_besucher_inside:
+    name: "Besucher ist im Haus"
+    initial: false
+    icon: "mdi:account-clock"
+
+input_datetime:
+  haustur_eingang_zeit:
+    name: "Eingangszeit Besucher"
+    has_date: true
+    has_time: true
+    
+  haustur_letzter_eingang:
+    name: "Letzter Eingang über Haustür"
+    has_date: true
+    has_time: true
+
+input_text:
+  haustur_besucher_dauer:
+    name: "Besuchsdauer"
+    initial: ""
+    max: 100
 
 # ============================================================================
 # EXTERNAL FILE INCLUDES
