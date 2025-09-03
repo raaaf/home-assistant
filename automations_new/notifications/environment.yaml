@@ -62,7 +62,7 @@
 - id: '1738322846270'
   alias: Notification » Stromverbrauch gestern
   description: 'Erstellt eine persistente Benachrichtigung mit dem Stromverbrauch,
-    der Solarproduktion, AC-Verbrauch und den Kosten des Vortages
+    der Solarproduktion und den Kosten des Vortages
 
     '
   triggers:
@@ -71,8 +71,7 @@
   conditions:
   - condition: template
     value_template: >
-      {{ states('sensor.solarproduktion_gestern') not in ['unknown', 'unavailable']
-         and state_attr('sensor.ac_energy_daily','last_period') is not none }}
+      {{ states('sensor.solarproduktion_gestern') not in ['unknown', 'unavailable'] }}
   actions:
   - variables:
       # Check if we have historical data or need to use current values
@@ -119,34 +118,6 @@
         {% else %}
           0
         {% endif %}
-      
-      # AC Verbrauch nur wenn signifikant
-      ac_verbrauch_gestern: >-
-        {% set last = state_attr('sensor.ac_energy_daily','last_period') %}
-        {% if last is not none and last | float(0) > 0 %}
-          {{ last | float(0) | round(1) }}
-        {% else %}
-          {{ states('sensor.ac_energy_daily') | float(0) | round(1) }}
-        {% endif %}
-      ac_anteil_prozent: >-
-        {% set brutto = verbrauch_brutto | float(0) %}
-        {% set ac_usage = ac_verbrauch_gestern | float(0) %}
-        {% if brutto > 0 and ac_usage >= 0 %}
-          {{ ((ac_usage / brutto) * 100) | round(0) }}
-        {% else %}
-          0
-        {% endif %}
-      
-      # EcoFlow Basis-Statistiken
-      ecoflow_ladezyklen_gestern: >-
-        {% set state = states('counter.ecoflow_ladezyklen_heute') %}
-        {{ state if state not in ['unknown', 'unavailable'] else 0 }}
-      ecoflow_entladezyklen_gestern: >-
-        {% set state = states('counter.ecoflow_entladezyklen_heute') %}
-        {{ state if state not in ['unknown', 'unavailable'] else 0 }}
-      ecoflow_current_soc: >-
-        {% set soc = states('sensor.ecoflow_aktueller_soc')|float(0) %}
-        {{ soc if soc > 0 else 0 }}
   - data:
       title: ⚡ Energie-Bilanz {{ datum_gestern }}{{ ' (Test)' if not has_historical_data else '' }}
       message: >-
@@ -163,13 +134,6 @@
         **💰 Kosten:**
         Tatsächlich: {{ kosten_nach_solar }} €
         Ersparnis: {{ ersparnis_gestern }} €
-
-        **🔋 EcoFlow:**
-        Ladestand: {{ ecoflow_current_soc }}%
-        Zyklen: {{ ecoflow_ladezyklen_gestern }}↑ / {{ ecoflow_entladezyklen_gestern }}↓
-        {% if ac_anteil_prozent|int(0) >= 10 %}
-        **❄️ Klimaanlage:** {{ ac_verbrauch_gestern }} kWh ({{ ac_anteil_prozent }}%)
-        {% endif %}
     action: persistent_notification.create
   - data:
       message: >-
@@ -177,129 +141,9 @@
         Verbrauch {{ verbrauch_brutto }} kWh (Netto: {{ verbrauch_netto }} kWh), 
         Solar {{ solarproduktion_gestern }} kWh, 
         Eigenverbrauch {{ eigenverbrauch_quote }}%, 
-        Kosten {{ kosten_nach_solar }} € (Ersparnis: {{ ersparnis_gestern }} €), 
-        EcoFlow: {{ ecoflow_ladezyklen_gestern }}↑/{{ ecoflow_entladezyklen_gestern }}↓ @ {{ ecoflow_current_soc }}%
+        Kosten {{ kosten_nach_solar }} € (Ersparnis: {{ ersparnis_gestern }} €)
       name: Energie-Bilanz
       domain: automation
     action: logbook.log
   mode: single
 
-- id: 'ecoflow_status_benachrichtigung'
-  alias: Notification » EcoFlow Status Updates
-  description: >
-    Sendet Benachrichtigungen bei wichtigen EcoFlow-Events wie 
-    Vollladung, kritischem Batteriestand oder Systemfehlern
-  triggers:
-    # EcoFlow voll geladen
-    - platform: numeric_state
-      entity_id: sensor.stream_system_3683_power_battery_soc
-      above: 95
-      id: vollladung
-    
-    # EcoFlow kritisch niedrig
-    - platform: numeric_state
-      entity_id: sensor.stream_system_3683_power_battery_soc
-      below: 15
-      for:
-        minutes: 10
-      id: kritisch_niedrig
-    
-    # Automation automatisch deaktiviert (Sicherheit)
-    - platform: state
-      entity_id: input_boolean.ecoflow_automation_enabled
-      to: 'off'
-      for:
-        minutes: 2
-      id: automation_deaktiviert
-    
-    # Zu viele Zyklen am Tag
-    - platform: numeric_state
-      entity_id: counter.ecoflow_ladezyklen_heute
-      above: 15
-      id: viele_zyklen
-  conditions:
-    # Nur zwischen 8:00 und 22:00 Uhr benachrichtigen
-    - condition: time
-      after: '08:00:00'
-      before: '22:00:00'
-  actions:
-    - choose:
-        # EcoFlow vollständig geladen
-        - conditions:
-            - condition: trigger
-              id: vollladung
-            - condition: state
-              entity_id: input_boolean.ecoflow_lademodus_aktiv
-              state: 'on'
-          sequence:
-            - parallel:
-                - action: notify.rafael
-                  data:
-                    title: "🔋 EcoFlow vollgeladen"
-                    message: >
-                      STREAM Pro ist bei {{ trigger.to_state.state }}% angelangt.
-                      {{ states('counter.ecoflow_ladezyklen_heute') }} Ladezyklen heute.
-                    data:
-                      push:
-                        interruption-level: passive
-                
-                - action: logbook.log
-                  data:
-                    message: >
-                      EcoFlow STREAM Pro vollgeladen: {{ trigger.to_state.state }}%
-                    name: EcoFlow Status
-                    domain: automation
-
-        # Kritisch niedriger Batteriestand
-        - conditions:
-            - condition: trigger
-              id: kritisch_niedrig
-          sequence:
-            - parallel:
-                - action: notify.rafael
-                  data:
-                    title: "⚠️ EcoFlow Batterie niedrig"
-                    message: >
-                      STREAM Pro nur noch {{ trigger.to_state.state }}% geladen!
-                      Nachtmodus: {{ 'aktiv' if is_state('input_boolean.ecoflow_nachtmodus_aktiv', 'on') else 'inaktiv' }}
-                    data:
-                      push:
-                        interruption-level: time-sensitive
-                
-                - action: logbook.log
-                  data:
-                    message: >
-                      ⚠️ EcoFlow STREAM Pro kritisch niedrig: {{ trigger.to_state.state }}%
-                    name: EcoFlow Warning
-                    domain: automation
-
-        # Automation wurde deaktiviert
-        - conditions:
-            - condition: trigger
-              id: automation_deaktiviert
-          sequence:
-            - action: notify.rafael
-              data:
-                title: "🔧 EcoFlow Automation deaktiviert"
-                message: >
-                  Die EcoFlow-Steuerung wurde deaktiviert. 
-                  Lade-/Entladezyklen heute: {{ states('counter.ecoflow_ladezyklen_heute') }}/{{ states('counter.ecoflow_entladezyklen_heute') }}
-                data:
-                  push:
-                    interruption-level: active
-
-        # Viele Schaltzyklen
-        - conditions:
-            - condition: trigger
-              id: viele_zyklen
-          sequence:
-            - action: notify.rafael
-              data:
-                title: "📊 EcoFlow viele Zyklen"
-                message: >
-                  Bereits {{ trigger.to_state.state }} Ladezyklen heute.
-                  Automation wird bei 20 Zyklen automatisch deaktiviert.
-                data:
-                  push:
-                    interruption-level: passive
-  mode: restart

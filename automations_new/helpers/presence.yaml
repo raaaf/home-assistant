@@ -276,7 +276,7 @@
           - switch.steckdose_kuechengeraete
           - switch.kuchengerate
           - switch.steckdose_kinderzimmer
-          - switch.alex_steckdose
+          - switch.schlafzimmer_tv_steckdose
         data: {}
       - alias: Trockner ausschalten wenn im Aus-Zustand
         if:
@@ -389,7 +389,7 @@
           - switch.arbeitszimmer_steckdose
           - switch.kuchengerate
           - switch.steckdose_kinderzimmer
-          - switch.alex_steckdose
+          - switch.schlafzimmer_tv_steckdose
         data: {}
     - alias: Alle weg (lange Abwesenheit) - Tiefschlafmodus
       conditions:
@@ -423,7 +423,7 @@
           - switch.trockner
           - switch.kuchengerate
           - switch.steckdose_kinderzimmer
-          - switch.alex_steckdose
+          - switch.schlafzimmer_tv_steckdose
         data: {}
       - alias: Türe abschließen wenn offen
         if:

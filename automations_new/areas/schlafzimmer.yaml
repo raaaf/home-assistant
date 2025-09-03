@@ -30,22 +30,9 @@
       night_lights_after_time: '19:00:00'
       night_lights_before_time: 07:00:00
       include_ambient: ambient_enabled
-      ambient_light_sensor: sensor.balkon_motion_illuminance
+      ambient_light_sensor: sensor.balkon_motion_illuminance_safe
       ambient_light_value: 150
       ambient_light_high_value: 200
-- id: '1730370576866'
-  alias: Helper » Sunrise Lights Schlafzimmer
-  description: Simuliert Sonnenaufgang im Schlafzimmer mit parabolischer Helligkeitssteuerung
-  use_blueprint:
-    path: steku/parabolic_alarm.yaml
-    input:
-      alarm_start_time: input_datetime.sunrise_start_time
-      workday_sensor: binary_sensor.workday_sensor
-      alarm_script: script.sunrise_simulator
-      target_light: light.alle_schlafzimmer_lichter
-      light_timeout: 60
-      target_kelvin_2: 3479
-      target_kelvin_3: 4111
 - id: '1737544939682'
   alias: Helper » Steckdose Schlafzimmer
   description: 'Schaltet Schlafzimmer- und Arbeitszimmer-Steckdose automatisch ein,

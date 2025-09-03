@@ -15,7 +15,7 @@
   action:
   - if:
     - condition: template
-      value_template: '{{ has_value(''sensor.fuerth_daily'') and state_attr(''sensor.fuerth_daily'', ''forecast'') is not none and state_attr(''sensor.fuerth_daily'', ''forecast'') | length > 0 and state_attr(''sensor.fuerth_daily'', ''forecast'')[0].temperature > 29 }}
+      value_template: '{{ states(''sensor.fuerth_daily'') not in [''unknown'', ''unavailable''] and state_attr(''sensor.fuerth_daily'', ''forecast'') is not none and state_attr(''sensor.fuerth_daily'', ''forecast'') | length > 0 and state_attr(''sensor.fuerth_daily'', ''forecast'')[0].temperature > 29 }}
 
         '
     then:
@@ -28,7 +28,7 @@
       action: input_boolean.turn_off
   - if:
     - condition: template
-      value_template: '{{ has_value(''sensor.fuerth_daily'') and state_attr(''sensor.fuerth_daily'', ''forecast'') is not none and state_attr(''sensor.fuerth_daily'', ''forecast'') | length > 0 and 24 < state_attr(''sensor.fuerth_daily'', ''forecast'')[0].temperature <= 29 }}
+      value_template: '{{ states(''sensor.fuerth_daily'') not in [''unknown'', ''unavailable''] and state_attr(''sensor.fuerth_daily'', ''forecast'') is not none and state_attr(''sensor.fuerth_daily'', ''forecast'') | length > 0 and 24 < state_attr(''sensor.fuerth_daily'', ''forecast'')[0].temperature <= 29 }}
 
         '
     then:
@@ -379,20 +379,18 @@
   action:
   - variables:
       climate_entities:
-      - climate.badezimmer
-      - climate.flur
       - climate.kinderzimmer
       - climate.schlafzimmer
       - climate.wohnzimmer
       current_temp: "{% set temp = states('sensor.temperatur_aussen') %} {% if not has_value('sensor.temperatur_aussen') %}\n  unbekannt\n{% else %}\n  {{ temp | float(10)\
         \ | round(1) }}°C\n{% endif %}\n"
       adaptive_temp_home: "{% set temp = states('sensor.temperatur_aussen') %}\n{%\
-        \ if not has_value('sensor.temperatur_aussen') %}\n  21\n{% elif temp | float(10)\
-        \ > 15 %}\n  20\n{% elif temp | float(10) > 10 %}\n  21\n{% else %}\n  22\n\
+        \ if not has_value('sensor.temperatur_aussen') %}\n  20\n{% elif temp | float(10)\
+        \ > 15 %}\n  19\n{% elif temp | float(10) > 10 %}\n  20\n{% else %}\n  21\n\
         {% endif %}\n"
       adaptive_temp_eco: "{% set temp = states('sensor.temperatur_aussen') %}\n{%\
-        \ if not has_value('sensor.temperatur_aussen') %}\n  19\n{% elif temp | float(10)\
-        \ > 15 %}\n  18\n{% elif temp | float(10) > 10 %}\n  19\n{% else %}\n  20\n\
+        \ if not has_value('sensor.temperatur_aussen') %}\n  18\n{% elif temp | float(10)\
+        \ > 15 %}\n  17\n{% elif temp | float(10) > 10 %}\n  18\n{% else %}\n  19\n\
         {% endif %}\n"
       adaptive_temp_away: 16
   - choose:
@@ -628,7 +626,7 @@
     entity_id: switch.heizung_steckdose
     state: 'off'
   - condition: template
-    value_template: "{% if has_value('binary_sensor.workday_sensor') and has_value('input_datetime.aufwachzeit_arbeitstag') and has_value('input_datetime.aufwachzeit_freier_tag') %}\n  {% if is_state('binary_sensor.workday_sensor', 'on') %}\n    {%\
+    value_template: "{% if states('binary_sensor.workday_sensor') not in ['unknown', 'unavailable'] and states('input_datetime.aufwachzeit_arbeitstag') not in ['unknown', 'unavailable'] and states('input_datetime.aufwachzeit_freier_tag') not in ['unknown', 'unavailable'] %}\n  {% if is_state('binary_sensor.workday_sensor', 'on') %}\n    {%\
       \ set start = states('input_datetime.aufwachzeit_arbeitstag') %}\n  {% else %}\n\
       \    {% set start = states('input_datetime.aufwachzeit_freier_tag') %}\n  {% endif\
       \ %}\n  {% set today = now().strftime('%Y-%m-%d') %}\n  {% set start_dt = strptime(today\
@@ -671,7 +669,7 @@
     trigger: time
   condition:
   - condition: template
-    value_template: "{% if has_value('sensor.fuerth_daily') and state_attr('sensor.fuerth_daily', 'forecast') is not none %}\n  {% set forecast = state_attr('sensor.fuerth_daily', 'forecast') %}\n  {% if forecast and forecast | length > 0 %}\n    {{ forecast[0].templow < 0 }}\n  {% else %}\n    false\n  {% endif %}\n{% else %}\n  false\n{% endif %}\n"
+    value_template: "{% if states('sensor.fuerth_daily') not in ['unknown', 'unavailable'] and state_attr('sensor.fuerth_daily', 'forecast') is not none %}\n  {% set forecast = state_attr('sensor.fuerth_daily', 'forecast') %}\n  {% if forecast and forecast | length > 0 %}\n    {{ forecast[0].templow < 0 }}\n  {% else %}\n    false\n  {% endif %}\n{% else %}\n  false\n{% endif %}\n"
   action:
   - parallel:
       # TTS Ansage über HomePods
@@ -902,3 +900,110 @@
         data: {}
   mode: parallel
   max: 4
+- id: '1749999999999'
+  alias: Heizung » Predictive Pre-Heating (Thermal Mass Optimization)
+  description: 'Startet Heizung 2-3 Stunden vor Aufwachzeit basierend auf Außentemperatur und thermaler Masse'
+  trigger:
+  - trigger: template
+    value_template: >
+      {% set current_time = now().strftime('%H:%M') %}
+      {% if states('binary_sensor.workday_sensor') not in ['unknown', 'unavailable'] and states('input_datetime.aufwachzeit_arbeitstag') not in ['unknown', 'unavailable'] and states('input_datetime.aufwachzeit_freier_tag') not in ['unknown', 'unavailable'] %}
+        {% if is_state('binary_sensor.workday_sensor', 'on') %}
+          {% set wake_time = states('input_datetime.aufwachzeit_arbeitstag') %}
+        {% else %}
+          {% set wake_time = states('input_datetime.aufwachzeit_freier_tag') %}
+        {% endif %}
+        {% set wake_hour = wake_time.split(':')[0]|int %}
+        {% set wake_minute = wake_time.split(':')[1]|int %}
+        {% set outdoor_temp = states('sensor.temperatur_aussen')|float(10) %}
+        {% set preheat_hours = 3 if outdoor_temp < 5 else 2 %}
+        {% set preheat_hour = wake_hour - preheat_hours %}
+        {% if preheat_hour < 0 %}
+          {% set preheat_hour = preheat_hour + 24 %}
+        {% endif %}
+        {% set target_time = '{:02d}:{:02d}'.format(preheat_hour, wake_minute) %}
+        {{ current_time == target_time }}
+      {% else %}
+        {{ current_time == '05:00' }}
+      {% endif %}
+  condition:
+  - condition: state
+    entity_id: input_boolean.alle_sind_weg
+    state: 'off'
+  - condition: template
+    value_template: '{{ now().month <= 4 or now().month >= 10 }}'
+  action:
+  - variables:
+      climate_entities:
+      - climate.kinderzimmer
+      - climate.schlafzimmer
+      - climate.wohnzimmer
+      outdoor_temp: '{{ states(''sensor.temperatur_aussen'')|float(10) }}'
+      preheat_boost: '{{ 1 if outdoor_temp < 0 else 0.5 if outdoor_temp < 10 else 0 }}'
+      adaptive_temp_home: "{% set temp = states('sensor.temperatur_aussen') %}\n{%\
+        \ if not has_value('sensor.temperatur_aussen') %}\n  20\n{% elif temp | float(10)\
+        \ > 15 %}\n  19\n{% elif temp | float(10) > 10 %}\n  20\n{% else %}\n  21\n\
+        {% endif %}\n"
+  - action: climate.set_preset_mode
+    target:
+      entity_id: '{{ climate_entities }}'
+    data:
+      preset_mode: home
+  - action: climate.set_temperature
+    target:
+      entity_id: '{{ climate_entities }}'
+    data:
+      temperature: '{{ (adaptive_temp_home|float + preheat_boost)|round(1) }}'
+  - action: notify.persistent_notification
+    data:
+      title: 🔥 Predictive Heating Started
+      message: 'Pre-heating started {{ preheat_boost + adaptive_temp_home|float }}°C (outdoor: {{ outdoor_temp }}°C). Thermal mass charging for optimal wake-up comfort.'
+  mode: single
+- id: '1749999999998'
+  alias: Heizung » Thermal Mass Off-Peak Charging
+  description: 'Lädt die thermale Masse während günstiger Nachtstunden vor (1-4 Uhr bei kaltem Wetter)'
+  trigger:
+  - at: '01:00:00'
+    trigger: time
+  condition:
+  - condition: state
+    entity_id: input_boolean.alle_sind_weg
+    state: 'off'
+  - condition: template
+    value_template: '{{ now().month <= 4 or now().month >= 10 }}'
+  - condition: numeric_state
+    entity_id: sensor.temperatur_aussen
+    below: 12
+  action:
+  - variables:
+      climate_entities:
+      - climate.kinderzimmer
+      - climate.schlafzimmer
+      - climate.wohnzimmer
+      outdoor_temp: '{{ states(''sensor.temperatur_aussen'')|float(10) }}'
+      thermal_boost: '{{ 2.0 if outdoor_temp < -5 else 1.5 if outdoor_temp < 0 else 1.0 if outdoor_temp < 5 else 0.5 }}'
+      adaptive_temp_eco: "{% set temp = states('sensor.temperatur_aussen') %}\n{%\
+        \ if not has_value('sensor.temperatur_aussen') %}\n  18\n{% elif temp | float(10)\
+        \ > 15 %}\n  17\n{% elif temp | float(10) > 10 %}\n  18\n{% else %}\n  19\n\
+        {% endif %}\n"
+  - action: climate.set_temperature
+    target:
+      entity_id: '{{ climate_entities }}'
+    data:
+      temperature: '{{ (adaptive_temp_eco|float + thermal_boost)|round(1) }}'
+  - action: notify.persistent_notification
+    data:
+      title: ⚡ Off-Peak Thermal Charging
+      message: 'Thermal mass charging at {{ (adaptive_temp_eco|float + thermal_boost)|round(1) }}°C (boost: +{{ thermal_boost }}°C). Outdoor: {{ outdoor_temp }}°C'
+  - delay:
+      hours: 2
+  - action: climate.set_temperature
+    target:
+      entity_id: '{{ climate_entities }}'
+    data:
+      temperature: '{{ adaptive_temp_eco }}'
+  - action: notify.persistent_notification
+    data:
+      title: 🌡️ Thermal Charging Complete
+      message: 'Thermal mass charged. Returning to eco {{ adaptive_temp_eco }}°C for remainder of night.'
+  mode: single

@@ -88,8 +88,8 @@
             id: gaming-off
         - alias: Alle Arbeits- und Gaming-Geräte sind aus
           condition: template
-          value_template: "{{ has_value('input_boolean.gaming') and states('input_boolean.gaming') == 'off' and\n   has_value('binary_sensor.macbook_air_von_alexandra_active') and states('binary_sensor.macbook_air_von_alexandra_active')\
-            \ == 'off' and\n   has_value('binary_sensor.macbook_pro_rafael_active') and states('binary_sensor.macbook_pro_rafael_active') ==\
+          value_template: "{{ states('input_boolean.gaming') not in ['unknown', 'unavailable'] and states('input_boolean.gaming') == 'off' and\n   states('binary_sensor.macbook_air_von_alexandra_active') not in ['unknown', 'unavailable'] and states('binary_sensor.macbook_air_von_alexandra_active')\
+            \ == 'off' and\n   states('binary_sensor.macbook_pro_rafael_active') not in ['unknown', 'unavailable'] and states('binary_sensor.macbook_pro_rafael_active') ==\
             \ 'off' }}\n"
       sequence:
       - action: input_boolean.turn_off
@@ -184,7 +184,7 @@
       night_lights_after_time: '19:00:00'
       night_lights_before_time: 07:00:00
       include_ambient: ambient_enabled
-      ambient_light_sensor: sensor.balkon_motion_illuminance
+      ambient_light_sensor: sensor.balkon_motion_illuminance_safe
       ambient_light_value: 150
       ambient_light_high_value: 200
       include_bypass:
@@ -192,24 +192,3 @@
       motion_bypass_lights_on:
       - input_boolean.arbeit
       - input_boolean.gaming
-- id: '1746390139602'
-  alias: Color Loop » Arbeitszimmer / Schlafzimmer
-  description: 'Farbwechsel-Animation für Arbeitszimmer und Schlafzimmer Lichter'
-  use_blueprint:
-    path: mdolnik/color_loop.yaml
-    input:
-      light:
-      - light.alle_arbeitszimmer_nachtlichter
-      - light.alle_schlafzimmer_nachtlichter
-      - light.alle_arbeitszimmer_lichter
-      - light.alle_schlafzimmer_lichter
-      helper_toggle: input_boolean.es_ist_dunkel
-      color_1:
-      - 255
-      - 38
-      - 0
-      color_2:
-      - 4
-      - 51
-      - 255
-      max_color_distance: 120

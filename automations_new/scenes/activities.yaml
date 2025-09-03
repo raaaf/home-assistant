@@ -214,7 +214,6 @@
         action: light.turn_off
         target:
           entity_id:
-          - light.schwarze_stehlampe
           - light.alle_arbeitszimmer_nachtlichter
           - light.alle_arbeitszimmer_lichter
         data: {}
@@ -234,8 +233,11 @@
             target:
               entity_id:
               - light.alle_arbeitszimmer_nachtlichter
-              - light.schwarze_stehlampe
-            data: {}
+              - light.alle_arbeitszimmer_lichter
+            data:
+              brightness_pct: 80
+              kelvin: 5000
+              transition: 2
         - alias: Dunkel und nach 21 Uhr - gedämpfte Arbeitsbeleuchtung
           conditions:
           - alias: Es ist dunkel (Sonne unter oder Schlafenszeit)
@@ -251,7 +253,9 @@
             target:
               entity_id: light.alle_arbeitszimmer_nachtlichter
             data:
-              brightness_pct: 30
+              brightness_pct: 60
+              kelvin: 4000
+              transition: 2
     - alias: Arbeitsmodus deaktivieren
       conditions:
       - condition: trigger
@@ -273,7 +277,6 @@
         action: light.turn_off
         target:
           entity_id:
-          - light.schwarze_stehlampe
           - light.alle_arbeitszimmer_nachtlichter
           - light.alle_arbeitszimmer_lichter
         data: {}

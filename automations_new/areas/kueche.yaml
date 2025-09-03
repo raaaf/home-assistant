@@ -89,7 +89,7 @@
       night_time_delay: 1
       time_delay: 0
       include_ambient: ambient_enabled
-      ambient_light_sensor: sensor.balkon_motion_illuminance
+      ambient_light_sensor: sensor.balkon_motion_illuminance_safe
       ambient_light_options: ambient_light_option_disabled
       include_zone: zone_enabled
       zone: zone.home
@@ -174,22 +174,3 @@
           entity_id: automation.1745924154398
     default: []
   mode: single
-- id: '1746390088711'
-  alias: Color Loop » Küche
-  description: 'Farbwechsel-Animation für Küche Lichter'
-  use_blueprint:
-    path: mdolnik/color_loop.yaml
-    input:
-      light:
-      - light.alle_kuche_nachtlichter
-      - light.alle_kuche_lichter
-      helper_toggle: input_boolean.es_ist_dunkel
-      color_1:
-      - 255
-      - 38
-      - 0
-      color_2:
-      - 4
-      - 51
-      - 255
-      max_color_distance: 120

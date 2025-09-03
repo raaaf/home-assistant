@@ -86,7 +86,7 @@
       night_time_delay: 0
       time_delay: 1
       include_ambient: ambient_enabled
-      ambient_light_sensor: sensor.balkon_motion_illuminance
+      ambient_light_sensor: sensor.balkon_motion_illuminance_safe
       night_lights_conditions:
       - time_enabled
       ambient_light_options: ambient_light_option_disabled
@@ -276,7 +276,7 @@
       night_time_delay: 0
       time_delay: 1
       include_ambient: ambient_disabled
-      ambient_light_sensor: sensor.balkon_motion_illuminance
+      ambient_light_sensor: sensor.balkon_motion_illuminance_safe
       night_lights_conditions:
       - time_enabled
       night_lights_entity_state:
@@ -287,21 +287,3 @@
       ambient_light_options: ambient_light_option_enabled
       include_light_control:
       - use_brightness
-- id: '1746390065079'
-  alias: Color Loop » Flur
-  description: 'Farbwechsel-Animation für Flur Lichter'
-  use_blueprint:
-    path: mdolnik/color_loop.yaml
-    input:
-      light:
-      - light.alle_flur_nachtlichter
-      helper_toggle: input_boolean.es_ist_dunkel
-      color_1:
-      - 255
-      - 38
-      - 0
-      color_2:
-      - 4
-      - 51
-      - 255
-      max_color_distance: 120

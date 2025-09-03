@@ -34,7 +34,7 @@
         entity_id: light.alle_ankleide_lichter
       time_delay: 1
       include_ambient: ambient_disabled
-      ambient_light_sensor: sensor.balkon_motion_illuminance
+      ambient_light_sensor: sensor.balkon_motion_illuminance_safe
       include_night_lights: night_lights_enabled
       night_lights_conditions:
       - time_enabled

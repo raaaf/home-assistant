@@ -14,7 +14,7 @@
       light_switch:
         entity_id: light.alle_kinderzimmer_lichter
       include_ambient: ambient_enabled
-      ambient_light_sensor: sensor.balkon_motion_illuminance
+      ambient_light_sensor: sensor.balkon_motion_illuminance_safe
       include_night_lights: night_lights_enabled
       night_lights:
         entity_id: light.alle_kinderzimmer_nachtlichter
@@ -163,35 +163,3 @@
         '
       title: Schlafenszeiten angepasst
   mode: single
-- id: '1738343971464'
-  alias: Helper » Sunrise Lights Kinderzimmer
-  description: Simuliert Sonnenaufgang im Kinderzimmer mit parabolischer Helligkeitssteuerung
-  use_blueprint:
-    path: steku/parabolic_alarm.yaml
-    input:
-      alarm_start_time: input_datetime.sunrise_start_time
-      workday_sensor: binary_sensor.workday_sensor
-      alarm_script: script.sunrise_simulator
-      target_light: light.alle_kinderzimmer_lichter
-      light_timeout: 60
-      target_kelvin_2: 3479
-      target_kelvin_3: 4111
-- id: '1746390169283'
-  alias: Color Loop » Kinderzimmer
-  description: 'Farbwechsel-Animation für Kinderzimmer Lichter'
-  use_blueprint:
-    path: mdolnik/color_loop.yaml
-    input:
-      light:
-      - light.alle_kinderzimmer_nachtlichter
-      - light.alle_kinderzimmer_lichter
-      helper_toggle: input_boolean.es_ist_dunkel
-      color_1:
-      - 255
-      - 38
-      - 0
-      color_2:
-      - 4
-      - 51
-      - 255
-      max_color_distance: 120

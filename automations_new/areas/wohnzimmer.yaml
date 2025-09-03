@@ -350,19 +350,6 @@
           id: de7eda64-84bf-4ed6-a4fa-76e0ebdd1968
     default: []
   mode: single
-- id: '1738344014302'
-  alias: Helper » Sunrise Lights Wohnzimmer
-  description: Simuliert Sonnenaufgang im Wohnzimmer mit parabolischer Helligkeitssteuerung
-  use_blueprint:
-    path: steku/parabolic_alarm.yaml
-    input:
-      alarm_start_time: input_datetime.sunrise_start_time
-      workday_sensor: binary_sensor.workday_sensor
-      alarm_script: script.sunrise_simulator
-      target_light: light.alle_wohnzimmer_lichter
-      light_timeout: 60
-      target_kelvin_2: 3479
-      target_kelvin_3: 4111
 - id: '1744714272996'
   alias: Scenen » Esstisch reinigen
   description: 'Helles Licht zum Reinigen des Esstisch Bereichs'
@@ -430,7 +417,7 @@
       night_time_delay: 1
       time_delay: 15
       include_ambient: ambient_disabled
-      ambient_light_sensor: sensor.balkon_motion_illuminance
+      ambient_light_sensor: sensor.balkon_motion_illuminance_safe
       ambient_light_options: ambient_light_option_disabled
       include_zone: zone_enabled
       zone: zone.home
@@ -449,21 +436,3 @@
       motion_bypass_lights_on: []
       motion_bypass_lights_off: []
       include_bypass: []
-- id: '1746389875059'
-  alias: Color Loop » Wohnzimmer
-  description: 'Farbwechsel-Animation für Wohnzimmer Lichter'
-  use_blueprint:
-    path: mdolnik/color_loop.yaml
-    input:
-      light:
-      - light.alle_party_wohnzimmer_lichter
-      helper_toggle: input_boolean.es_ist_dunkel
-      color_1:
-      - 255
-      - 38
-      - 0
-      color_2:
-      - 4
-      - 51
-      - 255
-      max_color_distance: 120

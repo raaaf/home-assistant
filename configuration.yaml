@@ -342,6 +342,77 @@ template:
           precipitation_unit: "{{ state_attr('weather.fuerth_bayern', 'precipitation_unit') }}"
           forecast: "{{ daily_forecast['weather.fuerth_bayern'].forecast[:5] }}"
 
+  # Heating efficiency and energy sensors
+  - sensor:
+      - name: "Heating Efficiency Score"
+        unique_id: heating_efficiency_score
+        unit_of_measurement: "%"
+        icon: "mdi:thermometer-chevron-up"
+        state: >
+          {% set total_heating_time = (
+            (states('sensor.heizung_arbeitszimmer_an') | float(0)) +
+            (states('sensor.heizung_badezimmer_an') | float(0)) +
+            (states('sensor.heizung_flur_an') | float(0)) +
+            (states('sensor.heizung_wohnzimmer_an') | float(0)) +
+            (states('sensor.heizung_kinderzimmer_an') | float(0))
+          ) %}
+          {% set outside_temp = state_attr('weather.fuerth_bayern', 'temperature') | float(15) %}
+          {% set baseline_efficiency = 100 - (total_heating_time / 24 * 100) %}
+          {% set temp_factor = 1 + ((15 - outside_temp) / 100) %}
+          {{ (baseline_efficiency * temp_factor) | round(1) }}
+        availability: >
+          {{ states('sensor.heizung_arbeitszimmer_an') not in ['unknown', 'unavailable'] and
+             states('sensor.heizung_badezimmer_an') not in ['unknown', 'unavailable'] and
+             states('sensor.heizung_flur_an') not in ['unknown', 'unavailable'] and
+             states('sensor.heizung_wohnzimmer_an') not in ['unknown', 'unavailable'] and
+             states('sensor.heizung_kinderzimmer_an') not in ['unknown', 'unavailable'] and
+             state_attr('weather.fuerth_bayern', 'temperature') is not none }}
+
+      - name: "Thermal Mass Utilization"
+        unique_id: thermal_mass_utilization
+        unit_of_measurement: "%"
+        icon: "mdi:home-thermometer-outline"
+        state: >
+          {% set avg_temp = (
+            (states('sensor.temperatur_arbeitszimmer') | float(20)) +
+            (states('sensor.temperatur_badezimmer') | float(20)) +
+            (states('sensor.temperatur_wohnzimmer') | float(20)) +
+            (states('sensor.temperatur_schlafzimmer') | float(20)) +
+            (states('sensor.temperatur_kinderzimmer') | float(20))
+          ) / 5 %}
+          {% set target_temp = 21 %}
+          {% set temp_deviation = (avg_temp - target_temp) | abs %}
+          {% set utilization = 100 - (temp_deviation * 10) %}
+          {{ [utilization, 0] | max | round(1) }}
+        availability: >
+          {{ states('sensor.temperatur_arbeitszimmer') not in ['unknown', 'unavailable'] and
+             states('sensor.temperatur_badezimmer') not in ['unknown', 'unavailable'] and
+             states('sensor.temperatur_wohnzimmer') not in ['unknown', 'unavailable'] and
+             states('sensor.temperatur_schlafzimmer') not in ['unknown', 'unavailable'] and
+             states('sensor.temperatur_kinderzimmer') not in ['unknown', 'unavailable'] }}
+
+      - name: "Heating Zones Disabled Savings"
+        unique_id: heating_zones_disabled_savings
+        unit_of_measurement: "€"
+        icon: "mdi:cash-multiple"
+        state: >
+          {% set disabled_zones = [
+            states('switch.heizung_arbeitszimmer'),
+            states('switch.heizung_badezimmer'),
+            states('switch.heizung_flur'),
+            states('switch.heizung_wohnzimmer'),
+            states('switch.heizung_kinderzimmer')
+          ] | select('eq', 'off') | list | count %}
+          {% set cost_per_zone_per_hour = 0.35 %}
+          {% set hours_today = now().hour %}
+          {{ (disabled_zones * cost_per_zone_per_hour * hours_today) | round(2) }}
+        availability: >
+          {{ states('switch.heizung_arbeitszimmer') not in ['unknown', 'unavailable'] and
+             states('switch.heizung_badezimmer') not in ['unknown', 'unavailable'] and
+             states('switch.heizung_flur') not in ['unknown', 'unavailable'] and
+             states('switch.heizung_wohnzimmer') not in ['unknown', 'unavailable'] and
+             states('switch.heizung_kinderzimmer') not in ['unknown', 'unavailable'] }}
+
 utility_meter:
   ac_energy_daily:
     source: sensor.ac_total_energy
@@ -352,31 +423,8 @@ utility_meter:
   # Diese werden automatisch durch Home Assistant Energy Dashboard erstellt
   # Falls sie nicht existieren, können sie über Settings > Energy konfiguriert werden
 
-# ============================================================================
-# ECOFLOW MONITORING HELPER ENTITIES - Nur essentiell für Monitoring
-# ============================================================================
 
-input_number:
-  ecoflow_letzter_soc:
-    name: "EcoFlow letzter bekannter SoC"
-    min: 0
-    max: 100
-    step: 1
-    initial: 50
-    unit_of_measurement: "%"
-    icon: "mdi:battery-50"
-    
 input_boolean:
-  ecoflow_monitoring_aktiv:
-    name: "EcoFlow Monitoring aktiviert"
-    initial: true
-    icon: "mdi:monitor-eye"
-    
-  ecoflow_steckdosen_warnung_aktiv:
-    name: "Steckdosen-Warnung aktiviert"
-    initial: true
-    icon: "mdi:alert-circle-outline"
-    
   haustur_besucher_inside:
     name: "Besucher ist im Haus"
     initial: false
@@ -416,13 +464,6 @@ climate: !include climates.yaml
 # Dashboard Konfiguration
 lovelace:
   mode: storage
-  dashboards:
-    ecoflow-monitor:
-      mode: yaml
-      title: EcoFlow Monitor
-      icon: mdi:solar-power
-      show_in_sidebar: true
-      filename: dashboards/pv_ueberschuss_dashboard.yaml
 
 # ============================================================================
 # SYSTEM FEATURES

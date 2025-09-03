@@ -481,22 +481,3 @@
         entity_id: input_boolean.duschen
   mode: parallel
   max: 4
-- id: '1746390115261'
-  alias: Color Loop » Badezimmer
-  description: 'Farbwechsel-Animation für Badezimmer Lichter'
-  use_blueprint:
-    path: mdolnik/color_loop.yaml
-    input:
-      light:
-      - light.alle_badezimmer_nachtlichter
-      - light.alle_badezimmer_lichter
-      helper_toggle: input_boolean.es_ist_dunkel
-      color_1:
-      - 255
-      - 38
-      - 0
-      color_2:
-      - 4
-      - 51
-      - 255
-      max_color_distance: 120
