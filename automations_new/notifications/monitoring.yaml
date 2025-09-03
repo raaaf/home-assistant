@@ -196,13 +196,6 @@
         message: Außensensor offline - prüfe Batterie!
         level: warning
     - parallel:
-        # TTS Ansage über HomePods
-        - action: script.hausgeraete_ansage
-          data:
-            message: "Der Außensensor ist offline. Bitte die Batterie prüfen"
-            priority: "normal"
-          continue_on_error: true
-        
         # Mobile Benachrichtigung
         - action: notify.mobile_app_iphone_rafael
           data:

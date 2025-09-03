@@ -672,12 +672,6 @@
     value_template: "{% if states('sensor.fuerth_daily') not in ['unknown', 'unavailable'] and state_attr('sensor.fuerth_daily', 'forecast') is not none %}\n  {% set forecast = state_attr('sensor.fuerth_daily', 'forecast') %}\n  {% if forecast and forecast | length > 0 %}\n    {{ forecast[0].templow < 0 }}\n  {% else %}\n    false\n  {% endif %}\n{% else %}\n  false\n{% endif %}\n"
   action:
   - parallel:
-      # TTS Ansage über HomePods
-      - action: script.hausgeraete_ansage
-        data:
-          message: "Achtung Frostwarnung! Es wird heute Nacht unter null Grad. Bitte die Blumen abdecken"
-          priority: "kritisch"
-      
       # Mobile Benachrichtigung
       - action: notify.alex
         data:

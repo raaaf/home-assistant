@@ -24,47 +24,21 @@
         id: rennsemmel-battery
       sequence:
       - parallel:
-          # TTS Ansage über HomePods
-          - action: script.hausgeraete_ansage
-            data:
-              message: "Alex, dein E-Bike Akku ist unter 25 Prozent. Zeit zum Laden"
-              priority: "normal"
-          
           # Mobile Benachrichtigung
           - action: notify.alex
             data:
               title: 🚵‍♀️ Cowboy Battery <= 25%
               message: Wie wäre es mit laden?
-          
-          # Persistent Notification als Backup
-          - action: persistent_notification.create
-            data:
-              notification_id: "ebike_alex_battery"
-              title: "🚴 E-Bike Akku niedrig"
-              message: "Alex's E-Bike: {{ states('sensor.rennsemmel_remaining_battery') }}% Akku verbleibend"
     - conditions:
       - condition: trigger
         id: butzabatza-battery
       sequence:
       - parallel:
-          # TTS Ansage über HomePods
-          - action: script.hausgeraete_ansage
-            data:
-              message: "Rafael, dein E-Bike Akku ist unter 25 Prozent. Zeit zum Laden"
-              priority: "normal"
-          
           # Mobile Benachrichtigung
           - action: notify.rafael
             data:
               title: 🚵‍♀️ Cowboy Battery <= 25%
               message: Wie wäre es mit laden?
-          
-          # Persistent Notification als Backup
-          - action: persistent_notification.create
-            data:
-              notification_id: "ebike_rafael_battery"
-              title: "🚴 E-Bike Akku niedrig"
-              message: "Rafael's E-Bike: {{ states('sensor.butzabatza_remaining_battery') }}% Akku verbleibend"
     - conditions:
       - condition: trigger
         id: rennsemmel-range
@@ -100,5 +74,3 @@
       entity_id: input_number.solarproduktion_gestern
       value: '{{ (states("sensor.dtu_ac_daily_energy") | float(0) / 1000) | round(2) if has_value("sensor.dtu_ac_daily_energy") else 0 }}'
     action: input_number.set_value
-
-

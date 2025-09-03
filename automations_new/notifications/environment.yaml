@@ -32,15 +32,6 @@
       room_name_display: "{{ room_name_raw | replace('_', ' ') | title }}"
       heating_hours: "{{ trigger.to_state.state }}"
   - parallel:
-      # TTS Ansage über HomePods
-      - action: script.hausgeraete_ansage
-        data:
-          message: >-
-            Die Heizung im {{ room_name_display }}
-            läuft seit über 4 Stunden
-          priority: "normal"
-        continue_on_error: true
-      
       # Mobile Benachrichtigung
       - action: notify.rafael
         data:
@@ -146,4 +137,3 @@
       domain: automation
     action: logbook.log
   mode: single
-

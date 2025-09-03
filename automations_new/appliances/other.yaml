@@ -43,11 +43,16 @@
               variables:
                 todo: "Futterspender » Filter ersetzen"
           
-          # HomePod Ansage
-          - action: script.hausgeraete_ansage
-            data:
-              message: "Der Filter im Futterspender muss ersetzt werden"
-              priority: "normal"
+          # Mobile Benachrichtigungen
+          - parallel:
+              - action: notify.rafael
+                data:
+                  title: "🐾 Futterspender"
+                  message: "Filter ersetzen"
+              - action: notify.alex
+                data:
+                  title: "🐾 Futterspender"
+                  message: "Filter ersetzen"
           
           # Fallback persistent notification
           - if:
@@ -75,11 +80,16 @@
               variables:
                 todo: "Futterspender » Reinigen"
           
-          # HomePod Ansage
-          - action: script.hausgeraete_ansage
-            data:
-              message: "Der Futterspender muss gereinigt werden"
-              priority: "normal"
+          # Mobile Benachrichtigungen
+          - parallel:
+              - action: notify.rafael
+                data:
+                  title: "🐾 Futterspender"
+                  message: "Reinigen"
+              - action: notify.alex
+                data:
+                  title: "🐾 Futterspender"
+                  message: "Reinigen"
           
           # Fallback persistent notification
           - if:
