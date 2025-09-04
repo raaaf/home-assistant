@@ -271,7 +271,6 @@
           - switch.steckdose_avr
           - switch.wohnzimmer_steckdose
           - switch.flur_licht
-          - switch.schlafzimmer_steckdose
           - switch.arbeitszimmer_steckdose
           - switch.steckdose_kuechengeraete
           - switch.kuchengerate
@@ -385,7 +384,6 @@
         target:
           entity_id:
           - switch.wohnzimmer_steckdose
-          - switch.schlafzimmer_steckdose
           - switch.arbeitszimmer_steckdose
           - switch.kuchengerate
           - switch.steckdose_kinderzimmer
@@ -416,7 +414,6 @@
           - switch.steckdose_avr
           - switch.wohnzimmer_steckdose
           - switch.flur_licht
-          - switch.schlafzimmer_steckdose
           - switch.arbeitszimmer_steckdose
           - switch.steckdose_kuechengeraete
           - switch.steckdose_waschmaschine

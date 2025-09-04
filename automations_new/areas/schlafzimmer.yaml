@@ -34,15 +34,12 @@
       ambient_light_value: 150
       ambient_light_high_value: 200
 - id: '1737544939682'
-  alias: Helper » Steckdose Schlafzimmer
-  description: 'Schaltet Schlafzimmer- und Arbeitszimmer-Steckdose automatisch ein,
-    wenn sie wieder verfügbar sind – aber nur wenn jemand zu Hause ist.
+  alias: Helper » Steckdose Arbeitszimmer
+  description: 'Schaltet Arbeitszimmer-Steckdose automatisch ein,
+    wenn sie wieder verfügbar ist – aber nur wenn jemand zu Hause ist.
 
     '
   trigger:
-  - entity_id: switch.schlafzimmer_steckdose
-    from: unavailable
-    trigger: state
   - entity_id: switch.arbeitszimmer_steckdose
     from: unavailable
     trigger: state
@@ -51,21 +48,10 @@
     entity_id: input_boolean.alle_sind_weg
     state: 'off'
   action:
-  - choose:
-    - conditions:
-      - condition: state
-        entity_id: switch.schlafzimmer_steckdose
-        state: 'off'
-      sequence:
-      - target:
-          entity_id: switch.schlafzimmer_steckdose
-        action: switch.turn_on
-    - conditions:
-      - condition: state
-        entity_id: switch.arbeitszimmer_steckdose
-        state: 'off'
-      sequence:
-      - target:
-          entity_id: switch.arbeitszimmer_steckdose
-        action: switch.turn_on
+  - condition: state
+    entity_id: switch.arbeitszimmer_steckdose
+    state: 'off'
+  - target:
+      entity_id: switch.arbeitszimmer_steckdose
+    action: switch.turn_on
   mode: single
