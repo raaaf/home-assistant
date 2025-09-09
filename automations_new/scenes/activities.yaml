@@ -200,9 +200,6 @@
       conditions:
       - condition: trigger
         id: arbeit-on
-      - condition: state
-        entity_id: input_boolean.gaming
-        state: 'off'
       sequence:
       - alias: Bewegungsmelder Schlafzimmer deaktivieren
         action: automation.turn_off
@@ -260,9 +257,6 @@
       conditions:
       - condition: trigger
         id: arbeit-off
-      - condition: state
-        entity_id: input_boolean.gaming
-        state: 'off'
       sequence:
       - alias: Bewegungsmelder Schlafzimmer aktivieren
         action: automation.turn_on

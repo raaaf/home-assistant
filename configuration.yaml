@@ -409,6 +409,17 @@ utility_meter:
     name: "AC Energie Täglich"
     cycle: daily
     
+  # Utility meters for grid import/export tracking
+  taglicher_netzbezug:
+    source: sensor.netzbezug_energie
+    name: "Täglicher Netzbezug"
+    cycle: daily
+    
+  tagliche_einspeisung:
+    source: sensor.einspeisung_energie
+    name: "Tägliche Einspeisung"
+    cycle: daily
+    
   # Utility Meter für Energy müssen Integration Sensoren verwenden
   # Diese werden automatisch durch Home Assistant Energy Dashboard erstellt
   # Falls sie nicht existieren, können sie über Settings > Energy konfiguriert werden

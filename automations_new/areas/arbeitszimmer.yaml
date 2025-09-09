@@ -25,18 +25,7 @@
     entity_id: binary_sensor.macbook_pro_rafael_active
     to: 'off'
     id: work-rafael-off
-  - trigger: state
-    entity_id: device_tracker.gamingpc
-    to: home
-    id: gaming-on
-  - trigger: state
-    entity_id: device_tracker.gamingpc
-    from: home
-    to:
-    - unavailable
-    - not_home
-    - unknown
-    id: gaming-off
+  
   condition: []
   action:
   - choose:
@@ -84,11 +73,9 @@
             id: work-alex-off
           - condition: trigger
             id: work-rafael-off
-          - condition: trigger
-            id: gaming-off
-        - alias: Alle Arbeits- und Gaming-Geräte sind aus
+        - alias: Alle Arbeitsgeräte sind aus
           condition: template
-          value_template: "{{ states('input_boolean.gaming') not in ['unknown', 'unavailable'] and states('input_boolean.gaming') == 'off' and\n   states('binary_sensor.macbook_air_von_alexandra_active') not in ['unknown', 'unavailable'] and states('binary_sensor.macbook_air_von_alexandra_active')\
+          value_template: "{{ states('binary_sensor.macbook_air_von_alexandra_active') not in ['unknown', 'unavailable'] and states('binary_sensor.macbook_air_von_alexandra_active')\
             \ == 'off' and\n   states('binary_sensor.macbook_pro_rafael_active') not in ['unknown', 'unavailable'] and states('binary_sensor.macbook_pro_rafael_active') ==\
             \ 'off' }}\n"
       sequence:
@@ -96,65 +83,10 @@
         target:
           entity_id: input_boolean.arbeit
         data: {}
-      - condition: state
-        entity_id: input_boolean.gaming
-        state: 'off'
       - action: switch.turn_on
         target:
           entity_id: switch.adaptive_lighting_arbeitszimmer
         data: {}
-    - alias: Gaming einschalten
-      conditions:
-      - condition: trigger
-        id: gaming-on
-      sequence:
-      - action: input_boolean.turn_on
-        target:
-          entity_id: input_boolean.gaming
-        data: {}
-      - action: switch.turn_off
-        target:
-          entity_id: switch.adaptive_lighting_arbeitszimmer
-        data: {}
-      - delay:
-          seconds: 0.5
-      - action: light.turn_on
-        target:
-          entity_id: light.alle_arbeitszimmer_nachtlichter
-        data:
-          brightness_pct: 50
-          rgb_color:
-          - 255
-          - 0
-          - 255
-          transition: 2
-    - alias: Gaming ausschalten
-      conditions:
-      - condition: trigger
-        id: gaming-off
-      sequence:
-      - action: input_boolean.turn_off
-        target:
-          entity_id: input_boolean.gaming
-        data: {}
-      - choose:
-        - conditions:
-          - condition: state
-            entity_id: input_boolean.arbeit
-            state: 'on'
-          sequence:
-          - action: light.turn_on
-            target:
-              entity_id: light.alle_arbeitszimmer_nachtlichter
-            data:
-              brightness_pct: 50
-              kelvin: 4000
-              transition: 2
-        default:
-        - action: switch.turn_on
-          target:
-            entity_id: switch.adaptive_lighting_arbeitszimmer
-          data: {}
   mode: single
 - id: '1730279567232'
   alias: Motion » Arbeitszimmer
@@ -191,4 +123,3 @@
       - bypass_enabled_turn_on
       motion_bypass_lights_on:
       - input_boolean.arbeit
-      - input_boolean.gaming

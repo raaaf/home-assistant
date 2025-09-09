@@ -49,7 +49,6 @@
   trigger:
   - entity_id:
     - input_boolean.arbeit
-    - input_boolean.gaming
     to: 'on'
     id: aktivität-an
     for:
@@ -64,7 +63,6 @@
     trigger: state
   - entity_id:
     - input_boolean.arbeit
-    - input_boolean.gaming
     - input_boolean.schlafenszeit
     to: 'off'
     id: modus-aus
@@ -94,9 +92,8 @@
   action:
   - variables:
       arbeit_aktiv: '{{ is_state(''input_boolean.arbeit'', ''on'') }}'
-      gaming_aktiv: '{{ is_state(''input_boolean.gaming'', ''on'') }}'
       schlafenszeit_aktiv: '{{ is_state(''input_boolean.schlafenszeit'', ''on'') }}'
-      irgendein_modus_aktiv: '{{ arbeit_aktiv or gaming_aktiv or schlafenszeit_aktiv
+      irgendein_modus_aktiv: '{{ arbeit_aktiv or schlafenszeit_aktiv
         }}'
       raum_temp: "{% set qingping = states('sensor.qingping_air_monitor_lite_temperature')\
         \ %} {% if has_value('sensor.qingping_air_monitor_lite_temperature') %}\n  {{ qingping\
@@ -134,7 +131,7 @@
           - delay: 00:00:02
           - if:
             - condition: template
-              value_template: '{{ arbeit_aktiv or gaming_aktiv }}'
+              value_template: '{{ arbeit_aktiv }}'
             then:
             - action: climate.set_preset_mode
               data:
@@ -206,7 +203,7 @@
       - delay: 00:00:02
       - if:
         - condition: template
-          value_template: '{{ arbeit_aktiv or gaming_aktiv }}'
+          value_template: '{{ arbeit_aktiv }}'
         then:
         - action: climate.set_preset_mode
           data:
@@ -272,7 +269,7 @@
               - delay: 00:00:02
               - if:
                 - condition: template
-                  value_template: '{{ arbeit_aktiv or gaming_aktiv }}'
+                  value_template: '{{ arbeit_aktiv }}'
                 then:
                 - action: climate.set_preset_mode
                   data:
