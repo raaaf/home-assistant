@@ -119,11 +119,9 @@
     id: arbeitet
   - trigger: numeric_state
     entity_id: sensor.trockner_current_consumption
-    above: 1.3
-    below: 7
+    below: 60
     for:
-      minutes: 1
-      seconds: 30
+      minutes: 5
     id: fertig
   - trigger: numeric_state
     entity_id: sensor.trockner_current_consumption
@@ -189,7 +187,22 @@
               notification_id: "trockner_fertig"
               title: "🧺 Trockner ist fertig"
               message: "Der Trockner wurde um {{ now().strftime('%H:%M Uhr') }} fertig"
-    
+
+    - alias: "Fertig-Trigger ignorieren (außer Reihenfolge)"
+      conditions:
+      - condition: trigger
+        id: fertig
+      - condition: not
+        conditions:
+        - condition: state
+          entity_id: input_select.trockner
+          state: "Arbeitet"
+      sequence:
+      - action: logbook.log
+        data:
+          name: "Trockner"
+          message: "Fertig-Trigger ignoriert, da Zustand nicht 'Arbeitet' ({{ now().strftime('%H:%M Uhr') }})"
+
     - alias: "Trockner aus"
       conditions:
       - condition: trigger
@@ -207,12 +220,11 @@
           notification_id: "trockner_fertig"
     
     default:
-    # Fallback bei unbekanntem Trigger
-    - action: persistent_notification.create
+    # Fallback: nur Log-Eintrag statt Benachrichtigung
+    - action: logbook.log
       data:
-        notification_id: "trockner_error"
-        title: "⚠️ Trockner Fehler"
-        message: "Unbekannter Status-Trigger bei {{ now().strftime('%H:%M Uhr') }}"
+        name: "Trockner"
+        message: "Unerwarteter Trigger: {{ trigger.id | default('unknown') }} ({{ now().strftime('%H:%M Uhr') }})"
   mode: single
   max_exceeded: silent
 - id: '1682954529440'

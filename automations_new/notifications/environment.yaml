@@ -79,13 +79,7 @@
         {% endif %}
       
       solarproduktion_gestern: >-
-        {% set stored = states('sensor.solarproduktion_gestern') | float(0) %}
-        {% if stored > 0 %}
-          {{ stored | round(1) }}
-        {% else %}
-          {% set current = states('sensor.dtu_ac_daily_energy') | float(0) %}
-          {{ (current / 1000) | round(1) if current > 0 else 0 }}
-        {% endif %}
+        {{ states('sensor.solarproduktion_gestern') | float(0) | round(1) }}
       
       verbrauch_brutto: '{{ (verbrauch_netto + solarproduktion_gestern) | round(1) }}'
       strompreis: >-
@@ -99,13 +93,27 @@
       kosten_nach_solar: '{{ (verbrauch_netto * strompreis) | round(2) }}'
       datum_gestern: '{{ (now() - timedelta(days=1)).strftime(''%d.%m.%Y'') }}'
       
-      # Eigenverbrauchsquote berechnen
+      # Eigenverbrauchsquote berechnen (aligned with sensor.pv_eigenverbrauch_quote)
       eigenverbrauch_quote: >-
+        {% set sensor_val = states('sensor.pv_eigenverbrauch_quote') %}
+        {% if sensor_val not in ['unknown', 'unavailable', ''] %}
+          {{ sensor_val | float(0) | round(0) }}
+        {% else %}
+          {% set solar = solarproduktion_gestern | float(0) %}
+          {% set export = state_attr('sensor.tagliche_einspeisung', 'last_period') | float(0) if state_attr('sensor.tagliche_einspeisung', 'last_period') is not none else 0 %}
+          {% if solar > 0 %}
+            {{ ((1 - (export / solar)) * 100) | round(0) }}
+          {% else %}
+            0
+          {% endif %}
+        {% endif %}
+
+      # Anteil Solar am Verbrauch (Solar / Gesamtverbrauch)
+      solaranteil_verbrauch: >-
         {% set solar = solarproduktion_gestern | float(0) %}
-        {% set netto = verbrauch_netto | float(0) %}
         {% set brutto = verbrauch_brutto | float(0) %}
         {% if solar > 0 and brutto > 0 %}
-          {{ ((solar / brutto * 100) | round(0)) }}
+          {{ ((solar / brutto) * 100) | round(0) }}
         {% else %}
           0
         {% endif %}
@@ -120,7 +128,8 @@
 
         **☀️ Solar:**
         Produktion: {{ solarproduktion_gestern }} kWh
-        Eigenverbrauch: {{ eigenverbrauch_quote }}%
+        PV-Eigenverbrauchsquote: {{ eigenverbrauch_quote }}%
+        Anteil Solar am Verbrauch: {{ solaranteil_verbrauch }}%
 
         **💰 Kosten:**
         Tatsächlich: {{ kosten_nach_solar }} €
@@ -131,7 +140,8 @@
         Tagesstatistik {{ datum_gestern }}: 
         Verbrauch {{ verbrauch_brutto }} kWh (Netto: {{ verbrauch_netto }} kWh), 
         Solar {{ solarproduktion_gestern }} kWh, 
-        Eigenverbrauch {{ eigenverbrauch_quote }}%, 
+        PV-Eigenverbrauchsquote {{ eigenverbrauch_quote }}%, 
+        Anteil Solar am Verbrauch {{ solaranteil_verbrauch }}%, 
         Kosten {{ kosten_nach_solar }} € (Ersparnis: {{ ersparnis_gestern }} €)
       name: Energie-Bilanz
       domain: automation

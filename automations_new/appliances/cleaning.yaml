@@ -45,43 +45,30 @@
         id: hauptbueste
       sequence:
       - parallel:
-        # Todo erstellen
-        - action: script.turn_on
-          target:
-            entity_id: script.xtodo_create_todo
+        # Persistent notification als Aufgabe
+        - action: persistent_notification.create
           data:
-            variables:
-              todo: >-
-                Robbi » Hauptbürste wechseln ({{ 
-                  state_attr('vacuum.robbi_2', 'brush_cleaner.brush_life_level') | int(0) 
-                }}% verbleibend)
-        # Parallel: TTS Ansage + Persistent Notification
-        - parallel:
-            # Mobile Benachrichtigung bei kritischem Wert (<5%)
-            - if:
-                - condition: template
-                  value_template: >-
-                    {{ state_attr('vacuum.robbi_2', 'brush_cleaner.brush_life_level') | int(100) < 5 }}
-              then:
-                - parallel:
-                    - action: notify.rafael
-                      data:
-                        title: "🤖 Robbi Wartung"
-                        message: "Hauptbürste kritisch – bitte wechseln"
-                    - action: notify.alex
-                      data:
-                        title: "🤖 Robbi Wartung"
-                        message: "Hauptbürste kritisch – bitte wechseln"
-            
-            # Always create persistent notification as backup
-            - action: persistent_notification.create
-              data:
-                notification_id: "robbi_hauptbueste"
-                title: "🤖 Robbi Wartung"
-                message: >-
-                  Hauptbürste wechseln ({{ 
-                    state_attr('vacuum.robbi_2', 'brush_cleaner.brush_life_level') | int(0) 
-                  }}% verbleibend)
+            notification_id: "robbi_hauptbueste"
+            title: "🤖 Robbi Wartung"
+            message: >-
+              Hauptbürste wechseln ({{ 
+                state_attr('vacuum.robbi_2', 'brush_cleaner.brush_life_level') | int(0) 
+              }}% verbleibend)
+        # Mobile Benachrichtigung bei kritischem Wert (<5%)
+        - if:
+            - condition: template
+              value_template: >-
+                {{ state_attr('vacuum.robbi_2', 'brush_cleaner.brush_life_level') | int(100) < 5 }}
+          then:
+            - parallel:
+                - action: notify.rafael
+                  data:
+                    title: "🤖 Robbi Wartung"
+                    message: "Hauptbürste kritisch – bitte wechseln"
+                - action: notify.alex
+                  data:
+                    title: "🤖 Robbi Wartung"
+                    message: "Hauptbürste kritisch – bitte wechseln"
     
     - alias: "Seitenbürste wechseln"
       conditions:
@@ -89,16 +76,15 @@
         id: seitenbueste
       sequence:
       - parallel:
-        # Todo erstellen
-        - action: script.turn_on
-          target:
-            entity_id: script.xtodo_create_todo
+        # Persistent notification als Aufgabe
+        - action: persistent_notification.create
           data:
-            variables:
-              todo: >-
-                Robbi » Seitenbürste wechseln ({{ 
-                  state_attr('vacuum.robbi_2', 'brush_life_level-10-2') | int(0) 
-                }}% verbleibend)
+            notification_id: "robbi_seitenbueste"
+            title: "🤖 Robbi Wartung"
+            message: >-
+              Seitenbürste wechseln ({{ 
+                state_attr('vacuum.robbi_2', 'brush_life_level-10-2') | int(0) 
+              }}% verbleibend)
         # Mobile Benachrichtigung bei kritischem Wert (<5%)
         - if:
             - condition: template
@@ -114,20 +100,6 @@
                   data:
                     title: "🤖 Robbi Wartung"
                     message: "Seitenbürste kritisch – bitte wechseln"
-        # Fallback persistent notification
-        - if:
-            - condition: template
-              value_template: >-
-                {{ states('script.xtodo_create_todo') in ['unknown', 'unavailable'] }}
-          then:
-            - action: persistent_notification.create
-              data:
-                notification_id: "robbi_seitenbueste"
-                title: "🤖 Robbi Wartung"
-                message: >-
-                  Seitenbürste wechseln ({{ 
-                    state_attr('vacuum.robbi_2', 'brush_life_level-10-2') | int(0) 
-                  }}% verbleibend)
     
     - alias: "Filter wechseln"
       conditions:
@@ -135,16 +107,15 @@
         id: filter
       sequence:
       - parallel:
-        # Todo erstellen
-        - action: script.turn_on
-          target:
-            entity_id: script.xtodo_create_todo
+        # Persistent notification als Aufgabe
+        - action: persistent_notification.create
           data:
-            variables:
-              todo: >-
-                Robbi » Filter wechseln ({{ 
-                  state_attr('vacuum.robbi_2', 'filter.filter_life_level') | int(0) 
-                }}% verbleibend)
+            notification_id: "robbi_filter"
+            title: "🤖 Robbi Wartung"
+            message: >-
+              Filter wechseln ({{ 
+                state_attr('vacuum.robbi_2', 'filter.filter_life_level') | int(0) 
+              }}% verbleibend)
         # Mobile Benachrichtigung bei kritischem Wert (<5%)
         - if:
             - condition: template
@@ -160,20 +131,6 @@
                   data:
                     title: "🤖 Robbi Wartung"
                     message: "Filter kritisch – bitte wechseln"
-        # Fallback persistent notification
-        - if:
-            - condition: template
-              value_template: >-
-                {{ states('script.xtodo_create_todo') in ['unknown', 'unavailable'] }}
-          then:
-            - action: persistent_notification.create
-              data:
-                notification_id: "robbi_filter"
-                title: "🤖 Robbi Wartung"
-                message: >-
-                  Filter wechseln ({{ 
-                    state_attr('vacuum.robbi_2', 'filter.filter_life_level') | int(0) 
-                  }}% verbleibend)
     
     - alias: "Sensoren reinigen"
       conditions:
@@ -181,16 +138,15 @@
         id: sensoren
       sequence:
       - parallel:
-        # Todo erstellen
-        - action: script.turn_on
-          target:
-            entity_id: script.xtodo_create_todo
+        # Persistent notification als Aufgabe
+        - action: persistent_notification.create
           data:
-            variables:
-              todo: >-
-                Robbi » Sensoren reinigen ({{ 
-                  state_attr('vacuum.robbi_2', 'props').get('sensor_dirty_time', 'unbekannt') 
-                }} verbleibend)
+            notification_id: "robbi_sensoren"
+            title: "🤖 Robbi Wartung"
+            message: >-
+              Sensoren reinigen ({{ 
+                state_attr('vacuum.robbi_2', 'props').get('sensor_dirty_time', 'unbekannt') 
+              }} verbleibend)
         # Mobile Benachrichtigung für Sensoren-Reinigung
         - parallel:
             - action: notify.rafael
@@ -201,20 +157,6 @@
               data:
                 title: "🤖 Robbi Wartung"
                 message: "Sensoren reinigen"
-        # Fallback persistent notification
-        - if:
-            - condition: template
-              value_template: >-
-                {{ states('script.xtodo_create_todo') in ['unknown', 'unavailable'] }}
-          then:
-            - action: persistent_notification.create
-              data:
-                notification_id: "robbi_sensoren"
-                title: "🤖 Robbi Wartung"
-                message: >-
-                  Sensoren reinigen ({{ 
-                    state_attr('vacuum.robbi_2', 'props').get('sensor_dirty_time', 'unbekannt') 
-                  }} verbleibend)
     default:
     # Fallback wenn unbekannter Trigger
     - action: persistent_notification.create
@@ -243,17 +185,16 @@
       {{ states('sensor.zhimi_vb4_bce4_filter_life_level') not in ['unknown', 'unavailable'] }}
   actions:
   - parallel:
-      # Todo erstellen
-      - action: script.turn_on
-        target:
-          entity_id: script.xtodo_create_todo
+      # Persistent notification als Aufgabe
+      - action: persistent_notification.create
         data:
-          variables:
-            todo: >-
-              Luftreiniger » Filter wechseln ({{ 
-                states('sensor.zhimi_vb4_bce4_filter_life_level') | int(0) 
-              }}% verbleibend)
-      
+          notification_id: "luftreiniger_filter"
+          title: "🌬️ Luftreiniger Wartung"
+          message: >-
+            Filter wechseln ({{ 
+              states('sensor.zhimi_vb4_bce4_filter_life_level') | int(0) 
+            }}% verbleibend)
+
       # Mobile Benachrichtigung bei kritischem Wert (<5%)
       - if:
           - condition: template
@@ -269,19 +210,4 @@
                 data:
                   title: "🌬️ Luftreiniger Wartung"
                   message: "Filter kritisch – bitte wechseln"
-      
-      # Fallback persistent notification
-      - if:
-          - condition: template
-            value_template: >-
-              {{ states('script.xtodo_create_todo') in ['unknown', 'unavailable'] }}
-        then:
-          - action: persistent_notification.create
-            data:
-              notification_id: "luftreiniger_filter"
-              title: "🌬️ Luftreiniger Wartung"
-              message: >-
-                Filter wechseln ({{ 
-                  states('sensor.zhimi_vb4_bce4_filter_life_level') | int(0) 
-                }}% verbleibend)
   mode: single

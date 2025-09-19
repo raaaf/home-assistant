@@ -102,18 +102,31 @@
       unit_of_measurement: "kWh"
       device_class: energy
       value_template: >-
-        {% set today = now().date() %}
-        {% set yesterday = (today - timedelta(days=1)).isoformat() %}
-        {% set stats = state_attr('sensor.dtu_ac_daily_energy', 'statistics') %}
-        {% if stats %}
-          {% set match = stats | selectattr('start', 'defined') | selectattr('start', 'search', yesterday) | list %}
-          {% if match and match[0]['sum'] is defined %}
-            {{ (match[0]['sum'] / 1000) | round(2) }}
+        {#
+          Priority order for yesterday's solar production (kWh):
+          1) UI helper input_number.solarproduktion_gestern saved at 23:55
+          2) Utility meter last_period from sensor.ac_energy_daily
+          3) DTU daily energy statistics fallback (Wh -> kWh)
+        #}
+        {% set helper = states('input_number.solarproduktion_gestern') %}
+        {% if helper not in ['unknown', 'unavailable', ''] and helper | float(0) > 0 %}
+          {{ helper | float(0) | round(2) }}
+        {% elif state_attr('sensor.ac_energy_daily', 'last_period') is not none and state_attr('sensor.ac_energy_daily', 'last_period') | float(0) > 0 %}
+          {{ state_attr('sensor.ac_energy_daily', 'last_period') | float(0) | round(2) }}
+        {% else %}
+          {% set today = now().date() %}
+          {% set yesterday = (today - timedelta(days=1)).isoformat() %}
+          {% set stats = state_attr('sensor.dtu_ac_daily_energy', 'statistics') %}
+          {% if stats %}
+            {% set match = stats | selectattr('start', 'defined') | selectattr('start', 'search', yesterday) | list %}
+            {% if match and match[0]['sum'] is defined %}
+              {{ (match[0]['sum'] / 1000) | round(2) }}
+            {% else %}
+              0
+            {% endif %}
           {% else %}
             0
           {% endif %}
-        {% else %}
-          0
         {% endif %}
 
     # Astronomie und Wetter
@@ -303,7 +316,7 @@
         {% set pv_heute = states('sensor.solarproduktion_gestern')|float(0) %}
         {% set einspeisung_heute = state_attr('sensor.tagliche_einspeisung', 'last_period')|float(0) if state_attr('sensor.tagliche_einspeisung', 'last_period') is not none else 0 %}
         {% if pv_heute > 0 %}
-          {{ ((1 - einspeisung_heute/pv_heute) * 100)|round(1) }}
+          {{ ((1 - einspeisung_heute/pv_heute) * 100)|round(0) }}
         {% else %}
           0
         {% endif %}
@@ -323,4 +336,3 @@
           200
         {% endif %}
       availability_template: "true"
-

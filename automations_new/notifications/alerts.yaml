@@ -166,37 +166,31 @@
         id:
         - wasser-leer
       sequence:
-      - action: script.turn_on
-        target:
-          entity_id: script.xtodo_create_todo
+      - action: persistent_notification.create
         data:
-          variables:
-            todo: Wasserspender » Braucht Wasser
-        continue_on_error: true
+          notification_id: "wasserspender_wasser"
+          title: "🚰 Wasserspender"
+          message: "Wasserspender » Braucht Wasser"
     - conditions:
       - condition: trigger
         id:
         - pumpe
       sequence:
-      - action: script.turn_on
-        target:
-          entity_id: script.xtodo_create_todo
+      - action: persistent_notification.create
         data:
-          variables:
-            todo: Wasserspender » Pumpe prüfen
-        continue_on_error: true
+          notification_id: "wasserspender_pumpe"
+          title: "🚰 Wasserspender"
+          message: "Wasserspender » Pumpe prüfen"
     - conditions:
       - condition: trigger
         id:
         - clean
       sequence:
-      - action: script.turn_on
-        target:
-          entity_id: script.xtodo_create_todo
+      - action: persistent_notification.create
         data:
-          variables:
-            todo: Wasserspender » Reinigen
-        continue_on_error: true
+          notification_id: "wasserspender_reinigen"
+          title: "🚰 Wasserspender"
+          message: "Wasserspender » Reinigen"
   mode: single
 - id: '1700477276036'
   alias: Notification » Season Change

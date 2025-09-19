@@ -539,6 +539,9 @@
       - condition: trigger
         id: startup
       sequence:
+      - wait_template: "{{ has_value('sensor.temperatur_aussen') }}"
+        timeout: '00:02:00'
+        continue_on_timeout: true
       - action: system_log.write
         data:
           message: 'Heizungsautomation gestartet. Außentemperatur: {{ current_temp

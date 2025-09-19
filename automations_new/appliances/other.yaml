@@ -35,13 +35,12 @@
         id: filter
       sequence:
       - parallel:
-          # Todo erstellen
-          - action: script.turn_on
-            target:
-              entity_id: script.xtodo_create_todo
+          # Persistent notification als Aufgabe
+          - action: persistent_notification.create
             data:
-              variables:
-                todo: "Futterspender » Filter ersetzen"
+              notification_id: "futterspender_filter"
+              title: "🐾 Futterspender Wartung"
+              message: "Filter ersetzen"
           
           # Mobile Benachrichtigungen
           - parallel:
@@ -52,18 +51,6 @@
               - action: notify.alex
                 data:
                   title: "🐾 Futterspender"
-                  message: "Filter ersetzen"
-          
-          # Fallback persistent notification
-          - if:
-              - condition: template
-                value_template: >-
-                  {{ states('script.xtodo_create_todo') in ['unknown', 'unavailable'] }}
-            then:
-              - action: persistent_notification.create
-                data:
-                  notification_id: "futterspender_filter"
-                  title: "🐾 Futterspender Wartung"
                   message: "Filter ersetzen"
     
     - alias: "Futterspender reinigen"
@@ -72,13 +59,12 @@
         id: reinigung
       sequence:
       - parallel:
-          # Todo erstellen
-          - action: script.turn_on
-            target:
-              entity_id: script.xtodo_create_todo
+          # Persistent notification als Aufgabe
+          - action: persistent_notification.create
             data:
-              variables:
-                todo: "Futterspender » Reinigen"
+              notification_id: "futterspender_reinigung"
+              title: "🐾 Futterspender Wartung"
+              message: "Futterspender reinigen"
           
           # Mobile Benachrichtigungen
           - parallel:
@@ -90,18 +76,6 @@
                 data:
                   title: "🐾 Futterspender"
                   message: "Reinigen"
-          
-          # Fallback persistent notification
-          - if:
-              - condition: template
-                value_template: >-
-                  {{ states('script.xtodo_create_todo') in ['unknown', 'unavailable'] }}
-            then:
-              - action: persistent_notification.create
-                data:
-                  notification_id: "futterspender_reinigung"
-                  title: "🐾 Futterspender Wartung"
-                  message: "Futterspender reinigen"
     
     default:
     # Fallback bei unbekanntem Trigger

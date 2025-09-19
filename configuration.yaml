@@ -23,40 +23,6 @@ homeassistant:
       allow_bypass_login: false
     - type: homeassistant
 
-  # REMINDERS / TODO SYSTEM
-  packages:
-    xtodo:
-      input_text:
-        xtodo_todos:
-          name: "Pending todos"
-          initial: ""
-          max: 255 # iOS sync limitation
-
-      script:
-        xtodo_create_todo:
-          alias: "Create new TODO"
-          mode: single
-          fields:
-            todo:
-              description: "Todo text to add"
-              example: "Buy groceries"
-              required: true
-          sequence:
-            - condition: template
-              value_template: "{{ todo is defined and todo | length > 0 }}"
-              alias: "Validate todo input"
-            - action: input_text.set_value
-              target:
-                entity_id: input_text.xtodo_todos
-              data:
-                value: >-
-                  {% set current = states('input_text.xtodo_todos') %}
-                  {% if current | length > 0 %}
-                    {{ current }}\n{{ todo }}
-                  {% else %}
-                    {{ todo }}
-                  {% endif %}
-
 # ============================================================================
 # NETWORK & SECURITY
 # ============================================================================
