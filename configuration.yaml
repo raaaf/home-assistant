@@ -62,7 +62,6 @@ recorder:
   purge_keep_days: 30
   auto_purge: true
   commit_interval: 30
-  db_url: !secret db_url
   exclude:
     domains:
       - automation
@@ -71,9 +70,9 @@ recorder:
       - persistent_notification
       - script
     entities:
-      - sensor.last_boot
+      - sensor.system_monitor_last_boot
       - sensor.date
-      - sensor.time
+      - sensor.date_time_iso
       - sensor.roborock_a27_737e_status  # Excluded due to state list too long (>255 chars)
       # Exclude specific problematic energy sensors that cause utility meter errors
       - sensor.homepod_arbeitszimmer_energy
@@ -237,10 +236,14 @@ template:
         unique_id: wakeup_light_timestamp
         device_class: timestamp
         state: >
-          {% if is_state("binary_sensor.workday_sensor", "on") %}
-            {{ today_at(states('input_datetime.aufwachzeit_arbeitstag')) }}
+          {% set target = 'input_datetime.aufwachzeit_arbeitstag' if is_state("binary_sensor.workday_sensor", "on") else 'input_datetime.aufwachzeit_freier_tag' %}
+          {% set raw = states(target) %}
+          {% if raw in ['unknown', 'unavailable', ''] %}
+            {{ none }}
           {% else %}
-            {{ today_at(states('input_datetime.aufwachzeit_freier_tag')) }}
+            {% set parsed = as_datetime(raw, default=None) %}
+            {% set time_str = parsed.strftime('%H:%M:%S') if parsed is not none else raw %}
+            {{ today_at(time_str) }}
           {% endif %}
         availability: >
           {{ states('binary_sensor.workday_sensor') not in ['unknown', 'unavailable'] and
@@ -251,10 +254,14 @@ template:
         unique_id: einschlafzeit_timestamp
         device_class: timestamp
         state: >
-          {% if is_state("binary_sensor.tomorrow_workday_sensor", "on") %}
-            {{ today_at(states('input_datetime.einschlafzeit_arbeitstag')) }}
+          {% set target = 'input_datetime.einschlafzeit_arbeitstag' if is_state("binary_sensor.tomorrow_workday_sensor", "on") else 'input_datetime.einschlafzeit_freier_tag' %}
+          {% set raw = states(target) %}
+          {% if raw in ['unknown', 'unavailable', ''] %}
+            {{ none }}
           {% else %}
-            {{ today_at(states('input_datetime.einschlafzeit_freier_tag')) }}
+            {% set parsed = as_datetime(raw, default=None) %}
+            {% set time_str = parsed.strftime('%H:%M:%S') if parsed is not none else raw %}
+            {{ today_at(time_str) }}
           {% endif %}
         availability: >
           {{ states('binary_sensor.tomorrow_workday_sensor') not in ['unknown', 'unavailable'] and

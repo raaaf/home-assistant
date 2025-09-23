@@ -37,10 +37,6 @@
       - condition: trigger
         id: wakeup
       sequence:
-      - alias: Alarm deaktivieren
-        action: alarm_control_panel.alarm_disarm
-        target:
-          entity_id: alarm_control_panel.alarmo
       - alias: Schlafenszeit beenden
         action: input_boolean.turn_off
         target:

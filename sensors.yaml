@@ -336,3 +336,25 @@
           200
         {% endif %}
       availability_template: "true"
+
+# ============================================================================
+# ENERGY INTEGRATION SENSORS (kWh)
+# ============================================================================
+
+- platform: integration
+  source: sensor.netzbezug
+  name: Netzbezug Energie
+  unit_prefix: k
+  round: 3
+  method: trapezoidal
+  unit_time: h
+  unique_id: netzbezug_energie
+
+- platform: integration
+  source: sensor.einspeisung
+  name: Einspeisung Energie
+  unit_prefix: k
+  round: 3
+  method: trapezoidal
+  unit_time: h
+  unique_id: einspeisung_energie

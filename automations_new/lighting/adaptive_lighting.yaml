@@ -32,7 +32,6 @@
       excluded_lights:
       - light.hyperhdr
       - light.lichterkette
-      - light.schwarze_stehlampe
       lights_to_turn_off: '{{ lights_in_area | reject("in", excluded_lights) | list if lights_in_area else [] }}'
       area_name: '{{ area_name(motion_area) if motion_area != "unknown" and has_value(motion_area) else "Unbekannter Bereich" }}'
   - choose:
