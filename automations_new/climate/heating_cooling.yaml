@@ -609,54 +609,6 @@
                 {{ current_temp }}'
   mode: single
   max_exceeded: silent
-- id: '1738314198577'
-  alias: Heizung » Handtuchheizer Steuerung (Motion innerhalb 60 Minuten)
-  description: 'Schaltet den Handtuchheizer ein, wenn zwischen dem eingestellten Aufwachzeitpunkt
-    (arbeitstags oder freier Tag) und 60 Minuten später Bewegung erkannt wird.
-
-    '
-  trigger:
-  - entity_id: binary_sensor.motion_dusche_occupancy
-    to: 'on'
-    trigger: state
-  condition:
-  - condition: state
-    entity_id: input_boolean.alle_sind_weg
-    state: 'off'
-  - condition: state
-    entity_id: switch.heizung_steckdose
-    state: 'off'
-  - condition: template
-    value_template: "{% if states('binary_sensor.workday_sensor') not in ['unknown', 'unavailable'] and states('input_datetime.aufwachzeit_arbeitstag') not in ['unknown', 'unavailable'] and states('input_datetime.aufwachzeit_freier_tag') not in ['unknown', 'unavailable'] %}\n  {% if is_state('binary_sensor.workday_sensor', 'on') %}\n    {%\
-      \ set start = states('input_datetime.aufwachzeit_arbeitstag') %}\n  {% else %}\n\
-      \    {% set start = states('input_datetime.aufwachzeit_freier_tag') %}\n  {% endif\
-      \ %}\n  {% set today = now().strftime('%Y-%m-%d') %}\n  {% set start_dt = strptime(today\
-      \ ~ ' ' ~ start, '%Y-%m-%d %H:%M:%S') %}\n  {% set start_ts = as_timestamp(start_dt)\
-      \ %}\n  {% set end_ts = start_ts + 3600 %}\n  {{ start_ts <= now().timestamp() < end_ts }}\n{% else %}\n  false\n{% endif %}\n"
-  action:
-  - target:
-      entity_id: switch.heizung_steckdose
-    action: switch.turn_on
-  - data:
-      title: Handtuchheizer aktiviert
-      message: 'Der Handtuchheizer wurde um {{ now().strftime(''%H:%M Uhr'') }} eingeschaltet,
-        da zwischen Startzeit und 60 Minuten später Bewegung erkannt wurde.
-
-        '
-    action: notify.mobile_app_iphone_rafael
-  - delay:
-      minutes: 30
-  - target:
-      entity_id: switch.heizung_steckdose
-    action: switch.turn_off
-  - data:
-      title: Handtuchheizer deaktiviert
-      message: 'Der Handtuchheizer wurde um {{ now().strftime(''%H:%M Uhr'') }} automatisch
-        ausgeschaltet.
-
-        '
-    action: notify.mobile_app_iphone_rafael
-  mode: single
 - id: '1743835898091'
   alias: Helper » Frostwarnung für Blumen (morgen früh unter 0°C)
   description: 'Sendet eine kritische Notification, wenn es in der Nacht auf morgen
@@ -896,8 +848,8 @@
   mode: parallel
   max: 4
 - id: '1749999999999'
-  alias: Heizung » Predictive Pre-Heating (Thermal Mass Optimization)
-  description: 'Startet Heizung 2-3 Stunden vor Aufwachzeit basierend auf Außentemperatur und thermaler Masse'
+  alias: Heizung » Adaptive Pre-Heating (Room Temperature Based)
+  description: 'Adaptive Heizungssteuerung basierend auf aktueller Raumtemperatur - startet automatisch 1-4 Stunden vor Aufwachzeit je nach Bedarf'
   trigger:
   - trigger: template
     value_template: >
@@ -910,16 +862,33 @@
         {% endif %}
         {% set wake_hour = wake_time.split(':')[0]|int %}
         {% set wake_minute = wake_time.split(':')[1]|int %}
-        {% set outdoor_temp = states('sensor.temperatur_aussen')|float(10) %}
-        {% set preheat_hours = 3 if outdoor_temp < 5 else 2 %}
-        {% set preheat_hour = wake_hour - preheat_hours %}
-        {% if preheat_hour < 0 %}
-          {% set preheat_hour = preheat_hour + 24 %}
-        {% endif %}
-        {% set target_time = '{:02d}:{:02d}'.format(preheat_hour, wake_minute) %}
-        {{ current_time == target_time }}
+
+        {# Get average indoor temperature #}
+        {% set temps = [
+          states('sensor.arbeitszimmer_temperatur')|float(20),
+          states('sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature')|float(20),
+          states('sensor.wohnzimmer_temperatur')|float(20),
+          states('sensor.temperatur_schlafzimmer')|float(20)
+        ] %}
+        {% set avg_indoor_temp = (temps|sum / temps|length)|round(1) %}
+
+        {# Determine required pre-heat hours based on room temperature #}
+        {% set preheat_hours = 4 if avg_indoor_temp < 16 else 3 if avg_indoor_temp < 18 else 2 if avg_indoor_temp < 20 else 1 %}
+
+        {# Calculate when to start for each possible duration #}
+        {% for hours in range(1, 5) %}
+          {% set start_hour = wake_hour - hours %}
+          {% if start_hour < 0 %}
+            {% set start_hour = start_hour + 24 %}
+          {% endif %}
+          {% set check_time = '{:02d}:{:02d}'.format(start_hour, wake_minute) %}
+          {% if current_time == check_time and hours == preheat_hours %}
+            {{ true }}
+          {% endif %}
+        {% endfor %}
       {% else %}
-        {{ current_time == '05:00' }}
+        {# Fallback for missing sensors - check every hour from 4 hours before 7 AM #}
+        {{ current_time in ['03:00', '04:00', '05:00', '06:00'] }}
       {% endif %}
   condition:
   - condition: state
@@ -927,6 +896,9 @@
     state: 'off'
   - condition: template
     value_template: '{{ now().month <= 4 or now().month >= 10 }}'
+  - condition: state
+    entity_id: input_boolean.schlafenszeit
+    state: 'on'
   action:
   - variables:
       climate_entities:
@@ -934,71 +906,57 @@
       - climate.schlafzimmer
       - climate.wohnzimmer
       outdoor_temp: '{{ states(''sensor.temperatur_aussen'')|float(10) }}'
-      preheat_boost: '{{ 1 if outdoor_temp < 0 else 0.5 if outdoor_temp < 10 else 0 }}'
+
+      # Room temperatures
+      arbeitszimmer_temp: '{{ states(''sensor.arbeitszimmer_temperatur'')|float(20) }}'
+      kinderzimmer_temp: '{{ states(''sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature'')|float(20) }}'
+      wohnzimmer_temp: '{{ states(''sensor.wohnzimmer_temperatur'')|float(20) }}'
+      schlafzimmer_temp: '{{ states(''sensor.temperatur_schlafzimmer'')|float(20) }}'
+
+      # Average indoor temperature
+      avg_indoor_temp: '{{ ((arbeitszimmer_temp + kinderzimmer_temp + wohnzimmer_temp + schlafzimmer_temp) / 4)|round(1) }}'
+
+      # Determine heating strategy based on room temperature
+      heating_needed: '{{ avg_indoor_temp < 18 }}'
+      intensive_heating: '{{ avg_indoor_temp < 16 }}'
+
+      # Target temperature based on outdoor conditions
       adaptive_temp_home: "{% set temp = states('sensor.temperatur_aussen') %}\n{%\
         \ if not has_value('sensor.temperatur_aussen') %}\n  20\n{% elif temp | float(10)\
         \ > 15 %}\n  19\n{% elif temp | float(10) > 10 %}\n  20\n{% else %}\n  21\n\
         {% endif %}\n"
-  - action: climate.set_preset_mode
-    target:
-      entity_id: '{{ climate_entities }}'
-    data:
-      preset_mode: home
-  - action: climate.set_temperature
-    target:
-      entity_id: '{{ climate_entities }}'
-    data:
-      temperature: '{{ (adaptive_temp_home|float + preheat_boost)|round(1) }}'
-  - action: notify.persistent_notification
-    data:
-      title: 🔥 Predictive Heating Started
-      message: 'Pre-heating started {{ preheat_boost + adaptive_temp_home|float }}°C (outdoor: {{ outdoor_temp }}°C). Thermal mass charging for optimal wake-up comfort.'
-  mode: single
-- id: '1749999999998'
-  alias: Heizung » Thermal Mass Off-Peak Charging
-  description: 'Lädt die thermale Masse während günstiger Nachtstunden vor (1-4 Uhr bei kaltem Wetter)'
-  trigger:
-  - at: '01:00:00'
-    trigger: time
-  condition:
-  - condition: state
-    entity_id: input_boolean.alle_sind_weg
-    state: 'off'
-  - condition: template
-    value_template: '{{ now().month <= 4 or now().month >= 10 }}'
-  - condition: numeric_state
-    entity_id: sensor.temperatur_aussen
-    below: 12
-  action:
-  - variables:
-      climate_entities:
-      - climate.kinderzimmer
-      - climate.schlafzimmer
-      - climate.wohnzimmer
-      outdoor_temp: '{{ states(''sensor.temperatur_aussen'')|float(10) }}'
-      thermal_boost: '{{ 2.0 if outdoor_temp < -5 else 1.5 if outdoor_temp < 0 else 1.0 if outdoor_temp < 5 else 0.5 }}'
-      adaptive_temp_eco: "{% set temp = states('sensor.temperatur_aussen') %}\n{%\
-        \ if not has_value('sensor.temperatur_aussen') %}\n  18\n{% elif temp | float(10)\
-        \ > 15 %}\n  17\n{% elif temp | float(10) > 10 %}\n  18\n{% else %}\n  19\n\
-        {% endif %}\n"
-  - action: climate.set_temperature
-    target:
-      entity_id: '{{ climate_entities }}'
-    data:
-      temperature: '{{ (adaptive_temp_eco|float + thermal_boost)|round(1) }}'
-  - action: notify.persistent_notification
-    data:
-      title: ⚡ Off-Peak Thermal Charging
-      message: 'Thermal mass charging at {{ (adaptive_temp_eco|float + thermal_boost)|round(1) }}°C (boost: +{{ thermal_boost }}°C). Outdoor: {{ outdoor_temp }}°C'
-  - delay:
-      hours: 2
-  - action: climate.set_temperature
-    target:
-      entity_id: '{{ climate_entities }}'
-    data:
-      temperature: '{{ adaptive_temp_eco }}'
-  - action: notify.persistent_notification
-    data:
-      title: 🌡️ Thermal Charging Complete
-      message: 'Thermal mass charged. Returning to eco {{ adaptive_temp_eco }}°C for remainder of night.'
+
+      # Calculate estimated hours until wake-up
+      estimated_preheat_hours: >
+        {% if avg_indoor_temp < 16 %}4
+        {% elif avg_indoor_temp < 18 %}3
+        {% elif avg_indoor_temp < 20 %}2
+        {% else %}1{% endif %}
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ heating_needed }}'
+      sequence:
+      - action: climate.set_preset_mode
+        target:
+          entity_id: '{{ climate_entities }}'
+        data:
+          preset_mode: home
+      - action: climate.set_temperature
+        target:
+          entity_id: '{{ climate_entities }}'
+        data:
+          temperature: '{{ adaptive_temp_home }}'
+      - action: notify.persistent_notification
+        data:
+          title: 🔥 Adaptive Pre-Heating Started
+          message: >
+            Pre-heating started {{ estimated_preheat_hours }}h before wake-up.
+            Current room temp: {{ avg_indoor_temp }}°C → Target: {{ adaptive_temp_home }}°C
+            Outside: {{ outdoor_temp }}°C | Strategy: {{ 'Intensive' if intensive_heating else 'Normal' }}
+    default:
+    - action: notify.persistent_notification
+      data:
+        title: ☀️ Pre-Heating Skipped
+        message: 'Room temperature adequate ({{ avg_indoor_temp }}°C). No pre-heating needed.'
   mode: single

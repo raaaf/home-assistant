@@ -212,237 +212,9 @@
       night_time_delay: 1
       ambient_light_value: 300
       ambient_light_high_value: 700
-- id: '1736074913814'
-  alias: Dusche » Licht, Lüftung und Duschzeit
-  description: Steuert Licht und Lüftung beim Duschen, misst Duschzeit und sendet
-    Benachrichtigung.
-  trigger:
-  - entity_id: binary_sensor.badezimmer_vibration
-    to: 'on'
-    id: vibration_detected
-    trigger: state
-  - entity_id: timer.dusche_luftung
-    to: idle
-    id: lueftung_timer_abgelaufen
-    trigger: state
-  conditions: []
-  actions:
-  - choose:
-    - conditions:
-      - condition: trigger
-        id: vibration_detected
-      - condition: state
-        entity_id: input_boolean.dusche_aktiv
-        state: 'off'
-      sequence:
-      - target:
-          entity_id: input_boolean.dusche_aktiv
-        action: input_boolean.turn_on
-        data: {}
-      - target:
-          entity_id: input_number.dusche_start_timestamp
-        data:
-          value: '{{ now().timestamp() }}'
-        action: input_number.set_value
-      - data:
-          name: Dusche
-          message: 'Dusche gestartet, Timestamp: {{ now().timestamp() }}'
-        action: logbook.log
-      - target:
-          entity_id:
-          - light.alle_badezimmer_lichter
-          - light.alle_badezimmer_nachtlichter
-        action: light.turn_on
-        data: {}
-      - target:
-          entity_id: switch.luefter_badezimmer
-        action: switch.turn_on
-        data: {}
-      - target:
-          entity_id: timer.dusche_luftung
-        data:
-          duration: 00:30:00
-        action: timer.start
-    - conditions:
-      - condition: trigger
-        id: vibration_detected
-      - condition: state
-        entity_id: input_boolean.dusche_aktiv
-        state: 'on'
-      sequence:
-      - variables:
-          startzeit: '{{ states(''input_number.dusche_start_timestamp'') | int }}'
-          endzeit: '{{ now().timestamp() }}'
-          dauer: '{{ ((endzeit - startzeit)/60)|round(1) }}'
-      - data:
-          name: Dusche
-          message: 'Dusche beendet - Startzeit: {{ startzeit }}, Endzeit: {{ endzeit
-            }}, Dauer: {{ dauer }}'
-        action: logbook.log
-      - data:
-          title: Duschen beendet
-          message: 'Dauer der Dusche: {{ dauer }} Minuten.'
-        action: notify.mobile_app_iphone_rafael
-      - target:
-          entity_id: input_number.dusche_start_timestamp
-        data:
-          value: 0
-        action: input_number.set_value
-      - target:
-          entity_id: input_boolean.dusche_aktiv
-        action: input_boolean.turn_off
-        data: {}
-    - conditions:
-      - condition: trigger
-        id: lueftung_timer_abgelaufen
-      sequence:
-      - choose:
-        - conditions:
-          - condition: state
-            entity_id: input_boolean.dusche_aktiv
-            state: 'on'
-          sequence:
-          - variables:
-              startzeit: '{{ states(''input_number.dusche_start_timestamp'') | int
-                }}'
-              endzeit: '{{ now().timestamp() }}'
-              dauer: '{{ ((endzeit - startzeit)/60)|round(1) }}'
-          - data:
-              name: Dusche
-              message: 'Dusche Timeout - Startzeit: {{ startzeit }}, Endzeit: {{ endzeit
-                }}, Dauer: {{ dauer }}'
-            action: logbook.log
-          - data:
-              title: Duschen beendet (Timeout)
-              message: 'Dauer der Dusche: {{ dauer }} Minuten (max. 30 Minuten erreicht).'
-            action: notify.mobile_app_iphone_rafael
-          - target:
-              entity_id: input_number.dusche_start_timestamp
-            data:
-              value: 0
-            action: input_number.set_value
-          - target:
-              entity_id: input_boolean.dusche_aktiv
-            action: input_boolean.turn_off
-            data: {}
-      - target:
-          entity_id: switch.luefter_badezimmer
-        action: switch.turn_off
-        data: {}
-      - data:
-          name: Lüftung
-          message: 'Lüftung ausgeschaltet: 30 Minuten maximale Laufzeit erreicht.'
-        action: logbook.log
-  mode: restart
-- id: '1744713746266'
-  alias: Scenen » Duschen
-  description: Aktiviert spezielle Badezimmerbeleuchtung fürs Duschen
-  trigger:
-  - entity_id:
-    - input_boolean.duschen
-    to: 'on'
-    id: 'on'
-    trigger: state
-  - entity_id:
-    - input_boolean.duschen
-    to: 'off'
-    id: 'off'
-    trigger: state
-  conditions: []
-  actions:
-  - choose:
-    - conditions:
-      - condition: trigger
-        id: 'on'
-      sequence:
-      - data: {}
-        action: automation.turn_off
-        target:
-          entity_id: automation.1672929418223
-      - action: switch.turn_off
-        metadata: {}
-        data: {}
-        target:
-          entity_id: switch.adaptive_lighting_adapt_brightness_badezimmer
-      - if:
-        - condition: time
-          after: '19:00:00'
-          before: 06:00:00
-        then:
-        - action: light.turn_on
-          metadata: {}
-          data:
-            color_temp_kelvin: 3411
-            brightness_pct: 100
-          target:
-            entity_id: light.alle_badezimmer_nachtlichter
-        else:
-        - action: light.turn_on
-          metadata: {}
-          data:
-            color_temp_kelvin: 5554
-            brightness_pct: 100
-          target:
-            entity_id: light.alle_badezimmer_lichter
-    - conditions:
-      - condition: trigger
-        id: 'off'
-      sequence:
-      - data: {}
-        action: automation.turn_on
-        target:
-          entity_id: automation.1672929418223
-      - action: switch.turn_on
-        metadata: {}
-        data: {}
-        target:
-          entity_id: switch.adaptive_lighting_adapt_brightness_badezimmer
-      - data:
-          transition: 10
-        action: light.turn_off
-        target:
-          entity_id:
-          - light.alle_badezimmer_lichter
-          - light.alle_badezimmer_nachtlichter
-    default: []
-  mode: single
-- id: '1745485428421'
-  alias: Scenen » Duschen Blinklicht
-  description: Blinkt alle 5 Minuten aktive Badezimmerlichter, wenn Duschen aktiv
-    ist
-  trigger:
-  - minutes: /5
-    trigger: time_pattern
-  conditions:
-  - condition: state
-    entity_id: input_boolean.duschen
-    state: 'on'
-  actions:
-  - choose:
-    - conditions:
-      - condition: state
-        entity_id: light.alle_badezimmer_lichter
-        state: 'on'
-      sequence:
-      - target:
-          entity_id: light.alle_badezimmer_lichter
-        data:
-          flash: short
-        action: light.turn_on
-    - conditions:
-      - condition: state
-        entity_id: light.alle_badezimmer_nachtlichter
-        state: 'on'
-      sequence:
-      - target:
-          entity_id: light.alle_badezimmer_nachtlichter
-        data:
-          flash: short
-        action: light.turn_on
-  mode: single
 - id: '1745925395920'
-  alias: Motion » Dusche
-  description: 'Bewegungsgesteuertes Licht für die Dusche'
+  alias: Motion » Dusche Simple
+  description: 'Simple motion-based shower lighting and ventilation'
   trigger:
   - trigger: state
     entity_id:
@@ -453,31 +225,22 @@
     entity_id: input_boolean.alle_sind_weg
     state: 'off'
   actions:
-  - action: input_boolean.turn_on
-    metadata: {}
-    data: {}
+  - action: light.turn_on
     target:
-      entity_id: input_boolean.duschen
+      entity_id:
+      - light.alle_badezimmer_lichter
+      - light.alle_badezimmer_nachtlichter
+  - action: switch.turn_on
+    target:
+      entity_id: switch.luefter_badezimmer
   - delay:
-      hours: 0
       minutes: 30
-      seconds: 0
-      milliseconds: 0
-  - if:
-    - condition: state
-      entity_id: input_boolean.sauna
-      state: 'off'
-    - condition: state
-      entity_id: input_boolean.baden
-      state: 'off'
-    - condition: state
-      entity_id: input_boolean.duschen
-      state: 'on'
-    then:
-    - action: input_boolean.turn_off
-      metadata: {}
-      data: {}
-      target:
-        entity_id: input_boolean.duschen
-  mode: parallel
-  max: 4
+  - action: light.turn_off
+    target:
+      entity_id:
+      - light.alle_badezimmer_lichter
+      - light.alle_badezimmer_nachtlichter
+  - action: switch.turn_off
+    target:
+      entity_id: switch.luefter_badezimmer
+  mode: restart

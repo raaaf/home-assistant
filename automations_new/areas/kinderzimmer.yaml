@@ -118,12 +118,12 @@
         '
       aufwach_schultag_final: '{% set basis = today_at(basis_aufwach_schultag) %}
         {% set angepasst = basis + timedelta(minutes=gesamt_offset_aufwach|int) %}
-        {% set begrenzt = [angepasst, today_at(''07:00:00'')] | max %} {{ begrenzt.strftime(''%H:%M:%S'') }}
+        {% set begrenzt = [angepasst, today_at(''06:45:00'')] | max %} {{ begrenzt.strftime(''%H:%M:%S'') }}
 
         '
       aufwach_wochenende_final: '{% set basis = today_at(basis_aufwach_wochenende)
         %} {% set angepasst = basis + timedelta(minutes=gesamt_offset_aufwach|int)
-        %} {% set begrenzt = [angepasst, today_at(''07:00:00'')] | max %} {{ begrenzt.strftime(''%H:%M:%S'') }}
+        %} {% set begrenzt = [angepasst, today_at(''09:00:00'')] | max %} {{ begrenzt.strftime(''%H:%M:%S'') }}
 
         '
   - action: input_datetime.set_datetime

@@ -24,8 +24,8 @@
   initial_transition: 0
   min_brightness: 30
   max_brightness: 100
-  min_color_temp: 2000
-  max_color_temp: 5000
+  min_color_temp: 2000 # Consistent warm minimum
+  max_color_temp: 6000 # Bright white maximum
   prefer_rgb_color: false
   sleep_brightness: 5 # Very dim for evening relaxation
   sleep_color_temp: 1800  # Scientifically optimal for circadian rhythm
@@ -57,8 +57,8 @@
   initial_transition: 0
   min_brightness: 30
   max_brightness: 100
-  min_color_temp: 2700 # Warmer for cooking comfort
-  max_color_temp: 5500 # Bright white for food prep
+  min_color_temp: 2000 # Consistent warm minimum
+  max_color_temp: 6000 # Bright white for food prep
   prefer_rgb_color: false
   sleep_brightness: 25 # Higher for late night snacks/safety
   sleep_color_temp: 1800  # Warmer for sleep hygiene
@@ -95,7 +95,7 @@
   min_brightness: 30
   max_brightness: 100
   min_color_temp: 2000
-  max_color_temp: 4500 # Lower max for better sleep hygiene
+  max_color_temp: 6000 # Bright white maximum for energizing mornings
   prefer_rgb_color: false
   sleep_brightness: 35 # Higher for nighttime navigation
   sleep_color_temp: 1800 # Optimal warmth for sleep without being too extreme
@@ -128,7 +128,7 @@
   min_brightness: 30
   max_brightness: 100
   min_color_temp: 2000
-  max_color_temp: 5000 # Moderate for children's activities
+  max_color_temp: 6000 # Bright white maximum for consistency
   prefer_rgb_color: false
   sleep_brightness: 8 # Very low for children's sleep
   sleep_color_temp: 1800 # Optimal circadian rhythm for children
@@ -164,7 +164,7 @@
   initial_transition: 0
   min_brightness: 30
   max_brightness: 100
-  min_color_temp: 2500 # Warmer minimum for comfort
+  min_color_temp: 2000 # Consistent warm minimum
   max_color_temp: 6000 # Bright white for morning alertness
   prefer_rgb_color: false
   sleep_brightness: 15 # Low but safe for nighttime use
@@ -197,8 +197,8 @@
   initial_transition: 0
   min_brightness: 30
   max_brightness: 100
-  min_color_temp: 2200
-  max_color_temp: 5500
+  min_color_temp: 2000 # Consistent warm minimum
+  max_color_temp: 6000 # Bright white maximum
   prefer_rgb_color: false
   sleep_brightness: 30 # Higher for safety during night use
   sleep_color_temp: 1800 # Better circadian alignment
@@ -234,8 +234,8 @@
   initial_transition: 0
   min_brightness: 30
   max_brightness: 100
-  min_color_temp: 3500 # Higher minimum for productivity
-  max_color_temp: 6000 # Very bright white for focus
+  min_color_temp: 2000 # Consistent warm minimum
+  max_color_temp: 6000 # Bright white for productivity
   prefer_rgb_color: false
   sleep_brightness: 15 # Minimal for late work sessions
   sleep_color_temp: 1800 # Better circadian support
@@ -267,8 +267,8 @@
   initial_transition: 0
   min_brightness: 30
   max_brightness: 100
-  min_color_temp: 2200
-  max_color_temp: 5500
+  min_color_temp: 2000 # Consistent warm minimum
+  max_color_temp: 6000 # Bright white maximum
   prefer_rgb_color: false
   sleep_brightness: 20
   sleep_color_temp: 1800 # Improved sleep hygiene
@@ -305,8 +305,8 @@
   initial_transition: 0
   min_brightness: 30
   max_brightness: 100
-  min_color_temp: 2000
-  max_color_temp: 5000
+  min_color_temp: 2000 # Consistent warm minimum
+  max_color_temp: 6000 # Bright white maximum
   prefer_rgb_color: false
   sleep_brightness: 8 # Very low for nighttime navigation
   sleep_color_temp: 1800 # Optimal circadian rhythm for nighttime navigation
@@ -342,8 +342,8 @@
   initial_transition: 0
   min_brightness: 20 # Lower minimum for outdoor ambiance
   max_brightness: 100
-  min_color_temp: 1800 # Very warm for evening atmosphere
-  max_color_temp: 5000 # Moderate maximum for outdoor
+  min_color_temp: 2000 # Consistent warm minimum
+  max_color_temp: 6000 # Bright white maximum
   prefer_rgb_color: false
   sleep_brightness: 10 # Minimal outdoor lighting
   sleep_color_temp: 1800 # Optimal circadian rhythm for outdoor evening

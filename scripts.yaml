@@ -112,76 +112,69 @@ brightness_decrease:
       entity_id: '{{ entities_on }}'
     data:
       brightness: '{{ new_brightness }}'
-sunrise_simulator:
-  alias: Sonnenaufgang Simulator
-  description: Simuliert einen sanften Sonnenaufgang mit konfigurierbarer Dauer
+parabolic_sunrise_arbeitszimmer:
+  alias: Parabolic Sunrise - Arbeitszimmer
+  description: Parabolic sunrise effect for Arbeitszimmer
   icon: mdi:weather-sunset-up
-  mode: single
-  fields:
-    target:
-      description: Ziel-Lichter oder Area
-      example: light.schlafzimmer,bedroom
-      required: true
-    duration:
-      description: Dauer in Minuten
-      example: 15
-      default: 10
-      selector:
-        number:
-          min: 1
-          max: 60
-          unit_of_measurement: min
-    max_brightness:
-      description: Maximale Helligkeit in Prozent
-      example: 80
-      default: 100
-      selector:
-        number:
-          min: 1
-          max: 100
-          unit_of_measurement: '%'
-  variables:
-    duration_min: '{{ duration | int(10) }}'
-    max_bright: '{{ max_brightness | int(100) | min(100) }}'
-    target_lights: "{% if target in area_entities('') | map('area_name') | list %}\n
-      \ {{ area_entities(target) | select('match', '^light\\.') | list }}\n{% else
-      %}\n  {{ expand(target) | selectattr('domain', 'eq', 'light') | map(attribute='entity_id')
-      | list }}\n{% endif %}\n"
-    steps: 20
-    step_duration: '{{ (duration_min * 60 / steps) | int }}'
-  sequence:
-  - condition: template
-    value_template: '{{ target_lights | count > 0 }}'
-  - action: light.turn_on
-    target:
-      entity_id: '{{ target_lights }}'
-    data:
-      brightness_pct: 1
-      rgb_color:
-      - 255
-      - 100
-      - 0
-  - repeat:
-      count: '{{ steps }}'
-      sequence:
-      - variables:
-          current_step: '{{ repeat.index }}'
-          brightness: '{{ (current_step * max_bright / steps) | int | max(1) }}'
-          red: '{{ 255 }}'
-          green: '{{ (100 + (current_step * 155 / steps)) | int | min(255) }}'
-          blue: '{{ (current_step * 255 / steps * 0.3) | int | min(255) }}'
-      - action: light.turn_on
-        target:
-          entity_id: '{{ target_lights }}'
-        data:
-          brightness_pct: '{{ brightness }}'
-          rgb_color:
-          - '{{ red }}'
-          - '{{ green }}'
-          - '{{ blue }}'
-          transition: '{{ step_duration }}'
-      - delay:
-          seconds: '{{ step_duration }}'
+  mode: parallel
+  use_blueprint:
+    path: steku/parabolic_alarm_script.yaml
+    input:
+      target_kelvin: 6500
+      start_kelvin: 2500
+      max_brightness_pct: 100
+      alarm_length: 10
+      steps_per_minute: 12
+      target_light: light.alle_arbeitszimmer_lichter
+      light_timeout: 0
+
+parabolic_sunrise_schlafzimmer:
+  alias: Parabolic Sunrise - Schlafzimmer
+  description: Parabolic sunrise effect for Schlafzimmer
+  icon: mdi:weather-sunset-up
+  mode: parallel
+  use_blueprint:
+    path: steku/parabolic_alarm_script.yaml
+    input:
+      target_kelvin: 6500
+      start_kelvin: 2500
+      max_brightness_pct: 100
+      alarm_length: 10
+      steps_per_minute: 12
+      target_light: light.alle_schlafzimmer_lichter
+      light_timeout: 0
+
+parabolic_sunrise_kinderzimmer:
+  alias: Parabolic Sunrise - Kinderzimmer
+  description: Parabolic sunrise effect for Kinderzimmer
+  icon: mdi:weather-sunset-up
+  mode: parallel
+  use_blueprint:
+    path: steku/parabolic_alarm_script.yaml
+    input:
+      target_kelvin: 6500
+      start_kelvin: 2500
+      max_brightness_pct: 100
+      alarm_length: 10
+      steps_per_minute: 12
+      target_light: light.alle_kinderzimmer_lichter
+      light_timeout: 0
+
+parabolic_sunrise_wohnzimmer:
+  alias: Parabolic Sunrise - Wohnzimmer
+  description: Parabolic sunrise effect for Wohnzimmer
+  icon: mdi:weather-sunset-up
+  mode: parallel
+  use_blueprint:
+    path: steku/parabolic_alarm_script.yaml
+    input:
+      target_kelvin: 6500
+      start_kelvin: 2500
+      max_brightness_pct: 100
+      alarm_length: 10
+      steps_per_minute: 12
+      target_light: light.alle_wohnzimmer_lichter
+      light_timeout: 0
 robbi_go_to_kitchen:
   alias: Robbi in die Küche
   description: Sendet Robbi zur Küchenreinigung mit leisem Modus

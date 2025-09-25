@@ -15,7 +15,7 @@
     above: -3.5
     id: sun
   - trigger: time
-    at: 07:00:00
+    at: 06:45:00
     id: sun
   - trigger: time
     at: sensor.einschlafzeit_timestamp
@@ -61,6 +61,7 @@
             - switch.adaptive_lighting_adapt_brightness_arbeitszimmer
             - switch.adaptive_lighting_adapt_brightness_kinderzimmer
             - switch.adaptive_lighting_adapt_brightness_schlafzimmer
+            - switch.adaptive_lighting_adapt_brightness_wohnzimmer
         - alias: Motion-Automationen temporär deaktivieren
           action: automation.turn_off
           target:
@@ -70,36 +71,135 @@
             - automation.1678724233791
           data:
             stop_actions: true
-        - alias: Lichter sehr schwach einschalten (1%)
-          action: light.turn_on
-          target:
-            entity_id:
-            - light.alle_arbeitszimmer_lichter
-            - light.alle_schlafzimmer_lichter
-            - light.alle_kinderzimmer_lichter
-          data:
-            brightness_pct: 1
-        - alias: Sanfter Übergang zu 100% über 15 Minuten
-          action: light.turn_on
-          target:
-            entity_id:
-            - light.alle_arbeitszimmer_lichter
-            - light.alle_schlafzimmer_lichter
-            - light.alle_kinderzimmer_lichter
-          data:
-            brightness_pct: 100
-            transition: 900
-        # Alternative: Sunrise Simulator Script (deaktiviert)
-        # - action: script.sunrise_simulator
-        #   data:
-        #     duration: 30
-        #     target:
-        #     - light.alle_schlafzimmer_lichter
-        #     - light.alle_kinderzimmer_lichter
-        #     - light.alle_arbeitszimmer_lichter
-        #     max_brightness: 100
-        # 10 Minuten warten (deaktiviert)
-        # - delay: 00:10:00
+        # Parabolic Sunrise Alarm - All rooms get 3-phase synchronized wake-up
+        - alias: "Initialize all lights to warm start state"
+          parallel:
+          - action: light.turn_on
+            target:
+              entity_id: light.alle_arbeitszimmer_lichter
+            data:
+              brightness_pct: 1
+              color_temp_kelvin: 2500
+          - action: light.turn_on
+            target:
+              entity_id: light.alle_schlafzimmer_lichter
+            data:
+              brightness_pct: 1
+              color_temp_kelvin: 2500
+          - action: light.turn_on
+            target:
+              entity_id: light.alle_kinderzimmer_lichter
+            data:
+              brightness_pct: 1
+              color_temp_kelvin: 2500
+          - action: light.turn_on
+            target:
+              entity_id: light.alle_wohnzimmer_lichter
+            data:
+              brightness_pct: 1
+              color_temp_kelvin: 2500
+        - alias: "Phase 1: All rooms 1% → 10% brightness, 2500K → 3000K"
+          parallel:
+          - action: script.parabolic_sunrise_arbeitszimmer
+            data:
+              start_kelvin: 2500
+              target_kelvin: 3000
+              max_brightness_pct: 10
+              alarm_length: 10
+              steps_per_minute: 12
+              light_timeout: 0
+          - action: script.parabolic_sunrise_schlafzimmer
+            data:
+              start_kelvin: 2500
+              target_kelvin: 3000
+              max_brightness_pct: 10
+              alarm_length: 10
+              steps_per_minute: 12
+              light_timeout: 0
+          - action: script.parabolic_sunrise_kinderzimmer
+            data:
+              start_kelvin: 2500
+              target_kelvin: 3000
+              max_brightness_pct: 10
+              alarm_length: 10
+              steps_per_minute: 12
+              light_timeout: 0
+          - action: script.parabolic_sunrise_wohnzimmer
+            data:
+              start_kelvin: 2500
+              target_kelvin: 3000
+              max_brightness_pct: 10
+              alarm_length: 10
+              steps_per_minute: 12
+              light_timeout: 0
+        - alias: "Phase 2: All rooms 10% → 50% brightness, 3000K → 4000K"
+          parallel:
+          - action: script.parabolic_sunrise_arbeitszimmer
+            data:
+              start_kelvin: 3000
+              target_kelvin: 4000
+              max_brightness_pct: 50
+              alarm_length: 10
+              steps_per_minute: 12
+              light_timeout: 0
+          - action: script.parabolic_sunrise_schlafzimmer
+            data:
+              start_kelvin: 3000
+              target_kelvin: 4000
+              max_brightness_pct: 50
+              alarm_length: 10
+              steps_per_minute: 12
+              light_timeout: 0
+          - action: script.parabolic_sunrise_kinderzimmer
+            data:
+              start_kelvin: 3000
+              target_kelvin: 4000
+              max_brightness_pct: 50
+              alarm_length: 10
+              steps_per_minute: 12
+              light_timeout: 0
+          - action: script.parabolic_sunrise_wohnzimmer
+            data:
+              start_kelvin: 3000
+              target_kelvin: 4000
+              max_brightness_pct: 50
+              alarm_length: 10
+              steps_per_minute: 12
+              light_timeout: 0
+        - alias: "Phase 3: All rooms 50% → 100% brightness, 4000K → 6500K"
+          parallel:
+          - action: script.parabolic_sunrise_arbeitszimmer
+            data:
+              start_kelvin: 4000
+              target_kelvin: 6500
+              max_brightness_pct: 100
+              alarm_length: 5
+              steps_per_minute: 12
+              light_timeout: 0
+          - action: script.parabolic_sunrise_schlafzimmer
+            data:
+              start_kelvin: 4000
+              target_kelvin: 6500
+              max_brightness_pct: 100
+              alarm_length: 5
+              steps_per_minute: 12
+              light_timeout: 0
+          - action: script.parabolic_sunrise_kinderzimmer
+            data:
+              start_kelvin: 4000
+              target_kelvin: 6500
+              max_brightness_pct: 100
+              alarm_length: 5
+              steps_per_minute: 12
+              light_timeout: 0
+          - action: script.parabolic_sunrise_wohnzimmer
+            data:
+              start_kelvin: 4000
+              target_kelvin: 6500
+              max_brightness_pct: 100
+              alarm_length: 5
+              steps_per_minute: 12
+              light_timeout: 0
         - alias: Motion-Automationen wieder aktivieren
           action: automation.turn_on
           target:
@@ -107,6 +207,8 @@
             - automation.arbeitszimmer_motion
             - automation.1692710690350
             - automation.1678724233791
+        # Wait for all 3 phases to complete (total: 25 minutes)
+        - delay: 00:25:00
         - alias: Adaptive Beleuchtung Helligkeit wieder aktivieren
           action: switch.turn_on
           target:
@@ -114,6 +216,7 @@
             - switch.adaptive_lighting_adapt_brightness_arbeitszimmer
             - switch.adaptive_lighting_adapt_brightness_kinderzimmer
             - switch.adaptive_lighting_adapt_brightness_schlafzimmer
+            - switch.adaptive_lighting_adapt_brightness_wohnzimmer
       - alias: Sleep Mode für alle Räume deaktivieren
         action: switch.turn_off
         target:
