@@ -14,7 +14,9 @@
       include_night_lights: night_lights_enabled
       night_lights:
         entity_id:
-        - light.alle_flur_nachtlichter
+          - light.alle_flur_nachtlichter
+          - light.stahltraeger
+          - switch.flur_licht
       night_lights_after_time: '22:00:00'
       night_lights_before_time: 06:00:00
       night_time_delay: 0
@@ -23,7 +25,9 @@
       ambient_light_sensor: sensor.balkon_motion_illuminance_safe
       night_lights_conditions:
       - time_enabled
-      ambient_light_options: ambient_light_option_disabled
+      ambient_light_options: ambient_light_option_enabled
+      ambient_light_value: 20
+      ambient_light_high_value: 50
 - id: '1696841069890'
   alias: Flur » Robbi
   description: Steuert Staubsauger-Roboter mit verschiedenen Reinigungsplänen und
@@ -187,7 +191,7 @@
         action: input_boolean.turn_on
         target:
           entity_id: input_boolean.robbi_kitchen_done
-  mode: single
+  mode: restart
 - id: '1745826967324'
   alias: Motion » Haustür
   description: Bewegungsgesteuerte Beleuchtung im Flur mit Nachtlicht-Modus

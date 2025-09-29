@@ -112,69 +112,6 @@ brightness_decrease:
       entity_id: '{{ entities_on }}'
     data:
       brightness: '{{ new_brightness }}'
-parabolic_sunrise_arbeitszimmer:
-  alias: Parabolic Sunrise - Arbeitszimmer
-  description: Parabolic sunrise effect for Arbeitszimmer
-  icon: mdi:weather-sunset-up
-  mode: parallel
-  use_blueprint:
-    path: steku/parabolic_alarm_script.yaml
-    input:
-      target_kelvin: 6500
-      start_kelvin: 2500
-      max_brightness_pct: 100
-      alarm_length: 10
-      steps_per_minute: 12
-      target_light: light.alle_arbeitszimmer_lichter
-      light_timeout: 0
-
-parabolic_sunrise_schlafzimmer:
-  alias: Parabolic Sunrise - Schlafzimmer
-  description: Parabolic sunrise effect for Schlafzimmer
-  icon: mdi:weather-sunset-up
-  mode: parallel
-  use_blueprint:
-    path: steku/parabolic_alarm_script.yaml
-    input:
-      target_kelvin: 6500
-      start_kelvin: 2500
-      max_brightness_pct: 100
-      alarm_length: 10
-      steps_per_minute: 12
-      target_light: light.alle_schlafzimmer_lichter
-      light_timeout: 0
-
-parabolic_sunrise_kinderzimmer:
-  alias: Parabolic Sunrise - Kinderzimmer
-  description: Parabolic sunrise effect for Kinderzimmer
-  icon: mdi:weather-sunset-up
-  mode: parallel
-  use_blueprint:
-    path: steku/parabolic_alarm_script.yaml
-    input:
-      target_kelvin: 6500
-      start_kelvin: 2500
-      max_brightness_pct: 100
-      alarm_length: 10
-      steps_per_minute: 12
-      target_light: light.alle_kinderzimmer_lichter
-      light_timeout: 0
-
-parabolic_sunrise_wohnzimmer:
-  alias: Parabolic Sunrise - Wohnzimmer
-  description: Parabolic sunrise effect for Wohnzimmer
-  icon: mdi:weather-sunset-up
-  mode: parallel
-  use_blueprint:
-    path: steku/parabolic_alarm_script.yaml
-    input:
-      target_kelvin: 6500
-      start_kelvin: 2500
-      max_brightness_pct: 100
-      alarm_length: 10
-      steps_per_minute: 12
-      target_light: light.alle_wohnzimmer_lichter
-      light_timeout: 0
 robbi_go_to_kitchen:
   alias: Robbi in die Küche
   description: Sendet Robbi zur Küchenreinigung mit leisem Modus
@@ -212,28 +149,23 @@ tts_random_greeting:
         entity:
           domain: media_player
   sequence:
-    - variables:
-        greeting: >-
-          {{ [
-              "Hallo Hand",
-              "Hallo Maus",
-              "Hallo Hase",
-              "Willkommen zu Hause",
-              "Schön dass du da bist"
-            ] | random }}
-    - parallel:
-        - action: notify.rafael
-          data:
-            title: "👋 Begrüßung"
-            message: "{{ greeting }}"
-        - action: notify.alex
-          data:
-            title: "👋 Begrüßung"
-            message: "{{ greeting }}"
-    - action: persistent_notification.create
+  - variables:
+      greeting: "{{ [\n    \"Hallo Hand\",\n    \"Hallo Maus\",\n    \"Hallo Hase\",\n
+        \   \"Willkommen zu Hause\",\n    \"Schön dass du da bist\"\n  ] | random
+        }}"
+  - parallel:
+    - action: notify.rafael
       data:
-        title: "👋 Begrüßung"
-        message: "{{ greeting }}"
+        title: "\U0001F44B Begrüßung"
+        message: '{{ greeting }}'
+    - action: notify.alex
+      data:
+        title: "\U0001F44B Begrüßung"
+        message: '{{ greeting }}'
+  - action: persistent_notification.create
+    data:
+      title: "\U0001F44B Begrüßung"
+      message: '{{ greeting }}'
 notification_with_icon:
   alias: Benachrichtigung mit Icon
   description: Sendet formatierte Benachrichtigung an Gerät
@@ -377,13 +309,15 @@ fade_volume:
       level: debug
   icon: mdi:tune-vertical
   description: Smooth volume fading with multiple curve options
-
 test_debug:
-  alias: "Debug Test"
+  alias: Debug Test
   sequence:
-    - action: system_log.write
-      data:
-        message: "Debug Test Script Executed"
-        level: warning
-
-# (Removed) hausgeraete_ansage script was replaced by direct notifications in automations
+  - action: system_log.write
+    data:
+      message: Debug Test Script Executed
+      level: warning
+light_sunrise:
+  alias: Light Sunrise
+  use_blueprint:
+    path: steku/parabolic_alarm_script.yaml
+  description: ''
