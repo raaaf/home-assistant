@@ -42,12 +42,17 @@
               interruption-level: critical
         continue_on_error: true
       
-      # Persistent Notification als Backup
-      - action: persistent_notification.create
+      # Email notification
+      - action: notify.rafael_mail
         data:
-          notification_id: "heizung_warnung_{{ room_name_raw }}"
-          title: "🔥 Heizung läuft zu lange"
-          message: "{{ room_name_display }} seit {{ heating_hours }} Stunden aktiv"
+          title: "Heizung läuft zu lange - {{ room_name_display }}"
+          message: |
+            Heizung läuft zu lange
+
+            Raum: {{ room_name_display }}
+            Laufzeit: {{ heating_hours }} Stunden
+
+            Die Heizung im {{ room_name_display }} läuft seit mehr als 4 Stunden. Bitte überprüfe die Einstellungen oder ob eventuell ein Fenster geöffnet ist.
         continue_on_error: true
   mode: single
 - id: '1738322846270'
@@ -118,23 +123,43 @@
           0
         {% endif %}
   - data:
-      title: ⚡ Energie-Bilanz {{ datum_gestern }}{{ ' (Test)' if not has_historical_data else '' }}
+      title: Energie-Bilanz {{ datum_gestern }}{{ ' (Test)' if not has_historical_data else '' }}
       message: >-
-        {% if not has_historical_data %}*⚠️ Aktuelle Werte - Testmodus*
-        
-        {% endif %}**📊 Verbrauch:**
+        {% if not has_historical_data %}WARNUNG: Aktuelle Werte - Testmodus
+
+        {% endif %}VERBRAUCH:
         Gesamt: {{ verbrauch_brutto }} kWh
         Netzbezug: {{ verbrauch_netto }} kWh
 
-        **☀️ Solar:**
+        SOLAR:
         Produktion: {{ solarproduktion_gestern }} kWh
         PV-Eigenverbrauchsquote: {{ eigenverbrauch_quote }}%
         Anteil Solar am Verbrauch: {{ solaranteil_verbrauch }}%
 
-        **💰 Kosten:**
-        Tatsächlich: {{ kosten_nach_solar }} €
-        Ersparnis: {{ ersparnis_gestern }} €
-    action: persistent_notification.create
+        KOSTEN:
+        Tatsächlich: {{ kosten_nach_solar }} Euro
+        Ersparnis: {{ ersparnis_gestern }} Euro
+    action: notify.rafael_mail
+    data:
+      title: "Energie-Bilanz {{ datum_gestern }}{{ ' (Test)' if not has_historical_data else '' }}"
+      message: |
+        Energie-Bilanz {{ datum_gestern }}{{ ' (Test)' if not has_historical_data else '' }}
+
+        {% if not has_historical_data %}WARNUNG: Aktuelle Werte - Testmodus
+        {% endif %}
+
+        VERBRAUCH:
+        - Gesamt: {{ verbrauch_brutto }} kWh
+        - Netzbezug: {{ verbrauch_netto }} kWh
+
+        SOLAR:
+        - Produktion: {{ solarproduktion_gestern }} kWh
+        - PV-Eigenverbrauchsquote: {{ eigenverbrauch_quote }}%
+        - Anteil Solar am Verbrauch: {{ solaranteil_verbrauch }}%
+
+        KOSTEN:
+        - Tatsächlich: {{ kosten_nach_solar }} Euro
+        - Ersparnis: {{ ersparnis_gestern }} Euro
   - data:
       message: >-
         Tagesstatistik {{ datum_gestern }}: 

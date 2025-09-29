@@ -4,11 +4,13 @@
 #
 # Home Assistant Adaptive Lighting component configurations for all rooms
 # Optimized for Bavarian climate, daily routines, and circadian rhythm health
+# UPDATED: Optimized for Zigbee2MQTT with mixed Philips Hue & IKEA lights
 #
 # Key principles:
 # - Sleep color temps at 1800K for optimal circadian rhythm support
 # - Room-specific timing based on usage patterns
-# - Smooth transitions for comfort (45-180s depending on room)
+# - IKEA-compatible transitions (10-15s max) to prevent bulb lockups
+# - Separate commands for IKEA lights to avoid simultaneous brightness/color changes
 # - Higher brightness for safety areas (bathrooms, hallways)
 # - Extended evening hours for work and outdoor spaces
 
@@ -20,7 +22,7 @@
   lights:
     - light.alle_wohnzimmer_lichter
   interval: 90
-  transition: 45
+  transition: 15  # Reduced for IKEA compatibility
   initial_transition: 0
   min_brightness: 30
   max_brightness: 100
@@ -29,7 +31,7 @@
   prefer_rgb_color: false
   sleep_brightness: 5 # Very dim for evening relaxation
   sleep_color_temp: 1800  # Scientifically optimal for circadian rhythm
-  sleep_transition: 120 # Gradual evening transition
+  sleep_transition: 60 # Reduced for IKEA compatibility
   transition_until_sleep: true
   min_sunrise_time: "05:00:00"
   max_sunrise_time: "07:00:00"
@@ -40,9 +42,9 @@
   autoreset_control_seconds: 3600
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: false
-  send_split_delay: 0
-  adapt_delay: 5
+  separate_turn_on_commands: true  # CRITICAL: Required for IKEA lights
+  send_split_delay: 0.5  # Delay between commands for IKEA lights
+  adapt_delay: 8  # Increased for mixed bulb types
   skip_redundant_commands: true
   intercept: true
   multi_light_intercept: true
@@ -53,7 +55,7 @@
   lights:
     - light.alle_kuche_lichter
   interval: 90
-  transition: 45
+  transition: 15  # Reduced for IKEA compatibility
   initial_transition: 0
   min_brightness: 30
   max_brightness: 100
@@ -62,7 +64,7 @@
   prefer_rgb_color: false
   sleep_brightness: 25 # Higher for late night snacks/safety
   sleep_color_temp: 1800  # Warmer for sleep hygiene
-  sleep_transition: 60
+  sleep_transition: 30  # Reduced for IKEA compatibility
   transition_until_sleep: true
   min_sunrise_time: "06:00:00" # Later start for kitchen activities
   max_sunrise_time: "07:30:00"
@@ -73,9 +75,9 @@
   autoreset_control_seconds: 3600
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: false
-  send_split_delay: 0
-  adapt_delay: 5
+  separate_turn_on_commands: true  # CRITICAL: Required for IKEA lights
+  send_split_delay: 0.5  # Delay between commands for IKEA lights
+  adapt_delay: 8  # Increased for mixed bulb types
   skip_redundant_commands: true
   intercept: true
   multi_light_intercept: true
@@ -90,7 +92,7 @@
   lights:
     - light.alle_schlafzimmer_lichter
   interval: 90
-  transition: 45
+  transition: 12  # Reduced for IKEA compatibility
   initial_transition: 0
   min_brightness: 30
   max_brightness: 100
@@ -99,7 +101,7 @@
   prefer_rgb_color: false
   sleep_brightness: 35 # Higher for nighttime navigation
   sleep_color_temp: 1800 # Optimal warmth for sleep without being too extreme
-  sleep_transition: 180 # Very gradual 3-minute transition
+  sleep_transition: 60 # Reduced for IKEA compatibility
   transition_until_sleep: true
   min_sunrise_time: "05:00:00"
   max_sunrise_time: "07:00:00"
@@ -110,9 +112,9 @@
   autoreset_control_seconds: 3600
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: false
-  send_split_delay: 0
-  adapt_delay: 5
+  separate_turn_on_commands: true  # CRITICAL: Required for IKEA lights
+  send_split_delay: 0.5  # Delay between commands for IKEA lights
+  adapt_delay: 10  # Higher for bedroom motion sensors
   skip_redundant_commands: true
   intercept: true
   multi_light_intercept: true
@@ -123,7 +125,7 @@
   lights:
     - light.alle_kinderzimmer_lichter
   interval: 90
-  transition: 45
+  transition: 15  # Reduced for IKEA compatibility
   initial_transition: 0
   min_brightness: 30
   max_brightness: 100
@@ -132,7 +134,7 @@
   prefer_rgb_color: false
   sleep_brightness: 8 # Very low for children's sleep
   sleep_color_temp: 1800 # Optimal circadian rhythm for children
-  sleep_transition: 120 # Gentle transition for kids
+  sleep_transition: 45 # Reduced for IKEA compatibility
   transition_until_sleep: true
   min_sunrise_time: "05:00:00"
   max_sunrise_time: "07:00:00"
@@ -143,9 +145,9 @@
   autoreset_control_seconds: 3600
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: false
-  send_split_delay: 0
-  adapt_delay: 5
+  separate_turn_on_commands: true  # CRITICAL: Required for IKEA lights
+  send_split_delay: 0.5  # Delay between commands for IKEA lights
+  adapt_delay: 8  # Increased for mixed bulb types
   skip_redundant_commands: true
   intercept: true
   multi_light_intercept: true
@@ -160,7 +162,7 @@
   lights:
     - light.alle_badezimmer_lichter
   interval: 90
-  transition: 45
+  transition: 15  # Reduced for IKEA compatibility
   initial_transition: 0
   min_brightness: 30
   max_brightness: 100
@@ -180,9 +182,9 @@
   autoreset_control_seconds: 7200 # 2 hours for less frequently used rooms
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: false
-  send_split_delay: 0
-  adapt_delay: 5
+  separate_turn_on_commands: true  # CRITICAL: Required for IKEA lights
+  send_split_delay: 0.5  # Delay between commands for IKEA lights
+  adapt_delay: 8  # Increased for mixed bulb types
   skip_redundant_commands: true
   intercept: true
   multi_light_intercept: true
@@ -193,7 +195,7 @@
   lights:
     - light.alle_waschzimmer_lichter
   interval: 90
-  transition: 45
+  transition: 15  # Reduced for IKEA compatibility
   initial_transition: 0
   min_brightness: 30
   max_brightness: 100
@@ -213,9 +215,9 @@
   autoreset_control_seconds: 7200
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: false
-  send_split_delay: 0
-  adapt_delay: 5
+  separate_turn_on_commands: true  # CRITICAL: Required for IKEA lights
+  send_split_delay: 0.5  # Delay between commands for IKEA lights
+  adapt_delay: 8  # Increased for mixed bulb types
   skip_redundant_commands: true
   intercept: true
   multi_light_intercept: true
@@ -230,7 +232,7 @@
   lights:
     - light.alle_arbeitszimmer_lichter
   interval: 90
-  transition: 45
+  transition: 15  # Reduced for IKEA compatibility
   initial_transition: 0
   min_brightness: 30
   max_brightness: 100
@@ -250,9 +252,9 @@
   autoreset_control_seconds: 3600
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: false
-  send_split_delay: 0
-  adapt_delay: 5
+  separate_turn_on_commands: true  # CRITICAL: Required for IKEA lights
+  send_split_delay: 0.5  # Delay between commands for IKEA lights
+  adapt_delay: 8  # Increased for mixed bulb types
   skip_redundant_commands: true
   intercept: true
   multi_light_intercept: true
@@ -263,7 +265,7 @@
   lights:
     - light.alle_ankleide_lichter
   interval: 90
-  transition: 45
+  transition: 15  # Reduced for IKEA compatibility
   initial_transition: 0
   min_brightness: 30
   max_brightness: 100
@@ -283,9 +285,9 @@
   autoreset_control_seconds: 7200
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: false
-  send_split_delay: 0
-  adapt_delay: 5
+  separate_turn_on_commands: true  # CRITICAL: Required for IKEA lights
+  send_split_delay: 0.5  # Delay between commands for IKEA lights
+  adapt_delay: 8  # Increased for mixed bulb types
   skip_redundant_commands: true
   intercept: true
   multi_light_intercept: true
@@ -301,7 +303,7 @@
     - light.alle_flur_lichter
     - light.alle_flur_nachtlichter
   interval: 90
-  transition: 45
+  transition: 15  # Reduced for IKEA compatibility
   initial_transition: 0
   min_brightness: 30
   max_brightness: 100
@@ -321,9 +323,9 @@
   autoreset_control_seconds: 7200
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: false
-  send_split_delay: 0
-  adapt_delay: 10 # Higher delay for motion sensor areas
+  separate_turn_on_commands: true  # CRITICAL: Required for IKEA lights
+  send_split_delay: 0.5  # Delay between commands for IKEA lights
+  adapt_delay: 12 # Higher delay for motion sensor areas in hallways
   skip_redundant_commands: true
   intercept: true
   multi_light_intercept: true
@@ -338,7 +340,7 @@
   lights:
     - light.alle_balkon_lichter
   interval: 120 # Slower updates for outdoor
-  transition: 90 # Slower transition for smooth outdoor changes
+  transition: 15 # Reduced for IKEA compatibility
   initial_transition: 0
   min_brightness: 20 # Lower minimum for outdoor ambiance
   max_brightness: 100
@@ -347,7 +349,7 @@
   prefer_rgb_color: false
   sleep_brightness: 10 # Minimal outdoor lighting
   sleep_color_temp: 1800 # Optimal circadian rhythm for outdoor evening
-  sleep_transition: 90
+  sleep_transition: 30 # Reduced for IKEA compatibility
   transition_until_sleep: false # No sleep transition for outdoor
   min_sunrise_time: "05:30:00"
   max_sunrise_time: "07:30:00"
@@ -358,9 +360,9 @@
   autoreset_control_seconds: 7200 # Longer reset for outdoor
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: false
-  send_split_delay: 0
-  adapt_delay: 15 # Higher delay for outdoor sensors
+  separate_turn_on_commands: true  # CRITICAL: Required for IKEA lights
+  send_split_delay: 0.5  # Delay between commands for IKEA lights
+  adapt_delay: 15 # Higher delay for outdoor sensors and mixed bulb types
   skip_redundant_commands: true
   intercept: true
   multi_light_intercept: true

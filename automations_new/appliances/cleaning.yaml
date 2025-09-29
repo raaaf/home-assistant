@@ -45,15 +45,19 @@
         id: hauptbueste
       sequence:
       - parallel:
-        # Persistent notification als Aufgabe
-        - action: persistent_notification.create
+        # Email notification
+        - action: notify.rafael_mail
           data:
-            notification_id: "robbi_hauptbueste"
-            title: "🤖 Robbi Wartung"
-            message: >-
-              Hauptbürste wechseln ({{ 
-                state_attr('vacuum.robbi_2', 'brush_cleaner.brush_life_level') | int(0) 
-              }}% verbleibend)
+            title: "Robbi Wartung - Hauptbürste wechseln"
+            message: |
+              Robbi Wartung erforderlich
+
+              Wartungsaufgabe: Hauptbürste wechseln
+              Verbleibende Lebensdauer: {{
+                state_attr('vacuum.robbi_2', 'brush_cleaner.brush_life_level') | int(0)
+              }}%
+
+              Bitte die Hauptbürste von Robbi wechseln, wenn es dir möglich ist.
         # Mobile Benachrichtigung bei kritischem Wert (<5%)
         - if:
             - condition: template
@@ -63,11 +67,11 @@
             - parallel:
                 - action: notify.rafael
                   data:
-                    title: "🤖 Robbi Wartung"
+                    title: "Robbi Wartung"
                     message: "Hauptbürste kritisch – bitte wechseln"
                 - action: notify.alex
                   data:
-                    title: "🤖 Robbi Wartung"
+                    title: "Robbi Wartung"
                     message: "Hauptbürste kritisch – bitte wechseln"
     
     - alias: "Seitenbürste wechseln"
@@ -76,15 +80,19 @@
         id: seitenbueste
       sequence:
       - parallel:
-        # Persistent notification als Aufgabe
-        - action: persistent_notification.create
+        # Email notification
+        - action: notify.rafael_mail
           data:
-            notification_id: "robbi_seitenbueste"
-            title: "🤖 Robbi Wartung"
-            message: >-
-              Seitenbürste wechseln ({{ 
-                state_attr('vacuum.robbi_2', 'brush_life_level-10-2') | int(0) 
-              }}% verbleibend)
+            title: "Robbi Wartung - Seitenbürste wechseln"
+            message: |
+              Robbi Wartung erforderlich
+
+              Wartungsaufgabe: Seitenbürste wechseln
+              Verbleibende Lebensdauer: {{
+                state_attr('vacuum.robbi_2', 'brush_life_level-10-2') | int(0)
+              }}%
+
+              Bitte die Seitenbürste von Robbi wechseln, wenn es dir möglich ist.
         # Mobile Benachrichtigung bei kritischem Wert (<5%)
         - if:
             - condition: template
@@ -94,11 +102,11 @@
             - parallel:
                 - action: notify.rafael
                   data:
-                    title: "🤖 Robbi Wartung"
+                    title: "Robbi Wartung"
                     message: "Seitenbürste kritisch – bitte wechseln"
                 - action: notify.alex
                   data:
-                    title: "🤖 Robbi Wartung"
+                    title: "Robbi Wartung"
                     message: "Seitenbürste kritisch – bitte wechseln"
     
     - alias: "Filter wechseln"
@@ -107,15 +115,19 @@
         id: filter
       sequence:
       - parallel:
-        # Persistent notification als Aufgabe
-        - action: persistent_notification.create
+        # Email notification
+        - action: notify.rafael_mail
           data:
-            notification_id: "robbi_filter"
-            title: "🤖 Robbi Wartung"
-            message: >-
-              Filter wechseln ({{ 
-                state_attr('vacuum.robbi_2', 'filter.filter_life_level') | int(0) 
-              }}% verbleibend)
+            title: "Robbi Wartung - Filter wechseln"
+            message: |
+              Robbi Wartung erforderlich
+
+              Wartungsaufgabe: Filter wechseln
+              Verbleibende Lebensdauer: {{
+                state_attr('vacuum.robbi_2', 'filter.filter_life_level') | int(0)
+              }}%
+
+              Bitte den Filter von Robbi wechseln, wenn es dir möglich ist.
         # Mobile Benachrichtigung bei kritischem Wert (<5%)
         - if:
             - condition: template
@@ -125,11 +137,11 @@
             - parallel:
                 - action: notify.rafael
                   data:
-                    title: "🤖 Robbi Wartung"
+                    title: "Robbi Wartung"
                     message: "Filter kritisch – bitte wechseln"
                 - action: notify.alex
                   data:
-                    title: "🤖 Robbi Wartung"
+                    title: "Robbi Wartung"
                     message: "Filter kritisch – bitte wechseln"
     
     - alias: "Sensoren reinigen"
@@ -138,32 +150,39 @@
         id: sensoren
       sequence:
       - parallel:
-        # Persistent notification als Aufgabe
-        - action: persistent_notification.create
+        # Email notification
+        - action: notify.rafael_mail
           data:
-            notification_id: "robbi_sensoren"
-            title: "🤖 Robbi Wartung"
-            message: >-
-              Sensoren reinigen ({{ 
-                state_attr('vacuum.robbi_2', 'props').get('sensor_dirty_time', 'unbekannt') 
-              }} verbleibend)
+            title: "Robbi Wartung - Sensoren reinigen"
+            message: |
+              Robbi Wartung erforderlich
+
+              Wartungsaufgabe: Sensoren reinigen
+              Sensor Status: {{
+                state_attr('vacuum.robbi_2', 'props').get('sensor_dirty_time', 'unbekannt')
+              }} verbleibend
+
+              Bitte die Sensoren von Robbi reinigen, wenn es dir möglich ist.
         # Mobile Benachrichtigung für Sensoren-Reinigung
         - parallel:
             - action: notify.rafael
               data:
-                title: "🤖 Robbi Wartung"
+                title: "Robbi Wartung"
                 message: "Sensoren reinigen"
             - action: notify.alex
               data:
-                title: "🤖 Robbi Wartung"
+                title: "Robbi Wartung"
                 message: "Sensoren reinigen"
     default:
     # Fallback wenn unbekannter Trigger
-    - action: persistent_notification.create
+    - action: notify.rafael_mail
       data:
-        notification_id: "robbi_wartung_error"
-        title: "⚠️ Robbi Automation Fehler"
-        message: "Unbekannter Wartungstrigger ausgelöst"
+        title: "Robbi Automation Fehler"
+        message: |
+          Robbi Automation Fehler
+
+          Unbekannter Wartungstrigger wurde ausgelöst.
+          Bitte die Automation überprüfen.
   mode: single
 - id: '1692862723924'
   alias: "Benachrichtigung » Luftreiniger Filter"
@@ -185,15 +204,21 @@
       {{ states('sensor.zhimi_vb4_bce4_filter_life_level') not in ['unknown', 'unavailable'] }}
   actions:
   - parallel:
-      # Persistent notification als Aufgabe
-      - action: persistent_notification.create
+      # Email notification
+      - action: notify.rafael_mail
         data:
-          notification_id: "luftreiniger_filter"
-          title: "🌬️ Luftreiniger Wartung"
-          message: >-
-            Filter wechseln ({{ 
-              states('sensor.zhimi_vb4_bce4_filter_life_level') | int(0) 
-            }}% verbleibend)
+          title: "🌬️ Luftreiniger Wartung - Filter wechseln"
+          message: >
+            <html>
+            <body>
+            <h2>🌬️ Luftreiniger Wartung erforderlich</h2>
+            <p><strong>Wartungsaufgabe:</strong> Filter wechseln</p>
+            <p><strong>Verbleibende Lebensdauer:</strong> {{
+              states('sensor.zhimi_vb4_bce4_filter_life_level') | int(0)
+            }}%</p>
+            <p>Bitte den Filter des Luftreinigers wechseln, wenn es dir möglich ist.</p>
+            </body>
+            </html>
 
       # Mobile Benachrichtigung bei kritischem Wert (<5%)
       - if:

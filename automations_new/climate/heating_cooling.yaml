@@ -629,7 +629,7 @@
       - action: notify.alex
         data:
           title: Frostwarnung für die Blumen
-          message: '⚠️ Es wird kalt: In der Nacht sind Frostwerte unter 0°C vorhergesagt!
+          message: 'WARNUNG: Es wird kalt: In der Nacht sind Frostwerte unter 0°C vorhergesagt!
             Bitte Blumen abdecken.
 
             '
@@ -640,12 +640,19 @@
                 critical: 1
                 volume: 1
       
-      # Persistent Notification als Backup
-      - action: persistent_notification.create
+      # Email notification
+      - action: notify.alex_mail
         data:
-          notification_id: "frostwarnung_{{ now().strftime('%Y%m%d') }}"
           title: "❄️ Frostwarnung für die Blumen"
-          message: "In der Nacht sind Frostwerte unter 0°C vorhergesagt! Blumen abdecken."
+          message: >
+            <html>
+            <body>
+            <h2>❄️ Frostwarnung für die Blumen</h2>
+            <p><strong>Warnung:</strong> In der Nacht sind Frostwerte unter 0°C vorhergesagt!</p>
+            <p>Bitte decke die Blumen ab, um sie vor dem Frost zu schützen.</p>
+            <p><em>Diese Nachricht wurde automatisch generiert basierend auf der Wettervorhersage.</em></p>
+            </body>
+            </html>
   mode: single
 - id: '1749643406352'
   alias: Ventilator » Individuelle Raumsteuerung (Optimiert)
@@ -728,7 +735,7 @@
           entity_id: '{{ arbeit_fan }}'
       - action: notify.persistent_notification
         data:
-          title: 🌡️ Ventilator Arbeitszimmer
+          title: Ventilator Arbeitszimmer
           message: 'Eingeschaltet - Temperatur: {{ states(''sensor.arbeitszimmer_temperatur'') if has_value(''sensor.arbeitszimmer_temperatur'') else ''N/A''
             }}°C {{ ''Mit AC-Unterstützung'' if ac_laeuft else ''Standalone'' }}
 
@@ -949,7 +956,7 @@
           temperature: '{{ adaptive_temp_home }}'
       - action: notify.persistent_notification
         data:
-          title: 🔥 Adaptive Pre-Heating Started
+          title: Adaptive Pre-Heating Started
           message: >
             Pre-heating started {{ estimated_preheat_hours }}h before wake-up.
             Current room temp: {{ avg_indoor_temp }}°C → Target: {{ adaptive_temp_home }}°C
@@ -957,6 +964,6 @@
     default:
     - action: notify.persistent_notification
       data:
-        title: ☀️ Pre-Heating Skipped
+        title: Pre-Heating Skipped
         message: 'Room temperature adequate ({{ avg_indoor_temp }}°C). No pre-heating needed.'
   mode: single

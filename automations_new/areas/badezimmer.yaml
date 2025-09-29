@@ -189,6 +189,8 @@
     input:
       motion_trigger:
       - binary_sensor.badezimmer_motion_presence
+      - binary_sensor.motion_dusche_occupancy
+      - binary_sensor.badezimmer_vibration
       include_night_lights: night_lights_enabled
       night_lights:
         entity_id: light.alle_badezimmer_nachtlichter
@@ -212,35 +214,3 @@
       night_time_delay: 1
       ambient_light_value: 300
       ambient_light_high_value: 700
-- id: '1745925395920'
-  alias: Motion » Dusche Simple
-  description: 'Simple motion-based shower lighting and ventilation'
-  trigger:
-  - trigger: state
-    entity_id:
-    - binary_sensor.motion_dusche_occupancy
-    to: 'on'
-  conditions:
-  - condition: state
-    entity_id: input_boolean.alle_sind_weg
-    state: 'off'
-  actions:
-  - action: light.turn_on
-    target:
-      entity_id:
-      - light.alle_badezimmer_lichter
-      - light.alle_badezimmer_nachtlichter
-  - action: switch.turn_on
-    target:
-      entity_id: switch.luefter_badezimmer
-  - delay:
-      minutes: 30
-  - action: light.turn_off
-    target:
-      entity_id:
-      - light.alle_badezimmer_lichter
-      - light.alle_badezimmer_nachtlichter
-  - action: switch.turn_off
-    target:
-      entity_id: switch.luefter_badezimmer
-  mode: restart

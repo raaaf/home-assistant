@@ -12,7 +12,7 @@
       actions:
       - action: notify.rafael_mail
         data:
-          title: 👉 Nicht erreichbare Geräte
+          title: Nicht erreichbare Geräte
           message: '{{entities}}'
       monday_enabled: true
       tuesday_enabled: true
@@ -32,7 +32,7 @@
       actions:
       - action: notify.family
         data:
-          title: 👉 Luftfeuchtigkeit
+          title: Luftfeuchtigkeit
           message: '{{sensors}}'
       exclude:
         entity_id:
@@ -98,7 +98,7 @@
           \ > 3600 }}"
       - action: notify.mobile_app_iphone_rafael
         data:
-          title: ⚠️ Sensor Probleme erkannt
+          title: Sensor Probleme erkannt
           message: '{{ states(''sensor.watchman_missing_entities'') | int(0) }} Entitäten sind
             nicht verfügbar. Prüfe den Watchman Bericht für Details.
 
@@ -201,15 +201,21 @@
         # Mobile Benachrichtigung
         - action: notify.mobile_app_iphone_rafael
           data:
-            title: ⚠️ Außensensor offline
+            title: Außensensor offline
             message: Der Außensensor liefert keine Daten. Batterie prüfen!
         
-        # Persistent Notification als Backup
-        - action: persistent_notification.create
+        # Email notification
+        - action: notify.rafael_mail
           data:
-            notification_id: "aussensensor_offline"
-            title: "🌡️ Außensensor offline"
-            message: "Der Außensensor liefert keine Daten. Batterie prüfen!"
+            title: "Außensensor offline"
+            message: |
+              Außensensor offline
+
+              Problem: Der Außensensor liefert keine Daten.
+
+              Bitte überprüfe die Batterie des Sensors und stelle sicher, dass er ordnungsgemäß funktioniert.
+
+              Diese Nachricht wurde automatisch generiert.
   mode: single
 - id: '1725893400001'
   alias: Security » Haustür Überwachung
@@ -259,7 +265,7 @@
                     datetime: "{{ aktueller_zeitstempel }}"
                 - action: notify.family
                   data:
-                    title: "🚨 Haustür geöffnet"
+                    title: "SICHERHEITSALARM - Haustür geöffnet"
                     message: >
                       Die Haustür wurde um {{ formatierte_zeit }} geöffnet,
                       obwohl niemand zuhause ist!
@@ -304,7 +310,7 @@
                 value: "{{ formatierte_dauer }}"
             - action: notify.family
               data:
-                title: "👋 Besucher hat das Haus verlassen"
+                title: "Besucher hat das Haus verlassen"
                 message: >
                   Jemand war {{ formatierte_dauer }} im Haus
                   ({{ eingang_zeit.split(' ')[1][:5] }} - {{ aktueller_zeitstempel.strftime('%H:%M') }} Uhr)

@@ -35,12 +35,18 @@
         id: filter
       sequence:
       - parallel:
-          # Persistent notification als Aufgabe
-          - action: persistent_notification.create
+          # Email notification
+          - action: notify.rafael_mail
             data:
-              notification_id: "futterspender_filter"
-              title: "🐾 Futterspender Wartung"
-              message: "Filter ersetzen"
+              title: "🐾 Futterspender Wartung - Filter ersetzen"
+              message: >
+                <html>
+                <body>
+                <h2>🐾 Futterspender Wartung erforderlich</h2>
+                <p><strong>Wartungsaufgabe:</strong> Filter ersetzen</p>
+                <p>Bitte ersetze den Filter des Futterspenders, wenn es dir möglich ist.</p>
+                </body>
+                </html>
           
           # Mobile Benachrichtigungen
           - parallel:
@@ -59,12 +65,18 @@
         id: reinigung
       sequence:
       - parallel:
-          # Persistent notification als Aufgabe
-          - action: persistent_notification.create
+          # Email notification
+          - action: notify.rafael_mail
             data:
-              notification_id: "futterspender_reinigung"
-              title: "🐾 Futterspender Wartung"
-              message: "Futterspender reinigen"
+              title: "🐾 Futterspender Wartung - Reinigung erforderlich"
+              message: >
+                <html>
+                <body>
+                <h2>🐾 Futterspender Wartung erforderlich</h2>
+                <p><strong>Wartungsaufgabe:</strong> Futterspender reinigen</p>
+                <p>Bitte führe eine gründliche Reinigung des Futterspenders durch.</p>
+                </body>
+                </html>
           
           # Mobile Benachrichtigungen
           - parallel:
@@ -79,9 +91,12 @@
     
     default:
     # Fallback bei unbekanntem Trigger
-    - action: persistent_notification.create
+    - action: notify.rafael_mail
       data:
-        notification_id: "futterspender_error"
-        title: "⚠️ Futterspender Fehler"
-        message: "Unbekannter Wartungstrigger ausgelöst"
+        title: "Futterspender Fehler"
+        message: |
+          Futterspender Automation Fehler
+
+          Unbekannter Wartungstrigger wurde ausgelöst.
+          Bitte überprüfe die Automation.
   mode: single

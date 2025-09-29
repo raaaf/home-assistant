@@ -63,7 +63,7 @@
           # Mobile Benachrichtigungen (kritisch - funktioniert überall)
           - action: notify.rafael
             data:
-              title: "🧺 Waschmaschine ist fertig"
+              title: "Waschmaschine ist fertig"
               message: "Fertig um {{ now().strftime('%H:%M Uhr') }}"
               data:
                 push:
@@ -71,18 +71,22 @@
           
           - action: notify.alex
             data:
-              title: "🧺 Waschmaschine ist fertig"
+              title: "Waschmaschine ist fertig"
               message: "Fertig um {{ now().strftime('%H:%M Uhr') }}"
               data:
                 push:
                   interruption-level: critical
           
-          # Persistent Notification als Fallback/Backup
-          - action: persistent_notification.create
+          # Email notification
+          - action: notify.rafael_mail
             data:
-              notification_id: "waschmaschine_fertig"
-              title: "🧺 Waschmaschine ist fertig"
-              message: "Die Waschmaschine wurde um {{ now().strftime('%H:%M Uhr') }} fertig"
+              title: "Waschmaschine ist fertig"
+              message: |
+                Waschmaschine ist fertig
+
+                Fertigstellung: {{ now().strftime('%H:%M Uhr') }}
+
+                Die Waschmaschine hat ihren Waschgang beendet. Bitte hänge die Wäsche auf, wenn es dir möglich ist.
     
     - alias: "Waschmaschine aus"
       conditions:
@@ -102,11 +106,16 @@
     
     default:
     # Fallback bei unbekanntem Trigger
-    - action: persistent_notification.create
+    - action: notify.rafael_mail
       data:
-        notification_id: "waschmaschine_error"
-        title: "⚠️ Waschmaschine Fehler"
-        message: "Unbekannter Status-Trigger bei {{ now().strftime('%H:%M Uhr') }}"
+        title: "Waschmaschine Fehler"
+        message: |
+          Waschmaschine Automation Fehler
+
+          Zeit: {{ now().strftime('%H:%M Uhr') }}
+
+          Unbekannter Status-Trigger wurde ausgelöst.
+          Bitte überprüfe die Automation.
 - id: '1661934852025'
   alias: "Benachrichtigung » Trockner Status"
   description: "Überwacht Trockner-Status via Stromverbrauch mit HomePod-Ansagen und Benachrichtigungen"
@@ -181,12 +190,18 @@
                 push:
                   interruption-level: critical
           
-          # Persistent Notification als Fallback/Backup
-          - action: persistent_notification.create
+          # Email notification
+          - action: notify.rafael_mail
             data:
-              notification_id: "trockner_fertig"
               title: "🧺 Trockner ist fertig"
-              message: "Der Trockner wurde um {{ now().strftime('%H:%M Uhr') }} fertig"
+              message: >
+                <html>
+                <body>
+                <h2>🧺 Trockner ist fertig</h2>
+                <p><strong>Fertigstellung:</strong> {{ now().strftime('%H:%M Uhr') }}</p>
+                <p>Der Trockner hat seinen Trockengang beendet. Bitte hole die Wäsche raus, wenn es dir möglich ist.</p>
+                </body>
+                </html>
 
     - alias: "Fertig-Trigger ignorieren (außer Reihenfolge)"
       conditions:

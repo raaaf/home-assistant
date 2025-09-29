@@ -133,6 +133,19 @@
         action: input_boolean.turn_off
         target:
           entity_id: input_boolean.schlafenszeit
+      - alias: Sleep Mode für alle Räume deaktivieren bei Sonnenaufgang
+        action: switch.turn_off
+        target:
+          entity_id:
+          - switch.adaptive_lighting_sleep_mode_arbeitszimmer
+          - switch.adaptive_lighting_sleep_mode_badezimmer
+          - switch.adaptive_lighting_sleep_mode_balkon
+          - switch.adaptive_lighting_sleep_mode_flur
+          - switch.adaptive_lighting_sleep_mode_kinderzimmer
+          - switch.adaptive_lighting_sleep_mode_kueche
+          - switch.adaptive_lighting_sleep_mode_waschzimmer
+          - switch.adaptive_lighting_sleep_mode_wohnzimmer
+          - switch.adaptive_lighting_sleep_mode_schlafzimmer
     - alias: Einschlafzeit - Schlafmodus aktivieren
       conditions:
       - condition: trigger

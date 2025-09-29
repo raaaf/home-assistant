@@ -39,14 +39,14 @@
       sequence:
       - action: notify.mobile_app_macbook_pro_rafael
         data:
-          title: "🔔 Haustür Klingel"
+          title: "Haustür Klingel"
           message: "{{ now().strftime('%A, %H:%M Uhr, %d.%m.%Y') }} - {{ anwesenheits_status }}"
           data:
             push:
               interruption-level: critical
       - action: notify.mobile_app_macbook_air_von_alexandra
         data:
-          title: "🔔 Haustür Klingel"
+          title: "Haustür Klingel"
           message: "{{ now().strftime('%A, %H:%M Uhr, %d.%m.%Y') }} - {{ anwesenheits_status }}"
           data:
             push:
@@ -58,7 +58,7 @@
       sequence:
       - action: notify.mobile_app_macbook_pro_rafael
         data:
-          title: "🔔 Haustür Klingel"
+          title: "Haustür Klingel"
           message: "{{ now().strftime('%A, %H:%M Uhr, %d.%m.%Y') }} - {{ anwesenheits_status }}"
           data:
             push:
@@ -70,7 +70,7 @@
       sequence:
       - action: notify.mobile_app_macbook_air_von_alexandra
         data:
-          title: "🔔 Haustür Klingel"
+          title: "Haustür Klingel"
           message: "{{ now().strftime('%A, %H:%M Uhr, %d.%m.%Y') }} - {{ anwesenheits_status }}"
           data:
             push:
@@ -82,7 +82,7 @@
       sequence:
       - action: notify.mobile_app_iphone_rafael
         data:
-          title: "🔔 Haustür Klingel"
+          title: "Haustür Klingel"
           message: "{{ now().strftime('%A, %H:%M Uhr, %d.%m.%Y') }} - {{ anwesenheits_status }}"
           data:
             push:
@@ -166,31 +166,44 @@
         id:
         - wasser-leer
       sequence:
-      - action: persistent_notification.create
+      - action: notify.rafael_mail
         data:
-          notification_id: "wasserspender_wasser"
-          title: "🚰 Wasserspender"
-          message: "Wasserspender » Braucht Wasser"
+          title: "Wasserspender - Braucht Wasser"
+          message: |
+            Wasserspender Wartung
+
+            Problem: Wassertank ist leer
+
+            Bitte fülle den Wasserspender mit frischem Wasser auf.
     - conditions:
       - condition: trigger
         id:
         - pumpe
       sequence:
-      - action: persistent_notification.create
+      - action: notify.rafael_mail
         data:
-          notification_id: "wasserspender_pumpe"
-          title: "🚰 Wasserspender"
-          message: "Wasserspender » Pumpe prüfen"
+          title: "Wasserspender - Pumpe prüfen"
+          message: |
+            Wasserspender Wartung
+
+            Problem: Pumpe blockiert
+
+            Bitte überprüfe die Pumpe des Wasserspenders und behebe eventuelle Blockierungen.
     - conditions:
       - condition: trigger
         id:
         - clean
       sequence:
-      - action: persistent_notification.create
+      - action: notify.rafael_mail
         data:
-          notification_id: "wasserspender_reinigen"
-          title: "🚰 Wasserspender"
-          message: "Wasserspender » Reinigen"
+          title: "Wasserspender - Reinigung erforderlich"
+          message: |
+            Wasserspender Wartung
+
+            Aufgabe: Reinigung erforderlich
+
+            Es ist Zeit für die regelmäßige Reinigung des Wasserspenders.
+            Bitte führe eine gründliche Reinigung durch.
   mode: single
 - id: '1700477276036'
   alias: Notification » Season Change
@@ -215,7 +228,7 @@
   conditions: []
   actions:
   - data:
-      title: 🎉 Wir haben jetzt {{ trigger.id }}!
+      title: Jahreszeitenwechsel - Wir haben jetzt {{ trigger.id }}!
       message: Yippey! Die neue Jahreszeit hat begonnen.
     action: notify.family
   mode: single
