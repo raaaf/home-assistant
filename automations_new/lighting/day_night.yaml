@@ -69,8 +69,7 @@
             - automation.arbeitszimmer_motion
             - automation.1692710690350
             - automation.1678724233791
-          data:
-            stop_actions: true
+          data: {}
         # Parabolic Sunrise Alarm - Trigger all room automations
         - alias: "Trigger parabolic sunrise automations for all rooms"
           parallel:

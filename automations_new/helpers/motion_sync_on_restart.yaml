@@ -1,0 +1,184 @@
+# Helpers - Motion Sync On Restart.Yaml
+# Syncs motion automation and adaptive lighting states with scene booleans after HA restart
+# Part of Home Assistant configuration
+
+- id: '1738000000001'
+  alias: Helper » Sync Motion & Adaptive Lighting After Restart
+  description: 'Re-applies scene-based motion automation and adaptive lighting disables after HA restart to maintain consistency'
+  triggers:
+  - event: start
+    trigger: homeassistant
+  conditions: []
+  actions:
+  - delay:
+      seconds: 30
+  # ADAPTIVE LIGHTING SYNC
+  - alias: "Disable living room adaptive lighting if movie/party/party_wohnzimmer active"
+    choose:
+    - conditions:
+      - condition: or
+        conditions:
+        - condition: state
+          entity_id: input_boolean.movie
+          state: 'on'
+        - condition: state
+          entity_id: input_boolean.party
+          state: 'on'
+        - condition: state
+          entity_id: input_boolean.party_wohnzimmer
+          state: 'on'
+      sequence:
+      - action: switch.turn_off
+        target:
+          entity_id: switch.adaptive_lighting_wohnzimmer
+  - alias: "Disable kitchen adaptive lighting if movie/kochen/party/party_wohnzimmer active"
+    choose:
+    - conditions:
+      - condition: or
+        conditions:
+        - condition: state
+          entity_id: input_boolean.movie
+          state: 'on'
+        - condition: state
+          entity_id: input_boolean.kochen
+          state: 'on'
+        - condition: state
+          entity_id: input_boolean.party
+          state: 'on'
+        - condition: state
+          entity_id: input_boolean.party_wohnzimmer
+          state: 'on'
+      sequence:
+      - action: switch.turn_off
+        target:
+          entity_id: switch.adaptive_lighting_kueche
+  - alias: "Disable bathroom adaptive lighting if sauna/baden/party active"
+    choose:
+    - conditions:
+      - condition: or
+        conditions:
+        - condition: state
+          entity_id: input_boolean.sauna
+          state: 'on'
+        - condition: state
+          entity_id: input_boolean.baden
+          state: 'on'
+        - condition: state
+          entity_id: input_boolean.party
+          state: 'on'
+      sequence:
+      - action: switch.turn_off
+        target:
+          entity_id: switch.adaptive_lighting_badezimmer
+  # MOTION AUTOMATION SYNC
+  - alias: "Disable kitchen motion if any conflicting scene is active"
+    choose:
+    - conditions:
+      - condition: or
+        conditions:
+        - condition: state
+          entity_id: input_boolean.movie
+          state: 'on'
+        - condition: state
+          entity_id: input_boolean.kochen
+          state: 'on'
+        - condition: state
+          entity_id: input_boolean.party
+          state: 'on'
+        - condition: state
+          entity_id: input_boolean.party_wohnzimmer
+          state: 'on'
+      sequence:
+      - action: automation.turn_off
+        target:
+          entity_id: automation.1672931243226  # Motion » Küche
+        data: {}
+  - alias: "Disable hallway motion if party mode is active"
+    choose:
+    - conditions:
+      - condition: or
+        conditions:
+        - condition: state
+          entity_id: input_boolean.party
+          state: 'on'
+        - condition: state
+          entity_id: input_boolean.party_wohnzimmer
+          state: 'on'
+      sequence:
+      - action: automation.turn_off
+        target:
+          entity_id: automation.motion_flur_wohnung  # Hallway motion
+        data: {}
+  - alias: "Disable bedroom motion if work or party mode is active"
+    choose:
+    - conditions:
+      - condition: or
+        conditions:
+        - condition: state
+          entity_id: input_boolean.arbeit
+          state: 'on'
+        - condition: state
+          entity_id: input_boolean.party
+          state: 'on'
+      sequence:
+      - action: automation.turn_off
+        target:
+          entity_id: automation.1678724233791  # Motion » Schlafzimmer
+        data: {}
+  - alias: "Disable bathroom motion if sauna or bath mode is active"
+    choose:
+    - conditions:
+      - condition: or
+        conditions:
+        - condition: state
+          entity_id: input_boolean.sauna
+          state: 'on'
+        - condition: state
+          entity_id: input_boolean.baden
+          state: 'on'
+      sequence:
+      - action: automation.turn_off
+        target:
+          entity_id: automation.1672929418223  # Motion » Badezimmer Gross
+        data: {}
+  - alias: "Disable dining table motion if movie or eating mode is active"
+    choose:
+    - conditions:
+      - condition: or
+        conditions:
+        - condition: state
+          entity_id: input_boolean.movie
+          state: 'on'
+        - condition: state
+          entity_id: input_boolean.essen
+          state: 'on'
+      sequence:
+      - action: automation.turn_off
+        target:
+          entity_id: automation.1745924154398  # Motion » Esstisch
+        data: {}
+  - alias: "Disable additional motion if party mode is active"
+    choose:
+    - conditions:
+      - condition: state
+        entity_id: input_boolean.party
+        state: 'on'
+      sequence:
+      - action: automation.turn_off
+        target:
+          entity_id: automation.1692710690350  # Additional motion sensor
+        data: {}
+  - alias: "Disable multiple motions if party mode is active"
+    choose:
+    - conditions:
+      - condition: state
+        entity_id: input_boolean.party
+        state: 'on'
+      sequence:
+      - action: automation.turn_off
+        target:
+          entity_id:
+          - automation.arbeitszimmer_motion  # Office motion
+          - automation.motion_haustur  # Front door motion
+        data: {}
+  mode: single

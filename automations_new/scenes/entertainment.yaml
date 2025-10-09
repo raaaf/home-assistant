@@ -28,13 +28,17 @@
           entity_id:
           - switch.adaptive_lighting_wohnzimmer
           - switch.adaptive_lighting_kueche
-      - data:
-          stop_actions: true
+      - action: automation.turn_off
         target:
           entity_id:
-          - automation.1672931243226  # Motion sensor automation (living room)
-          - automation.motion_flur_wohnung  # Hallway motion sensor
-        action: automation.turn_off
+          - automation.1672931243226  # Motion sensor automation (kitchen)
+        data: {}
+      - action: light.turn_on
+        target:
+          entity_id: light.hyperhdr
+        data:
+          effect: USB Capture
+          brightness_pct: 60
       - action: light.turn_off
         data:
           transition: 6
@@ -47,20 +51,53 @@
       - condition: trigger
         id: 'off'
       sequence:
-      - action: switch.turn_on
-        data: {}
-        target:
-          entity_id:
-          - switch.adaptive_lighting_wohnzimmer
-          - switch.adaptive_lighting_kueche
-      - data: {}
-        target:
-          entity_id:
-          - automation.1672931243226  # Motion sensor automation (living room)
-          - automation.motion_flur_wohnung  # Hallway motion sensor
-        action: automation.turn_on
+      - alias: "Re-enable living room adaptive lighting if no conflicting scenes"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.party
+            state: 'off'
+          - condition: state
+            entity_id: input_boolean.party_wohnzimmer
+            state: 'off'
+          sequence:
+          - action: switch.turn_on
+            target:
+              entity_id: switch.adaptive_lighting_wohnzimmer
+      - alias: "Re-enable kitchen adaptive lighting if no conflicting scenes"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.kochen
+            state: 'off'
+          - condition: state
+            entity_id: input_boolean.party
+            state: 'off'
+          - condition: state
+            entity_id: input_boolean.party_wohnzimmer
+            state: 'off'
+          sequence:
+          - action: switch.turn_on
+            target:
+              entity_id: switch.adaptive_lighting_kueche
+      - alias: "Re-enable kitchen motion only if no conflicting scenes are active"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.kochen
+            state: 'off'
+          - condition: state
+            entity_id: input_boolean.party
+            state: 'off'
+          - condition: state
+            entity_id: input_boolean.party_wohnzimmer
+            state: 'off'
+          sequence:
+          - action: automation.turn_on
+            target:
+              entity_id: automation.1672931243226  # Motion sensor automation (kitchen)
     default: []
-  mode: single
+  mode: restart
 - id: '1744286287244'
   alias: Helper » TV Auto off
   description: Turns off living room remote 30 minutes after TV timer is turned on.

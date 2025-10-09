@@ -25,7 +25,7 @@
     entity_id: binary_sensor.macbook_pro_rafael_active
     to: 'off'
     id: work-rafael-off
-  
+
   condition: []
   action:
   - choose:
@@ -87,6 +87,16 @@
         target:
           entity_id: switch.adaptive_lighting_arbeitszimmer
         data: {}
+      - alias: "Re-enable bedroom motion if party mode is off"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.party
+            state: 'off'
+          sequence:
+          - action: automation.turn_on
+            target:
+              entity_id: automation.1678724233791
   mode: restart
 - id: '1730279567232'
   alias: Motion » Arbeitszimmer

@@ -90,15 +90,32 @@
       - condition: trigger
         id: 'off'
       sequence:
-      - data: {}
-        target:
-          entity_id: switch.adaptive_lighting_badezimmer
-        action: switch.turn_on
-      - data: {}
-        target:
-          entity_id:
-          - automation.1672929418223
-        action: automation.turn_on
+      - alias: "Re-enable bathroom adaptive lighting if bath/party mode is off"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.baden
+            state: 'off'
+          - condition: state
+            entity_id: input_boolean.party
+            state: 'off'
+          sequence:
+          - data: {}
+            target:
+              entity_id: switch.adaptive_lighting_badezimmer
+            action: switch.turn_on
+      - alias: "Re-enable bathroom motion only if bath mode is off"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.baden
+            state: 'off'
+          sequence:
+          - data: {}
+            target:
+              entity_id:
+              - automation.1672929418223
+            action: automation.turn_on
       - action: cover.set_cover_position
         target:
           entity_id: cover.badezimmer_rollo
@@ -109,7 +126,7 @@
         data:
           id: 68e8b68e-8237-48a6-bf5f-f62258dd2ff3
     default: []
-  mode: single
+  mode: restart
 - id: '1662822489094'
   alias: Scenen » Baden
   description: Aktiviert Bade-Modus mit spezieller Beleuchtung und deaktiviert Bewegungsmelder
@@ -154,15 +171,32 @@
       - condition: trigger
         id: 'off'
       sequence:
-      - data: {}
-        target:
-          entity_id: switch.adaptive_lighting_badezimmer
-        action: switch.turn_on
-      - data: {}
-        target:
-          entity_id:
-          - automation.1672929418223
-        action: automation.turn_on
+      - alias: "Re-enable bathroom adaptive lighting if sauna/party mode is off"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.sauna
+            state: 'off'
+          - condition: state
+            entity_id: input_boolean.party
+            state: 'off'
+          sequence:
+          - data: {}
+            target:
+              entity_id: switch.adaptive_lighting_badezimmer
+            action: switch.turn_on
+      - alias: "Re-enable bathroom motion only if sauna mode is off"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.sauna
+            state: 'off'
+          sequence:
+          - data: {}
+            target:
+              entity_id:
+              - automation.1672929418223
+            action: automation.turn_on
       - delay:
           hours: 0
           minutes: 5
@@ -180,7 +214,7 @@
         data:
           id: a6ba3a6e-1e3a-41fd-84f2-f7b021935deb
     default: []
-  mode: single
+  mode: restart
 - id: '1672929418223'
   alias: Motion » Badezimmer Gross
   description: Bewegungsgesteuerte Beleuchtung im Badezimmer mit Nachtlicht-Modus
@@ -188,9 +222,7 @@
     path: Blackshome/sensor-light.yaml
     input:
       motion_trigger:
-      - binary_sensor.badezimmer_motion_presence
-      - binary_sensor.motion_dusche_occupancy
-      - binary_sensor.badezimmer_vibration
+      - binary_sensor.badezimmer_motion_all
       include_night_lights: night_lights_enabled
       night_lights:
         entity_id: light.alle_badezimmer_nachtlichter
@@ -212,5 +244,5 @@
       boolean_scenes_scripts: input_boolean.musik_badezimmer
       time_delay: 5
       night_time_delay: 1
-      ambient_light_value: 300
-      ambient_light_high_value: 700
+      ambient_light_value: 150
+      ambient_light_high_value: 200

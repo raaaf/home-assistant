@@ -35,7 +35,7 @@ http:
     - 192.168.178.72
     - 192.168.188.118
     - ::1
-  ip_ban_enabled: true
+  ip_ban_enabled: false
   login_attempts_threshold: 5
   # SSL certificates (uncomment when using)
   # ssl_certificate: /ssl/fullchain.pem

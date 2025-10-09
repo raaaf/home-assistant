@@ -277,6 +277,7 @@
           - switch.steckdose_kinderzimmer
           - switch.schlafzimmer_tv_steckdose
           - switch.steckdose_arbeitszimmer
+          - switch.steckdose_pc_alex
         data: {}
       - alias: Trockner ausschalten wenn im Aus-Zustand
         if:
@@ -414,6 +415,7 @@
           - switch.steckdose_kinderzimmer
           - switch.schlafzimmer_tv_steckdose
           - switch.steckdose_arbeitszimmer
+          - switch.steckdose_pc_alex
         data: {}
       - alias: Türe abschließen wenn offen
         if:
@@ -461,3 +463,63 @@
     lock_timeout: 01:00:00
     guest_mode_timeout: '12:00:00'
     timestamp: '{{ now() }}'
+- id: '1736456789001'
+  alias: Helper » Alex PC Steckdose aus wenn weg
+  description: Schaltet die PC-Steckdose von Alex aus wenn sie das Gebäude verlässt
+  triggers:
+  - entity_id: person.alex
+    zone: zone.home
+    event: leave
+    trigger: zone
+  conditions: []
+  actions:
+  - action: switch.turn_off
+    target:
+      entity_id: switch.steckdose_pc_alex
+    data: {}
+  mode: single
+- id: '1736456789002'
+  alias: Helper » Alex PC Steckdose an wenn zurück
+  description: Schaltet die PC-Steckdose von Alex ein wenn sie zurück kommt
+  triggers:
+  - entity_id: person.alex
+    zone: zone.home
+    event: enter
+    trigger: zone
+  conditions: []
+  actions:
+  - action: switch.turn_on
+    target:
+      entity_id: switch.steckdose_pc_alex
+    data: {}
+  mode: single
+- id: '1736456789003'
+  alias: Helper » Rafael Arbeitszimmer Steckdose aus wenn weg
+  description: Schaltet die Arbeitszimmer-Steckdose von Rafael aus wenn er das Gebäude verlässt
+  triggers:
+  - entity_id: person.rafael
+    zone: zone.home
+    event: leave
+    trigger: zone
+  conditions: []
+  actions:
+  - action: switch.turn_off
+    target:
+      entity_id: switch.steckdose_arbeitszimmer
+    data: {}
+  mode: single
+- id: '1736456789004'
+  alias: Helper » Rafael Arbeitszimmer Steckdose an wenn zurück
+  description: Schaltet die Arbeitszimmer-Steckdose von Rafael ein wenn er zurück kommt
+  triggers:
+  - entity_id: person.rafael
+    zone: zone.home
+    event: enter
+    trigger: zone
+  conditions: []
+  actions:
+  - action: switch.turn_on
+    target:
+      entity_id: switch.steckdose_arbeitszimmer
+    data: {}
+  mode: single

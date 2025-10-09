@@ -31,31 +31,53 @@
         target:
           entity_id: automation.1672931243226
         action: automation.turn_off
-      - action: scene_presets.start_dynamic_scene
+      - action: light.turn_on
+        target:
+          entity_id:
+          - light.alle_kuche_lichter
+          - light.alle_kuche_nachtlichter
         data:
-          preset_id: e71b2ef3-1b15-4c4b-b036-4b3d6efe58f8
-          targets:
-            entity_id:
-            - light.alle_kuche_lichter
-            - light.alle_kuche_nachtlichter
-          transition: 45
-          interval: 60
+          brightness_pct: 90
+          kelvin: 2700
+          transition: 2
     - conditions:
       - condition: trigger
         id: 'off'
       sequence:
-      - action: scene_presets.stop_dynamic_scene
-        metadata: {}
-        data:
-          id: e71b2ef3-1b15-4c4b-b036-4b3d6efe58f8
-      - data: {}
-        action: switch.turn_on
-        target:
-          entity_id: switch.adaptive_lighting_kueche
-      - data: {}
-        target:
-          entity_id: automation.1672931243226
-        action: automation.turn_on
+      - alias: "Re-enable kitchen adaptive lighting if no conflicting scenes"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.movie
+            state: 'off'
+          - condition: state
+            entity_id: input_boolean.party
+            state: 'off'
+          - condition: state
+            entity_id: input_boolean.party_wohnzimmer
+            state: 'off'
+          sequence:
+          - data: {}
+            action: switch.turn_on
+            target:
+              entity_id: switch.adaptive_lighting_kueche
+      - alias: "Re-enable kitchen motion only if no conflicting scenes are active"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.movie
+            state: 'off'
+          - condition: state
+            entity_id: input_boolean.party
+            state: 'off'
+          - condition: state
+            entity_id: input_boolean.party_wohnzimmer
+            state: 'off'
+          sequence:
+          - data: {}
+            target:
+              entity_id: automation.1672931243226
+            action: automation.turn_on
       - delay:
           hours: 0
           minutes: 0
@@ -69,7 +91,7 @@
           - light.alle_kuche_lichter
           - light.alle_kuche_nachtlichter
     default: []
-  mode: single
+  mode: restart
 - id: '1672931243226'
   alias: Motion » Küche
   description: Bewegungsgesteuerte Beleuchtung in der Küche mit Nachtlicht-Modus und
@@ -144,7 +166,7 @@
         action: switch.turn_off
         target:
           entity_id:
-          - switch.adaptive_lighting_adapt_brightness_wohnzimmer
+          - switch.adaptive_lighting_wohnzimmer
       - data: {}
         action: automation.turn_off
         target:
@@ -152,9 +174,11 @@
       - action: light.turn_on
         metadata: {}
         data:
-          brightness_pct: 60
+          brightness_pct: 70
+          kelvin: 2700
+          transition: 2
         target:
-          entity_id: light.wohnzimmer_esstisch
+          entity_id: light.wohnzimmer_esstisch_alle
     - conditions:
       - condition: trigger
         id: 'off'
@@ -162,15 +186,23 @@
       - data: {}
         action: light.turn_off
         target:
-          entity_id: light.wohnzimmer_esstisch
-      - data: {}
+          entity_id: light.wohnzimmer_esstisch_alle
+      - alias: "Always re-enable living room adaptive lighting"
+        data: {}
         action: switch.turn_on
         target:
           entity_id:
-          - switch.adaptive_lighting_adapt_brightness_wohnzimmer
-      - data: {}
-        action: automation.turn_on
-        target:
-          entity_id: automation.1745924154398
+          - switch.adaptive_lighting_wohnzimmer
+      - alias: "Re-enable dining table motion only if movie mode is off"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.movie
+            state: 'off'
+          sequence:
+          - data: {}
+            action: automation.turn_on
+            target:
+              entity_id: automation.1745924154398
     default: []
-  mode: single
+  mode: restart

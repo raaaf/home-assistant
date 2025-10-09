@@ -1,0 +1,65 @@
+# Lighting - Nachtlicht
+# Automation for nightlight using aqara_hub_lightbulb
+# Turns on warm reddish light from 10pm until sunrise
+
+- id: nachtlicht_an
+  alias: Lighting » Nachtlicht ein (22:00 Uhr)
+  description: Schaltet Nachtlicht um 22:00 Uhr ein mit warmem rötlichem Licht
+  triggers:
+    - trigger: time
+      at: '22:00:00'
+      id: time_trigger
+    - trigger: state
+      entity_id: input_boolean.nachtlicht
+      from: 'off'
+      to: 'on'
+      id: manual_on
+  conditions:
+    - condition: template
+      value_template: "{{ has_value('light.aqara_hub_lightbulb') }}"
+  actions:
+    - if:
+      - condition: trigger
+        id: time_trigger
+      then:
+        - action: input_boolean.turn_on
+          target:
+            entity_id: input_boolean.nachtlicht
+    - action: light.turn_on
+      target:
+        entity_id: light.aqara_hub_lightbulb
+      data:
+        brightness: 25
+        rgb_color: [255, 80, 40]  # Warm reddish color
+        transition: 2
+  mode: single
+
+- id: nachtlicht_aus
+  alias: Lighting » Nachtlicht aus (Sonnenaufgang)
+  description: Schaltet Nachtlicht bei Sonnenaufgang aus
+  triggers:
+    - trigger: sun
+      event: sunrise
+      id: sunrise
+    - trigger: state
+      entity_id: input_boolean.nachtlicht
+      from: 'on'
+      to: 'off'
+      id: manual_off
+  conditions:
+    - condition: template
+      value_template: "{{ has_value('light.aqara_hub_lightbulb') }}"
+  actions:
+    - if:
+      - condition: trigger
+        id: sunrise
+      then:
+        - action: input_boolean.turn_off
+          target:
+            entity_id: input_boolean.nachtlicht
+    - action: light.turn_off
+      target:
+        entity_id: light.aqara_hub_lightbulb
+      data:
+        transition: 2
+  mode: single

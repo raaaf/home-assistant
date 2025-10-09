@@ -20,31 +20,35 @@
 
 - name: "Wohnzimmer"
   lights:
-    - light.alle_wohnzimmer_lichter
-  interval: 90
-  transition: 15  # Reduced for IKEA compatibility
-  initial_transition: 0
-  min_brightness: 30
+    - light.wohnzimmer_wand_alle          # Zigbee-Gruppe (6 Lichter - synchron)
+    - light.wohnzimmer_esstisch_alle      # Zigbee-Gruppe (3 Lichter - synchron)
+    - light.wohnzimmer_spielematte_alle   # Zigbee-Gruppe (4 Lichter - synchron)
+    - light.wohnzimmer_schrank_alle       # Zigbee-Gruppe (3 Lichter - synchron)
+    - light.wohnzimmer_spieletisch        # Einzellicht (individuell gesteuert)
+  interval: 60
+  transition: 10  # Short transitions prevent IKEA lockups
+  initial_transition: 1  # Prevents color flashing
+  min_brightness: 10
   max_brightness: 100
-  min_color_temp: 2000 # Consistent warm minimum
-  max_color_temp: 6000 # Bright white maximum
+  min_color_temp: 2200 # IKEA/Hue compatible warm minimum
+  max_color_temp: 4000 # IKEA compatible cool maximum
   prefer_rgb_color: false
-  sleep_brightness: 5 # Very dim for evening relaxation
-  sleep_color_temp: 1800  # Scientifically optimal for circadian rhythm
-  sleep_transition: 60 # Reduced for IKEA compatibility
+  sleep_brightness: 10 # Consistent across all rooms
+  sleep_color_temp: 2200  # Warmest supported by all bulbs
+  sleep_transition: 10 # Short transitions prevent IKEA lockups
   transition_until_sleep: true
   min_sunrise_time: "05:00:00"
   max_sunrise_time: "07:00:00"
   min_sunset_time: "18:00:00"
   max_sunset_time: "20:00:00"
   take_over_control: true
-  detect_non_ha_changes: false
+  detect_non_ha_changes: true  # Critical for Zigbee2MQTT
   autoreset_control_seconds: 3600
   only_once: false
   adapt_only_on_bare_turn_on: false
   separate_turn_on_commands: true  # CRITICAL: Required for IKEA lights
   send_split_delay: 0.5  # Delay between commands for IKEA lights
-  adapt_delay: 8  # Increased for mixed bulb types
+  adapt_delay: 0  # Immediate adaptation for correct color on turn-on
   skip_redundant_commands: true
   intercept: true
   multi_light_intercept: true
@@ -53,31 +57,33 @@
 
 - name: "Küche"
   lights:
-    - light.alle_kuche_lichter
-  interval: 90
-  transition: 15  # Reduced for IKEA compatibility
-  initial_transition: 0
-  min_brightness: 30
+    - light.kuche_decke_alle              # Zigbee-Gruppe (2 Lichter - synchron)
+    - light.kuche_insel_alle              # Zigbee-Gruppe (2 Lichter - synchron)
+    - light.kuche_schrank_alle            # Zigbee-Gruppe (2 Lichter - synchron)
+  interval: 60
+  transition: 10  # Short transitions prevent IKEA lockups
+  initial_transition: 1  # Prevents color flashing
+  min_brightness: 10
   max_brightness: 100
-  min_color_temp: 2000 # Consistent warm minimum
-  max_color_temp: 6000 # Bright white for food prep
+  min_color_temp: 2200 # IKEA/Hue compatible warm minimum
+  max_color_temp: 4000 # IKEA compatible cool maximum
   prefer_rgb_color: false
-  sleep_brightness: 25 # Higher for late night snacks/safety
-  sleep_color_temp: 1800  # Warmer for sleep hygiene
-  sleep_transition: 30  # Reduced for IKEA compatibility
+  sleep_brightness: 10 # Consistent across all rooms
+  sleep_color_temp: 2200  # Warmest supported by all bulbs
+  sleep_transition: 45  # Optimized for IKEA compatibility
   transition_until_sleep: true
   min_sunrise_time: "06:00:00" # Later start for kitchen activities
   max_sunrise_time: "07:30:00"
   min_sunset_time: "18:00:00"
   max_sunset_time: "20:00:00"
   take_over_control: true
-  detect_non_ha_changes: false
+  detect_non_ha_changes: true  # Critical for Zigbee2MQTT
   autoreset_control_seconds: 3600
   only_once: false
   adapt_only_on_bare_turn_on: false
   separate_turn_on_commands: true  # CRITICAL: Required for IKEA lights
   send_split_delay: 0.5  # Delay between commands for IKEA lights
-  adapt_delay: 8  # Increased for mixed bulb types
+  adapt_delay: 0  # Immediate adaptation for correct color on turn-on
   skip_redundant_commands: true
   intercept: true
   multi_light_intercept: true
@@ -90,31 +96,33 @@
 
 - name: "Schlafzimmer"
   lights:
-    - light.alle_schlafzimmer_lichter
-  interval: 90
-  transition: 12  # Reduced for IKEA compatibility
-  initial_transition: 0
-  min_brightness: 30
+    - light.schlafzimmer_decke_alle       # Zigbee-Gruppe (2 Lichter - synchron)
+    - light.schlafzimmer_bett             # Einzellicht (individuell gesteuert)
+    - light.schlafzimmer_tv               # Einzellicht (individuell gesteuert)
+  interval: 60
+  transition: 10  # Short transitions prevent IKEA lockups
+  initial_transition: 1  # Prevents color flashing
+  min_brightness: 10
   max_brightness: 100
-  min_color_temp: 2000
-  max_color_temp: 6000 # Bright white maximum for energizing mornings
+  min_color_temp: 2200 # IKEA/Hue compatible warm minimum
+  max_color_temp: 4000 # IKEA compatible cool maximum
   prefer_rgb_color: false
-  sleep_brightness: 35 # Higher for nighttime navigation
-  sleep_color_temp: 1800 # Optimal warmth for sleep without being too extreme
-  sleep_transition: 60 # Reduced for IKEA compatibility
+  sleep_brightness: 10 # Consistent across all rooms
+  sleep_color_temp: 2200  # Warmest supported by all bulbs
+  sleep_transition: 10 # Short transitions prevent IKEA lockups
   transition_until_sleep: true
   min_sunrise_time: "05:00:00"
   max_sunrise_time: "07:00:00"
   min_sunset_time: "17:30:00" # Earlier evening transition
   max_sunset_time: "19:30:00"
   take_over_control: true
-  detect_non_ha_changes: false
+  detect_non_ha_changes: true  # Critical for Zigbee2MQTT
   autoreset_control_seconds: 3600
   only_once: false
   adapt_only_on_bare_turn_on: false
   separate_turn_on_commands: true  # CRITICAL: Required for IKEA lights
   send_split_delay: 0.5  # Delay between commands for IKEA lights
-  adapt_delay: 10  # Higher for bedroom motion sensors
+  adapt_delay: 0  # Immediate adaptation for correct color on turn-on
   skip_redundant_commands: true
   intercept: true
   multi_light_intercept: true
@@ -123,31 +131,34 @@
 
 - name: "Kinderzimmer"
   lights:
-    - light.alle_kinderzimmer_lichter
-  interval: 90
-  transition: 15  # Reduced for IKEA compatibility
-  initial_transition: 0
-  min_brightness: 30
+    - light.kinderzimmer_decke            # Einzellicht (Hauptlicht)
+    - light.kinderzimmer_bucher           # Einzellicht (Leselicht)
+    - light.kinderzimmer_schrank          # Einzellicht (Akzentlicht)
+    - light.kinderzimmer_stehlampe        # Einzellicht (Stimmungslicht)
+  interval: 60
+  transition: 10  # Short transitions prevent IKEA lockups
+  initial_transition: 1  # Prevents color flashing
+  min_brightness: 10
   max_brightness: 100
-  min_color_temp: 2000
-  max_color_temp: 6000 # Bright white maximum for consistency
+  min_color_temp: 2200 # IKEA/Hue compatible warm minimum
+  max_color_temp: 4000 # IKEA compatible cool maximum
   prefer_rgb_color: false
-  sleep_brightness: 8 # Very low for children's sleep
-  sleep_color_temp: 1800 # Optimal circadian rhythm for children
-  sleep_transition: 45 # Reduced for IKEA compatibility
+  sleep_brightness: 10 # Consistent across all rooms
+  sleep_color_temp: 2200  # Warmest supported by all bulbs
+  sleep_transition: 10 # Short transitions prevent IKEA lockups
   transition_until_sleep: true
   min_sunrise_time: "05:00:00"
   max_sunrise_time: "07:00:00"
   min_sunset_time: "17:00:00" # Early bedtime routine
   max_sunset_time: "19:00:00"
   take_over_control: true
-  detect_non_ha_changes: false
+  detect_non_ha_changes: true  # Critical for Zigbee2MQTT
   autoreset_control_seconds: 3600
   only_once: false
   adapt_only_on_bare_turn_on: false
   separate_turn_on_commands: true  # CRITICAL: Required for IKEA lights
   send_split_delay: 0.5  # Delay between commands for IKEA lights
-  adapt_delay: 8  # Increased for mixed bulb types
+  adapt_delay: 0  # Immediate adaptation for correct color on turn-on
   skip_redundant_commands: true
   intercept: true
   multi_light_intercept: true
@@ -160,31 +171,33 @@
 
 - name: "Badezimmer"
   lights:
-    - light.alle_badezimmer_lichter
-  interval: 90
-  transition: 15  # Reduced for IKEA compatibility
-  initial_transition: 0
-  min_brightness: 30
+    - light.badezimmer_decke_alle         # Zigbee-Gruppe (2 Lichter - synchron)
+    - light.badezimmer_schrank            # Einzellicht (individuell gesteuert)
+    - light.badezimmer_fenster            # Einzellicht (individuell gesteuert)
+  interval: 60
+  transition: 10  # Short transitions prevent IKEA lockups
+  initial_transition: 1  # Prevents color flashing
+  min_brightness: 10
   max_brightness: 100
-  min_color_temp: 2000 # Consistent warm minimum
-  max_color_temp: 6000 # Bright white for morning alertness
+  min_color_temp: 2200 # IKEA/Hue compatible warm minimum
+  max_color_temp: 4000 # IKEA compatible cool maximum
   prefer_rgb_color: false
-  sleep_brightness: 15 # Low but safe for nighttime use
-  sleep_color_temp: 1800 # Optimal for evening bathroom use
-  sleep_transition: 60
+  sleep_brightness: 10 # Consistent across all rooms
+  sleep_color_temp: 2200  # Warmest supported by all bulbs
+  sleep_transition: 45  # Optimized for IKEA compatibility
   transition_until_sleep: true
   min_sunrise_time: "06:00:00" # Align with morning routines
   max_sunrise_time: "08:00:00"
   min_sunset_time: "18:00:00"
   max_sunset_time: "20:00:00"
   take_over_control: true
-  detect_non_ha_changes: false
+  detect_non_ha_changes: true  # Critical for Zigbee2MQTT
   autoreset_control_seconds: 7200 # 2 hours for less frequently used rooms
   only_once: false
   adapt_only_on_bare_turn_on: false
   separate_turn_on_commands: true  # CRITICAL: Required for IKEA lights
   send_split_delay: 0.5  # Delay between commands for IKEA lights
-  adapt_delay: 8  # Increased for mixed bulb types
+  adapt_delay: 0  # Immediate adaptation for correct color on turn-on
   skip_redundant_commands: true
   intercept: true
   multi_light_intercept: true
@@ -193,31 +206,31 @@
 
 - name: "Waschzimmer"
   lights:
-    - light.alle_waschzimmer_lichter
-  interval: 90
-  transition: 15  # Reduced for IKEA compatibility
-  initial_transition: 0
-  min_brightness: 30
+    - light.waschzimmer_decke
+  interval: 60
+  transition: 10  # Short transitions prevent IKEA lockups
+  initial_transition: 1  # Prevents color flashing
+  min_brightness: 10
   max_brightness: 100
-  min_color_temp: 2000 # Consistent warm minimum
-  max_color_temp: 6000 # Bright white maximum
+  min_color_temp: 2200 # IKEA/Hue compatible warm minimum
+  max_color_temp: 4000 # IKEA compatible cool maximum
   prefer_rgb_color: false
-  sleep_brightness: 30 # Higher for safety during night use
-  sleep_color_temp: 1800 # Better circadian alignment
-  sleep_transition: 45 # Quicker transition for utility space
+  sleep_brightness: 10 # Consistent across all rooms
+  sleep_color_temp: 2200  # Warmest supported by all bulbs
+  sleep_transition: 10 # Short transitions prevent IKEA lockups
   transition_until_sleep: true
   min_sunrise_time: "05:00:00"
   max_sunrise_time: "07:00:00"
   min_sunset_time: "18:00:00"
   max_sunset_time: "20:00:00"
   take_over_control: true
-  detect_non_ha_changes: false
+  detect_non_ha_changes: true  # Critical for Zigbee2MQTT
   autoreset_control_seconds: 7200
   only_once: false
   adapt_only_on_bare_turn_on: false
   separate_turn_on_commands: true  # CRITICAL: Required for IKEA lights
   send_split_delay: 0.5  # Delay between commands for IKEA lights
-  adapt_delay: 8  # Increased for mixed bulb types
+  adapt_delay: 0  # Immediate adaptation for correct color on turn-on
   skip_redundant_commands: true
   intercept: true
   multi_light_intercept: true
@@ -230,31 +243,32 @@
 
 - name: "Arbeitszimmer"
   lights:
-    - light.alle_arbeitszimmer_lichter
-  interval: 90
-  transition: 15  # Reduced for IKEA compatibility
-  initial_transition: 0
-  min_brightness: 30
+    - light.arbeitszimmer_decke           # Einzellicht (Hauptlicht)
+    - light.arbeitszimmer_pc_alle         # Zigbee-Gruppe (2 Lichter - synchron)
+  interval: 60
+  transition: 10  # Short transitions prevent IKEA lockups
+  initial_transition: 1  # Prevents color flashing
+  min_brightness: 10
   max_brightness: 100
-  min_color_temp: 2000 # Consistent warm minimum
-  max_color_temp: 6000 # Bright white for productivity
+  min_color_temp: 2200 # IKEA/Hue compatible warm minimum
+  max_color_temp: 4000 # IKEA compatible cool maximum
   prefer_rgb_color: false
-  sleep_brightness: 15 # Minimal for late work sessions
-  sleep_color_temp: 1800 # Better circadian support
-  sleep_transition: 45 # Smoother transition for productivity
+  sleep_brightness: 10 # Consistent across all rooms
+  sleep_color_temp: 2200  # Warmest supported by all bulbs
+  sleep_transition: 10 # Short transitions prevent IKEA lockups
   transition_until_sleep: true
   min_sunrise_time: "06:30:00" # Later start for work schedule
   max_sunrise_time: "08:00:00"
   min_sunset_time: "19:00:00" # Extended evening hours
   max_sunset_time: "21:30:00"
   take_over_control: true
-  detect_non_ha_changes: false
+  detect_non_ha_changes: true  # Critical for Zigbee2MQTT
   autoreset_control_seconds: 3600
   only_once: false
   adapt_only_on_bare_turn_on: false
   separate_turn_on_commands: true  # CRITICAL: Required for IKEA lights
   send_split_delay: 0.5  # Delay between commands for IKEA lights
-  adapt_delay: 8  # Increased for mixed bulb types
+  adapt_delay: 0  # Immediate adaptation for correct color on turn-on
   skip_redundant_commands: true
   intercept: true
   multi_light_intercept: true
@@ -263,31 +277,31 @@
 
 - name: "Ankleide"
   lights:
-    - light.alle_ankleide_lichter
-  interval: 90
-  transition: 15  # Reduced for IKEA compatibility
-  initial_transition: 0
-  min_brightness: 30
+    - light.ankleide_decke_alle           # Zigbee-Gruppe (2 Lichter - synchron)
+  interval: 60
+  transition: 10  # Short transitions prevent IKEA lockups
+  initial_transition: 1  # Prevents color flashing
+  min_brightness: 10
   max_brightness: 100
-  min_color_temp: 2000 # Consistent warm minimum
-  max_color_temp: 6000 # Bright white maximum
+  min_color_temp: 2200 # IKEA/Hue compatible warm minimum
+  max_color_temp: 4000 # IKEA compatible cool maximum
   prefer_rgb_color: false
-  sleep_brightness: 20
-  sleep_color_temp: 1800 # Improved sleep hygiene
-  sleep_transition: 60
+  sleep_brightness: 10 # Consistent across all rooms
+  sleep_color_temp: 2200  # Warmest supported by all bulbs
+  sleep_transition: 45  # Optimized for IKEA compatibility
   transition_until_sleep: true
   min_sunrise_time: "06:00:00" # Early for morning routines
   max_sunrise_time: "07:30:00"
   min_sunset_time: "18:00:00"
   max_sunset_time: "20:00:00"
   take_over_control: true
-  detect_non_ha_changes: false
+  detect_non_ha_changes: true  # Critical for Zigbee2MQTT
   autoreset_control_seconds: 7200
   only_once: false
   adapt_only_on_bare_turn_on: false
   separate_turn_on_commands: true  # CRITICAL: Required for IKEA lights
   send_split_delay: 0.5  # Delay between commands for IKEA lights
-  adapt_delay: 8  # Increased for mixed bulb types
+  adapt_delay: 0  # Immediate adaptation for correct color on turn-on
   skip_redundant_commands: true
   intercept: true
   multi_light_intercept: true
@@ -300,32 +314,32 @@
 
 - name: "Flur"
   lights:
-    - light.alle_flur_lichter
-    - light.alle_flur_nachtlichter
-  interval: 90
-  transition: 15  # Reduced for IKEA compatibility
-  initial_transition: 0
-  min_brightness: 30
+    - light.flur_decke_alle               # Zigbee-Gruppe (6 Lichter - synchron)
+    - light.flur_schrank_alle             # Zigbee-Gruppe (2 Lichter - synchron)
+  interval: 60
+  transition: 10  # Short transitions prevent IKEA lockups
+  initial_transition: 1  # Prevents color flashing
+  min_brightness: 10
   max_brightness: 100
-  min_color_temp: 2000 # Consistent warm minimum
-  max_color_temp: 6000 # Bright white maximum
+  min_color_temp: 2200 # IKEA/Hue compatible warm minimum
+  max_color_temp: 4000 # IKEA compatible cool maximum
   prefer_rgb_color: false
-  sleep_brightness: 8 # Very low for nighttime navigation
-  sleep_color_temp: 1800 # Optimal circadian rhythm for nighttime navigation
-  sleep_transition: 30 # Quick transition for transitional space
+  sleep_brightness: 10 # Consistent across all rooms
+  sleep_color_temp: 2200  # Warmest supported by all bulbs
+  sleep_transition: 10 # Short transitions prevent IKEA lockups
   transition_until_sleep: true
   min_sunrise_time: "05:00:00"
   max_sunrise_time: "07:00:00"
   min_sunset_time: "18:00:00"
   max_sunset_time: "20:00:00"
   take_over_control: true
-  detect_non_ha_changes: false
+  detect_non_ha_changes: true  # Critical for Zigbee2MQTT
   autoreset_control_seconds: 7200
   only_once: false
   adapt_only_on_bare_turn_on: false
   separate_turn_on_commands: true  # CRITICAL: Required for IKEA lights
   send_split_delay: 0.5  # Delay between commands for IKEA lights
-  adapt_delay: 12 # Higher delay for motion sensor areas in hallways
+  adapt_delay: 0  # Immediate adaptation for correct color on turn-on
   skip_redundant_commands: true
   intercept: true
   multi_light_intercept: true
@@ -338,31 +352,32 @@
 
 - name: "Balkon"
   lights:
-    - light.alle_balkon_lichter
-  interval: 120 # Slower updates for outdoor
-  transition: 15 # Reduced for IKEA compatibility
-  initial_transition: 0
-  min_brightness: 20 # Lower minimum for outdoor ambiance
+    - light.balkon_wand_alle              # Zigbee-Gruppe (2 Lichter - synchron)
+    - light.balkon_blumen                 # Einzellicht (individuell gesteuert)
+  interval: 90 # Slower updates for outdoor
+  transition: 10  # Short transitions prevent IKEA lockups
+  initial_transition: 1  # Prevents color flashing
+  min_brightness: 10 # Lower minimum for outdoor ambiance
   max_brightness: 100
-  min_color_temp: 2000 # Consistent warm minimum
-  max_color_temp: 6000 # Bright white maximum
+  min_color_temp: 2200 # IKEA/Hue compatible warm minimum
+  max_color_temp: 4000 # IKEA compatible cool maximum
   prefer_rgb_color: false
-  sleep_brightness: 10 # Minimal outdoor lighting
-  sleep_color_temp: 1800 # Optimal circadian rhythm for outdoor evening
-  sleep_transition: 30 # Reduced for IKEA compatibility
+  sleep_brightness: 10 # Consistent across all rooms
+  sleep_color_temp: 2200  # Warmest supported by all bulbs
+  sleep_transition: 10 # Short transitions prevent IKEA lockups
   transition_until_sleep: false # No sleep transition for outdoor
   min_sunrise_time: "05:30:00"
   max_sunrise_time: "07:30:00"
   min_sunset_time: "19:30:00" # Later for outdoor evening use
   max_sunset_time: "21:30:00" # Extended summer evenings
   take_over_control: true
-  detect_non_ha_changes: false
+  detect_non_ha_changes: true  # Critical for Zigbee2MQTT
   autoreset_control_seconds: 7200 # Longer reset for outdoor
   only_once: false
   adapt_only_on_bare_turn_on: false
   separate_turn_on_commands: true  # CRITICAL: Required for IKEA lights
   send_split_delay: 0.5  # Delay between commands for IKEA lights
-  adapt_delay: 15 # Higher delay for outdoor sensors and mixed bulb types
+  adapt_delay: 0  # Immediate adaptation for correct color on turn-on
   skip_redundant_commands: true
   intercept: true
   multi_light_intercept: true

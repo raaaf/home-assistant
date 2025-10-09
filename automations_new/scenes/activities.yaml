@@ -30,12 +30,11 @@
       - condition: trigger
         id: gäste-an
       sequence:
-      - data:
-          stop_actions: true
+      - action: automation.turn_off
         target:
           entity_id:
           - automation.1696241451967  # Helper » Workday Musik - Automatic workday music
-        action: automation.turn_off
+        data: {}
       - target:
           entity_id:
           - switch.wohnzimmer_steckdose
@@ -120,19 +119,18 @@
           - light.flur_decke_alle
           - light.schlafzimmer_decke_alle
           - light.ankleide_decke_alle
-      - data:
-          stop_actions: true
+      - action: automation.turn_off
         target:
           entity_id:
           - automation.1672931243226  # Motion sensor automation (living room)
           - automation.motion_flur_wohnung  # Hallway motion sensor
-          - automation.1678724233791  # Bedroom motion sensor  
+          - automation.1678724233791  # Bedroom motion sensor
           - automation.1672929418223  # Kitchen motion sensor
           - automation.1745924154398  # Bathroom motion sensor
           - automation.arbeitszimmer_motion  # Office motion sensor
           - automation.1692710690350  # Additional motion sensor
           - automation.motion_haustur  # Front door motion sensor
-        action: automation.turn_off
+        data: {}
       - action: scene_presets.start_dynamic_scene
         data:
           preset_id: 9565033d-f2ea-4821-bfba-7dd9b35be20a
@@ -145,31 +143,107 @@
       - condition: trigger
         id: 'off'
       sequence:
-      - action: switch.turn_on
+      - alias: "Re-enable living room adaptive lighting if party_wohnzimmer is off"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.party_wohnzimmer
+            state: 'off'
+          - condition: state
+            entity_id: input_boolean.movie
+            state: 'off'
+          sequence:
+          - action: switch.turn_on
+            target:
+              entity_id: switch.adaptive_lighting_wohnzimmer
+      - alias: "Re-enable kitchen adaptive lighting if cooking/movie/party_wohnzimmer off"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.kochen
+            state: 'off'
+          - condition: state
+            entity_id: input_boolean.movie
+            state: 'off'
+          - condition: state
+            entity_id: input_boolean.party_wohnzimmer
+            state: 'off'
+          sequence:
+          - action: switch.turn_on
+            target:
+              entity_id: switch.adaptive_lighting_kueche
+      - alias: "Re-enable bathroom adaptive lighting if sauna/baden off"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.sauna
+            state: 'off'
+          - condition: state
+            entity_id: input_boolean.baden
+            state: 'off'
+          sequence:
+          - action: switch.turn_on
+            target:
+              entity_id: switch.adaptive_lighting_badezimmer
+      - alias: "Re-enable other room adaptive lighting unconditionally"
+        action: switch.turn_on
         target:
           entity_id:
-          - switch.adaptive_lighting_wohnzimmer
-          - switch.adaptive_lighting_kueche
-          - switch.adaptive_lighting_badezimmer
           - switch.adaptive_lighting_kinderzimmer
           - switch.adaptive_lighting_arbeitszimmer
           - switch.adaptive_lighting_flur
           - switch.adaptive_lighting_schlafzimmer
           - switch.adaptive_lighting_waschzimmer
           - switch.adaptive_lighting_balkon
-      - data:
-          stop_actions: true
+      - alias: "Re-enable all motion sensors only if no conflicting scenes are active"
+        choose:
+        - conditions:
+          # Kitchen motion - check movie, cooking, party_wohnzimmer
+          - condition: state
+            entity_id: input_boolean.movie
+            state: 'off'
+          - condition: state
+            entity_id: input_boolean.kochen
+            state: 'off'
+          - condition: state
+            entity_id: input_boolean.party_wohnzimmer
+            state: 'off'
+          sequence:
+          - action: automation.turn_on
+            target:
+              entity_id: automation.1672931243226  # Motion sensor automation (kitchen)
+      - alias: "Re-enable hallway motion if no conflicting scenes"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.movie
+            state: 'off'
+          - condition: state
+            entity_id: input_boolean.party_wohnzimmer
+            state: 'off'
+          sequence:
+          - action: automation.turn_on
+            target:
+              entity_id: automation.motion_flur_wohnung  # Hallway motion sensor
+      - alias: "Re-enable bedroom motion if work mode is off"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.arbeit
+            state: 'off'
+          sequence:
+          - action: automation.turn_on
+            target:
+              entity_id: automation.1678724233791  # Bedroom motion sensor
+      - alias: "Re-enable other motion sensors unconditionally"
+        action: automation.turn_on
         target:
           entity_id:
-          - automation.1672931243226  # Motion sensor automation (living room)
-          - automation.motion_flur_wohnung  # Hallway motion sensor
-          - automation.1678724233791  # Bedroom motion sensor  
-          - automation.1672929418223  # Kitchen motion sensor
-          - automation.1745924154398  # Bathroom motion sensor
+          - automation.1672929418223  # Bathroom motion sensor
+          - automation.1745924154398  # Dining table motion sensor
           - automation.arbeitszimmer_motion  # Office motion sensor
           - automation.1692710690350  # Additional motion sensor
           - automation.motion_haustur  # Front door motion sensor
-        action: automation.turn_on
       - action: light.turn_off
         data:
           transition: 5
@@ -177,7 +251,7 @@
           entity_id:
           - light.alle_party_lichter
     default: []
-  mode: single
+  mode: restart
 - id: '1744448757845'
   alias: Szene » Arbeit
   description: 'Aktiviert spezielle Lichtszene und deaktiviert Bewegung bei aktivem
@@ -205,14 +279,6 @@
         action: automation.turn_off
         target:
           entity_id: automation.1678724233791  # Bedroom motion sensor
-        data:
-          stop_actions: true
-      - alias: Alle Arbeitslichter ausschalten
-        action: light.turn_off
-        target:
-          entity_id:
-          - light.alle_arbeitszimmer_nachtlichter
-          - light.alle_arbeitszimmer_lichter
         data: {}
       - choose:
         - alias: Dunkel und vor 21 Uhr - normale Arbeitsbeleuchtung
@@ -258,11 +324,18 @@
       - condition: trigger
         id: arbeit-off
       sequence:
-      - alias: Bewegungsmelder Schlafzimmer aktivieren
-        action: automation.turn_on
-        target:
-          entity_id: automation.1678724233791  # Bedroom motion sensor
-        data: {}
+      - alias: "Re-enable bedroom motion only if party mode is off"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.party
+            state: 'off'
+          sequence:
+          - alias: Bewegungsmelder Schlafzimmer aktivieren
+            action: automation.turn_on
+            target:
+              entity_id: automation.1678724233791  # Bedroom motion sensor
+            data: {}
       - alias: Nur ausschalten wenn es dunkel ist
         condition: template
         value_template: "{{ has_value('sun.sun') and (state_attr('sun.sun', 'elevation') < 0 or \n   (has_value('input_boolean.schlafenszeit') and is_state('input_boolean.schlafenszeit',\

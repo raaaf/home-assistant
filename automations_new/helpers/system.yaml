@@ -45,7 +45,7 @@
   mode: single
 - id: '1725023601709'
   alias: Helper » Restart Fritzbox
-  description: Startet Fritzbox und Repeater jeden Sonntag um 5 Uhr neu
+  description: Startet Fritzbox und Repeater jeden Tag um 5 Uhr neu
   triggers:
   - at: 05:00:00
     trigger: time
@@ -53,17 +53,23 @@
   - condition: state
     entity_id: input_boolean.arbeit
     state: 'off'
-  - condition: time
-    weekday:
-    - sun
   actions:
   - action: button.press
     data: {}
     target:
-      entity_id:
-      - button.fritz_box_7590_ax_restart
-      - button.fritz_repeater_1200_ax_restart
-      - button.fritz_repeater_2400_restart
+      entity_id: button.fritz_box_7590_ax_restart
+  - delay:
+      minutes: 2
+  - action: button.press
+    data: {}
+    target:
+      entity_id: button.fritz_repeater_2400_restart
+  - delay:
+      minutes: 2
+  - action: button.press
+    data: {}
+    target:
+      entity_id: button.fritz_repeater_1200_ax_restart
   mode: single
 - id: '1744630508158'
   alias: Helper » Media Player nur wenn inaktiv aktualisieren

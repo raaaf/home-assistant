@@ -49,11 +49,9 @@
       wird_heiss: '{{ has_value(''input_boolean.heute_wird_es_heiss_werden'') and is_state(''input_boolean.heute_wird_es_heiss_werden'', ''on'')
         }}'
       ist_arbeitstag: '{{ has_value(''binary_sensor.workday_sensor'') and is_state(''binary_sensor.workday_sensor'', ''on'') }}'
-      position_schlaf_kinder: "{% if wird_sehr_heiss %}\n  5\n{% elif wird_heiss %}\n\
-        \  25\n{% else %}\n  100\n{% endif %}\n"
+      position_schlaf_kinder: "{% if wird_sehr_heiss %}5{% elif wird_heiss %}25{% else %}100{% endif %}"
       position_arbeit: 1
-      position_west: "{% if wird_sehr_heiss %}\n  0\n{% elif wird_heiss %}\n  10\n\
-        {% else %}\n  100\n{% endif %}\n"
+      position_west: "{% if wird_sehr_heiss %}0{% elif wird_heiss %}10{% else %}100{% endif %}"
   - choose:
     - conditions:
       - condition: trigger

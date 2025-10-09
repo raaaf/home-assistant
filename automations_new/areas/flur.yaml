@@ -26,8 +26,8 @@
       night_lights_conditions:
       - time_enabled
       ambient_light_options: ambient_light_option_enabled
-      ambient_light_value: 20
-      ambient_light_high_value: 50
+      ambient_light_value: 150
+      ambient_light_high_value: 200
 - id: '1696841069890'
   alias: Flur » Robbi
   description: Steuert Staubsauger-Roboter mit verschiedenen Reinigungsplänen und
@@ -220,8 +220,8 @@
       night_lights_entity_state:
       - input_boolean.schlafenszeit
       night_light_brightness: 10
-      ambient_light_value: 40
-      ambient_light_high_value: 80
+      ambient_light_value: 150
+      ambient_light_high_value: 200
       ambient_light_options: ambient_light_option_enabled
       include_light_control:
       - use_brightness

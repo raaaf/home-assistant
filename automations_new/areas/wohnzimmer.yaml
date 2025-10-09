@@ -67,10 +67,9 @@
         enabled: false
       - action: automation.turn_off
         metadata: {}
-        data:
-          stop_actions: true
         target:
           entity_id: automation.1745924154398
+        data: {}
       - target:
           entity_id: light.hyperhdr
         data:
@@ -97,11 +96,18 @@
           entity_id: input_boolean.movie
         data: {}
         action: input_boolean.turn_off
-      - action: automation.turn_on
-        metadata: {}
-        data: {}
-        target:
-          entity_id: automation.1745924154398
+      - alias: "Re-enable dining table motion only if eating mode is off"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.essen
+            state: 'off'
+          sequence:
+          - action: automation.turn_on
+            metadata: {}
+            data: {}
+            target:
+              entity_id: automation.1745924154398
       - target:
           entity_id:
           - light.hyperhdr
@@ -129,11 +135,18 @@
             - light.alle_kuche_nachtlichter
             - light.alle_wohnzimmer_nachtlichter
           action: light.turn_on
-      - action: automation.turn_on
-        metadata: {}
-        data: {}
-        target:
-          entity_id: automation.1745924154398
+      - alias: "Re-enable dining table motion only if eating mode is off"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.essen
+            state: 'off'
+          sequence:
+          - action: automation.turn_on
+            metadata: {}
+            data: {}
+            target:
+              entity_id: automation.1745924154398
     - conditions:
       - condition: trigger
         id: game-on
@@ -303,14 +316,13 @@
           - light.wohnzimmer_wand_alle
           - light.kuche_decke_alle
           - light.steckdose_kuechengeraete
-      - data:
-          stop_actions: true
+      - action: automation.turn_off
         target:
           entity_id:
           - automation.1672931243226
           - automation.motion_flur_wohnung
         enabled: true
-        action: automation.turn_off
+        data: {}
       - action: scene_presets.start_dynamic_scene
         metadata: {}
         data:
@@ -324,19 +336,64 @@
       - condition: trigger
         id: 'off'
       sequence:
-      - action: switch.turn_on
-        metadata: {}
-        data: {}
-        target:
-          entity_id:
-          - switch.adaptive_lighting_wohnzimmer
-          - switch.adaptive_lighting_kueche
-      - data: {}
-        target:
-          entity_id:
-          - automation.1672931243226
-          - automation.motion_flur_wohnung
-        action: automation.turn_on
+      - alias: "Re-enable living room adaptive lighting if movie/party off"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.movie
+            state: 'off'
+          - condition: state
+            entity_id: input_boolean.party
+            state: 'off'
+          sequence:
+          - action: switch.turn_on
+            target:
+              entity_id: switch.adaptive_lighting_wohnzimmer
+      - alias: "Re-enable kitchen adaptive lighting if movie/kochen/party off"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.movie
+            state: 'off'
+          - condition: state
+            entity_id: input_boolean.kochen
+            state: 'off'
+          - condition: state
+            entity_id: input_boolean.party
+            state: 'off'
+          sequence:
+          - action: switch.turn_on
+            target:
+              entity_id: switch.adaptive_lighting_kueche
+      - alias: "Re-enable kitchen motion only if no conflicting scenes are active"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.movie
+            state: 'off'
+          - condition: state
+            entity_id: input_boolean.kochen
+            state: 'off'
+          - condition: state
+            entity_id: input_boolean.party
+            state: 'off'
+          sequence:
+          - action: automation.turn_on
+            target:
+              entity_id: automation.1672931243226
+      - alias: "Re-enable hallway motion only if no conflicting scenes are active"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.movie
+            state: 'off'
+          - condition: state
+            entity_id: input_boolean.party
+            state: 'off'
+          sequence:
+          - action: automation.turn_on
+            target:
+              entity_id: automation.motion_flur_wohnung
       - action: light.turn_off
         metadata: {}
         data:
@@ -349,7 +406,7 @@
         data:
           id: de7eda64-84bf-4ed6-a4fa-76e0ebdd1968
     default: []
-  mode: single
+  mode: restart
 - id: '1744714272996'
   alias: Scenen » Esstisch reinigen
   description: 'Helles Licht zum Reinigen des Esstisch Bereichs'
@@ -408,7 +465,7 @@
       - binary_sensor.wohnzimmer_vibration_vibration
       - binary_sensor.wohnzimmer_vibration_2_vibration
       light_switch:
-        entity_id: light.wohnzimmer_esstisch
+        entity_id: light.wohnzimmer_esstisch_alle
       include_night_lights: night_lights_disabled
       night_lights:
         entity_id: light.alle_kuche_nachtlichter
