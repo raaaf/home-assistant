@@ -41,6 +41,19 @@
         action: input_boolean.turn_off
         target:
           entity_id: input_boolean.schlafenszeit
+      - alias: Sleep Mode für alle Räume deaktivieren
+        action: switch.turn_off
+        target:
+          entity_id:
+          - switch.adaptive_lighting_sleep_mode_arbeitszimmer
+          - switch.adaptive_lighting_sleep_mode_badezimmer
+          - switch.adaptive_lighting_sleep_mode_balkon
+          - switch.adaptive_lighting_sleep_mode_flur
+          - switch.adaptive_lighting_sleep_mode_kinderzimmer
+          - switch.adaptive_lighting_sleep_mode_kueche
+          - switch.adaptive_lighting_sleep_mode_waschzimmer
+          - switch.adaptive_lighting_sleep_mode_wohnzimmer
+          - switch.adaptive_lighting_sleep_mode_schlafzimmer
       - alias: Sanftes Aufwachlicht nur an Werktagen wenn jemand da ist
         if:
         - alias: Ist Werktag
@@ -62,7 +75,7 @@
             - switch.adaptive_lighting_adapt_brightness_kinderzimmer
             - switch.adaptive_lighting_adapt_brightness_schlafzimmer
             - switch.adaptive_lighting_adapt_brightness_wohnzimmer
-        - alias: Motion-Automationen temporär deaktivieren
+        - alias: Motion-Automationen temporär deaktivieren (BEFORE parabolic sunrise)
           action: automation.turn_off
           target:
             entity_id:
@@ -93,15 +106,15 @@
               entity_id: automation.parabolic_sunrise_wohnzimmer
             data:
               skip_condition: true
-        - alias: Motion-Automationen wieder aktivieren
+        # Wait for all 3 phases to complete (total: 25 minutes)
+        - delay: 00:25:00
+        - alias: Motion-Automationen wieder aktivieren (AFTER parabolic sunrise)
           action: automation.turn_on
           target:
             entity_id:
             - automation.arbeitszimmer_motion
             - automation.1692710690350
             - automation.1678724233791
-        # Wait for all 3 phases to complete (total: 25 minutes)
-        - delay: 00:25:00
         - alias: Adaptive Beleuchtung Helligkeit wieder aktivieren
           action: switch.turn_on
           target:
@@ -110,19 +123,6 @@
             - switch.adaptive_lighting_adapt_brightness_kinderzimmer
             - switch.adaptive_lighting_adapt_brightness_schlafzimmer
             - switch.adaptive_lighting_adapt_brightness_wohnzimmer
-      - alias: Sleep Mode für alle Räume deaktivieren
-        action: switch.turn_off
-        target:
-          entity_id:
-          - switch.adaptive_lighting_sleep_mode_arbeitszimmer
-          - switch.adaptive_lighting_sleep_mode_badezimmer
-          - switch.adaptive_lighting_sleep_mode_balkon
-          - switch.adaptive_lighting_sleep_mode_flur
-          - switch.adaptive_lighting_sleep_mode_kinderzimmer
-          - switch.adaptive_lighting_sleep_mode_kueche
-          - switch.adaptive_lighting_sleep_mode_waschzimmer
-          - switch.adaptive_lighting_sleep_mode_wohnzimmer
-          - switch.adaptive_lighting_sleep_mode_schlafzimmer
     - alias: Sonnenaufgang - Schlafenszeit beenden
       conditions:
       - condition: trigger

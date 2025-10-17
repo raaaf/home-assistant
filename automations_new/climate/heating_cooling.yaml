@@ -303,312 +303,6 @@
                   entity_id: climate.ac
   mode: single
   max_exceeded: silent
-- id: '1722326567932'
-  alias: Helper » Heizung
-  description: 'Verwaltet Heizungsmodi basierend auf Außentemperatur, Tageszeit und
-    Anwesenheit mit optimierten Triggern und adaptiver Temperatur
-
-    '
-  trigger:
-  - entity_id: sensor.temperatur_aussen
-    above: 21
-    for:
-      minutes: 10
-    id: warm-outside
-    trigger: numeric_state
-  - entity_id: sensor.temperatur_aussen
-    below: 18
-    for:
-      minutes: 10
-    id: cold-outside
-    trigger: numeric_state
-  - entity_id: input_boolean.alle_sind_weg
-    to: 'on'
-    for:
-      hours: 24
-    id: alle-weg-24
-    trigger: state
-  - entity_id: input_boolean.alle_sind_weg
-    to: 'on'
-    for:
-      hours: 8
-    id: alle-weg-8
-    trigger: state
-  - entity_id: input_boolean.alle_sind_weg
-    to: 'off'
-    id: alle-da
-    trigger: state
-  - at: input_datetime.automation_lauft_erst_ab
-    id: tagsüber
-    trigger: time
-  - at: '21:00:00'
-    id: nachts
-    trigger: time
-  - event: start
-    id: startup
-    trigger: homeassistant
-  condition:
-  - condition: or
-    conditions:
-    - condition: trigger
-      id: startup
-    - condition: and
-      conditions:
-      - condition: template
-        value_template: '{{ now().month <= 4 or now().month >= 10 }}
-
-          '
-      - condition: or
-        conditions:
-        - condition: numeric_state
-          entity_id: sensor.temperatur_aussen
-          below: 22
-        - condition: state
-          entity_id: sensor.temperatur_aussen
-          state:
-          - unknown
-          - unavailable
-        - condition: trigger
-          id:
-          - alle-da
-          - nachts
-          - tagsüber
-  action:
-  - variables:
-      climate_entities:
-      - climate.kinderzimmer
-      - climate.schlafzimmer
-      - climate.wohnzimmer
-      current_temp: "{% set temp = states('sensor.temperatur_aussen') %} {% if not has_value('sensor.temperatur_aussen') %}\n  unbekannt\n{% else %}\n  {{ temp | float(10)\
-        \ | round(1) }}°C\n{% endif %}\n"
-      adaptive_temp_home: "{% set temp = states('sensor.temperatur_aussen') %}\n{%\
-        \ if not has_value('sensor.temperatur_aussen') %}\n  20\n{% elif temp | float(10)\
-        \ > 15 %}\n  19\n{% elif temp | float(10) > 10 %}\n  20\n{% else %}\n  21\n\
-        {% endif %}\n"
-      adaptive_temp_eco: "{% set temp = states('sensor.temperatur_aussen') %}\n{%\
-        \ if not has_value('sensor.temperatur_aussen') %}\n  18\n{% elif temp | float(10)\
-        \ > 15 %}\n  17\n{% elif temp | float(10) > 10 %}\n  18\n{% else %}\n  19\n\
-        {% endif %}\n"
-      adaptive_temp_away: 16
-  - choose:
-    - conditions:
-      - condition: trigger
-        id: nachts
-      - condition: state
-        entity_id: input_boolean.alle_sind_weg
-        state: 'off'
-      sequence:
-      - action: climate.set_preset_mode
-        target:
-          entity_id: '{{ climate_entities }}'
-        data:
-          preset_mode: eco
-      - action: climate.set_temperature
-        target:
-          entity_id: '{{ climate_entities }}'
-        data:
-          temperature: '{{ adaptive_temp_eco }}'
-      - action: notify.persistent_notification
-        data:
-          title: Heizung Nachtmodus
-          message: 'Alle Heizungen auf Eco-Modus ({{ adaptive_temp_eco }}°C) umgestellt.
-            Außentemperatur: {{ current_temp }}'
-    - conditions:
-      - condition: trigger
-        id: tagsüber
-      - condition: state
-        entity_id: input_boolean.alle_sind_weg
-        state: 'off'
-      sequence:
-      - action: climate.set_preset_mode
-        target:
-          entity_id: '{{ climate_entities }}'
-        data:
-          preset_mode: home
-      - action: climate.set_temperature
-        target:
-          entity_id: '{{ climate_entities }}'
-        data:
-          temperature: '{{ adaptive_temp_home }}'
-      - action: notify.persistent_notification
-        data:
-          title: Heizung Tagesmodus
-          message: 'Alle Heizungen auf Home-Modus ({{ adaptive_temp_home }}°C) umgestellt.
-            Außentemperatur: {{ current_temp }}'
-    - conditions:
-      - condition: trigger
-        id: alle-weg-24
-      sequence:
-      - action: climate.set_preset_mode
-        target:
-          entity_id: '{{ climate_entities }}'
-        data:
-          preset_mode: away
-      - action: climate.set_temperature
-        target:
-          entity_id: '{{ climate_entities }}'
-        data:
-          temperature: '{{ adaptive_temp_away }}'
-      - action: notify.persistent_notification
-        data:
-          title: Heizung Urlaubsmodus
-          message: 'Alle Heizungen auf Away-Modus ({{ adaptive_temp_away }}°C Frostschutz)
-            umgestellt. Außentemperatur: {{ current_temp }}'
-    - conditions:
-      - condition: trigger
-        id: alle-weg-8
-      sequence:
-      - action: climate.set_preset_mode
-        target:
-          entity_id: '{{ climate_entities }}'
-        data:
-          preset_mode: eco
-      - action: climate.set_temperature
-        target:
-          entity_id: '{{ climate_entities }}'
-        data:
-          temperature: '{{ adaptive_temp_eco }}'
-      - action: notify.persistent_notification
-        data:
-          title: Heizung Abwesenheitsmodus
-          message: 'Alle Heizungen auf Eco-Modus ({{ adaptive_temp_eco }}°C) umgestellt.
-            Außentemperatur: {{ current_temp }}'
-    - conditions:
-      - condition: trigger
-        id: alle-da
-      sequence:
-      - action: climate.turn_on
-        target:
-          entity_id: '{{ climate_entities }}'
-        data: {}
-      - delay:
-          seconds: 2
-      - choose:
-        - conditions:
-          - condition: time
-            after: '21:00:00'
-            before: input_datetime.automation_lauft_erst_ab
-          sequence:
-          - action: climate.set_preset_mode
-            target:
-              entity_id: '{{ climate_entities }}'
-            data:
-              preset_mode: eco
-          - action: climate.set_temperature
-            target:
-              entity_id: '{{ climate_entities }}'
-            data:
-              temperature: '{{ adaptive_temp_eco }}'
-        default:
-        - action: climate.set_preset_mode
-          target:
-            entity_id: '{{ climate_entities }}'
-          data:
-            preset_mode: home
-        - action: climate.set_temperature
-          target:
-            entity_id: '{{ climate_entities }}'
-          data:
-            temperature: '{{ adaptive_temp_home }}'
-      - action: notify.persistent_notification
-        data:
-          title: Willkommen zurück!
-          message: 'Heizungen wurden wieder aktiviert ({{ adaptive_temp_home if now().hour
-            >= 6 and now().hour < 21 else adaptive_temp_eco }}°C). Außentemperatur:
-            {{ current_temp }}
-
-            '
-    - conditions:
-      - condition: trigger
-        id: warm-outside
-      - condition: state
-        entity_id: input_boolean.alle_sind_weg
-        state: 'off'
-      sequence:
-      - action: climate.set_hvac_mode
-        target:
-          entity_id: '{{ climate_entities }}'
-        data:
-          hvac_mode: 'off'
-      - action: notify.persistent_notification
-        data:
-          title: Heizung Sommermodus
-          message: 'Außentemperatur über 21°C (aktuell: {{ current_temp }}) -  Heizungen
-            ausgeschaltet'
-    - conditions:
-      - condition: trigger
-        id: startup
-      sequence:
-      - wait_template: "{{ has_value('sensor.temperatur_aussen') }}"
-        timeout: '00:02:00'
-        continue_on_timeout: true
-      - delay: '00:02:00'
-      - action: system_log.write
-        data:
-          message: 'Heizungsautomation gestartet. Außentemperatur: {{ current_temp
-            }}'
-          level: info
-      - choose:
-        - conditions:
-          - condition: state
-            entity_id: input_boolean.alle_sind_weg
-            state: 'on'
-          sequence:
-          - action: climate.set_preset_mode
-            target:
-              entity_id: '{{ climate_entities }}'
-            data:
-              preset_mode: eco
-          - action: climate.set_temperature
-            target:
-              entity_id: '{{ climate_entities }}'
-            data:
-              temperature: '{{ adaptive_temp_eco }}'
-          - action: notify.persistent_notification
-            data:
-              title: Heizung initialisiert
-              message: 'Eco-Modus aktiviert ({{ adaptive_temp_eco }}°C) -  Niemand
-                zu Hause. Außentemperatur: {{ current_temp }}'
-        default:
-        - choose:
-          - conditions:
-            - condition: time
-              after: '21:00:00'
-              before: input_datetime.automation_lauft_erst_ab
-            sequence:
-            - action: climate.set_preset_mode
-              target:
-                entity_id: '{{ climate_entities }}'
-              data:
-                preset_mode: eco
-            - action: climate.set_temperature
-              target:
-                entity_id: '{{ climate_entities }}'
-              data:
-                temperature: '{{ adaptive_temp_eco }}'
-            - action: notify.persistent_notification
-              data:
-                title: Heizung initialisiert
-                message: 'Nachtmodus aktiviert ({{ adaptive_temp_eco }}°C). Außentemperatur:
-                  {{ current_temp }}'
-          default:
-          - action: climate.set_preset_mode
-            target:
-              entity_id: '{{ climate_entities }}'
-            data:
-              preset_mode: home
-          - action: climate.set_temperature
-            target:
-              entity_id: '{{ climate_entities }}'
-            data:
-              temperature: '{{ adaptive_temp_home }}'
-          - action: notify.persistent_notification
-            data:
-              title: Heizung initialisiert
-              message: 'Tagesmodus aktiviert ({{ adaptive_temp_home }}°C). Außentemperatur:
-                {{ current_temp }}'
-  mode: single
-  max_exceeded: silent
 - id: '1743835898091'
   alias: Helper » Frostwarnung für Blumen (morgen früh unter 0°C)
   description: 'Sendet eine kritische Notification, wenn es in der Nacht auf morgen
@@ -854,116 +548,85 @@
         data: {}
   mode: parallel
   max: 4
-- id: '1749999999999'
-  alias: Heizung » Adaptive Pre-Heating (Room Temperature Based)
-  description: 'Adaptive Heizungssteuerung basierend auf aktueller Raumtemperatur - startet automatisch 1-4 Stunden vor Aufwachzeit je nach Bedarf'
+- id: '1749999999998'
+  alias: Heizung » Smart Floor Control (Predictive)
+  description: 'Predictive floor heating control for slow-response system (1-2h warmup). Morning boost based on forecast, afternoon boost based on actual temp. Only controls Kinderzimmer, Schlafzimmer, Wohnzimmer.'
   trigger:
-  - trigger: template
-    value_template: >
-      {% set current_time = now().strftime('%H:%M') %}
-      {% if states('binary_sensor.workday_sensor') not in ['unknown', 'unavailable'] and states('input_datetime.aufwachzeit_arbeitstag') not in ['unknown', 'unavailable'] and states('input_datetime.aufwachzeit_freier_tag') not in ['unknown', 'unavailable'] %}
-        {% if is_state('binary_sensor.workday_sensor', 'on') %}
-          {% set wake_time = states('input_datetime.aufwachzeit_arbeitstag') %}
-        {% else %}
-          {% set wake_time = states('input_datetime.aufwachzeit_freier_tag') %}
-        {% endif %}
-        {% set wake_hour = wake_time.split(':')[0]|int %}
-        {% set wake_minute = wake_time.split(':')[1]|int %}
-
-        {# Get average indoor temperature #}
-        {% set temps = [
-          states('sensor.arbeitszimmer_temperatur')|float(20),
-          states('sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature')|float(20),
-          states('sensor.wohnzimmer_temperatur')|float(20),
-          states('sensor.temperatur_schlafzimmer')|float(20)
-        ] %}
-        {% set avg_indoor_temp = (temps|sum / temps|length)|round(1) %}
-
-        {# Determine required pre-heat hours based on room temperature #}
-        {% set preheat_hours = 4 if avg_indoor_temp < 16 else 3 if avg_indoor_temp < 18 else 2 if avg_indoor_temp < 20 else 1 %}
-
-        {# Calculate when to start for each possible duration #}
-        {% for hours in range(1, 5) %}
-          {% set start_hour = wake_hour - hours %}
-          {% if start_hour < 0 %}
-            {% set start_hour = start_hour + 24 %}
-          {% endif %}
-          {% set check_time = '{:02d}:{:02d}'.format(start_hour, wake_minute) %}
-          {% if current_time == check_time and hours == preheat_hours %}
-            {{ true }}
-          {% endif %}
-        {% endfor %}
-      {% else %}
-        {# Fallback for missing sensors - check every hour from 4 hours before 7 AM #}
-        {{ current_time in ['03:00', '04:00', '05:00', '06:00'] }}
-      {% endif %}
-  condition:
-  - condition: state
-    entity_id: input_boolean.alle_sind_weg
-    state: 'off'
-  - condition: template
-    value_template: '{{ now().month <= 4 or now().month >= 10 }}'
-  - condition: state
-    entity_id: input_boolean.schlafenszeit
-    state: 'on'
+  - at: "06:30:00"
+    id: morning-boost
+    trigger: time
+  - at: "15:30:00"
+    id: afternoon-boost
+    trigger: time
+  condition: []
   action:
   - variables:
-      climate_entities:
-      - climate.kinderzimmer
-      - climate.schlafzimmer
-      - climate.wohnzimmer
-      outdoor_temp: '{{ states(''sensor.temperatur_aussen'')|float(10) }}'
-
-      # Room temperatures
-      arbeitszimmer_temp: '{{ states(''sensor.arbeitszimmer_temperatur'')|float(20) }}'
-      kinderzimmer_temp: '{{ states(''sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature'')|float(20) }}'
-      wohnzimmer_temp: '{{ states(''sensor.wohnzimmer_temperatur'')|float(20) }}'
-      schlafzimmer_temp: '{{ states(''sensor.temperatur_schlafzimmer'')|float(20) }}'
-
-      # Average indoor temperature
-      avg_indoor_temp: '{{ ((arbeitszimmer_temp + kinderzimmer_temp + wohnzimmer_temp + schlafzimmer_temp) / 4)|round(1) }}'
-
-      # Determine heating strategy based on room temperature
-      heating_needed: '{{ avg_indoor_temp < 18 }}'
-      intensive_heating: '{{ avg_indoor_temp < 16 }}'
-
-      # Target temperature based on outdoor conditions
-      adaptive_temp_home: "{% set temp = states('sensor.temperatur_aussen') %}\n{%\
-        \ if not has_value('sensor.temperatur_aussen') %}\n  20\n{% elif temp | float(10)\
-        \ > 15 %}\n  19\n{% elif temp | float(10) > 10 %}\n  20\n{% else %}\n  21\n\
-        {% endif %}\n"
-
-      # Calculate estimated hours until wake-up
-      estimated_preheat_hours: >
-        {% if avg_indoor_temp < 16 %}4
-        {% elif avg_indoor_temp < 18 %}3
-        {% elif avg_indoor_temp < 20 %}2
-        {% else %}1{% endif %}
+      heating_switches:
+      - switch.heizung_kinderzimmer
+      - switch.heizung_schlafzimmer
+      - switch.heizung_wohnzimmer
   - choose:
+    # === LAYER 1: MORNING BOOST (06:00) ===
     - conditions:
+      - condition: trigger
+        id: morning-boost
+      - condition: state
+        entity_id: input_boolean.alle_sind_weg
+        state: 'off'
       - condition: template
-        value_template: '{{ heating_needed }}'
+        value_template: '{{ now().month <= 4 or now().month >= 10 }}'
+      - condition: template
+        value_template: >
+          {% set forecast = state_attr('sensor.fuerth_daily', 'forecast') %}
+          {% if forecast and forecast|length > 0 %}
+            {{ forecast[0].temperature < 20 }}
+          {% else %}
+            false
+          {% endif %}
       sequence:
-      - action: climate.set_preset_mode
+      - action: switch.turn_on
         target:
-          entity_id: '{{ climate_entities }}'
-        data:
-          preset_mode: home
-      - action: climate.set_temperature
-        target:
-          entity_id: '{{ climate_entities }}'
-        data:
-          temperature: '{{ adaptive_temp_home }}'
+          entity_id: '{{ heating_switches }}'
       - action: notify.persistent_notification
         data:
-          title: Adaptive Pre-Heating Started
-          message: >
-            Pre-heating started {{ estimated_preheat_hours }}h before wake-up.
-            Current room temp: {{ avg_indoor_temp }}°C → Target: {{ adaptive_temp_home }}°C
-            Outside: {{ outdoor_temp }}°C | Strategy: {{ 'Intensive' if intensive_heating else 'Normal' }}
-    default:
-    - action: notify.persistent_notification
-      data:
-        title: Pre-Heating Skipped
-        message: 'Room temperature adequate ({{ avg_indoor_temp }}°C). No pre-heating needed.'
-  mode: single
+          title: "🔥 Heizung: Morning Boost"
+          message: "Vorhersage zeigt kalten Tag (< 20°C). Heizung für 1,5h aktiviert."
+      - delay: '01:30:00'
+      - action: switch.turn_off
+        target:
+          entity_id: '{{ heating_switches }}'
+      - action: notify.persistent_notification
+        data:
+          title: "✅ Heizung: Morning Boost beendet"
+          message: "1,5-Stunden Boost abgeschlossen. Räume sollten jetzt warm sein."
+
+    # === LAYER 2: AFTERNOON BOOST (15:00) ===
+    - conditions:
+      - condition: trigger
+        id: afternoon-boost
+      - condition: state
+        entity_id: input_boolean.alle_sind_weg
+        state: 'off'
+      - condition: template
+        value_template: '{{ now().month <= 4 or now().month >= 10 }}'
+      - condition: numeric_state
+        entity_id: sensor.temperatur_aussen
+        below: 12
+      sequence:
+      - action: switch.turn_on
+        target:
+          entity_id: '{{ heating_switches }}'
+      - action: notify.persistent_notification
+        data:
+          title: "🔥 Heizung: Afternoon Boost"
+          message: "Außentemperatur < 12°C. Heizung für 1,5h vor Kinderankunft aktiviert."
+      - delay: '01:30:00'
+      - action: switch.turn_off
+        target:
+          entity_id: '{{ heating_switches }}'
+      - action: notify.persistent_notification
+        data:
+          title: "✅ Heizung: Afternoon Boost beendet"
+          message: "1,5-Stunden Boost abgeschlossen. Räume bereit für Kinder (16-17 Uhr)."
+  mode: queued
+  max: 2
