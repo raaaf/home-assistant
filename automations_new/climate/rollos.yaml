@@ -4,22 +4,22 @@
 
 - id: '1692259868217'
   alias: Rollos » All in one (Optimiert)
-  description: 'Intelligente Rollosteuerung basierend auf: - Tageszeit und Aufwachzeiten
+  description: 'Intelligente Rollosteuerung basierend auf: - Sonnenelevation (Tageslicht)
     - Sonnenstand (Azimuth & Elevation) - Temperaturvorhersage - Anwesenheit'
   trigger:
   - id: morgens-arbeitstag
-    trigger: time
-    at:
-      entity_id: input_datetime.aufwachzeit_arbeitstag
-      offset: 00:12:00
+    platform: numeric_state
+    entity_id: sun.sun
+    attribute: elevation
+    above: 0
   - id: morgens-freiertag
-    trigger: time
-    at:
-      entity_id: input_datetime.aufwachzeit_freier_tag
-      offset: 00:12:00
-  - at: 09:00:00
-    id: vormittag
-    trigger: time
+    platform: numeric_state
+    entity_id: sun.sun
+    attribute: elevation
+    above: 0
+  - id: vormittag
+    platform: time
+    at: "09:00:00"
   - entity_id: sensor.sun_azimuth
     above: 135
     id: sonne-suedost
@@ -32,11 +32,11 @@
     above: 225
     id: sonne-suedwest
     trigger: numeric_state
-  - entity_id: sun.sun
+  - platform: numeric_state
+    entity_id: sun.sun
     attribute: elevation
-    below: 0
+    below: -4
     id: sonnenuntergang
-    trigger: numeric_state
   - entity_id: input_boolean.schlafenszeit
     to: 'on'
     id: schlafenszeit
@@ -66,9 +66,12 @@
           entity_id:
           - cover.kinderzimmer_rollo
           - cover.schlafzimmer_rollo
-      - action: cover.set_cover_position
-        data:
-          position: '{{ position_arbeit }}'
+      - action: cover.open_cover
+        target:
+          entity_id: cover.arbeitszimmer_rollo
+      - delay:
+          seconds: 4
+      - action: cover.stop_cover
         target:
           entity_id: cover.arbeitszimmer_rollo
       - action: notify.persistent_notification
@@ -86,16 +89,23 @@
       - condition: template
         value_template: '{{ not ist_arbeitstag }}'
       sequence:
-      - action: cover.set_cover_position
-        data:
-          position: '{{ position_schlaf_kinder }}'
+      - action: cover.open_cover
         target:
           entity_id: cover.rollos_sonnenaufgang
-      - action: cover.set_cover_position
-        data:
-          position: '{{ position_arbeit }}'
+      - action: cover.open_cover
         target:
           entity_id: cover.arbeitszimmer_rollo
+      - delay:
+          seconds: 4
+      - action: cover.stop_cover
+        target:
+          entity_id: cover.arbeitszimmer_rollo
+      - action: notify.persistent_notification
+        data:
+          title: 🪟 Rollos Morgen (Wochenende)
+          message: 'Freier Tag {{ now().strftime(''%H:%M'') }} Ost-Rollos: Vollständig geöffnet, Arbeitszimmer: 4 Sekunden geöffnet
+
+            '
     - conditions:
       - condition: trigger
         id: vormittag

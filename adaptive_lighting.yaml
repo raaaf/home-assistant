@@ -31,14 +31,14 @@
   min_brightness: 10
   max_brightness: 100
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
-  max_color_temp: 4000 # IKEA compatible cool maximum
+  max_color_temp: 4000 # IKEA maximum cool white
   prefer_rgb_color: false
   sleep_brightness: 10 # Consistent across all rooms
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 10 # Short transitions prevent IKEA lockups
   transition_until_sleep: true
   min_sunrise_time: "05:00:00"
-  max_sunrise_time: "07:00:00"
+  max_sunrise_time: "07:00:00" # Peak brightness/coolness at wake time
   min_sunset_time: "18:00:00"
   max_sunset_time: "20:00:00"
   take_over_control: true
@@ -66,14 +66,14 @@
   min_brightness: 10
   max_brightness: 100
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
-  max_color_temp: 4000 # IKEA compatible cool maximum
+  max_color_temp: 4000 # IKEA maximum cool white
   prefer_rgb_color: false
   sleep_brightness: 10 # Consistent across all rooms
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 45  # Optimized for IKEA compatibility
   transition_until_sleep: true
-  min_sunrise_time: "06:00:00" # Later start for kitchen activities
-  max_sunrise_time: "07:30:00"
+  min_sunrise_time: "05:00:00" # Aligned with wake time
+  max_sunrise_time: "07:00:00" # Peak brightness/coolness at wake time
   min_sunset_time: "18:00:00"
   max_sunset_time: "20:00:00"
   take_over_control: true
@@ -105,14 +105,14 @@
   min_brightness: 10
   max_brightness: 100
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
-  max_color_temp: 4000 # IKEA compatible cool maximum
+  max_color_temp: 4000 # IKEA maximum cool white
   prefer_rgb_color: false
   sleep_brightness: 10 # Consistent across all rooms
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 10 # Short transitions prevent IKEA lockups
   transition_until_sleep: true
   min_sunrise_time: "05:00:00"
-  max_sunrise_time: "07:00:00"
+  max_sunrise_time: "07:00:00" # Peak brightness/coolness at wake time
   min_sunset_time: "17:30:00" # Earlier evening transition
   max_sunset_time: "19:30:00"
   take_over_control: true
@@ -141,14 +141,14 @@
   min_brightness: 10
   max_brightness: 100
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
-  max_color_temp: 4000 # IKEA compatible cool maximum
+  max_color_temp: 4000 # IKEA maximum cool white
   prefer_rgb_color: false
   sleep_brightness: 10 # Consistent across all rooms
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 10 # Short transitions prevent IKEA lockups
   transition_until_sleep: true
   min_sunrise_time: "05:00:00"
-  max_sunrise_time: "07:00:00"
+  max_sunrise_time: "07:00:00" # Peak brightness/coolness at wake time
   min_sunset_time: "17:00:00" # Early bedtime routine
   max_sunset_time: "19:00:00"
   take_over_control: true
@@ -180,14 +180,14 @@
   min_brightness: 10
   max_brightness: 100
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
-  max_color_temp: 4000 # IKEA compatible cool maximum
+  max_color_temp: 4000 # IKEA maximum cool white
   prefer_rgb_color: false
   sleep_brightness: 10 # Consistent across all rooms
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 45  # Optimized for IKEA compatibility
   transition_until_sleep: true
-  min_sunrise_time: "06:00:00" # Align with morning routines
-  max_sunrise_time: "08:00:00"
+  min_sunrise_time: "05:00:00" # Aligned with wake time
+  max_sunrise_time: "07:00:00" # Peak brightness/coolness at wake time
   min_sunset_time: "18:00:00"
   max_sunset_time: "20:00:00"
   take_over_control: true
@@ -213,14 +213,14 @@
   min_brightness: 10
   max_brightness: 100
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
-  max_color_temp: 4000 # IKEA compatible cool maximum
+  max_color_temp: 4000 # IKEA maximum cool white
   prefer_rgb_color: false
   sleep_brightness: 10 # Consistent across all rooms
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 10 # Short transitions prevent IKEA lockups
   transition_until_sleep: true
   min_sunrise_time: "05:00:00"
-  max_sunrise_time: "07:00:00"
+  max_sunrise_time: "07:00:00" # Peak brightness/coolness at wake time
   min_sunset_time: "18:00:00"
   max_sunset_time: "20:00:00"
   take_over_control: true
@@ -251,14 +251,14 @@
   min_brightness: 10
   max_brightness: 100
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
-  max_color_temp: 4000 # IKEA compatible cool maximum
+  max_color_temp: 4000 # IKEA maximum cool white
   prefer_rgb_color: false
   sleep_brightness: 10 # Consistent across all rooms
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 10 # Short transitions prevent IKEA lockups
   transition_until_sleep: true
-  min_sunrise_time: "06:30:00" # Later start for work schedule
-  max_sunrise_time: "08:00:00"
+  min_sunrise_time: "05:00:00" # Aligned with wake time
+  max_sunrise_time: "07:00:00" # Peak brightness/coolness at wake time
   min_sunset_time: "19:00:00" # Extended evening hours
   max_sunset_time: "21:30:00"
   take_over_control: true
@@ -284,14 +284,14 @@
   min_brightness: 10
   max_brightness: 100
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
-  max_color_temp: 4000 # IKEA compatible cool maximum
+  max_color_temp: 4000 # IKEA maximum cool white
   prefer_rgb_color: false
   sleep_brightness: 10 # Consistent across all rooms
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 45  # Optimized for IKEA compatibility
   transition_until_sleep: true
-  min_sunrise_time: "06:00:00" # Early for morning routines
-  max_sunrise_time: "07:30:00"
+  min_sunrise_time: "05:00:00" # Aligned with wake time
+  max_sunrise_time: "07:00:00" # Peak brightness/coolness at wake time
   min_sunset_time: "18:00:00"
   max_sunset_time: "20:00:00"
   take_over_control: true
@@ -322,14 +322,14 @@
   min_brightness: 10
   max_brightness: 100
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
-  max_color_temp: 4000 # IKEA compatible cool maximum
+  max_color_temp: 4000 # IKEA maximum cool white
   prefer_rgb_color: false
   sleep_brightness: 10 # Consistent across all rooms
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 10 # Short transitions prevent IKEA lockups
   transition_until_sleep: true
   min_sunrise_time: "05:00:00"
-  max_sunrise_time: "07:00:00"
+  max_sunrise_time: "07:00:00" # Peak brightness/coolness at wake time
   min_sunset_time: "18:00:00"
   max_sunset_time: "20:00:00"
   take_over_control: true
@@ -360,14 +360,14 @@
   min_brightness: 10 # Lower minimum for outdoor ambiance
   max_brightness: 100
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
-  max_color_temp: 4000 # IKEA compatible cool maximum
+  max_color_temp: 4000 # IKEA maximum cool white
   prefer_rgb_color: false
   sleep_brightness: 10 # Consistent across all rooms
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 10 # Short transitions prevent IKEA lockups
   transition_until_sleep: false # No sleep transition for outdoor
-  min_sunrise_time: "05:30:00"
-  max_sunrise_time: "07:30:00"
+  min_sunrise_time: "05:00:00" # Aligned with wake time
+  max_sunrise_time: "07:00:00" # Peak brightness/coolness at wake time
   min_sunset_time: "19:30:00" # Later for outdoor evening use
   max_sunset_time: "21:30:00" # Extended summer evenings
   take_over_control: true

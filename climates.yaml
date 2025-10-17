@@ -1,135 +1,137 @@
 # ============================================================================
-# DUAL SMART THERMOSTAT CONFIGURATION
+# DUAL SMART THERMOSTAT CONFIGURATION - DISABLED
 # ============================================================================
-# Room-specific thermostats with correct dual_smart_thermostat parameters
+# REASON: Floor heating has 1-2 hour warmup time, making reactive thermostats
+# inefficient (constant on/off cycling). Using predictive time-based control instead.
+# Manual control via switches: switch.heizung_* remains available
 # ============================================================================
 
-# Schlafzimmer - Smart thermostat with window sensor (optimized for thermal mass)
-- platform: dual_smart_thermostat
-  name: "Schlafzimmer"
-  unique_id: thermostat_schlafzimmer
-  heater: switch.heizung_schlafzimmer
-  target_sensor: sensor.arbeitszimmer_temperatur
-  target_temp: 20
-  precision: 0.5
-  min_temp: 12
-  max_temp: 28
-  ac_mode: false
-  cold_tolerance: 0.5
-  hot_tolerance: 0.4
-  keep_alive:
-    minutes: 20
-  min_cycle_duration:
-    minutes: 15
-  initial_hvac_mode: "heat"
-  away:
-    temperature: 14
-  eco:
-    temperature: 18
-  home:
-    temperature: 20
-  openings:
-    - entity_id: binary_sensor.schlafzimmer_kontaktsensor_contact
-      timeout: 00:30:00
+# # Schlafzimmer - Smart thermostat with window sensor (optimized for thermal mass)
+# - platform: dual_smart_thermostat
+#   name: "Schlafzimmer"
+#   unique_id: thermostat_schlafzimmer
+#   heater: switch.heizung_schlafzimmer
+#   target_sensor: sensor.arbeitszimmer_temperatur
+#   target_temp: 20
+#   precision: 0.5
+#   min_temp: 12
+#   max_temp: 28
+#   ac_mode: false
+#   cold_tolerance: 0.5
+#   hot_tolerance: 0.4
+#   keep_alive:
+#     minutes: 20
+#   min_cycle_duration:
+#     minutes: 15
+#   initial_hvac_mode: "heat"
+#   away:
+#     temperature: 14
+#   eco:
+#     temperature: 18
+#   home:
+#     temperature: 20
+#   openings:
+#     - entity_id: binary_sensor.schlafzimmer_kontaktsensor_contact
+#       timeout: 00:30:00
 
-# Kinderzimmer - Smart thermostat with window sensor (optimized for thermal mass)
-- platform: dual_smart_thermostat
-  name: "Kinderzimmer"
-  unique_id: thermostat_kinderzimmer
-  heater: switch.heizung_kinderzimmer
-  target_sensor: sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature
-  target_temp: 21
-  precision: 0.5
-  min_temp: 12
-  max_temp: 28
-  ac_mode: false
-  cold_tolerance: 0.5
-  hot_tolerance: 0.4
-  keep_alive:
-    minutes: 20
-  min_cycle_duration:
-    minutes: 15
-  initial_hvac_mode: "heat"
-  away:
-    temperature: 14
-  eco:
-    temperature: 19
-  home:
-    temperature: 21
-  openings:
-    - entity_id: binary_sensor.kinderzimmer_kontaktsensor_contact
-      timeout: 00:30:00
+# # Kinderzimmer - Smart thermostat with window sensor (optimized for thermal mass)
+# - platform: dual_smart_thermostat
+#   name: "Kinderzimmer"
+#   unique_id: thermostat_kinderzimmer
+#   heater: switch.heizung_kinderzimmer
+#   target_sensor: sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature
+#   target_temp: 21
+#   precision: 0.5
+#   min_temp: 12
+#   max_temp: 28
+#   ac_mode: false
+#   cold_tolerance: 0.5
+#   hot_tolerance: 0.4
+#   keep_alive:
+#     minutes: 20
+#   min_cycle_duration:
+#     minutes: 15
+#   initial_hvac_mode: "heat"
+#   away:
+#     temperature: 14
+#   eco:
+#     temperature: 19
+#   home:
+#     temperature: 21
+#   openings:
+#     - entity_id: binary_sensor.kinderzimmer_kontaktsensor_contact
+#       timeout: 00:30:00
 
-# Wohnzimmer - Smart thermostat with window sensor (optimized for thermal mass)
-- platform: dual_smart_thermostat
-  name: "Wohnzimmer"
-  unique_id: thermostat_wohnzimmer
-  heater: switch.heizung_wohnzimmer
-  target_sensor: sensor.wohnzimmer_temperatur
-  target_temp: 21
-  precision: 0.5
-  min_temp: 12
-  max_temp: 28
-  ac_mode: false
-  cold_tolerance: 0.5
-  hot_tolerance: 0.4
-  keep_alive:
-    minutes: 20
-  min_cycle_duration:
-    minutes: 15
-  initial_hvac_mode: "heat"
-  away:
-    temperature: 14
-  eco:
-    temperature: 19
-  home:
-    temperature: 21
-  openings:
-    - entity_id: binary_sensor.wohnzimmer_kontaktsensor_contact
-      timeout: 00:30:00
+# # Wohnzimmer - Smart thermostat with window sensor (optimized for thermal mass)
+# - platform: dual_smart_thermostat
+#   name: "Wohnzimmer"
+#   unique_id: thermostat_wohnzimmer
+#   heater: switch.heizung_wohnzimmer
+#   target_sensor: sensor.wohnzimmer_temperatur
+#   target_temp: 21
+#   precision: 0.5
+#   min_temp: 12
+#   max_temp: 28
+#   ac_mode: false
+#   cold_tolerance: 0.5
+#   hot_tolerance: 0.4
+#   keep_alive:
+#     minutes: 20
+#   min_cycle_duration:
+#     minutes: 15
+#   initial_hvac_mode: "heat"
+#   away:
+#     temperature: 14
+#   eco:
+#     temperature: 19
+#   home:
+#     temperature: 21
+#   openings:
+#     - entity_id: binary_sensor.wohnzimmer_kontaktsensor_contact
+#       timeout: 00:30:00
 
-# Badezimmer - Smart thermostat without window sensor
-- platform: dual_smart_thermostat
-  name: "Badezimmer"
-  unique_id: thermostat_badezimmer
-  heater: switch.heizung_badezimmer
-  target_sensor: sensor.badezimmer_temperatur_und_luftfeuchtigkeit_temperature
-  target_temp: 24 # Higher for bathroom
-  precision: 0.5
-  min_temp: 12
-  max_temp: 28
-  ac_mode: false
-  cold_tolerance: 0.3
-  hot_tolerance: 0.3
-  keep_alive:
-    minutes: 3
-  initial_hvac_mode: "heat"
-  away:
-    temperature: 14
-  eco:
-    temperature: 21 # Higher for bathroom
-  home:
-    temperature: 24 # Higher for bathroom
+# # Badezimmer - Smart thermostat without window sensor
+# - platform: dual_smart_thermostat
+#   name: "Badezimmer"
+#   unique_id: thermostat_badezimmer
+#   heater: switch.heizung_badezimmer
+#   target_sensor: sensor.badezimmer_temperatur_und_luftfeuchtigkeit_temperature
+#   target_temp: 24 # Higher for bathroom
+#   precision: 0.5
+#   min_temp: 12
+#   max_temp: 28
+#   ac_mode: false
+#   cold_tolerance: 0.3
+#   hot_tolerance: 0.3
+#   keep_alive:
+#     minutes: 3
+#   initial_hvac_mode: "heat"
+#   away:
+#     temperature: 14
+#   eco:
+#     temperature: 21 # Higher for bathroom
+#   home:
+#     temperature: 24 # Higher for bathroom
 
-# Flur - Smart thermostat without window sensor
-- platform: dual_smart_thermostat
-  name: "Flur"
-  unique_id: thermostat_flur
-  heater: switch.heizung_flur
-  target_sensor: sensor.flur_motion_2_temperature
-  target_temp: 20 # Lower for hallway
-  precision: 0.5
-  min_temp: 12
-  max_temp: 28
-  ac_mode: false
-  cold_tolerance: 0.3
-  hot_tolerance: 0.3
-  keep_alive:
-    minutes: 3
-  initial_hvac_mode: "heat"
-  away:
-    temperature: 12 # Lower for hallway
-  eco:
-    temperature: 17 # Lower for hallway
-  home:
-    temperature: 20 # Lower for hallway
+# # Flur - Smart thermostat without window sensor
+# - platform: dual_smart_thermostat
+#   name: "Flur"
+#   unique_id: thermostat_flur
+#   heater: switch.heizung_flur
+#   target_sensor: sensor.flur_motion_2_temperature
+#   target_temp: 20 # Lower for hallway
+#   precision: 0.5
+#   min_temp: 12
+#   max_temp: 28
+#   ac_mode: false
+#   cold_tolerance: 0.3
+#   hot_tolerance: 0.3
+#   keep_alive:
+#     minutes: 3
+#   initial_hvac_mode: "heat"
+#   away:
+#     temperature: 12 # Lower for hallway
+#   eco:
+#     temperature: 17 # Lower for hallway
+#   home:
+#     temperature: 20 # Lower for hallway

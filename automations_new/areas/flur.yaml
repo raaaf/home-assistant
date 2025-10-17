@@ -73,7 +73,7 @@
           entity_id: vacuum.robbi_2
         data:
           fan_speed: Basic
-    - alias: Esstisch-Reinigung (Di, Do 8:30)
+    - alias: Esstisch + Küche Reinigung (Di, Do 8:30)
       conditions:
       - condition: trigger
         id: esstisch
@@ -82,16 +82,21 @@
         - tue
         - thu
       sequence:
-      - alias: Saugkraft für Esstisch
+      - alias: Saugkraft für Esstisch und Küche
         action: vacuum.set_fan_speed
         target:
           entity_id: vacuum.robbi_2
         data:
           fan_speed: Basic
-      - alias: Esstisch-Segment reinigen
-        action: button.press
+      - alias: Esstisch + Küche zusammen reinigen
+        action: vacuum.send_command
         target:
-          entity_id: button.roborock_a27_737e_segment_21
+          entity_id: vacuum.robbi_2
+        data:
+          command: app_zoned_clean
+          params:
+            - [26849, 22736, 31750, 25988, 1]
+            - [24477, 26689, 29879, 31023, 1]
     - alias: Vollreinigung wenn alle weg sind
       conditions:
       - condition: trigger
