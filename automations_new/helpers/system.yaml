@@ -29,20 +29,6 @@
       - media_player.smarttv_4k
     action: homeassistant.update_entity
   mode: single
-- id: '1719869864261'
-  alias: Helper Restart Home Assistant
-  description: Neustart von Home Assistant jeden Sonntag um 00:05 Uhr
-  triggers:
-  - at: 00:05:00
-    trigger: time
-  conditions:
-  - condition: time
-    weekday:
-    - sun
-  actions:
-  - action: homeassistant.restart
-    data: {}
-  mode: single
 - id: '1725023601709'
   alias: Helper » Restart Fritzbox
   description: Startet Fritzbox und Repeater jeden Tag um 5 Uhr neu

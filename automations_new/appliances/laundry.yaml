@@ -105,17 +105,11 @@
           notification_id: "waschmaschine_fertig"
     
     default:
-    # Fallback bei unbekanntem Trigger
-    - action: notify.rafael_mail
+    # Fallback: nur Log-Eintrag statt Benachrichtigung
+    - action: logbook.log
       data:
-        title: "Waschmaschine Fehler"
-        message: |
-          Waschmaschine Automation Fehler
-
-          Zeit: {{ now().strftime('%H:%M Uhr') }}
-
-          Unbekannter Status-Trigger wurde ausgelöst.
-          Bitte überprüfe die Automation.
+        name: "Waschmaschine"
+        message: "Unerwarteter Trigger: {{ trigger.id | default('unknown') }} ({{ now().strftime('%H:%M Uhr') }})"
 - id: '1661934852025'
   alias: "Benachrichtigung » Trockner Status"
   description: "Überwacht Trockner-Status via Stromverbrauch mit HomePod-Ansagen und Benachrichtigungen"
@@ -130,7 +124,7 @@
     entity_id: sensor.trockner_current_consumption
     below: 60
     for:
-      minutes: 5
+      minutes: 2
     id: fertig
   - trigger: numeric_state
     entity_id: sensor.trockner_current_consumption

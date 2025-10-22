@@ -22,7 +22,7 @@
       - use_night_brightness
       - use_brightness
       night_lights_after_time: '19:00:00'
-      night_lights_before_time: 06:00:00
+      night_lights_before_time: 05:30:00
       time_delay: 0
       night_time_delay: 0
       night_lights_conditions:

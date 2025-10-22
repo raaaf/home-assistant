@@ -9,6 +9,11 @@
   - trigger: time
     at: sensor.wakeup_light_timestamp
     id: wakeup
+  - trigger: state
+    entity_id: input_boolean.test_morning_routine
+    from: 'off'
+    to: 'on'
+    id: wakeup
   - trigger: numeric_state
     entity_id: sun.sun
     attribute: elevation
