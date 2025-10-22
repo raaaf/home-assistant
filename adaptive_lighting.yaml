@@ -50,8 +50,8 @@
   send_split_delay: 0.5  # Delay between commands for IKEA lights
   adapt_delay: 0  # Immediate adaptation for correct color on turn-on
   skip_redundant_commands: true
-  intercept: true
-  multi_light_intercept: true
+  intercept: false
+  multi_light_intercept: false
   include_config_in_attributes: true
   brightness_mode: "tanh"
 
@@ -85,8 +85,8 @@
   send_split_delay: 0.5  # Delay between commands for IKEA lights
   adapt_delay: 0  # Immediate adaptation for correct color on turn-on
   skip_redundant_commands: true
-  intercept: true
-  multi_light_intercept: true
+  intercept: false
+  multi_light_intercept: false
   include_config_in_attributes: true
   brightness_mode: "tanh"
 
@@ -124,8 +124,8 @@
   send_split_delay: 0.5  # Delay between commands for IKEA lights
   adapt_delay: 0  # Immediate adaptation for correct color on turn-on
   skip_redundant_commands: true
-  intercept: true
-  multi_light_intercept: true
+  intercept: false
+  multi_light_intercept: false
   include_config_in_attributes: true
   brightness_mode: "tanh"
 
@@ -160,8 +160,8 @@
   send_split_delay: 0.5  # Delay between commands for IKEA lights
   adapt_delay: 0  # Immediate adaptation for correct color on turn-on
   skip_redundant_commands: true
-  intercept: true
-  multi_light_intercept: true
+  intercept: false
+  multi_light_intercept: false
   include_config_in_attributes: true
   brightness_mode: "tanh"
 
@@ -199,8 +199,8 @@
   send_split_delay: 0.5  # Delay between commands for IKEA lights
   adapt_delay: 0  # Immediate adaptation for correct color on turn-on
   skip_redundant_commands: true
-  intercept: true
-  multi_light_intercept: true
+  intercept: false
+  multi_light_intercept: false
   include_config_in_attributes: true
   brightness_mode: "tanh"
 
@@ -232,8 +232,8 @@
   send_split_delay: 0.5  # Delay between commands for IKEA lights
   adapt_delay: 0  # Immediate adaptation for correct color on turn-on
   skip_redundant_commands: true
-  intercept: true
-  multi_light_intercept: true
+  intercept: false
+  multi_light_intercept: false
   include_config_in_attributes: true
   brightness_mode: "tanh"
 
@@ -270,8 +270,8 @@
   send_split_delay: 0.5  # Delay between commands for IKEA lights
   adapt_delay: 0  # Immediate adaptation for correct color on turn-on
   skip_redundant_commands: true
-  intercept: true
-  multi_light_intercept: true
+  intercept: false
+  multi_light_intercept: false
   include_config_in_attributes: true
   brightness_mode: "tanh"
 
@@ -303,8 +303,8 @@
   send_split_delay: 0.5  # Delay between commands for IKEA lights
   adapt_delay: 0  # Immediate adaptation for correct color on turn-on
   skip_redundant_commands: true
-  intercept: true
-  multi_light_intercept: true
+  intercept: false
+  multi_light_intercept: false
   include_config_in_attributes: true
   brightness_mode: "tanh"
 
@@ -341,8 +341,8 @@
   send_split_delay: 0.5  # Delay between commands for IKEA lights
   adapt_delay: 0  # Immediate adaptation for correct color on turn-on
   skip_redundant_commands: true
-  intercept: true
-  multi_light_intercept: true
+  intercept: false
+  multi_light_intercept: false
   include_config_in_attributes: true
   brightness_mode: "tanh"
 
@@ -379,7 +379,7 @@
   send_split_delay: 0.5  # Delay between commands for IKEA lights
   adapt_delay: 0  # Immediate adaptation for correct color on turn-on
   skip_redundant_commands: true
-  intercept: true
-  multi_light_intercept: true
+  intercept: false
+  multi_light_intercept: false
   include_config_in_attributes: true
   brightness_mode: "tanh" # Smooth transitions for outdoor

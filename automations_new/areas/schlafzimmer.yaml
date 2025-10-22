@@ -180,7 +180,7 @@
     path: Blackshome/sensor-light.yaml
     input:
       motion_trigger:
-      - binary_sensor.arbeitszimmer_motion_occupancy
+      - binary_sensor.schlafzimmer_motion_occupancy
       light_switch:
         entity_id: light.alle_schlafzimmer_lichter
       include_night_lights: night_lights_enabled
@@ -198,7 +198,7 @@
       include_night_light_control:
       - if_lights_are_on_adjust_when_crossing_over
       night_lights_after_time: '19:00:00'
-      night_lights_before_time: 07:00:00
+      night_lights_before_time: 05:30:00
       include_ambient: ambient_enabled
       ambient_light_sensor: sensor.balkon_motion_illuminance_safe
       ambient_light_value: 150

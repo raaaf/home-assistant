@@ -67,62 +67,101 @@
           entity_id: input_boolean.alle_sind_weg
           state: 'off'
         then:
-        - alias: Adaptive Beleuchtung Helligkeit temporär deaktivieren
+        - alias: Adaptive Beleuchtung komplett deaktivieren (verhindert Auto-Reset)
           action: switch.turn_off
           target:
             entity_id:
-            - switch.adaptive_lighting_adapt_brightness_arbeitszimmer
-            - switch.adaptive_lighting_adapt_brightness_kinderzimmer
-            - switch.adaptive_lighting_adapt_brightness_schlafzimmer
-            - switch.adaptive_lighting_adapt_brightness_wohnzimmer
-        - alias: Motion-Automationen temporär deaktivieren (BEFORE parabolic sunrise)
+            - switch.adaptive_lighting_arbeitszimmer
+            - switch.adaptive_lighting_kinderzimmer
+            - switch.adaptive_lighting_schlafzimmer
+            - switch.adaptive_lighting_wohnzimmer
+        - alias: Motion-Automationen STOPPEN (während Wake-Up-Routine)
           action: automation.turn_off
           target:
             entity_id:
+            - automation.motion_schlafzimmer
+            - automation.kinderzimmer_motion
             - automation.arbeitszimmer_motion
-            - automation.1692710690350
-            - automation.1678724233791
-          data: {}
-        # Parabolic Sunrise Alarm - Trigger all room automations
-        - alias: "Trigger parabolic sunrise automations for all rooms"
-          parallel:
-          - action: automation.trigger
-            target:
-              entity_id: automation.parabolic_sunrise_arbeitszimmer
-            data:
-              skip_condition: true
-          - action: automation.trigger
-            target:
-              entity_id: automation.parabolic_sunrise_schlafzimmer
-            data:
-              skip_condition: true
-          - action: automation.trigger
-            target:
-              entity_id: automation.parabolic_sunrise_kinderzimmer
-            data:
-              skip_condition: true
-          - action: automation.trigger
-            target:
-              entity_id: automation.parabolic_sunrise_wohnzimmer
-            data:
-              skip_condition: true
-        # Wait for all 3 phases to complete (total: 25 minutes)
-        - delay: 00:25:00
-        - alias: Motion-Automationen wieder aktivieren (AFTER parabolic sunrise)
+          data:
+            stop_actions: true
+        # 30-Minute Gradual Wake-Up Light Routine (Research-Backed)
+        # Exponential brightness curve: 1% → 10% → 40% → 100%
+        # Color temp curve: 2200K (warm) → 2700K → 3400K → 4000K (cool)
+        - alias: "Phase 1: Initial light at 1% (sehr warm, 2200K)"
+          action: light.turn_on
+          target:
+            entity_id:
+            - light.alle_schlafzimmer_lichter
+            - light.alle_kinderzimmer_lichter
+            - light.alle_wohnzimmer_lichter
+            - light.alle_arbeitszimmer_lichter
+          data:
+            brightness_pct: 1
+            color_temp_kelvin: 2200
+        - alias: "Warte 10 Minuten (Augen passen sich an)"
+          delay: 00:10:00
+        - alias: "Phase 2: Erhöhe auf 10% Helligkeit (warm, 2700K)"
+          action: light.turn_on
+          target:
+            entity_id:
+            - light.alle_schlafzimmer_lichter
+            - light.alle_kinderzimmer_lichter
+            - light.alle_wohnzimmer_lichter
+            - light.alle_arbeitszimmer_lichter
+          data:
+            brightness_pct: 10
+            color_temp_kelvin: 2700
+        - alias: "Warte 10 Minuten (langsame Anpassung)"
+          delay: 00:10:00
+        - alias: "Phase 3: Erhöhe auf 40% Helligkeit (neutral, 3400K)"
+          action: light.turn_on
+          target:
+            entity_id:
+            - light.alle_schlafzimmer_lichter
+            - light.alle_kinderzimmer_lichter
+            - light.alle_wohnzimmer_lichter
+            - light.alle_arbeitszimmer_lichter
+          data:
+            brightness_pct: 40
+            color_temp_kelvin: 3400
+        - alias: "Warte 10 Minuten (fortgesetzte Anpassung)"
+          delay: 00:10:00
+        - alias: "Phase 4: Volle Helligkeit (100%, kühl, 4000K)"
+          action: light.turn_on
+          target:
+            entity_id:
+            - light.alle_schlafzimmer_lichter
+            - light.alle_kinderzimmer_lichter
+            - light.alle_wohnzimmer_lichter
+            - light.alle_arbeitszimmer_lichter
+          data:
+            brightness_pct: 100
+            color_temp_kelvin: 4000
+        - alias: "Warte bis 8:00 Uhr (Motion-Sensoren bleiben deaktiviert)"
+          delay:
+            seconds: >-
+              {% set target_time = today_at('08:00:00') %}
+              {% set now_time = now() %}
+              {% if now_time < target_time %}
+                {{ (target_time - now_time).total_seconds() | int }}
+              {% else %}
+                0
+              {% endif %}
+        - alias: Motion-Automationen wieder aktivieren (nach Wake-Up-Routine)
           action: automation.turn_on
           target:
             entity_id:
+            - automation.motion_schlafzimmer
+            - automation.kinderzimmer_motion
             - automation.arbeitszimmer_motion
-            - automation.1692710690350
-            - automation.1678724233791
-        - alias: Adaptive Beleuchtung Helligkeit wieder aktivieren
+        - alias: Adaptive Beleuchtung wieder aktivieren
           action: switch.turn_on
           target:
             entity_id:
-            - switch.adaptive_lighting_adapt_brightness_arbeitszimmer
-            - switch.adaptive_lighting_adapt_brightness_kinderzimmer
-            - switch.adaptive_lighting_adapt_brightness_schlafzimmer
-            - switch.adaptive_lighting_adapt_brightness_wohnzimmer
+            - switch.adaptive_lighting_arbeitszimmer
+            - switch.adaptive_lighting_kinderzimmer
+            - switch.adaptive_lighting_schlafzimmer
+            - switch.adaptive_lighting_wohnzimmer
     - alias: Sonnenaufgang - Schlafenszeit beenden
       conditions:
       - condition: trigger
