@@ -38,10 +38,7 @@
     id: reset
   - trigger: time
     at: 08:30:00
-    id: esstisch
-  - trigger: time
-    at: 08:30:00
-    id: regular
+    id: daily_workday
   - trigger: state
     entity_id: input_boolean.alle_sind_weg
     to: 'on'
@@ -67,36 +64,29 @@
         action: input_boolean.turn_off
         target:
           entity_id: input_boolean.robbi_kitchen_done
-      - alias: Saugkraft auf Basic setzen
-        action: vacuum.set_fan_speed
-        target:
-          entity_id: vacuum.robbi_2
-        data:
-          fan_speed: Basic
-    - alias: Esstisch + Küche Reinigung (Di, Do 8:30)
+    - alias: Tägliche Vollreinigung an Werktagen (Mo-Fr 8:30)
       conditions:
       - condition: trigger
-        id: esstisch
-      - condition: time
-        weekday:
-        - tue
-        - thu
+        id: daily_workday
+      - condition: state
+        entity_id: binary_sensor.workday_sensor
+        state: 'on'
+      - alias: Robbi lief heute noch nicht
+        condition: state
+        entity_id: input_boolean.robbi_lief_heute_bereits
+        state: 'off'
+      - alias: Robbi ist verfügbar
+        condition: template
+        value_template: '{{ has_value(''vacuum.robbi_2'') and states(''vacuum.robbi_2'') not in [''cleaning'', ''returning''] }}'
       sequence:
-      - alias: Saugkraft für Esstisch und Küche
-        action: vacuum.set_fan_speed
+      - alias: Vollreinigung starten (Mop-Plan gesteuert durch Roborock App)
+        action: vacuum.start
         target:
           entity_id: vacuum.robbi_2
-        data:
-          fan_speed: Basic
-      - alias: Esstisch + Küche zusammen reinigen
-        action: vacuum.send_command
+      - alias: Merken dass Robbi heute schon lief
+        action: input_boolean.turn_on
         target:
-          entity_id: vacuum.robbi_2
-        data:
-          command: app_zoned_clean
-          params:
-            - [26849, 22736, 31750, 25988, 1]
-            - [24477, 26689, 29879, 31023, 1]
+          entity_id: input_boolean.robbi_lief_heute_bereits
     - alias: Vollreinigung wenn alle weg sind
       conditions:
       - condition: trigger
@@ -111,46 +101,7 @@
 
           '
       sequence:
-      - alias: Vollgas für komplette Reinigung
-        action: vacuum.set_fan_speed
-        target:
-          entity_id: vacuum.robbi_2
-        data:
-          fan_speed: Full Speed
       - alias: Vollreinigung starten
-        action: vacuum.start
-        target:
-          entity_id: vacuum.robbi_2
-      - alias: Merken dass Robbi heute schon lief
-        action: input_boolean.turn_on
-        target:
-          entity_id: input_boolean.robbi_lief_heute_bereits
-    - alias: Reguläre Reinigung (Mo, Mi, Fr 8:30)
-      conditions:
-      - condition: trigger
-        id: regular
-      - condition: time
-        weekday:
-        - mon
-        - wed
-        - fri
-      - alias: Robbi lief heute noch nicht
-        condition: state
-        entity_id: input_boolean.robbi_lief_heute_bereits
-        state: 'off'
-      - alias: Robbi ist verfügbar
-        condition: template
-        value_template: '{{ has_value(''vacuum.robbi_2'') and states(''vacuum.robbi_2'') not in [''cleaning'', ''returning''] }}
-
-          '
-      sequence:
-      - alias: Normale Saugkraft für reguläre Reinigung
-        action: vacuum.set_fan_speed
-        target:
-          entity_id: vacuum.robbi_2
-        data:
-          fan_speed: Basic
-      - alias: Reguläre Reinigung starten
         action: vacuum.start
         target:
           entity_id: vacuum.robbi_2
