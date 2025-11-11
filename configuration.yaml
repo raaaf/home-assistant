@@ -97,6 +97,30 @@ recorder:
       # Exclude specific problematic utility meter sensors
       - sensor.homepod_*_energy_*
       - sensor.kamera_*_energy_*
+  include:
+    entities:
+      # Dashboard power sensors - explicitly included for history tracking
+      # Solar panels
+      - sensor.inverter_port_1_dc_power  # Panel 1
+      - sensor.inverter_port_2_dc_power  # Panel 2
+      # Grid phases
+      - sensor.strommesser_phase_a_active_power  # Phase 1
+      - sensor.strommesser_phase_b_active_power  # Phase 2
+      - sensor.strommesser_phase_c_active_power  # Phase 3
+      # Individual device power sensors
+      - sensor.steckdose_bkk_power  # BKK
+      - sensor.alex_steckdose_device_power  # Alex
+      - sensor.arbeitszimmer_steckdose_power  # Rafael (office)
+      - sensor.trockner_current_consumption  # Trockner (dryer)
+      - sensor.wohnzimmer_steckdose_power  # Wohnzimmer (living room)
+      - sensor.steckdose_kuechengeraete_power  # Küchengeräte (kitchen appliances)
+      - sensor.steckdose_waschmaschine_power  # Waschmaschine (washing machine)
+      - sensor.steckdose_kinderzimmer_power  # Kinderzimmer (kids room)
+      # Aggregate power sensors
+      - sensor.alle_always_on_power  # Alle Always-On
+      - sensor.alle_lichter_power  # Alle Lichter
+      - sensor.alle_speaker_power  # Alle Speaker
+      - sensor.alle_variablen_power  # Alle Variablen
 
 # History configuration - filtering handled by recorder configuration
 
