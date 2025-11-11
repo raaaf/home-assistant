@@ -49,6 +49,7 @@
   trigger:
   - entity_id:
     - input_boolean.arbeit
+    - input_boolean.gaming
     to: 'on'
     id: aktivität-an
     for:
@@ -63,6 +64,7 @@
     trigger: state
   - entity_id:
     - input_boolean.arbeit
+    - input_boolean.gaming
     - input_boolean.schlafenszeit
     to: 'off'
     id: modus-aus
@@ -92,8 +94,9 @@
   action:
   - variables:
       arbeit_aktiv: '{{ is_state(''input_boolean.arbeit'', ''on'') }}'
+      gaming_aktiv: '{{ is_state(''input_boolean.gaming'', ''on'') }}'
       schlafenszeit_aktiv: '{{ is_state(''input_boolean.schlafenszeit'', ''on'') }}'
-      irgendein_modus_aktiv: '{{ arbeit_aktiv or schlafenszeit_aktiv
+      irgendein_modus_aktiv: '{{ arbeit_aktiv or gaming_aktiv or schlafenszeit_aktiv
         }}'
       raum_temp: "{% set qingping = states('sensor.qingping_air_monitor_lite_temperature')\
         \ %} {% if has_value('sensor.qingping_air_monitor_lite_temperature') %}\n  {{ qingping\
@@ -131,7 +134,7 @@
           - delay: 00:00:02
           - if:
             - condition: template
-              value_template: '{{ arbeit_aktiv }}'
+              value_template: '{{ arbeit_aktiv or gaming_aktiv }}'
             then:
             - action: climate.set_preset_mode
               data:
@@ -203,7 +206,7 @@
       - delay: 00:00:02
       - if:
         - condition: template
-          value_template: '{{ arbeit_aktiv }}'
+          value_template: '{{ arbeit_aktiv or gaming_aktiv }}'
         then:
         - action: climate.set_preset_mode
           data:
@@ -269,7 +272,7 @@
               - delay: 00:00:02
               - if:
                 - condition: template
-                  value_template: '{{ arbeit_aktiv }}'
+                  value_template: '{{ arbeit_aktiv or gaming_aktiv }}'
                 then:
                 - action: climate.set_preset_mode
                   data:
@@ -318,35 +321,18 @@
   - condition: template
     value_template: "{% if states('sensor.fuerth_daily') not in ['unknown', 'unavailable'] and state_attr('sensor.fuerth_daily', 'forecast') is not none %}\n  {% set forecast = state_attr('sensor.fuerth_daily', 'forecast') %}\n  {% if forecast and forecast | length > 0 %}\n    {{ forecast[0].templow < 0 }}\n  {% else %}\n    false\n  {% endif %}\n{% else %}\n  false\n{% endif %}\n"
   action:
-  - parallel:
-      # Mobile Benachrichtigung
-      - action: notify.alex
-        data:
-          title: Frostwarnung für die Blumen
-          message: 'WARNUNG: Es wird kalt: In der Nacht sind Frostwerte unter 0°C vorhergesagt!
-            Bitte Blumen abdecken.
-
-            '
-          data:
-            push:
-              sound:
-                name: default
-                critical: 1
-                volume: 1
-      
-      # Email notification
-      - action: notify.alex_mail
-        data:
-          title: "❄️ Frostwarnung für die Blumen"
-          message: >
-            <html>
-            <body>
-            <h2>❄️ Frostwarnung für die Blumen</h2>
-            <p><strong>Warnung:</strong> In der Nacht sind Frostwerte unter 0°C vorhergesagt!</p>
-            <p>Bitte decke die Blumen ab, um sie vor dem Frost zu schützen.</p>
-            <p><em>Diese Nachricht wurde automatisch generiert basierend auf der Wettervorhersage.</em></p>
-            </body>
-            </html>
+  - action: notify.alex_mail
+    data:
+      title: "❄️ Frostwarnung für die Blumen"
+      message: >
+        <html>
+        <body>
+        <h2>❄️ Frostwarnung für die Blumen</h2>
+        <p><strong>Warnung:</strong> In der Nacht sind Frostwerte unter 0°C vorhergesagt!</p>
+        <p>Bitte decke die Blumen ab, um sie vor dem Frost zu schützen.</p>
+        <p><em>Diese Nachricht wurde automatisch generiert basierend auf der Wettervorhersage.</em></p>
+        </body>
+        </html>
   mode: single
 - id: '1749643406352'
   alias: Ventilator » Individuelle Raumsteuerung (Optimiert)
@@ -427,13 +413,11 @@
           percentage: "{% if has_value('sensor.arbeitszimmer_temperatur') %}\n  {% set temp = states('sensor.arbeitszimmer_temperatur')|float(22) %}\n  {% if ac_laeuft %}\n    {# Mit AC: Niedrigere Stufen für Luftzirkulation #}\n    {% if temp > 28 %} 75\n    {% elif temp > 26 %} 50\n    {% elif temp > 24 %} 25\n    {% else %} 25\n    {% endif %}\n  {% else %}\n    {# Ohne AC: Normale Stufen #}\n    {% if temp > 28 %} 100\n    {% elif temp > 26 %} 75\n    {% elif temp > 24 %} 50\n    {% else %} 25\n    {% endif %}\n  {% endif %}\n{% else %}\n  25\n{% endif %}\n"
         target:
           entity_id: '{{ arbeit_fan }}'
-      - action: notify.persistent_notification
+      - action: logbook.log
         data:
-          title: Ventilator Arbeitszimmer
-          message: 'Eingeschaltet - Temperatur: {{ states(''sensor.arbeitszimmer_temperatur'') if has_value(''sensor.arbeitszimmer_temperatur'') else ''N/A''
-            }}°C {{ ''Mit AC-Unterstützung'' if ac_laeuft else ''Standalone'' }}
-
-            '
+          name: Ventilator Arbeitszimmer
+          message: 'Temp: {{ states(''sensor.arbeitszimmer_temperatur'') if has_value(''sensor.arbeitszimmer_temperatur'') else ''N/A'' }}°C {{ ''Mit AC'' if ac_laeuft else ''Standalone'' }}'
+          domain: climate
     - conditions:
       - condition: trigger
         id: arbeit-kalt
@@ -587,18 +571,20 @@
       - action: switch.turn_on
         target:
           entity_id: '{{ heating_switches }}'
-      - action: notify.persistent_notification
+      - action: logbook.log
         data:
-          title: "🔥 Heizung: Morning Boost"
-          message: "Vorhersage zeigt kalten Tag (< 20°C). Heizung für 1,5h aktiviert."
+          name: Heizung Morning Boost
+          message: "Vorhersage < 20°C, Boost für 1,5h aktiviert"
+          domain: climate
       - delay: '01:30:00'
       - action: switch.turn_off
         target:
           entity_id: '{{ heating_switches }}'
-      - action: notify.persistent_notification
+      - action: logbook.log
         data:
-          title: "✅ Heizung: Morning Boost beendet"
-          message: "1,5-Stunden Boost abgeschlossen. Räume sollten jetzt warm sein."
+          name: Heizung Morning Boost beendet
+          message: "1,5h Boost abgeschlossen"
+          domain: climate
 
     # === LAYER 2: AFTERNOON BOOST (15:00) ===
     - conditions:
@@ -611,22 +597,24 @@
         value_template: '{{ now().month <= 4 or now().month >= 10 }}'
       - condition: numeric_state
         entity_id: sensor.temperatur_aussen
-        below: 12
+        below: 8
       sequence:
       - action: switch.turn_on
         target:
           entity_id: '{{ heating_switches }}'
-      - action: notify.persistent_notification
+      - action: logbook.log
         data:
-          title: "🔥 Heizung: Afternoon Boost"
-          message: "Außentemperatur < 12°C. Heizung für 1,5h vor Kinderankunft aktiviert."
+          name: Heizung Afternoon Boost
+          message: "Außentemp < 8°C, Boost 1,5h vor Kinderankunft"
+          domain: climate
       - delay: '01:30:00'
       - action: switch.turn_off
         target:
           entity_id: '{{ heating_switches }}'
-      - action: notify.persistent_notification
+      - action: logbook.log
         data:
-          title: "✅ Heizung: Afternoon Boost beendet"
-          message: "1,5-Stunden Boost abgeschlossen. Räume bereit für Kinder (16-17 Uhr)."
+          name: Heizung Afternoon Boost beendet
+          message: "1,5h Boost abgeschlossen, Räume bereit"
+          domain: climate
   mode: queued
   max: 2

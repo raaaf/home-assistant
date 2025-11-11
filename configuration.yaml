@@ -347,6 +347,10 @@ input_boolean:
     name: "Test Morning Routine"
     icon: mdi:weather-sunset-up
     initial: false
+  gaming:
+    name: "Gaming Mode"
+    icon: mdi:gamepad-variant
+    initial: false
 
 input_datetime:
   haustur_eingang_zeit:
@@ -364,6 +368,16 @@ input_text:
     name: "Besuchsdauer"
     initial: ""
     max: 100
+
+# ============================================================================
+# DEVICE TRACKING
+# ============================================================================
+
+device_tracker:
+  - platform: ping
+    hosts:
+      gamingpc: 192.168.178.138
+    consider_home: 180  # Consider home for 3 minutes after last seen
 
 # ============================================================================
 # EXTERNAL FILE INCLUDES

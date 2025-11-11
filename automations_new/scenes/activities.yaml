@@ -70,10 +70,11 @@
       - target:
           entity_id: lock.smart_lock_pro
         action: lock.lock
-      - data:
-          title: Tür automatisch verschlossen
-          message: Die Tür wurde nach Ablauf des Timers automatisch verschlossen.
-        action: notify.family
+      - action: logbook.log
+        data:
+          name: Tür automatisch verschlossen
+          message: Nach Ablauf des Timers automatisch verschlossen
+          domain: automation
   mode: single
 - id: '1737546608146'
   alias: Scenen » Party
@@ -267,7 +268,10 @@
     entity_id: input_boolean.arbeit
     to: 'off'
     id: arbeit-off
-  conditions: []
+  conditions:
+  - condition: state
+    entity_id: input_boolean.gaming
+    state: 'off'
   actions:
   - choose:
     - alias: Arbeitsmodus aktivieren
@@ -299,7 +303,7 @@
               - light.alle_arbeitszimmer_lichter
             data:
               brightness_pct: 80
-              kelvin: 5000
+              color_temp_kelvin: 5000
               transition: 2
         - alias: Dunkel und nach 21 Uhr - gedämpfte Arbeitsbeleuchtung
           conditions:
@@ -317,18 +321,21 @@
               entity_id: light.alle_arbeitszimmer_nachtlichter
             data:
               brightness_pct: 60
-              kelvin: 4000
+              color_temp_kelvin: 4000
               transition: 2
     - alias: Arbeitsmodus deaktivieren
       conditions:
       - condition: trigger
         id: arbeit-off
       sequence:
-      - alias: "Re-enable bedroom motion only if party mode is off"
+      - alias: "Re-enable bedroom motion only if party and gaming modes are off"
         choose:
         - conditions:
           - condition: state
             entity_id: input_boolean.party
+            state: 'off'
+          - condition: state
+            entity_id: input_boolean.gaming
             state: 'off'
           sequence:
           - alias: Bewegungsmelder Schlafzimmer aktivieren
