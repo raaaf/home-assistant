@@ -96,16 +96,11 @@
         value_template: " {% set last = state_attr('automation.watchman_monitor_combined',\
           \ 'last_triggered') %}\n    {{ last is none or (now() - last).total_seconds()\
           \ > 3600 }}"
-      - action: notify.mobile_app_iphone_rafael
+      - action: logbook.log
         data:
-          title: Sensor Probleme erkannt
-          message: '{{ states(''sensor.watchman_missing_entities'') | int(0) }} Entitäten sind
-            nicht verfügbar. Prüfe den Watchman Bericht für Details.
-
-            '
-          data:
-            tag: watchman_alert
-            group: sensor_health
+          name: Watchman Sensor Probleme
+          message: '{{ states(''sensor.watchman_missing_entities'') | int(0) }} Entitäten sind nicht verfügbar'
+          domain: automation
   mode: single
 - id: '1754557053144'
   alias: Helper » Unbekannte Geräte reparieren
@@ -197,25 +192,17 @@
       data:
         message: Außensensor offline - prüfe Batterie!
         level: warning
-    - parallel:
-        # Mobile Benachrichtigung
-        - action: notify.mobile_app_iphone_rafael
-          data:
-            title: Außensensor offline
-            message: Der Außensensor liefert keine Daten. Batterie prüfen!
-        
-        # Email notification
-        - action: notify.rafael_mail
-          data:
-            title: "Außensensor offline"
-            message: |
-              Außensensor offline
+    - action: notify.rafael_mail
+      data:
+        title: "Außensensor offline"
+        message: |
+          Außensensor offline
 
-              Problem: Der Außensensor liefert keine Daten.
+          Problem: Der Außensensor liefert keine Daten.
 
-              Bitte überprüfe die Batterie des Sensors und stelle sicher, dass er ordnungsgemäß funktioniert.
+          Bitte überprüfe die Batterie des Sensors und stelle sicher, dass er ordnungsgemäß funktioniert.
 
-              Diese Nachricht wurde automatisch generiert.
+          Diese Nachricht wurde automatisch generiert.
   mode: single
 - id: '1725893400001'
   alias: Security » Haustür Überwachung
@@ -308,17 +295,6 @@
                 entity_id: input_text.haustur_besucher_dauer
               data:
                 value: "{{ formatierte_dauer }}"
-            - action: notify.family
-              data:
-                title: "Besucher hat das Haus verlassen"
-                message: >
-                  Jemand war {{ formatierte_dauer }} im Haus
-                  ({{ eingang_zeit.split(' ')[1][:5] }} - {{ aktueller_zeitstempel.strftime('%H:%M') }} Uhr)
-                data:
-                  tag: door_security
-                  group: security_alerts
-                  push:
-                    interruption-level: active
             - action: system_log.write
               data:
                 message: >
@@ -341,3 +317,61 @@
                 message: "INFO: Haustür geöffnet - jemand ist zuhause"
                 level: info
   mode: restart
+- id: '1754557053145'
+  alias: Notification » Bewegungsmelder ausgefallen
+  description: Benachrichtigt wenn kritische Bewegungsmelder länger als 30 Minuten nicht verfügbar sind
+  triggers:
+  - entity_id:
+    - binary_sensor.schlafzimmer_motion_occupancy
+    - binary_sensor.balkon_motion_occupancy
+    - binary_sensor.kuche_motion_occupancy
+    - binary_sensor.haustur_motion_occupancy
+    - binary_sensor.waschzimmer_motion_occupancy
+    - binary_sensor.kinderzimmer_motion_occupancy
+    - binary_sensor.arbeitszimmer_motion_occupancy
+    to:
+    - unavailable
+    - unknown
+    for:
+      minutes: 30
+    trigger: state
+  conditions: []
+  actions:
+  - variables:
+      sensor_name: '{{ trigger.to_state.name }}'
+      sensor_id: '{{ trigger.entity_id }}'
+      duration: '{{ relative_time(trigger.from_state.last_changed) }}'
+  - parallel:
+    - action: notify.family
+      data:
+        title: "WARNUNG - Bewegungsmelder ausgefallen"
+        message: "{{ sensor_name }} ist seit {{ duration }} nicht verfügbar ({{ sensor_id }})"
+        data:
+          tag: motion_sensor_failure
+          group: system_alerts
+          push:
+            interruption-level: critical
+    - action: notify.rafael_mail
+      data:
+        title: "Bewegungsmelder ausgefallen"
+        message: |
+          Bewegungsmelder ausgefallen
+
+          Sensor: {{ sensor_name }}
+          Entity ID: {{ sensor_id }}
+          Status: {{ trigger.to_state.state }}
+          Ausgefallen seit: {{ duration }}
+
+          Bitte überprüfe:
+          - Batterie des Sensors
+          - Zigbee-Verbindung
+          - Sensor-Position
+
+          Diese Nachricht wurde automatisch generiert.
+  - action: logbook.log
+    data:
+      name: Bewegungsmelder ausgefallen
+      message: '{{ sensor_name }} ({{ sensor_id }}) ist seit {{ duration }} nicht verfügbar'
+      domain: automation
+  mode: queued
+  max: 10

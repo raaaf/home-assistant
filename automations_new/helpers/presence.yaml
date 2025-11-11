@@ -230,14 +230,12 @@
         entity_id: input_boolean.fenster_tueren_offen
         state: 'on'
       sequence:
-      - alias: Benachrichtigung über offene Fenster/Türen
-        action: notify.family
+      - alias: Log offene Fenster/Türen
+        action: logbook.log
         data:
-          title: Es sind noch Fenster oder Türen offen!
-          message: "{% set doors = state_attr('binary_sensor.fenster_tueren', 'entity_id')\
-            \ %} {{ expand(doors) | selectattr('state','in',['on', 'open']) | \n \
-            \  map(attribute='name') | join(', ') | default('Alle geschlossen', true)\
-            \ }}\n"
+          name: Offene Fenster/Türen
+          message: "{% set doors = state_attr('binary_sensor.fenster_tueren', 'entity_id') %} {{ expand(doors) | selectattr('state','in',['on', 'open']) | map(attribute='name') | join(', ') | default('Alle geschlossen', true) }}"
+          domain: automation
     - alias: Alle weg (kurze Abwesenheit) - Energiesparmodus
       conditions:
       - condition: trigger
@@ -319,11 +317,6 @@
         target:
           entity_id: media_player.homepods
         data: {}
-      - alias: Benachrichtigung senden
-        action: notify.family
-        data:
-          title: Alle sind weg (kurz)
-          message: Viel Spaß, wo auch immer ihr seid.
       - alias: Türe abschließen wenn offen
         if:
         - condition: state
@@ -427,11 +420,6 @@
           target:
             entity_id: lock.smart_lock_pro
           data: {}
-      - alias: Benachrichtigung lange Abwesenheit
-        action: notify.family
-        data:
-          title: Alle sind weg (lang)
-          message: Viel Spaß, wo auch immer ihr seid.
       - alias: Klimaanlage ausschalten wenn an
         if:
         - condition: state

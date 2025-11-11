@@ -44,7 +44,7 @@
           data:
             push:
               interruption-level: critical
-      - action: notify.mobile_app_macbook_air_von_alexandra
+      - action: notify.mobile_app_macbook_air
         data:
           title: "Haustür Klingel"
           message: "{{ now().strftime('%A, %H:%M Uhr, %d.%m.%Y') }} - {{ anwesenheits_status }}"
@@ -68,7 +68,7 @@
       - condition: template
         value_template: "{{ alex_zuhause and not rafael_zuhause }}"
       sequence:
-      - action: notify.mobile_app_macbook_air_von_alexandra
+      - action: notify.mobile_app_macbook_air
         data:
           title: "Haustür Klingel"
           message: "{{ now().strftime('%A, %H:%M Uhr, %d.%m.%Y') }} - {{ anwesenheits_status }}"
@@ -227,10 +227,11 @@
     trigger: state
   conditions: []
   actions:
-  - data:
-      title: Jahreszeitenwechsel - Wir haben jetzt {{ trigger.id }}!
-      message: Yippey! Die neue Jahreszeit hat begonnen.
-    action: notify.family
+  - action: logbook.log
+    data:
+      name: Jahreszeitenwechsel
+      message: Wir haben jetzt {{ trigger.id }}!
+      domain: automation
   mode: single
   max_exceeded: silent
 - id: '1714059235372'
@@ -281,10 +282,9 @@
       \ 'last_triggered') %}\n    {{ last is none or (now() - last).total_seconds()\
       \ > 12 * 60 * 60 }}"
   actions:
-  - metadata: {}
+  - action: logbook.log
     data:
-      title: Aussentemperatur erreicht 30°!
-      message: Sonnenaufgang » {{ states('sensor.temperatur_aussen_sonnenaufgang_temperature') | float(0) | round(1) }}°C
-        und Sonnenuntergang » {{ states('sensor.temperatur_aussen_sonnenuntergang_temperature') | float(0) | round(1) }}°C!
-    action: notify.family
+      name: Aussentemperatur 30°
+      message: 'Sonnenaufgang {{ states(''sensor.temperatur_aussen_sonnenaufgang_temperature'') | float(0) | round(1) }}°C, Sonnenuntergang {{ states(''sensor.temperatur_aussen_sonnenuntergang_temperature'') | float(0) | round(1) }}°C'
+      domain: automation
   mode: single
