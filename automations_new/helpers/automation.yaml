@@ -70,17 +70,12 @@
       - input_boolean.werktag_musik
       - input_boolean.werktag_aufwachen
     data: {}
-  - action: notify.persistent_notification
+  - action: logbook.log
     data:
-      title: 🎵 Guten Morgen!
+      name: Guten Morgen Musik
       message: 'Wakeup Musik gestartet um {{ as_timestamp(states(''sensor.wakeup_light_timestamp''))
-        | timestamp_custom(''%H:%M'') }}
-
-        HomePods (6 Geräte): {{ (state_attr(''media_player.homepods'', ''volume_level'')
-        | float(0) * 100) | round(0) }}% Läuft: {{ state_attr(''media_player.homepods'',
-        ''media_title'') | default(''Apple Home Musik'') }}
-
-        Fade: 4 Min mit Bezier-Kurve
-
-        '
+        | timestamp_custom(''%H:%M'') }} - HomePods (6 Geräte): {{ (state_attr(''media_player.homepods'',
+        ''volume_level'') | float(0) * 100) | round(0) }}% Läuft: {{ state_attr(''media_player.homepods'',
+        ''media_title'') | default(''Apple Home Musik'') }} - Fade: 4 Min mit Bezier-Kurve'
+      domain: automation
   mode: single

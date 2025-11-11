@@ -74,15 +74,11 @@
       - action: cover.stop_cover
         target:
           entity_id: cover.arbeitszimmer_rollo
-      - action: notify.persistent_notification
+      - action: logbook.log
         data:
-          title: 🪟 Rollos Morgen
-          message: 'Arbeitstag {{ now().strftime(''%H:%M'') }} Temperatur-Modus: {{
-            ''Sehr heiß'' if wird_sehr_heiss else ''Heiß'' if wird_heiss else ''Normal''
-            }} Positionen: Schlaf/Kinder {{ position_schlaf_kinder }}%, Arbeit {{
-            position_arbeit }}%
-
-            '
+          name: Rollos Morgen (Arbeitstag)
+          message: 'Modus: {{ ''Sehr heiß'' if wird_sehr_heiss else ''Heiß'' if wird_heiss else ''Normal'' }} Schlaf/Kinder: {{ position_schlaf_kinder }}%, Arbeit: {{ position_arbeit }}%'
+          domain: cover
     - conditions:
       - condition: trigger
         id: morgens-freiertag
@@ -100,12 +96,11 @@
       - action: cover.stop_cover
         target:
           entity_id: cover.arbeitszimmer_rollo
-      - action: notify.persistent_notification
+      - action: logbook.log
         data:
-          title: 🪟 Rollos Morgen (Wochenende)
-          message: 'Freier Tag {{ now().strftime(''%H:%M'') }} Ost-Rollos: Vollständig geöffnet, Arbeitszimmer: 4 Sekunden geöffnet
-
-            '
+          name: Rollos Morgen (Wochenende)
+          message: 'Ost-Rollos vollständig geöffnet, Arbeitszimmer: 4s'
+          domain: cover
     - conditions:
       - condition: trigger
         id: vormittag
@@ -117,11 +112,11 @@
           position: '{{ 0 if wird_sehr_heiss else 10 }}'
         target:
           entity_id: cover.rollos_sonnenaufgang
-      - action: notify.persistent_notification
+      - action: logbook.log
         data:
-          title: 🪟 Rollos 9 Uhr
-          message: Hitzeschutz verschärft - Ost-Rollos auf {{ 0 if wird_sehr_heiss
-            else 10 }}%
+          name: Rollos 9 Uhr Hitzeschutz
+          message: 'Ost-Rollos auf {{ 0 if wird_sehr_heiss else 10 }}%'
+          domain: cover
     - conditions:
       - condition: trigger
         id: sonne-sued
