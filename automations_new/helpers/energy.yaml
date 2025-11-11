@@ -18,43 +18,11 @@
     trigger: numeric_state
   conditions: []
   actions:
-  - choose:
-    - conditions:
-      - condition: trigger
-        id: rennsemmel-battery
-      sequence:
-      - parallel:
-          # Mobile Benachrichtigung
-          - action: notify.alex
-            data:
-              title: 🚵‍♀️ Cowboy Battery <= 25%
-              message: Wie wäre es mit laden?
-    - conditions:
-      - condition: trigger
-        id: butzabatza-battery
-      sequence:
-      - parallel:
-          # Mobile Benachrichtigung
-          - action: notify.rafael
-            data:
-              title: 🚵‍♀️ Cowboy Battery <= 25%
-              message: Wie wäre es mit laden?
-    - conditions:
-      - condition: trigger
-        id: rennsemmel-range
-      sequence:
-      - data:
-          title: 🚵‍♀️ Cowboy Reichweite <= 10km
-          message: Wie wäre es mit laden?
-        action: notify.alex
-    - conditions:
-      - condition: trigger
-        id: butzabatza-range
-      sequence:
-      - data:
-          title: 🚵‍♀️ Cowboy Reichweite <= 10km
-          message: Wie wäre es mit laden?
-        action: notify.rafael
+  - action: logbook.log
+    data:
+      name: Cowboy E-Bike Batterie niedrig
+      message: '{{ trigger.id }} - Battery <= 25%'
+      domain: automation
   mode: restart
 
 - id: '1745924954227'

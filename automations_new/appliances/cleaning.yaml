@@ -58,21 +58,6 @@
               }}%
 
               Bitte die Hauptbürste von Robbi wechseln, wenn es dir möglich ist.
-        # Mobile Benachrichtigung bei kritischem Wert (<5%)
-        - if:
-            - condition: template
-              value_template: >-
-                {{ state_attr('vacuum.robbi_2', 'brush_cleaner.brush_life_level') | int(100) < 5 }}
-          then:
-            - parallel:
-                - action: notify.rafael
-                  data:
-                    title: "Robbi Wartung"
-                    message: "Hauptbürste kritisch – bitte wechseln"
-                - action: notify.alex
-                  data:
-                    title: "Robbi Wartung"
-                    message: "Hauptbürste kritisch – bitte wechseln"
     
     - alias: "Seitenbürste wechseln"
       conditions:
@@ -94,20 +79,6 @@
 
               Bitte die Seitenbürste von Robbi wechseln, wenn es dir möglich ist.
         # Mobile Benachrichtigung bei kritischem Wert (<5%)
-        - if:
-            - condition: template
-              value_template: >-
-                {{ state_attr('vacuum.robbi_2', 'brush_life_level-10-2') | int(100) < 5 }}
-          then:
-            - parallel:
-                - action: notify.rafael
-                  data:
-                    title: "Robbi Wartung"
-                    message: "Seitenbürste kritisch – bitte wechseln"
-                - action: notify.alex
-                  data:
-                    title: "Robbi Wartung"
-                    message: "Seitenbürste kritisch – bitte wechseln"
     
     - alias: "Filter wechseln"
       conditions:
@@ -133,16 +104,6 @@
             - condition: template
               value_template: >-
                 {{ state_attr('vacuum.robbi_2', 'filter.filter_life_level') | int(100) < 5 }}
-          then:
-            - parallel:
-                - action: notify.rafael
-                  data:
-                    title: "Robbi Wartung"
-                    message: "Filter kritisch – bitte wechseln"
-                - action: notify.alex
-                  data:
-                    title: "Robbi Wartung"
-                    message: "Filter kritisch – bitte wechseln"
     
     - alias: "Sensoren reinigen"
       conditions:
@@ -163,26 +124,13 @@
               }} verbleibend
 
               Bitte die Sensoren von Robbi reinigen, wenn es dir möglich ist.
-        # Mobile Benachrichtigung für Sensoren-Reinigung
-        - parallel:
-            - action: notify.rafael
-              data:
-                title: "Robbi Wartung"
-                message: "Sensoren reinigen"
-            - action: notify.alex
-              data:
-                title: "Robbi Wartung"
-                message: "Sensoren reinigen"
     default:
-    # Fallback wenn unbekannter Trigger
-    - action: notify.rafael_mail
+    # Fallback wenn unbekannter Trigger - log only
+    - action: logbook.log
       data:
-        title: "Robbi Automation Fehler"
-        message: |
-          Robbi Automation Fehler
-
-          Unbekannter Wartungstrigger wurde ausgelöst.
-          Bitte die Automation überprüfen.
+        name: "Robbi Automation Fehler"
+        message: "Unbekannter Wartungstrigger wurde ausgelöst"
+        domain: automation
   mode: single
 - id: '1692862723924'
   alias: "Benachrichtigung » Luftreiniger Filter"
@@ -219,20 +167,4 @@
             <p>Bitte den Filter des Luftreinigers wechseln, wenn es dir möglich ist.</p>
             </body>
             </html>
-
-      # Mobile Benachrichtigung bei kritischem Wert (<5%)
-      - if:
-          - condition: template
-            value_template: >-
-              {{ states('sensor.zhimi_vb4_bce4_filter_life_level') | int(100) < 5 }}
-        then:
-          - parallel:
-              - action: notify.rafael
-                data:
-                  title: "🌬️ Luftreiniger Wartung"
-                  message: "Filter kritisch – bitte wechseln"
-              - action: notify.alex
-                data:
-                  title: "🌬️ Luftreiniger Wartung"
-                  message: "Filter kritisch – bitte wechseln"
   mode: single

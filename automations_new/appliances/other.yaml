@@ -47,17 +47,6 @@
                 <p>Bitte ersetze den Filter des Futterspenders, wenn es dir möglich ist.</p>
                 </body>
                 </html>
-          
-          # Mobile Benachrichtigungen
-          - parallel:
-              - action: notify.rafael
-                data:
-                  title: "🐾 Futterspender"
-                  message: "Filter ersetzen"
-              - action: notify.alex
-                data:
-                  title: "🐾 Futterspender"
-                  message: "Filter ersetzen"
     
     - alias: "Futterspender reinigen"
       conditions:
@@ -77,26 +66,12 @@
                 <p>Bitte führe eine gründliche Reinigung des Futterspenders durch.</p>
                 </body>
                 </html>
-          
-          # Mobile Benachrichtigungen
-          - parallel:
-              - action: notify.rafael
-                data:
-                  title: "🐾 Futterspender"
-                  message: "Reinigen"
-              - action: notify.alex
-                data:
-                  title: "🐾 Futterspender"
-                  message: "Reinigen"
-    
-    default:
-    # Fallback bei unbekanntem Trigger
-    - action: notify.rafael_mail
-      data:
-        title: "Futterspender Fehler"
-        message: |
-          Futterspender Automation Fehler
 
-          Unbekannter Wartungstrigger wurde ausgelöst.
-          Bitte überprüfe die Automation.
+    default:
+    # Fallback bei unbekanntem Trigger - log only
+    - action: logbook.log
+      data:
+        name: "Futterspender Fehler"
+        message: "Unbekannter Wartungstrigger wurde ausgelöst"
+        domain: automation
   mode: single
