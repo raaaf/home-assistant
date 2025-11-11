@@ -99,12 +99,7 @@
               }}%
 
               Bitte den Filter von Robbi wechseln, wenn es dir möglich ist.
-        # Mobile Benachrichtigung bei kritischem Wert (<5%)
-        - if:
-            - condition: template
-              value_template: >-
-                {{ state_attr('vacuum.robbi_2', 'filter.filter_life_level') | int(100) < 5 }}
-    
+
     - alias: "Sensoren reinigen"
       conditions:
       - condition: trigger
