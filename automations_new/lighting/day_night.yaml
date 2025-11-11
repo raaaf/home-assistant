@@ -72,8 +72,8 @@
           entity_id: input_boolean.alle_sind_weg
           state: 'off'
         then:
-        - alias: Adaptive Beleuchtung komplett deaktivieren (verhindert Auto-Reset)
-          action: switch.turn_off
+        - alias: Set very low brightness for wake-up routine (let AL handle color)
+          action: adaptive_lighting.change_switch_settings
           target:
             entity_id:
             - switch.adaptive_lighting_arbeitszimmer
@@ -83,6 +83,9 @@
             - switch.adaptive_lighting_kueche
             - switch.adaptive_lighting_schlafzimmer
             - switch.adaptive_lighting_wohnzimmer
+          data:
+            max_brightness: 1
+            min_brightness: 1
         - alias: Motion-Automationen STOPPEN (während Wake-Up-Routine)
           action: automation.turn_off
           target:
@@ -99,8 +102,8 @@
             stop_actions: true
         # 30-Minute Gradual Wake-Up Light Routine (Research-Backed)
         # Exponential brightness curve: 1% → 10% → 40% → 100%
-        # Color temp curve: 2200K (warm) → 2700K → 3400K → 4000K (cool)
-        - alias: "Phase 1: Initial light at 1% (sehr warm, 2200K)"
+        # Color temp: Adaptive Lighting handles circadian rhythm automatically
+        - alias: "Phase 1: Initial light at 1% (AL sets color for wake-up time)"
           action: light.turn_on
           target:
             entity_id:
@@ -113,55 +116,54 @@
             - light.alle_kuche_lichter
           data:
             brightness_pct: 1
-            color_temp_kelvin: 2200
         - alias: "Warte 10 Minuten (Augen passen sich an)"
           delay: 00:10:00
-        - alias: "Phase 2: Erhöhe auf 10% Helligkeit (warm, 2700K)"
-          action: light.turn_on
+        - alias: "Phase 2: Erhöhe auf 10% Helligkeit (AL adapts color)"
+          action: adaptive_lighting.change_switch_settings
           target:
             entity_id:
-            - light.alle_schlafzimmer_lichter
-            - light.alle_kinderzimmer_lichter
-            - light.alle_wohnzimmer_lichter
-            - light.alle_arbeitszimmer_lichter
-            - light.alle_badezimmer_lichter
-            - light.alle_flur_lichter
-            - light.alle_kuche_lichter
+            - switch.adaptive_lighting_arbeitszimmer
+            - switch.adaptive_lighting_badezimmer
+            - switch.adaptive_lighting_flur
+            - switch.adaptive_lighting_kinderzimmer
+            - switch.adaptive_lighting_kueche
+            - switch.adaptive_lighting_schlafzimmer
+            - switch.adaptive_lighting_wohnzimmer
           data:
-            brightness_pct: 10
-            color_temp_kelvin: 2700
+            max_brightness: 10
+            min_brightness: 10
         - alias: "Warte 10 Minuten (langsame Anpassung)"
           delay: 00:10:00
-        - alias: "Phase 3: Erhöhe auf 40% Helligkeit (neutral, 3400K)"
-          action: light.turn_on
+        - alias: "Phase 3: Erhöhe auf 40% Helligkeit (AL adapts color)"
+          action: adaptive_lighting.change_switch_settings
           target:
             entity_id:
-            - light.alle_schlafzimmer_lichter
-            - light.alle_kinderzimmer_lichter
-            - light.alle_wohnzimmer_lichter
-            - light.alle_arbeitszimmer_lichter
-            - light.alle_badezimmer_lichter
-            - light.alle_flur_lichter
-            - light.alle_kuche_lichter
+            - switch.adaptive_lighting_arbeitszimmer
+            - switch.adaptive_lighting_badezimmer
+            - switch.adaptive_lighting_flur
+            - switch.adaptive_lighting_kinderzimmer
+            - switch.adaptive_lighting_kueche
+            - switch.adaptive_lighting_schlafzimmer
+            - switch.adaptive_lighting_wohnzimmer
           data:
-            brightness_pct: 40
-            color_temp_kelvin: 3400
+            max_brightness: 40
+            min_brightness: 40
         - alias: "Warte 10 Minuten (fortgesetzte Anpassung)"
           delay: 00:10:00
-        - alias: "Phase 4: Volle Helligkeit (100%, kühl, 4000K)"
-          action: light.turn_on
+        - alias: "Phase 4: Volle Helligkeit (100%, AL handles optimal wake color)"
+          action: adaptive_lighting.change_switch_settings
           target:
             entity_id:
-            - light.alle_schlafzimmer_lichter
-            - light.alle_kinderzimmer_lichter
-            - light.alle_wohnzimmer_lichter
-            - light.alle_arbeitszimmer_lichter
-            - light.alle_badezimmer_lichter
-            - light.alle_flur_lichter
-            - light.alle_kuche_lichter
+            - switch.adaptive_lighting_arbeitszimmer
+            - switch.adaptive_lighting_badezimmer
+            - switch.adaptive_lighting_flur
+            - switch.adaptive_lighting_kinderzimmer
+            - switch.adaptive_lighting_kueche
+            - switch.adaptive_lighting_schlafzimmer
+            - switch.adaptive_lighting_wohnzimmer
           data:
-            brightness_pct: 100
-            color_temp_kelvin: 4000
+            max_brightness: 100
+            min_brightness: 100
         - alias: "Warte bis 8:00 Uhr (Motion-Sensoren bleiben deaktiviert)"
           delay:
             seconds: >-
@@ -184,8 +186,8 @@
             - automation.motion_haustur
             - automation.motion_kuche
             - automation.motion_esstisch
-        - alias: Adaptive Beleuchtung wieder aktivieren
-          action: switch.turn_on
+        - alias: Reset Adaptive Lighting to default settings
+          action: adaptive_lighting.change_switch_settings
           target:
             entity_id:
             - switch.adaptive_lighting_arbeitszimmer
@@ -195,6 +197,9 @@
             - switch.adaptive_lighting_kueche
             - switch.adaptive_lighting_schlafzimmer
             - switch.adaptive_lighting_wohnzimmer
+          data:
+            max_brightness: 100
+            min_brightness: 10
     - alias: Sonnenaufgang - Schlafenszeit beenden
       conditions:
       - condition: trigger

@@ -13,14 +13,11 @@
   - delay:
       seconds: 30
   # ADAPTIVE LIGHTING SYNC
-  - alias: "Disable living room adaptive lighting if movie/party/party_wohnzimmer active"
+  - alias: "Disable living room adaptive lighting if party/party_wohnzimmer active"
     choose:
     - conditions:
       - condition: or
         conditions:
-        - condition: state
-          entity_id: input_boolean.movie
-          state: 'on'
         - condition: state
           entity_id: input_boolean.party
           state: 'on'
@@ -31,14 +28,11 @@
       - action: switch.turn_off
         target:
           entity_id: switch.adaptive_lighting_wohnzimmer
-  - alias: "Disable kitchen adaptive lighting if movie/kochen/party/party_wohnzimmer active"
+  - alias: "Disable kitchen adaptive lighting if kochen/party/party_wohnzimmer active"
     choose:
     - conditions:
       - condition: or
         conditions:
-        - condition: state
-          entity_id: input_boolean.movie
-          state: 'on'
         - condition: state
           entity_id: input_boolean.kochen
           state: 'on'
@@ -76,9 +70,6 @@
     - conditions:
       - condition: or
         conditions:
-        - condition: state
-          entity_id: input_boolean.movie
-          state: 'on'
         - condition: state
           entity_id: input_boolean.kochen
           state: 'on'
@@ -141,17 +132,12 @@
         target:
           entity_id: automation.1672929418223  # Motion » Badezimmer Gross
         data: {}
-  - alias: "Disable dining table motion if movie or eating mode is active"
+  - alias: "Disable dining table motion if eating mode is active"
     choose:
     - conditions:
-      - condition: or
-        conditions:
-        - condition: state
-          entity_id: input_boolean.movie
-          state: 'on'
-        - condition: state
-          entity_id: input_boolean.essen
-          state: 'on'
+      - condition: state
+        entity_id: input_boolean.essen
+        state: 'on'
       sequence:
       - action: automation.turn_off
         target:

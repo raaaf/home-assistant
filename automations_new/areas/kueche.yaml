@@ -23,10 +23,12 @@
       - condition: trigger
         id: 'on'
       sequence:
-      - data: {}
-        action: switch.turn_off
+      - action: adaptive_lighting.change_switch_settings
         target:
           entity_id: switch.adaptive_lighting_kueche
+        data:
+          max_brightness: 100
+          min_brightness: 50
       - data: {}
         target:
           entity_id: automation.1672931243226
@@ -38,29 +40,18 @@
           - light.alle_kuche_nachtlichter
         data:
           brightness_pct: 90
-          kelvin: 2700
           transition: 2
     - conditions:
       - condition: trigger
         id: 'off'
       sequence:
-      - alias: "Re-enable kitchen adaptive lighting if no conflicting scenes"
-        choose:
-        - conditions:
-          - condition: state
-            entity_id: input_boolean.movie
-            state: 'off'
-          - condition: state
-            entity_id: input_boolean.party
-            state: 'off'
-          - condition: state
-            entity_id: input_boolean.party_wohnzimmer
-            state: 'off'
-          sequence:
-          - data: {}
-            action: switch.turn_on
-            target:
-              entity_id: switch.adaptive_lighting_kueche
+      - alias: "Reset kitchen adaptive lighting settings to default"
+        action: adaptive_lighting.change_switch_settings
+        target:
+          entity_id: switch.adaptive_lighting_kueche
+        data:
+          max_brightness: 100
+          min_brightness: 10
       - alias: "Re-enable kitchen motion only if no conflicting scenes are active"
         choose:
         - conditions:
@@ -162,11 +153,12 @@
       - condition: trigger
         id: 'on'
       sequence:
-      - data: {}
-        action: switch.turn_off
+      - action: adaptive_lighting.change_switch_settings
         target:
-          entity_id:
-          - switch.adaptive_lighting_wohnzimmer
+          entity_id: switch.adaptive_lighting_wohnzimmer
+        data:
+          max_brightness: 70
+          min_brightness: 20
       - data: {}
         action: automation.turn_off
         target:
@@ -175,7 +167,6 @@
         metadata: {}
         data:
           brightness_pct: 70
-          kelvin: 2700
           transition: 2
         target:
           entity_id: light.wohnzimmer_esstisch_alle
@@ -187,12 +178,13 @@
         action: light.turn_off
         target:
           entity_id: light.wohnzimmer_esstisch_alle
-      - alias: "Always re-enable living room adaptive lighting"
-        data: {}
-        action: switch.turn_on
+      - alias: "Reset living room adaptive lighting settings to default"
+        action: adaptive_lighting.change_switch_settings
         target:
-          entity_id:
-          - switch.adaptive_lighting_wohnzimmer
+          entity_id: switch.adaptive_lighting_wohnzimmer
+        data:
+          max_brightness: 100
+          min_brightness: 10
       - alias: "Re-enable dining table motion only if movie mode is off"
         choose:
         - conditions:

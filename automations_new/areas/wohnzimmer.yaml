@@ -53,41 +53,76 @@
         target:
           entity_id: input_boolean.movie
         action: input_boolean.turn_on
+      - action: adaptive_lighting.change_switch_settings
+        target:
+          entity_id:
+          - switch.adaptive_lighting_wohnzimmer
+          - switch.adaptive_lighting_kueche
+        data:
+          max_brightness: 40
+          min_brightness: 5
+      - action: automation.turn_off
+        target:
+          entity_id:
+          - automation.1672931243226  # Motion » Küche
+          - automation.1745924154398  # Motion » Esstisch
+        data: {}
       - target:
           entity_id: light.hyperhdr
         data:
           effect: USB Capture
           brightness_pct: 60
         action: light.turn_on
-      - data: {}
-        action: light.turn_off
+      - action: light.turn_off
+        data:
+          transition: 6
         target:
           entity_id:
-          - light.alle_wohnzimmer_lichter
-        enabled: false
-      - action: automation.turn_off
-        metadata: {}
-        target:
-          entity_id: automation.1745924154398
-        data: {}
-      - target:
-          entity_id: light.hyperhdr
-        data:
-          effect: USB Capture
-        action: light.turn_on
+          - light.alle_wohnzimmer_nachtlichter
+      - alias: "Turn off living room lights (conditionally skip dining table)"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.essen
+            state: 'off'
+          sequence:
+          - action: light.turn_off
+            data:
+              transition: 6
+            target:
+              entity_id: light.alle_wohnzimmer_lichter
+        default:
+        - action: light.turn_off
+          data:
+            transition: 6
+          target:
+            entity_id:
+            - light.wohnzimmer_wand_alle
+            - light.wohnzimmer_spielematte_alle
+            - light.wohnzimmer_schrank_alle
+            - light.wohnzimmer_spieletisch
+      - alias: "Turn off kitchen lights if not cooking"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.kochen
+            state: 'off'
+          sequence:
+          - action: light.turn_off
+            data:
+              transition: 6
+            target:
+              entity_id: light.alle_kuche_lichter
       - if:
         - condition: state
           entity_id: input_boolean.kochen
-          state: 'on'
-        then: []
-        else:
+          state: 'off'
+        then:
         - action: light.turn_off
-          metadata: {}
-          data: {}
+          data:
+            transition: 6
           target:
-            entity_id:
-            - light.alle_kuche_lichter
-            - light.alle_flur_lichter
+            entity_id: light.alle_flur_lichter
     - conditions:
       - condition: trigger
         id: 'off'
@@ -96,6 +131,30 @@
           entity_id: input_boolean.movie
         data: {}
         action: input_boolean.turn_off
+      - action: adaptive_lighting.change_switch_settings
+        target:
+          entity_id:
+          - switch.adaptive_lighting_wohnzimmer
+          - switch.adaptive_lighting_kueche
+        data:
+          max_brightness: 100
+          min_brightness: 10
+      - alias: "Re-enable kitchen motion only if no conflicting scenes are active"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.kochen
+            state: 'off'
+          - condition: state
+            entity_id: input_boolean.party
+            state: 'off'
+          - condition: state
+            entity_id: input_boolean.party_wohnzimmer
+            state: 'off'
+          sequence:
+          - action: automation.turn_on
+            target:
+              entity_id: automation.1672931243226  # Motion » Küche
       - alias: "Re-enable dining table motion only if eating mode is off"
         choose:
         - conditions:
@@ -107,7 +166,7 @@
             metadata: {}
             data: {}
             target:
-              entity_id: automation.1745924154398
+              entity_id: automation.1745924154398  # Motion » Esstisch
       - target:
           entity_id:
           - light.hyperhdr
@@ -118,6 +177,14 @@
       - condition: trigger
         id: paused
       sequence:
+      - action: adaptive_lighting.change_switch_settings
+        target:
+          entity_id:
+          - switch.adaptive_lighting_wohnzimmer
+          - switch.adaptive_lighting_kueche
+        data:
+          max_brightness: 80
+          min_brightness: 10
       - target:
           entity_id: light.hyperhdr
         data:
@@ -135,6 +202,22 @@
             - light.alle_kuche_nachtlichter
             - light.alle_wohnzimmer_nachtlichter
           action: light.turn_on
+      - alias: "Re-enable kitchen motion only if no conflicting scenes are active"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.kochen
+            state: 'off'
+          - condition: state
+            entity_id: input_boolean.party
+            state: 'off'
+          - condition: state
+            entity_id: input_boolean.party_wohnzimmer
+            state: 'off'
+          sequence:
+          - action: automation.turn_on
+            target:
+              entity_id: automation.1672931243226  # Motion » Küche
       - alias: "Re-enable dining table motion only if eating mode is off"
         choose:
         - conditions:
@@ -146,7 +229,7 @@
             metadata: {}
             data: {}
             target:
-              entity_id: automation.1745924154398
+              entity_id: automation.1745924154398  # Motion » Esstisch
     - conditions:
       - condition: trigger
         id: game-on
@@ -155,6 +238,25 @@
           entity_id: input_boolean.movie
         data: {}
         action: input_boolean.turn_on
+      - action: adaptive_lighting.change_switch_settings
+        target:
+          entity_id:
+          - switch.adaptive_lighting_wohnzimmer
+          - switch.adaptive_lighting_kueche
+        data:
+          max_brightness: 40
+          min_brightness: 5
+      - action: automation.turn_off
+        target:
+          entity_id:
+          - automation.1672931243226  # Motion » Küche
+          - automation.1745924154398  # Motion » Esstisch
+        data: {}
+      - target:
+          entity_id: light.hyperhdr
+        data:
+          effect: USB Capture
+        action: light.turn_on
       - target:
           entity_id:
           - light.alle_kuche_nachtlichter
@@ -162,16 +264,6 @@
           - light.alle_wohnzimmer_nachtlichter
         data: {}
         action: light.turn_off
-      - target:
-          entity_id: light.hyperhdr
-        data:
-          effect: USB Capture
-        action: light.turn_on
-      - action: automation.turn_off
-        metadata: {}
-        data: {}
-        target:
-          entity_id: automation.1745924154398
   mode: restart
 - id: '1671133998236'
   alias: Wohnzimmer » Weihnachtsbaum
