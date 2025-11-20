@@ -17,10 +17,10 @@
       \ > 60 }}"
   actions:
   - variables:
-      rafael_zuhause: "{{ is_state('person.rafael', 'home') }}"
-      alex_zuhause: "{{ is_state('person.alex', 'home') }}"
-      niemand_zuhause: "{{ is_state('input_boolean.alle_sind_weg', 'on') }}"
-      ist_dunkel: "{{ is_state('input_boolean.es_ist_dunkel', 'on') }}"
+      rafael_zuhause: "{{ has_value('person.rafael') and is_state('person.rafael', 'home') }}"
+      alex_zuhause: "{{ has_value('person.alex') and is_state('person.alex', 'home') }}"
+      niemand_zuhause: "{{ has_value('input_boolean.alle_sind_weg') and is_state('input_boolean.alle_sind_weg', 'on') }}"
+      ist_dunkel: "{{ has_value('input_boolean.es_ist_dunkel') and is_state('input_boolean.es_ist_dunkel', 'on') }}"
       anwesenheits_status: >
         {% if rafael_zuhause and alex_zuhause %}
           Beide zuhause

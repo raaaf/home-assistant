@@ -64,8 +64,8 @@
       - action: automation.turn_off
         target:
           entity_id:
-          - automation.1672931243226  # Motion » Küche
-          - automation.1745924154398  # Motion » Esstisch
+          - automation.motion_kuche_2  # Motion » Küche
+          - automation.motion_esstisch  # Motion » Esstisch
         data: {}
       - target:
           entity_id: light.hyperhdr
@@ -154,7 +154,7 @@
           sequence:
           - action: automation.turn_on
             target:
-              entity_id: automation.1672931243226  # Motion » Küche
+              entity_id: automation.motion_kuche_2  # Motion » Küche
       - alias: "Re-enable dining table motion only if eating mode is off"
         choose:
         - conditions:
@@ -166,7 +166,7 @@
             metadata: {}
             data: {}
             target:
-              entity_id: automation.1745924154398  # Motion » Esstisch
+              entity_id: automation.motion_esstisch  # Motion » Esstisch
       - target:
           entity_id:
           - light.hyperhdr
@@ -217,7 +217,7 @@
           sequence:
           - action: automation.turn_on
             target:
-              entity_id: automation.1672931243226  # Motion » Küche
+              entity_id: automation.motion_kuche_2  # Motion » Küche
       - alias: "Re-enable dining table motion only if eating mode is off"
         choose:
         - conditions:
@@ -229,7 +229,7 @@
             metadata: {}
             data: {}
             target:
-              entity_id: automation.1745924154398  # Motion » Esstisch
+              entity_id: automation.motion_esstisch  # Motion » Esstisch
     - conditions:
       - condition: trigger
         id: game-on
@@ -249,8 +249,8 @@
       - action: automation.turn_off
         target:
           entity_id:
-          - automation.1672931243226  # Motion » Küche
-          - automation.1745924154398  # Motion » Esstisch
+          - automation.motion_kuche_2  # Motion » Küche
+          - automation.motion_esstisch  # Motion » Esstisch
         data: {}
       - target:
           entity_id: light.hyperhdr
@@ -411,7 +411,7 @@
       - action: automation.turn_off
         target:
           entity_id:
-          - automation.1672931243226
+          - automation.motion_kuche_2
           - automation.motion_flur_wohnung
         enabled: true
         data: {}
@@ -472,7 +472,7 @@
           sequence:
           - action: automation.turn_on
             target:
-              entity_id: automation.1672931243226
+              entity_id: automation.motion_kuche_2
       - alias: "Re-enable hallway motion only if no conflicting scenes are active"
         choose:
         - conditions:

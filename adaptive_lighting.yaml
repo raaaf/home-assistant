@@ -39,8 +39,8 @@
   transition_until_sleep: true
   min_sunrise_time: "05:00:00"
   max_sunrise_time: "07:00:00" # Peak brightness/coolness at wake time
-  min_sunset_time: "18:00:00"
-  max_sunset_time: "20:00:00"
+  min_sunset_time: "20:00:00"  # Dynamic: Overridden by automation based on sleep time
+  max_sunset_time: "20:30:00"
   take_over_control: true
   detect_non_ha_changes: true  # Critical for Zigbee2MQTT
   autoreset_control_seconds: 3600
@@ -68,14 +68,15 @@
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
   max_color_temp: 4000 # IKEA maximum cool white
   prefer_rgb_color: false
+  separate_turn_on_commands: false  # Don't separate Zigbee groups into individual lights
   sleep_brightness: 10 # Consistent across all rooms
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 45  # Optimized for IKEA compatibility
   transition_until_sleep: true
   min_sunrise_time: "05:00:00" # Aligned with wake time
   max_sunrise_time: "07:00:00" # Peak brightness/coolness at wake time
-  min_sunset_time: "18:00:00"
-  max_sunset_time: "20:00:00"
+  min_sunset_time: "20:00:00"  # Dynamic: Overridden by automation based on sleep time
+  max_sunset_time: "20:30:00"
   take_over_control: true
   detect_non_ha_changes: true  # Critical for Zigbee2MQTT
   autoreset_control_seconds: 3600
@@ -113,8 +114,8 @@
   transition_until_sleep: true
   min_sunrise_time: "05:00:00"
   max_sunrise_time: "07:00:00" # Peak brightness/coolness at wake time
-  min_sunset_time: "17:30:00" # Earlier evening transition
-  max_sunset_time: "19:30:00"
+  min_sunset_time: "20:00:00"  # Dynamic: Overridden by automation based on sleep time
+  max_sunset_time: "20:30:00"
   take_over_control: true
   detect_non_ha_changes: true  # Critical for Zigbee2MQTT
   autoreset_control_seconds: 3600
@@ -149,8 +150,8 @@
   transition_until_sleep: true
   min_sunrise_time: "05:00:00"
   max_sunrise_time: "07:00:00" # Peak brightness/coolness at wake time
-  min_sunset_time: "17:00:00" # Early bedtime routine
-  max_sunset_time: "19:00:00"
+  min_sunset_time: "20:00:00"  # Dynamic: Overridden by automation based on sleep time
+  max_sunset_time: "20:30:00"
   take_over_control: true
   detect_non_ha_changes: true  # Critical for Zigbee2MQTT
   autoreset_control_seconds: 3600
@@ -188,8 +189,8 @@
   transition_until_sleep: true
   min_sunrise_time: "05:00:00" # Aligned with wake time
   max_sunrise_time: "07:00:00" # Peak brightness/coolness at wake time
-  min_sunset_time: "18:00:00"
-  max_sunset_time: "20:00:00"
+  min_sunset_time: "20:00:00"  # Dynamic: Overridden by automation based on sleep time
+  max_sunset_time: "20:30:00"
   take_over_control: true
   detect_non_ha_changes: true  # Critical for Zigbee2MQTT
   autoreset_control_seconds: 7200 # 2 hours for less frequently used rooms
@@ -221,8 +222,8 @@
   transition_until_sleep: true
   min_sunrise_time: "05:00:00"
   max_sunrise_time: "07:00:00" # Peak brightness/coolness at wake time
-  min_sunset_time: "18:00:00"
-  max_sunset_time: "20:00:00"
+  min_sunset_time: "20:00:00"  # Dynamic: Overridden by automation based on sleep time
+  max_sunset_time: "20:30:00"
   take_over_control: true
   detect_non_ha_changes: true  # Critical for Zigbee2MQTT
   autoreset_control_seconds: 7200
@@ -259,8 +260,8 @@
   transition_until_sleep: true
   min_sunrise_time: "05:00:00" # Aligned with wake time
   max_sunrise_time: "07:00:00" # Peak brightness/coolness at wake time
-  min_sunset_time: "19:00:00" # Extended evening hours
-  max_sunset_time: "21:30:00"
+  min_sunset_time: "20:00:00"  # Dynamic: Overridden by automation based on sleep time
+  max_sunset_time: "20:30:00"
   take_over_control: true
   detect_non_ha_changes: true  # Critical for Zigbee2MQTT
   autoreset_control_seconds: 3600
@@ -292,8 +293,8 @@
   transition_until_sleep: true
   min_sunrise_time: "05:00:00" # Aligned with wake time
   max_sunrise_time: "07:00:00" # Peak brightness/coolness at wake time
-  min_sunset_time: "18:00:00"
-  max_sunset_time: "20:00:00"
+  min_sunset_time: "20:00:00"  # Dynamic: Overridden by automation based on sleep time
+  max_sunset_time: "20:30:00"
   take_over_control: true
   detect_non_ha_changes: true  # Critical for Zigbee2MQTT
   autoreset_control_seconds: 7200
@@ -330,8 +331,8 @@
   transition_until_sleep: true
   min_sunrise_time: "05:00:00"
   max_sunrise_time: "07:00:00" # Peak brightness/coolness at wake time
-  min_sunset_time: "18:00:00"
-  max_sunset_time: "20:00:00"
+  min_sunset_time: "20:00:00"  # Dynamic: Overridden by automation based on sleep time
+  max_sunset_time: "20:30:00"
   take_over_control: true
   detect_non_ha_changes: true  # Critical for Zigbee2MQTT
   autoreset_control_seconds: 7200
@@ -368,8 +369,8 @@
   transition_until_sleep: false # No sleep transition for outdoor
   min_sunrise_time: "05:00:00" # Aligned with wake time
   max_sunrise_time: "07:00:00" # Peak brightness/coolness at wake time
-  min_sunset_time: "19:30:00" # Later for outdoor evening use
-  max_sunset_time: "21:30:00" # Extended summer evenings
+  min_sunset_time: "20:00:00"  # Dynamic: Overridden by automation based on sleep time
+  max_sunset_time: "20:30:00"
   take_over_control: true
   detect_non_ha_changes: true  # Critical for Zigbee2MQTT
   autoreset_control_seconds: 7200 # Longer reset for outdoor

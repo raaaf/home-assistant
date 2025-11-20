@@ -114,7 +114,7 @@
       sequence:
       - action: automation.turn_off
         target:
-          entity_id: automation.1678724233791  # Motion » Schlafzimmer
+          entity_id: automation.arbeitszimmer_motion  # Motion » Schlafzimmer
         data: {}
   - alias: "Disable bathroom motion if sauna or bath mode is active"
     choose:

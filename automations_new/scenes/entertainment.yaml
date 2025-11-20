@@ -3,7 +3,7 @@
 # Part of Home Assistant configuration
 - id: '1662822513154'
   alias: Scene » Gaming
-  description: Gaming mode - disables motion sensors in office and closes bedroom shutters
+  description: Gaming mode - disables adaptive lighting and motion sensors in bedroom/office, closes bedroom shutters
   triggers:
   - trigger: state
     entity_id: input_boolean.gaming
@@ -21,10 +21,22 @@
       - condition: trigger
         id: gaming-on
       sequence:
+      - alias: Disable adaptive lighting
+        action: switch.turn_off
+        target:
+          entity_id:
+          - switch.adaptive_lighting_schlafzimmer
+          - switch.adaptive_lighting_arbeitszimmer
       - alias: Disable office motion sensor
         action: automation.turn_off
         target:
           entity_id: automation.arbeitszimmer_motion
+        data:
+          stop_actions: false
+      - alias: Disable bedroom motion sensor
+        action: automation.turn_off
+        target:
+          entity_id: automation.motion_schlafzimmer
         data:
           stop_actions: false
       - alias: Close bedroom shutters
@@ -37,6 +49,12 @@
       - condition: trigger
         id: gaming-off
       sequence:
+      - alias: Re-enable adaptive lighting
+        action: switch.turn_on
+        target:
+          entity_id:
+          - switch.adaptive_lighting_schlafzimmer
+          - switch.adaptive_lighting_arbeitszimmer
       - alias: Re-enable office motion sensor if conditions are met
         choose:
         - conditions:
@@ -53,6 +71,19 @@
           - action: automation.turn_on
             target:
               entity_id: automation.arbeitszimmer_motion
+      - alias: Re-enable bedroom motion sensor if conditions are met
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.party
+            state: 'off'
+          - condition: state
+            entity_id: input_boolean.schlafenszeit
+            state: 'off'
+          sequence:
+          - action: automation.turn_on
+            target:
+              entity_id: automation.motion_schlafzimmer
       - alias: Open bedroom shutters if daytime and not sleeping
         choose:
         - conditions:

@@ -221,8 +221,8 @@
   conditions: []
   actions:
     - variables:
-        beide_weg: "{{ is_state('input_boolean.alle_sind_weg', 'on') }}"
-        besucher_inside: "{{ is_state('input_boolean.haustur_besucher_inside', 'on') }}"
+        beide_weg: "{{ has_value('input_boolean.alle_sind_weg') and is_state('input_boolean.alle_sind_weg', 'on') }}"
+        besucher_inside: "{{ has_value('input_boolean.haustur_besucher_inside') and is_state('input_boolean.haustur_besucher_inside', 'on') }}"
         aktueller_zeitstempel: "{{ now() }}"
         formatierte_zeit: "{{ now().strftime('%A, %H:%M Uhr, %d.%m.%Y') }}"
     - choose:

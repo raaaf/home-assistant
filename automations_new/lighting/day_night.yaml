@@ -226,6 +226,9 @@
       conditions:
       - condition: trigger
         id: einschlafzeit
+      - condition: state
+        entity_id: input_boolean.alle_sind_weg
+        state: 'off'
       sequence:
       - alias: Schlafenszeit aktivieren
         action: input_boolean.turn_on
@@ -248,11 +251,8 @@
       - alias: Klimaanlage auf Schlafmodus (wenn verfügbar)
         if:
         - alias: Klimaanlage ist verfügbar
-          condition: not
-          conditions:
-          - condition: state
-            entity_id: climate.ac
-            state: unavailable
+          condition: template
+          value_template: '{{ has_value(''climate.ac'') and not is_state(''climate.ac'', ''unavailable'') }}'
         then:
         - action: climate.set_preset_mode
           target:
@@ -276,6 +276,9 @@
       conditions:
       - condition: trigger
         id: schlafenszeit
+      - condition: state
+        entity_id: input_boolean.alle_sind_weg
+        state: 'off'
       sequence:
       - alias: Sleep Mode für alle Räume aktivieren
         action: switch.turn_on
@@ -329,4 +332,112 @@
           entity_id: input_boolean.es_ist_dunkel
         action: input_boolean.turn_off
         data: {}
+  mode: single
+- id: adaptive_lighting_sunset_color_transition
+  alias: Adaptive Lighting » Warm Color at Actual Sunset
+  description: Start warming color temperature at actual sunset while keeping brightness high
+  triggers:
+  - trigger: sun
+    event: sunset
+    offset: "00:00:00"
+    id: sunset
+  conditions: []
+  actions:
+  - alias: Start 90-minute color warming at sunset (keep brightness high)
+    action: adaptive_lighting.change_switch_settings
+    target:
+      entity_id:
+      - switch.adaptive_lighting_arbeitszimmer
+      - switch.adaptive_lighting_ankleide
+      - switch.adaptive_lighting_badezimmer
+      - switch.adaptive_lighting_balkon
+      - switch.adaptive_lighting_flur
+      - switch.adaptive_lighting_kinderzimmer
+      - switch.adaptive_lighting_kueche
+      - switch.adaptive_lighting_schlafzimmer
+      - switch.adaptive_lighting_waschzimmer
+      - switch.adaptive_lighting_wohnzimmer
+    data:
+      # Start color transition now
+      min_sunset_time: >-
+        {{ now().strftime('%H:%M:%S') }}
+      # End color transition 90 minutes from now
+      max_sunset_time: >-
+        {{ (now() + timedelta(minutes=90)).strftime('%H:%M:%S') }}
+      # Keep brightness high during color transition
+      min_brightness: 80
+      max_brightness: 100
+  mode: single
+- id: adaptive_lighting_dynamic_sunset
+  alias: Adaptive Lighting » Fade Over 30 Minutes When Schlafenszeit Starts
+  description: When schlafenszeit activates, fade lights over 30 minutes
+  triggers:
+  # Trigger when schlafenszeit turns ON
+  - trigger: state
+    entity_id: input_boolean.schlafenszeit
+    from: 'off'
+    to: 'on'
+    id: schlafenszeit_on
+  conditions: []
+  actions:
+  - alias: Start 30-minute fade-down when schlafenszeit activates
+    action: adaptive_lighting.change_switch_settings
+    target:
+      entity_id:
+      - switch.adaptive_lighting_arbeitszimmer
+      - switch.adaptive_lighting_ankleide
+      - switch.adaptive_lighting_badezimmer
+      - switch.adaptive_lighting_balkon
+      - switch.adaptive_lighting_flur
+      - switch.adaptive_lighting_kinderzimmer
+      - switch.adaptive_lighting_kueche
+      - switch.adaptive_lighting_schlafzimmer
+      - switch.adaptive_lighting_waschzimmer
+      - switch.adaptive_lighting_wohnzimmer
+    data:
+      # Start transition now
+      min_sunset_time: >-
+        {{ now().strftime('%H:%M:%S') }}
+      # End transition 30 minutes from now
+      max_sunset_time: >-
+        {{ (now() + timedelta(minutes=30)).strftime('%H:%M:%S') }}
+      # Dim down to sleep brightness
+      min_brightness: 10
+      max_brightness: 100
+  mode: single
+- id: adaptive_lighting_morning_reset
+  alias: Adaptive Lighting » Morning Reset to Default Sunset Times
+  description: Resets adaptive lighting to conservative default times in the morning
+  triggers:
+  # Reset at sunrise or when sleep mode ends
+  - trigger: state
+    entity_id: input_boolean.schlafenszeit
+    from: 'on'
+    to: 'off'
+    id: sleep_mode_ended
+  - trigger: sun
+    event: sunrise
+    id: sunrise
+  conditions: []
+  actions:
+  - alias: Reset all adaptive lighting switches to default conservative times
+    action: adaptive_lighting.change_switch_settings
+    target:
+      entity_id:
+      - switch.adaptive_lighting_arbeitszimmer
+      - switch.adaptive_lighting_ankleide
+      - switch.adaptive_lighting_badezimmer
+      - switch.adaptive_lighting_balkon
+      - switch.adaptive_lighting_flur
+      - switch.adaptive_lighting_kinderzimmer
+      - switch.adaptive_lighting_kueche
+      - switch.adaptive_lighting_schlafzimmer
+      - switch.adaptive_lighting_waschzimmer
+      - switch.adaptive_lighting_wohnzimmer
+    data:
+      # Reset to conservative defaults (will be overridden in evening)
+      min_sunset_time: "20:00:00"
+      max_sunset_time: "20:30:00"
+      min_brightness: 10
+      max_brightness: 100
   mode: single

@@ -48,8 +48,9 @@
         '
       is_bad_weather: "{{ states('weather.fuerth_bayern') in ['rainy', 'snowy', 'windy']\
         \ or \n   states('sensor.luftfeuchtigkeit_aussen') | float(50) > 85 }}\n"
-      heating_active: '{{ is_state(''climate.schlafzimmer'', ''on'') or is_state(''climate.ac'',
-        ''heat'') }}
+      heating_active: '{{ (has_value(''climate.schlafzimmer'') and is_state(''climate.schlafzimmer'',
+        ''on'')) or (has_value(''climate.ac'') and is_state(''climate.ac'', ''heat''))
+        }}
 
         '
       is_night_quiet_hours: '{{ now().hour >= 22 or now().hour < 6 }}

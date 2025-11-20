@@ -279,9 +279,8 @@
         data: {}
       - alias: Trockner ausschalten wenn im Aus-Zustand
         if:
-        - condition: state
-          entity_id: input_select.trockner
-          state: Aus
+        - condition: template
+          value_template: '{{ has_value(''input_select.trockner'') and is_state(''input_select.trockner'', ''Aus'') }}'
         then:
         - action: switch.turn_off
           target:
@@ -289,9 +288,8 @@
           data: {}
       - alias: Waschmaschine ausschalten wenn im Aus-Zustand
         if:
-        - condition: state
-          entity_id: input_select.waschmaschine
-          state: Aus
+        - condition: template
+          value_template: '{{ has_value(''input_select.waschmaschine'') and is_state(''input_select.waschmaschine'', ''Aus'') }}'
         then:
         - action: switch.turn_off
           target:
@@ -375,6 +373,26 @@
           - switch.schlafzimmer_tv_steckdose
           - switch.steckdose_arbeitszimmer
         data: {}
+      - alias: Schlafenszeit aktivieren wenn bereits Schlafenszeit
+        if:
+        - condition: template
+          value_template: >-
+            {% set einschlafzeit = states('sensor.einschlafzeit_timestamp') %}
+            {% if einschlafzeit not in ['unknown', 'unavailable', 'none'] %}
+              {% set sleep_time = as_datetime(einschlafzeit) %}
+              {% if sleep_time is not none %}
+                {{ now() >= sleep_time }}
+              {% else %}
+                {{ now().hour >= 19 }}
+              {% endif %}
+            {% else %}
+              {{ now().hour >= 19 }}
+            {% endif %}
+        then:
+        - action: input_boolean.turn_on
+          target:
+            entity_id: input_boolean.schlafenszeit
+          data: {}
     - alias: Alle weg (lange Abwesenheit) - Tiefschlafmodus
       conditions:
       - condition: trigger

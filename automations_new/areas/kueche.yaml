@@ -31,7 +31,7 @@
           min_brightness: 50
       - data: {}
         target:
-          entity_id: automation.1672931243226
+          entity_id: automation.motion_kuche_2
         action: automation.turn_off
       - action: light.turn_on
         target:
@@ -67,7 +67,7 @@
           sequence:
           - data: {}
             target:
-              entity_id: automation.1672931243226
+              entity_id: automation.motion_kuche_2
             action: automation.turn_on
       - delay:
           hours: 0
@@ -162,7 +162,7 @@
       - data: {}
         action: automation.turn_off
         target:
-          entity_id: automation.1745924154398
+          entity_id: automation.motion_esstisch
       - action: light.turn_on
         metadata: {}
         data:
@@ -195,6 +195,6 @@
           - data: {}
             action: automation.turn_on
             target:
-              entity_id: automation.1745924154398
+              entity_id: automation.motion_esstisch
     default: []
   mode: restart

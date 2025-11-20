@@ -177,4 +177,4 @@
           - cover.rollo_kueche
           - cover.wohnzimmer_rollo
         data: {}
-  mode: single
+  mode: restart

@@ -93,9 +93,9 @@
     state: 'off'
   action:
   - variables:
-      arbeit_aktiv: '{{ is_state(''input_boolean.arbeit'', ''on'') }}'
-      gaming_aktiv: '{{ is_state(''input_boolean.gaming'', ''on'') }}'
-      schlafenszeit_aktiv: '{{ is_state(''input_boolean.schlafenszeit'', ''on'') }}'
+      arbeit_aktiv: '{{ has_value(''input_boolean.arbeit'') and is_state(''input_boolean.arbeit'', ''on'') }}'
+      gaming_aktiv: '{{ has_value(''input_boolean.gaming'') and is_state(''input_boolean.gaming'', ''on'') }}'
+      schlafenszeit_aktiv: '{{ has_value(''input_boolean.schlafenszeit'') and is_state(''input_boolean.schlafenszeit'', ''on'') }}'
       irgendein_modus_aktiv: '{{ arbeit_aktiv or gaming_aktiv or schlafenszeit_aktiv
         }}'
       raum_temp: "{% set qingping = states('sensor.qingping_air_monitor_lite_temperature')\
@@ -381,10 +381,10 @@
   - variables:
       arbeit_fan: fan.zhimi_za4_2dca_fan
       kinder_fan: fan.zhimi_za4_fb1b_fan
-      niemand_zuhause: '{{ is_state(''input_boolean.alle_sind_weg'', ''on'') }}'
-      schlafenszeit_aktiv: '{{ is_state(''input_boolean.schlafenszeit'', ''on'') }}'
-      ac_laeuft: '{{ states(''climate.ac'') in [''cool'', ''heat'', ''dry'', ''fan_only'']
-        }}'
+      niemand_zuhause: '{{ has_value(''input_boolean.alle_sind_weg'') and is_state(''input_boolean.alle_sind_weg'', ''on'') }}'
+      schlafenszeit_aktiv: '{{ has_value(''input_boolean.schlafenszeit'') and is_state(''input_boolean.schlafenszeit'', ''on'') }}'
+      ac_laeuft: '{{ has_value(''climate.ac'') and states(''climate.ac'') in [''cool'',
+        ''heat'', ''dry'', ''fan_only''] }}'
       ac_temperatur: '{{ state_attr(''climate.ac'', ''current_temperature'') | float(25) if has_value(''climate.ac'') else 25
         }}'
   - choose:
@@ -393,9 +393,8 @@
         id: arbeit-warm
       - condition: template
         value_template: '{{ not niemand_zuhause }}'
-      - condition: state
-        entity_id: fan.zhimi_za4_2dca_fan
-        state: 'off'
+      - condition: template
+        value_template: '{{ not has_value(''fan.zhimi_za4_2dca_fan'') or is_state(''fan.zhimi_za4_2dca_fan'', ''off'') }}'
       sequence:
       - condition: or
         conditions:
@@ -421,9 +420,8 @@
     - conditions:
       - condition: trigger
         id: arbeit-kalt
-      - condition: state
-        entity_id: fan.zhimi_za4_2dca_fan
-        state: 'on'
+      - condition: template
+        value_template: '{{ has_value(''fan.zhimi_za4_2dca_fan'') and is_state(''fan.zhimi_za4_2dca_fan'', ''on'') }}'
       sequence:
       - action: fan.turn_off
         target:
@@ -432,9 +430,8 @@
     - conditions:
       - condition: trigger
         id: arbeit-speed-adjust
-      - condition: state
-        entity_id: fan.zhimi_za4_2dca_fan
-        state: 'on'
+      - condition: template
+        value_template: '{{ has_value(''fan.zhimi_za4_2dca_fan'') and is_state(''fan.zhimi_za4_2dca_fan'', ''on'') }}'
       sequence:
       - action: fan.set_percentage
         data:
@@ -446,9 +443,8 @@
         id: kinder-warm
       - condition: template
         value_template: '{{ schlafenszeit_aktiv and not niemand_zuhause }}'
-      - condition: state
-        entity_id: fan.zhimi_za4_fb1b_fan
-        state: 'off'
+      - condition: template
+        value_template: '{{ not has_value(''fan.zhimi_za4_fb1b_fan'') or is_state(''fan.zhimi_za4_fb1b_fan'', ''off'') }}'
       sequence:
       - action: fan.turn_on
         target:
@@ -470,9 +466,8 @@
         id: kinder-kalt
       - condition: template
         value_template: '{{ schlafenszeit_aktiv }}'
-      - condition: state
-        entity_id: fan.zhimi_za4_fb1b_fan
-        state: 'on'
+      - condition: template
+        value_template: '{{ has_value(''fan.zhimi_za4_fb1b_fan'') and is_state(''fan.zhimi_za4_fb1b_fan'', ''on'') }}'
       sequence:
       - action: fan.turn_off
         target:
@@ -483,9 +478,8 @@
         id: kinder-speed-adjust
       - condition: template
         value_template: '{{ schlafenszeit_aktiv }}'
-      - condition: state
-        entity_id: fan.zhimi_za4_fb1b_fan
-        state: 'on'
+      - condition: template
+        value_template: '{{ has_value(''fan.zhimi_za4_fb1b_fan'') and is_state(''fan.zhimi_za4_fb1b_fan'', ''on'') }}'
       sequence:
       - action: fan.set_percentage
         data:
@@ -500,9 +494,8 @@
     - conditions:
       - condition: trigger
         id: schlafenszeit-ende
-      - condition: state
-        entity_id: fan.zhimi_za4_fb1b_fan
-        state: 'on'
+      - condition: template
+        value_template: '{{ has_value(''fan.zhimi_za4_fb1b_fan'') and is_state(''fan.zhimi_za4_fb1b_fan'', ''on'') }}'
       sequence:
       - action: fan.turn_off
         target:
@@ -511,9 +504,8 @@
     - conditions:
       - condition: trigger
         id: ac-status-change
-      - condition: state
-        entity_id: fan.zhimi_za4_2dca_fan
-        state: 'on'
+      - condition: template
+        value_template: '{{ has_value(''fan.zhimi_za4_2dca_fan'') and is_state(''fan.zhimi_za4_2dca_fan'', ''on'') }}'
       sequence:
       - action: fan.set_percentage
         data:

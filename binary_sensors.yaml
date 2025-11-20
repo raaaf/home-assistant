@@ -71,7 +71,8 @@
     # Zustandsabhängige Geräte
     luefter_waschzimmer_active:
       friendly_name: "Lüfter Waschzimmer Active"
-      value_template: "{{ is_state('input_select.trockner', 'Arbeitet') }}"
+      value_template: "{{ has_value('input_select.trockner') and is_state('input_select.trockner', 'Arbeitet') }}"
       device_class: running
       icon_template: "mdi:fan"
       availability_template: "{{ states('input_select.trockner') not in ['unknown', 'unavailable'] }}"
+

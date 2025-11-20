@@ -167,7 +167,6 @@
     - light.kinderzimmer_decke
     - light.kinderzimmer_bucher
     - light.kinderzimmer_schrank
-    - light.kinderzimmer_stehlampe
 
 - platform: group
   unique_id: alle_badezimmer_lichter
@@ -183,6 +182,7 @@
   entities:
     - light.arbeitszimmer_decke
     - light.arbeitszimmer_pc_alle
+    - light.kinderzimmer_stehlampe
 
 - platform: group
   unique_id: alle_flur_lichter
@@ -251,6 +251,7 @@
   name: Alle Arbeitszimmer Nachtlichter
   entities:
     - light.arbeitszimmer_pc_alle
+    - light.kinderzimmer_stehlampe
 
 - platform: group
   unique_id: alle_flur_nachtlichter

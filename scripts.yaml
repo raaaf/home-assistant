@@ -277,6 +277,8 @@ fade_volume:
       - condition: template
         value_template: '{{ repeat.index <= total_steps }}'
       - condition: template
+        value_template: '{{ has_value(target_player) and state_attr(target_player, ''volume_level'') is not none }}'
+      - condition: template
         value_template: '{{ ((state_attr(target_player, ''volume_level'') | float(0)
           - target_volume) | abs) > 0.001 }}'
       sequence:

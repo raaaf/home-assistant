@@ -33,7 +33,7 @@
       - action: automation.turn_off
         target:
           entity_id:
-          - automation.1696241451967  # Helper » Workday Musik - Automatic workday music
+          - automation.helper_workday_musik  # Helper » Workday Musik - Automatic workday music
         data: {}
       - target:
           entity_id:
@@ -46,7 +46,7 @@
       sequence:
       - target:
           entity_id:
-          - automation.1696241451967  # Helper » Workday Musik - Automatic workday music
+          - automation.helper_workday_musik  # Helper » Workday Musik - Automatic workday music
         action: automation.turn_on
       - target:
           entity_id:
@@ -123,13 +123,13 @@
       - action: automation.turn_off
         target:
           entity_id:
-          - automation.1672931243226  # Motion sensor automation (living room)
+          - automation.motion_kuche_2  # Motion sensor automation (living room)
           - automation.motion_flur_wohnung  # Hallway motion sensor
-          - automation.1678724233791  # Bedroom motion sensor
-          - automation.1672929418223  # Kitchen motion sensor
-          - automation.1745924154398  # Bathroom motion sensor
+          - automation.arbeitszimmer_motion  # Bedroom motion sensor
+          - automation.motion_badezimmer_gross  # Kitchen motion sensor
+          - automation.motion_esstisch  # Bathroom motion sensor
           - automation.arbeitszimmer_motion  # Office motion sensor
-          - automation.1692710690350  # Additional motion sensor
+          - automation.kinderzimmer_motion  # Additional motion sensor
           - automation.motion_haustur  # Front door motion sensor
         data: {}
       - action: scene_presets.start_dynamic_scene
@@ -212,7 +212,7 @@
           sequence:
           - action: automation.turn_on
             target:
-              entity_id: automation.1672931243226  # Motion sensor automation (kitchen)
+              entity_id: automation.motion_kuche_2  # Motion sensor automation (kitchen)
       - alias: "Re-enable hallway motion if no conflicting scenes"
         choose:
         - conditions:
@@ -235,15 +235,15 @@
           sequence:
           - action: automation.turn_on
             target:
-              entity_id: automation.1678724233791  # Bedroom motion sensor
+              entity_id: automation.arbeitszimmer_motion  # Bedroom motion sensor
       - alias: "Re-enable other motion sensors unconditionally"
         action: automation.turn_on
         target:
           entity_id:
-          - automation.1672929418223  # Bathroom motion sensor
-          - automation.1745924154398  # Dining table motion sensor
+          - automation.motion_badezimmer_gross  # Bathroom motion sensor
+          - automation.motion_esstisch  # Dining table motion sensor
           - automation.arbeitszimmer_motion  # Office motion sensor
-          - automation.1692710690350  # Additional motion sensor
+          - automation.kinderzimmer_motion  # Additional motion sensor
           - automation.motion_haustur  # Front door motion sensor
       - action: light.turn_off
         data:
@@ -282,47 +282,48 @@
       - alias: Bewegungsmelder Schlafzimmer deaktivieren
         action: automation.turn_off
         target:
-          entity_id: automation.1678724233791  # Bedroom motion sensor
+          entity_id: automation.arbeitszimmer_motion  # Bedroom motion sensor
         data: {}
       - choose:
-        - alias: Dunkel und vor 21 Uhr - normale Arbeitsbeleuchtung
+        - alias: Nach 21 Uhr - nur Nachtlichter (unabhängig von Helligkeit)
           conditions:
-          - alias: Es ist dunkel (Sonne unter oder Schlafenszeit)
-            condition: template
-            value_template: "{{ has_value('sun.sun') and (state_attr('sun.sun', 'elevation') < 0 or \n   (has_value('input_boolean.schlafenszeit') and is_state('input_boolean.schlafenszeit',\
-              \ 'on'))) }}\n"
-          - alias: Vor 21 Uhr
-            condition: template
-            value_template: '{{ now().hour < 21 }}'
-          sequence:
-          - alias: Helle Arbeitsbeleuchtung einschalten
-            action: light.turn_on
-            target:
-              entity_id:
-              - light.alle_arbeitszimmer_nachtlichter
-              - light.alle_arbeitszimmer_lichter
-            data:
-              brightness_pct: 80
-              color_temp_kelvin: 5000
-              transition: 2
-        - alias: Dunkel und nach 21 Uhr - gedämpfte Arbeitsbeleuchtung
-          conditions:
-          - alias: Es ist dunkel (Sonne unter oder Schlafenszeit)
-            condition: template
-            value_template: "{{ has_value('sun.sun') and (state_attr('sun.sun', 'elevation') < 0 or \n   (has_value('input_boolean.schlafenszeit') and is_state('input_boolean.schlafenszeit',\
-              \ 'on'))) }}\n"
-          - alias: Nach 21 Uhr
-            condition: template
+          - condition: template
             value_template: '{{ now().hour >= 21 }}'
           sequence:
-          - alias: Gedämpfte Arbeitsbeleuchtung einschalten
+          - alias: Nachtlichter einschalten
             action: light.turn_on
             target:
               entity_id: light.alle_arbeitszimmer_nachtlichter
             data:
-              brightness_pct: 60
-              color_temp_kelvin: 4000
               transition: 2
+        - alias: Sehr hell draußen - keine Lichter nötig
+          conditions:
+          - condition: numeric_state
+            entity_id: sensor.sunlight_pct
+            above: 70
+          sequence: []
+        - alias: Hell draußen - nur Nachtlichter
+          conditions:
+          - condition: numeric_state
+            entity_id: sensor.sunlight_pct
+            above: 40
+            below: 71
+          sequence:
+          - alias: Nachtlichter einschalten
+            action: light.turn_on
+            target:
+              entity_id: light.alle_arbeitszimmer_nachtlichter
+            data:
+              transition: 2
+        default:
+        - alias: Dunkel oder moderat - alle Arbeitslichter einschalten
+          action: light.turn_on
+          target:
+            entity_id:
+            - light.alle_arbeitszimmer_nachtlichter
+            - light.alle_arbeitszimmer_lichter
+          data:
+            transition: 2
     - alias: Arbeitsmodus deaktivieren
       conditions:
       - condition: trigger
@@ -341,7 +342,7 @@
           - alias: Bewegungsmelder Schlafzimmer aktivieren
             action: automation.turn_on
             target:
-              entity_id: automation.1678724233791  # Bedroom motion sensor
+              entity_id: automation.arbeitszimmer_motion  # Bedroom motion sensor
             data: {}
       - alias: Nur ausschalten wenn es dunkel ist
         condition: template

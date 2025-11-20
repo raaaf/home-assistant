@@ -42,7 +42,7 @@
       - input_boolean.werktag_aufwachen
       - input_boolean.werktag_musik
     data: {}
-  - wait_template: '{{ is_state(''media_player.homepods'', ''playing'') }}'
+  - wait_template: '{{ has_value(''media_player.homepods'') and is_state(''media_player.homepods'', ''playing'') }}'
     timeout: 00:00:15
     continue_on_timeout: true
   - delay: 00:00:03

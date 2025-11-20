@@ -157,7 +157,7 @@
     night_state:
       friendly_name: "Night State"
       icon_template: mdi:weather-night
-      value_template: "{{ 1 if is_state('sun.sun', 'below_horizon') else 0 }}"
+      value_template: "{{ 1 if (has_value('sun.sun') and is_state('sun.sun', 'below_horizon')) else 0 }}"
 
     # Smart Home Status
     count_lights_on:
@@ -244,7 +244,7 @@
     # Zustandsabhängige Geräte
     luefter_waschzimmer_running:
       friendly_name: "Lüfter Waschzimmer Running"
-      value_template: "{{ is_state('input_select.trockner', 'Arbeitet') }}"
+      value_template: "{{ has_value('input_select.trockner') and is_state('input_select.trockner', 'Arbeitet') }}"
       icon_template: "mdi:fan"
       availability_template: "{{ states('input_select.trockner') not in ['unknown', 'unavailable'] }}"
 

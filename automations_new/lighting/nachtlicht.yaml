@@ -32,7 +32,7 @@
         brightness: 25
         rgb_color: [255, 80, 40]  # Warm reddish color
         transition: 2
-  mode: single
+  mode: restart
 
 - id: nachtlicht_aus
   alias: Lighting » Nachtlicht aus (Sonnenaufgang)
@@ -62,4 +62,4 @@
         entity_id: light.aqara_hub_lightbulb
       data:
         transition: 2
-  mode: single
+  mode: restart
