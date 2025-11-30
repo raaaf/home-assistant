@@ -48,9 +48,9 @@
   actions:
   - variables:
       basis_einschlaf_schultag: '19:30:00'
-      basis_einschlaf_wochenende: '20:00:00'
+      basis_einschlaf_wochenende: '20:30:00'
       basis_aufwach_schultag: 06:30:00
-      basis_aufwach_wochenende: 07:00:00
+      basis_aufwach_wochenende: 07:30:00
       aktueller_monat: '{{ now().month | int }}'
       aussentemperatur: '{% if has_value(''weather.fuerth_bayern'') %}{{ state_attr(''weather.fuerth_bayern'', ''temperature'')
         | float(20) }}{% else %}20{% endif %}'
@@ -60,72 +60,19 @@
       sonnenuntergang_zeit: "{% set su = state_attr('sun.sun', 'next_setting') %}\
         \ {% if su %}\n  {{ (su | as_datetime | as_local).strftime('%H:%M') }}\n{%\
         \ else %}\n  20:00\n{% endif %}\n"
-      helligkeit_offset: "{% if has_value('sensor.balkon_motion_illuminance') %}{% set lux = states('sensor.balkon_motion_illuminance')\
-        \ | float(100) %}{% else %}{% set lux = 100 %}{% endif %} {% if lux < 10 %}\n  {{ -20 }}\n{% elif lux < 50 %}\n  {{\
-        \ -10 }}\n{% elif lux < 200 %}\n  {{ 0 }}\n{% elif lux < 1000 %}\n  {{ 10\
-        \ }}\n{% else %}\n  {{ 15 }}\n{% endif %}\n"
-      saison_offset_einschlaf: "{% set m = now().month | int %} {% if m == 12 or m\
-        \ == 1 %}\n  {{ -30 }}\n{% elif m == 2 or m == 11 %}\n  {{ -20 }}\n{% elif\
-        \ m == 3 or m == 10 %}\n  {{ -10 }}\n{% elif m == 4 or m == 9 %}\n  {{ 0 }}\n\
-        {% elif m == 5 or m == 8 %}\n  {{ 15 }}\n{% elif m == 6 or m == 7 %}\n  {{\
-        \ 30 }}\n{% else %}\n  {{ 0 }}\n{% endif %}\n"
-      saison_offset_aufwach: "{% set m = now().month | int %} {% if m == 12 or m ==\
-        \ 1 %}\n  {{ 30 }}\n{% elif m == 2 or m == 11 %}\n  {{ 20 }}\n{% elif m ==\
-        \ 3 or m == 10 %}\n  {{ 10 }}\n{% elif m == 4 or m == 9 %}\n  {{ 0 }}\n{%\
-        \ elif m == 5 or m == 8 %}\n  {{ -10 }}\n{% elif m == 6 or m == 7 %}\n  {{\
-        \ -20 }}\n{% else %}\n  {{ 0 }}\n{% endif %}\n"
-      sonnenuntergang_offset: "{% set su = state_attr('sun.sun', 'next_setting') %}\
-        \ {% if su %}\n  {% set su_time = su | as_datetime | as_local %}\n  {% set\
-        \ stunde = su_time.hour + (su_time.minute / 60) %}\n  {% if stunde < 17 %}\n\
-        \    {{ -20 }}\n  {% elif stunde < 18 %}\n    {{ -10 }}\n  {% elif stunde\
-        \ < 19 %}\n    {{ 0 }}\n  {% elif stunde < 20 %}\n    {{ 10 }}\n  {% elif\
-        \ stunde < 21 %}\n    {{ 20 }}\n  {% else %}\n    {{ 30 }}\n  {% endif %}\n\
-        {% else %}\n  {{ 0 }}\n{% endif %}\n"
-      wetter_offset: "{% if has_value('weather.fuerth_bayern') %}{% set w = states('weather.fuerth_bayern') %} {% set temp =\
-        \ state_attr('weather.fuerth_bayern', 'temperature') | float(20) %}{% else %}{% set w = 'sunny' %}{% set temp = 20 %}{% endif %} {% if\
-        \ w == 'rainy' or w == 'pouring' or w == 'lightning-rainy' %}\n  {{ -15 }}\n\
-        {% elif w == 'sunny' and temp > 25 %}\n  {{ 15 }}\n{% elif w == 'partlycloudy'\
-        \ and temp > 25 %}\n  {{ 10 }}\n{% else %}\n  {{ 0 }}\n{% endif %}\n"
-      temp_offset: "{% if has_value('weather.fuerth_bayern') %}{% set t = state_attr('weather.fuerth_bayern', 'temperature')\
-        \ | float(20) %}{% else %}{% set t = 20 %}{% endif %} {% if t < 5 %}\n  {{ -10 }}\n{% elif t > 28 %}\n  {{ 20 }}\n\
-        {% else %}\n  {{ 0 }}\n{% endif %}\n"
-      gesamt_offset_einschlaf_schultag: '{% set total = saison_offset_einschlaf|int
-        + sonnenuntergang_offset|int + helligkeit_offset|int + wetter_offset|int +
-        temp_offset|int %} {% set begrenzt = [total, -30] | max %} {{ [begrenzt, 30]
-        | min }}  {# Max 30 Min statt 45 #}
-
-        '
-      gesamt_offset_einschlaf_wochenende: '{% set total = saison_offset_einschlaf|int
-        + sonnenuntergang_offset|int + helligkeit_offset|int + wetter_offset|int +
-        temp_offset|int %} {% set begrenzt = [total, -30] | max %} {{ [begrenzt, 45]
-        | min }}  {# Max 45 Min statt 60 #}
-
-        '
-      gesamt_offset_aufwach: '{% set total = saison_offset_aufwach|int %} {% set begrenzt
-        = [total, -15] | max %} {{ [begrenzt, 30] | min }}  {# Weniger extreme Anpassung
-        #}
-
-        '
-      einschlaf_schultag_final: '{% set basis = today_at(basis_einschlaf_schultag)
-        %} {% set angepasst = basis + timedelta(minutes=gesamt_offset_einschlaf_schultag|int)
-        %} {% set begrenzt = [angepasst, today_at(''21:00:00'')] | min %} {{ begrenzt.strftime(''%H:%M:%S'') }}
-
-        '
-      einschlaf_wochenende_final: '{% set basis = today_at(basis_einschlaf_wochenende)
-        %} {% set angepasst = basis + timedelta(minutes=gesamt_offset_einschlaf_wochenende|int)
-        %} {% set begrenzt = [angepasst, today_at(''21:00:00'')] | min %} {{ begrenzt.strftime(''%H:%M:%S'') }}
-
-        '
-      aufwach_schultag_final: '{% set basis = today_at(basis_aufwach_schultag) %}
-        {% set angepasst = basis + timedelta(minutes=gesamt_offset_aufwach|int) %}
-        {% set begrenzt = [angepasst, today_at(''06:30:00'')] | max %} {{ begrenzt.strftime(''%H:%M:%S'') }}
-
-        '
-      aufwach_wochenende_final: '{% set basis = today_at(basis_aufwach_wochenende)
-        %} {% set angepasst = basis + timedelta(minutes=gesamt_offset_aufwach|int)
-        %} {% set begrenzt = [angepasst, today_at(''08:00:00'')] | max %} {{ begrenzt.strftime(''%H:%M:%S'') }}
-
-        '
+      helligkeit_offset: "{{ 0 }}"
+      saison_offset_einschlaf: "{{ 0 }}"
+      saison_offset_aufwach: "{{ 0 }}"
+      sonnenuntergang_offset: "{{ 0 }}"
+      wetter_offset: "{{ 0 }}"
+      temp_offset: "{{ 0 }}"
+      gesamt_offset_einschlaf_schultag: '{{ 0 }}'
+      gesamt_offset_einschlaf_wochenende: '{{ 0 }}'
+      gesamt_offset_aufwach: '{{ 0 }}'
+      einschlaf_schultag_final: '{{ basis_einschlaf_schultag }}'
+      einschlaf_wochenende_final: '{{ basis_einschlaf_wochenende }}'
+      aufwach_schultag_final: '{{ basis_aufwach_schultag }}'
+      aufwach_wochenende_final: '{{ basis_aufwach_wochenende }}'
   - action: input_datetime.set_datetime
     target:
       entity_id: input_datetime.einschlafzeit_arbeitstag
