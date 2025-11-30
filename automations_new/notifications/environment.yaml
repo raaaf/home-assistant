@@ -6,7 +6,7 @@
   alias: Notifications » Heizung > 4 Stunden
   description: Benachrichtigt wenn Heizungen länger als 4 Stunden aktiv sind
   triggers:
-  - entity_id: sensor.heizung_arbeitszimmer_an
+  - entity_id: sensor.heizung_schlafzimmer_an
     above: 4
     trigger: numeric_state
   - entity_id: sensor.heizung_kinderzimmer_an
@@ -24,7 +24,7 @@
   conditions:
   - condition: template
     value_template: >
-      {% set last = state_attr('automation.notifications_heizung_4_stunden', 'last_triggered') %}
+      {% set last = state_attr('automation.notifications_heizung_8_stunden', 'last_triggered') %}
       {{ last is none or (now() - last).total_seconds() > 12 * 60 * 60 }}
   actions:
   - variables:

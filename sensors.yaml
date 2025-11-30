@@ -51,8 +51,8 @@
 
 # History Stats - Heizungen (je Raum)
 - platform: history_stats
-  name: Heizung Arbeitszimmer An
-  entity_id: switch.heizung_schlafzimmer # Hinweis: Entity ID scheint falsch zu sein
+  name: Heizung Schlafzimmer An
+  entity_id: switch.heizung_schlafzimmer
   state: "on"
   type: time
   start: "{{ now().replace(hour=0, minute=0, second=0) }}"

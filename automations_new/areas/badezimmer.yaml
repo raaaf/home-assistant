@@ -59,15 +59,14 @@
       - condition: trigger
         id: 'on'
       sequence:
-      - data: {}
-        target:
-          entity_id: switch.adaptive_lighting_badezimmer
-        action: switch.turn_off
-      - data: {}
-        target:
-          entity_id:
-          - automation.motion_badezimmer_gross
-        action: automation.turn_off
+      - alias: "Deaktiviere adaptive Beleuchtung"
+        action: script.scene_disable_adaptive_lighting
+        data:
+          room: "badezimmer"
+      - alias: "Deaktiviere Motion-Automationen"
+        action: script.scene_disable_motion_automations
+        data:
+          automations: "automation.motion_badezimmer_gross"
       - action: cover.set_cover_position
         target:
           entity_id: cover.badezimmer_rollo
@@ -90,32 +89,22 @@
       - condition: trigger
         id: 'off'
       sequence:
-      - alias: "Re-enable bathroom adaptive lighting if bath/party mode is off"
-        choose:
-        - conditions:
-          - condition: state
-            entity_id: input_boolean.baden
-            state: 'off'
-          - condition: state
-            entity_id: input_boolean.party
-            state: 'off'
-          sequence:
-          - data: {}
-            target:
-              entity_id: switch.adaptive_lighting_badezimmer
-            action: switch.turn_on
-      - alias: "Re-enable bathroom motion only if bath mode is off"
-        choose:
-        - conditions:
-          - condition: state
-            entity_id: input_boolean.baden
-            state: 'off'
-          sequence:
-          - data: {}
-            target:
-              entity_id:
-              - automation.motion_badezimmer_gross
-            action: automation.turn_on
+      - alias: "Setze aktive Szene zurück"
+        action: input_select.select_option
+        target:
+          entity_id: input_select.active_scene
+        data:
+          option: "Keine"
+      - alias: "Reaktiviere adaptive Beleuchtung mit Konflikt-Prüfung"
+        action: script.scene_enable_adaptive_lighting
+        data:
+          room: "badezimmer"
+          exclude_scenes: "baden,party"
+      - alias: "Reaktiviere Motion-Automationen mit Konflikt-Prüfung"
+        action: script.scene_enable_motion_automations
+        data:
+          automations: "automation.motion_badezimmer_gross"
+          exclude_scenes: "baden"
       - action: cover.set_cover_position
         target:
           entity_id: cover.badezimmer_rollo
@@ -148,15 +137,14 @@
       - condition: trigger
         id: 'on'
       sequence:
-      - data: {}
-        target:
-          entity_id: switch.adaptive_lighting_badezimmer
-        action: switch.turn_off
-      - data: {}
-        target:
-          entity_id:
-          - automation.motion_badezimmer_gross
-        action: automation.turn_off
+      - alias: "Deaktiviere adaptive Beleuchtung"
+        action: script.scene_disable_adaptive_lighting
+        data:
+          room: "badezimmer"
+      - alias: "Deaktiviere Motion-Automationen"
+        action: script.scene_disable_motion_automations
+        data:
+          automations: "automation.motion_badezimmer_gross"
       - action: scene_presets.start_dynamic_scene
         data:
           preset_id: a6ba3a6e-1e3a-41fd-84f2-f7b021935deb
@@ -171,32 +159,22 @@
       - condition: trigger
         id: 'off'
       sequence:
-      - alias: "Re-enable bathroom adaptive lighting if sauna/party mode is off"
-        choose:
-        - conditions:
-          - condition: state
-            entity_id: input_boolean.sauna
-            state: 'off'
-          - condition: state
-            entity_id: input_boolean.party
-            state: 'off'
-          sequence:
-          - data: {}
-            target:
-              entity_id: switch.adaptive_lighting_badezimmer
-            action: switch.turn_on
-      - alias: "Re-enable bathroom motion only if sauna mode is off"
-        choose:
-        - conditions:
-          - condition: state
-            entity_id: input_boolean.sauna
-            state: 'off'
-          sequence:
-          - data: {}
-            target:
-              entity_id:
-              - automation.motion_badezimmer_gross
-            action: automation.turn_on
+      - alias: "Setze aktive Szene zurück"
+        action: input_select.select_option
+        target:
+          entity_id: input_select.active_scene
+        data:
+          option: "Keine"
+      - alias: "Reaktiviere adaptive Beleuchtung mit Konflikt-Prüfung"
+        action: script.scene_enable_adaptive_lighting
+        data:
+          room: "badezimmer"
+          exclude_scenes: "sauna,party"
+      - alias: "Reaktiviere Motion-Automationen mit Konflikt-Prüfung"
+        action: script.scene_enable_motion_automations
+        data:
+          automations: "automation.motion_badezimmer_gross"
+          exclude_scenes: "sauna"
       - delay:
           hours: 0
           minutes: 5
@@ -242,7 +220,7 @@
       night_light_transition_on: 3
       night_light_transition_off: 9
       boolean_scenes_scripts: input_boolean.musik_badezimmer
-      time_delay: 5
-      night_time_delay: 1
+      time_delay: 0
+      night_time_delay: 0
       ambient_light_value: 150
       ambient_light_high_value: 200

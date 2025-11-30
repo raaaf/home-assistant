@@ -118,7 +118,6 @@ recorder:
       - sensor.steckdose_kinderzimmer_power  # Kinderzimmer (kids room)
       # Aggregate power sensors
       - sensor.alle_always_on_power  # Alle Always-On
-      - sensor.alle_lichter_power  # Alle Lichter
       - sensor.alle_speaker_power  # Alle Speaker
       - sensor.alle_variablen_power  # Alle Variablen
 
@@ -179,7 +178,10 @@ adaptive_lighting: !include adaptive_lighting.yaml
 
 # Power Calculation
 powercalc:
-  enable_autodiscovery: true
+  discovery:
+    enabled: true
+    exclude_device_types:
+      - power_meter    # exclude devices that already measure power (Shelly, smart plugs)
   create_utility_meters: true
   utility_meter_types:
     - daily
@@ -191,6 +193,9 @@ powercalc:
   energy_sensor_friendly_naming: "{} Energy"
   energy_sensor_precision: 2
   power_sensor_precision: 2
+  # Throttle group sensors to reduce database writes
+  group_power_update_interval: 5      # default: 2 seconds
+  group_energy_update_interval: 120   # default: 60 seconds
   # Handle edge cases and errors gracefully
   disable_extended_attributes: true
   ignore_unavailable_state: true
@@ -305,6 +310,259 @@ template:
              states('input_datetime.einschlafzeit_arbeitstag') not in ['unknown', 'unavailable'] and
              states('input_datetime.einschlafzeit_freier_tag') not in ['unknown', 'unavailable'] }}
 
+  # Scene status sensors
+  - sensor:
+      - name: "Active Scenes"
+        unique_id: active_scenes
+        state: >
+          {% set scenes = [
+            'Film' if is_state('input_boolean.movie', 'on') else none,
+            'Party' if is_state('input_boolean.party', 'on') else none,
+            'Kochen' if is_state('input_boolean.kochen', 'on') else none,
+            'Essen' if is_state('input_boolean.essen', 'on') else none,
+            'Baden' if is_state('input_boolean.baden', 'on') else none,
+            'Sauna' if is_state('input_boolean.sauna', 'on') else none,
+            'Arbeit' if is_state('input_boolean.arbeit', 'on') else none,
+            'Gaming' if is_state('input_boolean.gaming', 'on') else none
+          ] | reject('none') | list %}
+          {% if scenes | length > 0 %}
+            {{ scenes | join(', ') }}
+          {% else %}
+            Keine
+          {% endif %}
+        icon: mdi:play-circle
+        attributes:
+          scene_count: >
+            {{ [
+              is_state('input_boolean.movie', 'on'),
+              is_state('input_boolean.party', 'on'),
+              is_state('input_boolean.kochen', 'on'),
+              is_state('input_boolean.essen', 'on'),
+              is_state('input_boolean.baden', 'on'),
+              is_state('input_boolean.sauna', 'on'),
+              is_state('input_boolean.arbeit', 'on'),
+              is_state('input_boolean.gaming', 'on')
+            ] | select('true') | list | length }}
+          scene_list: >
+            {{ [
+              'Film' if is_state('input_boolean.movie', 'on') else none,
+              'Party' if is_state('input_boolean.party', 'on') else none,
+              'Kochen' if is_state('input_boolean.kochen', 'on') else none,
+              'Essen' if is_state('input_boolean.essen', 'on') else none,
+              'Baden' if is_state('input_boolean.baden', 'on') else none,
+              'Sauna' if is_state('input_boolean.sauna', 'on') else none,
+              'Arbeit' if is_state('input_boolean.arbeit', 'on') else none,
+              'Gaming' if is_state('input_boolean.gaming', 'on') else none
+            ] | reject('none') | list }}
+
+  # Scene status binary sensors
+  - binary_sensor:
+      - name: "Any Scene Active"
+        unique_id: any_scene_active
+        device_class: running
+        state: >
+          {{ [
+            is_state('input_boolean.movie', 'on'),
+            is_state('input_boolean.party', 'on'),
+            is_state('input_boolean.kochen', 'on'),
+            is_state('input_boolean.essen', 'on'),
+            is_state('input_boolean.baden', 'on'),
+            is_state('input_boolean.sauna', 'on'),
+            is_state('input_boolean.arbeit', 'on'),
+            is_state('input_boolean.gaming', 'on')
+          ] | select('true') | list | length > 0 }}
+        availability: >
+          {{ expand(['input_boolean.movie', 'input_boolean.party',
+                     'input_boolean.kochen', 'input_boolean.essen',
+                     'input_boolean.baden', 'input_boolean.sauna',
+                     'input_boolean.arbeit', 'input_boolean.gaming'])
+             | selectattr('state', 'defined') | list | length == 8 }}
+        icon: >
+          {% if this.state == 'on' %}
+            mdi:play-circle
+          {% else %}
+            mdi:play-circle-outline
+          {% endif %}
+        attributes:
+          active_scenes: "{{ states('sensor.active_scenes') }}"
+          scene_count: "{{ state_attr('sensor.active_scenes', 'scene_count') }}"
+
+      - name: "Scene Conflict Detected"
+        unique_id: scene_conflict_detected
+        device_class: problem
+        state: >
+          {% set party = is_state('input_boolean.party', 'on') %}
+          {% set arbeit = is_state('input_boolean.arbeit', 'on') %}
+          {% set gaming = is_state('input_boolean.gaming', 'on') %}
+          {% set other_scenes = [
+            is_state('input_boolean.movie', 'on'),
+            is_state('input_boolean.kochen', 'on'),
+            is_state('input_boolean.essen', 'on'),
+            is_state('input_boolean.baden', 'on'),
+            is_state('input_boolean.sauna', 'on')
+          ] | select('true') | list | length > 0 %}
+          {% set conflict = false %}
+          {# Party conflicts with any other scene #}
+          {% if party and (arbeit or gaming or other_scenes) %}
+            {% set conflict = true %}
+          {% endif %}
+          {# Arbeit and Gaming conflict (same room) #}
+          {% if arbeit and gaming %}
+            {% set conflict = true %}
+          {% endif %}
+          {{ conflict }}
+        availability: >
+          {{ expand(['input_boolean.movie', 'input_boolean.party',
+                     'input_boolean.kochen', 'input_boolean.essen',
+                     'input_boolean.baden', 'input_boolean.sauna',
+                     'input_boolean.arbeit', 'input_boolean.gaming'])
+             | selectattr('state', 'defined') | list | length == 8 }}
+        icon: >
+          {% if this.state == 'on' %}
+            mdi:alert-circle
+          {% else %}
+            mdi:check-circle
+          {% endif %}
+        attributes:
+          active_scenes: "{{ states('sensor.active_scenes') }}"
+          conflict_reason: >
+            {% set party = is_state('input_boolean.party', 'on') %}
+            {% set arbeit = is_state('input_boolean.arbeit', 'on') %}
+            {% set gaming = is_state('input_boolean.gaming', 'on') %}
+            {% set other_scenes = [
+              is_state('input_boolean.movie', 'on'),
+              is_state('input_boolean.kochen', 'on'),
+              is_state('input_boolean.essen', 'on'),
+              is_state('input_boolean.baden', 'on'),
+              is_state('input_boolean.sauna', 'on')
+            ] | select('true') | list | length > 0 %}
+            {% if party and (arbeit or gaming or other_scenes) %}
+              Party-Modus kann nicht mit anderen Szenen kombiniert werden
+            {% elif arbeit and gaming %}
+              Arbeit und Gaming nutzen denselben Raum (Arbeitszimmer)
+            {% else %}
+              Kein Konflikt
+            {% endif %}
+
+      - name: "Motion Automations Disabled"
+        unique_id: motion_automations_disabled
+        device_class: problem
+        state: >
+          {{ is_state('automation.motion_kuche_2', 'off') or
+             is_state('automation.motion_esstisch', 'off') or
+             is_state('automation.motion_badezimmer_gross', 'off') or
+             is_state('automation.arbeitszimmer_motion', 'off') }}
+        availability: >
+          {{ expand(['automation.motion_kuche_2', 'automation.motion_esstisch',
+                     'automation.motion_badezimmer_gross', 'automation.arbeitszimmer_motion'])
+             | selectattr('state', 'defined') | list | length == 4 }}
+        icon: >
+          {% if this.state == 'on' %}
+            mdi:motion-sensor-off
+          {% else %}
+            mdi:motion-sensor
+          {% endif %}
+        attributes:
+          disabled_count: >
+            {{ [
+              is_state('automation.motion_kuche_2', 'off'),
+              is_state('automation.motion_esstisch', 'off'),
+              is_state('automation.motion_badezimmer_gross', 'off'),
+              is_state('automation.arbeitszimmer_motion', 'off')
+            ] | select('true') | list | length }}
+          disabled_automations: >
+            {{ [
+              'Küche' if is_state('automation.motion_kuche_2', 'off') else none,
+              'Esstisch' if is_state('automation.motion_esstisch', 'off') else none,
+              'Badezimmer' if is_state('automation.motion_badezimmer_gross', 'off') else none,
+              'Arbeitszimmer' if is_state('automation.arbeitszimmer_motion', 'off') else none
+            ] | reject('none') | list | join(', ') }}
+
+  # Fan speed calculation sensors
+  - sensor:
+      - name: "Fan Speed Office Calculated"
+        unique_id: fan_speed_office_calculated
+        unit_of_measurement: "%"
+        state: >
+          {% set ac_running = is_state('climate.ac', 'on') if has_value('climate.ac') else false %}
+          {% if has_value('sensor.arbeitszimmer_temperatur') %}
+            {% set temp = states('sensor.arbeitszimmer_temperatur')|float(22) %}
+            {% if ac_running %}
+              {# With AC: Lower speeds for air circulation #}
+              {% if temp > 28 %} 75
+              {% elif temp > 26 %} 50
+              {% elif temp > 24 %} 25
+              {% else %} 25
+              {% endif %}
+            {% else %}
+              {# Without AC: Normal speeds #}
+              {% if temp > 28 %} 100
+              {% elif temp > 26 %} 75
+              {% elif temp > 24 %} 50
+              {% else %} 25
+              {% endif %}
+            {% endif %}
+          {% else %}
+            25
+          {% endif %}
+        availability: >
+          {{ has_value('sensor.arbeitszimmer_temperatur') }}
+        attributes:
+          temperature: "{{ states('sensor.arbeitszimmer_temperatur') if has_value('sensor.arbeitszimmer_temperatur') else 'N/A' }}"
+          ac_running: "{{ ac_running }}"
+
+      - name: "Fan Speed Kids Room Calculated"
+        unique_id: fan_speed_kids_calculated
+        unit_of_measurement: "%"
+        state: >
+          {% if has_value('sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature') %}
+            {% set temp = states('sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature')|float(22) %}
+            {# Gentle speeds for kids #}
+            {% if temp > 28 %} 50
+            {% elif temp > 26 %} 35
+            {% elif temp > 24 %} 25
+            {% else %} 20
+            {% endif %}
+          {% else %}
+            20
+          {% endif %}
+        availability: >
+          {{ has_value('sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature') }}
+        attributes:
+          temperature: "{{ states('sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature') if has_value('sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature') else 'N/A' }}"
+
+      - name: "Room Temperature Average"
+        unique_id: room_temperature_average
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state: >
+          {% set temps = [
+            states('sensor.arbeitszimmer_temperatur'),
+            states('sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature'),
+            states('sensor.badezimmer_temperatur_und_luftfeuchtigkeit_temperature'),
+            states('sensor.qingping_air_monitor_lite_temperature')
+          ] | reject('in', ['unknown', 'unavailable']) | map('float', 0) | select('>', 0) | list %}
+          {% if temps | length > 0 %}
+            {{ (temps | sum / temps | length) | round(1) }}
+          {% else %}
+            unavailable
+          {% endif %}
+        availability: >
+          {{ expand(['sensor.arbeitszimmer_temperatur',
+                     'sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature',
+                     'sensor.badezimmer_temperatur_und_luftfeuchtigkeit_temperature',
+                     'sensor.qingping_air_monitor_lite_temperature'])
+             | rejectattr('state', 'in', ['unknown', 'unavailable'])
+             | list | length > 0 }}
+        attributes:
+          room_count: >
+            {{ expand(['sensor.arbeitszimmer_temperatur',
+                       'sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature',
+                       'sensor.badezimmer_temperatur_und_luftfeuchtigkeit_temperature',
+                       'sensor.qingping_air_monitor_lite_temperature'])
+               | rejectattr('state', 'in', ['unknown', 'unavailable'])
+               | list | length }}
+
   # Weather forecast sensor with trigger
   - trigger:
       - platform: time_pattern
@@ -375,15 +633,41 @@ input_boolean:
     name: "Gaming Mode"
     icon: mdi:gamepad-variant
     initial: false
+  frost_warning_sent:
+    name: "Frostwarnung gesendet"
+    icon: mdi:snowflake-alert
+    initial: false
+  # Test triggers for scene validation
+  test_scene_film:
+    name: "Test Scene: Film"
+    icon: mdi:movie-play
+    initial: false
+  test_scene_party:
+    name: "Test Scene: Party"
+    icon: mdi:party-popper
+    initial: false
+  test_scene_kochen:
+    name: "Test Scene: Kochen"
+    icon: mdi:chef-hat
+    initial: false
+  test_scene_baden:
+    name: "Test Scene: Baden"
+    icon: mdi:bathtub
+    initial: false
 
 input_datetime:
   haustur_eingang_zeit:
     name: "Eingangszeit Besucher"
     has_date: true
     has_time: true
-    
+
   haustur_letzter_eingang:
     name: "Letzter Eingang über Haustür"
+    has_date: true
+    has_time: true
+
+  wakeup_routine_started:
+    name: "Aufwachroutine gestartet"
     has_date: true
     has_time: true
 
@@ -393,18 +677,129 @@ input_text:
     initial: ""
     max: 100
 
+input_number:
+  # Climate control temperature thresholds
+  ac_temp_hot:
+    name: "AC Aktivierung Temperatur (heiß)"
+    min: 20
+    max: 35
+    step: 0.5
+    unit_of_measurement: "°C"
+    icon: mdi:thermometer-high
+    initial: 25
+  ac_temp_warm:
+    name: "AC Aktivierung Temperatur (warm)"
+    min: 20
+    max: 35
+    step: 0.5
+    unit_of_measurement: "°C"
+    icon: mdi:thermometer
+    initial: 23
+  ac_temp_comfortable:
+    name: "AC Aktivierung Temperatur (angenehm)"
+    min: 18
+    max: 30
+    step: 0.5
+    unit_of_measurement: "°C"
+    icon: mdi:thermometer-low
+    initial: 22
+  # Rollo/blind position settings
+  rollo_position_closed:
+    name: "Rollo Position: Geschlossen"
+    min: 0
+    max: 100
+    step: 1
+    unit_of_measurement: "%"
+    icon: mdi:window-shutter
+    initial: 0
+  rollo_position_partial:
+    name: "Rollo Position: Teilweise"
+    min: 0
+    max: 100
+    step: 1
+    unit_of_measurement: "%"
+    icon: mdi:window-shutter
+    initial: 25
+  rollo_position_half:
+    name: "Rollo Position: Halb"
+    min: 0
+    max: 100
+    step: 1
+    unit_of_measurement: "%"
+    icon: mdi:window-shutter-open
+    initial: 50
+  rollo_position_open:
+    name: "Rollo Position: Offen"
+    min: 0
+    max: 100
+    step: 1
+    unit_of_measurement: "%"
+    icon: mdi:window-shutter-open
+    initial: 100
+  # Fan speed percentages
+  fan_speed_low:
+    name: "Lüfter Geschwindigkeit: Niedrig"
+    min: 0
+    max: 100
+    step: 5
+    unit_of_measurement: "%"
+    icon: mdi:fan-speed-1
+    initial: 25
+  fan_speed_medium:
+    name: "Lüfter Geschwindigkeit: Mittel"
+    min: 0
+    max: 100
+    step: 5
+    unit_of_measurement: "%"
+    icon: mdi:fan-speed-2
+    initial: 50
+  fan_speed_high:
+    name: "Lüfter Geschwindigkeit: Hoch"
+    min: 0
+    max: 100
+    step: 5
+    unit_of_measurement: "%"
+    icon: mdi:fan-speed-3
+    initial: 75
+  fan_speed_max:
+    name: "Lüfter Geschwindigkeit: Maximum"
+    min: 0
+    max: 100
+    step: 5
+    unit_of_measurement: "%"
+    icon: mdi:fan
+    initial: 100
+
+input_select:
+  active_scene:
+    name: "Aktive Szene"
+    options:
+      - "Keine"
+      - "Film"
+      - "Party"
+      - "Kochen"
+      - "Essen"
+      - "Baden"
+      - "Sauna"
+      - "Arbeit"
+      - "Gaming"
+    initial: "Keine"
+    icon: mdi:play-circle
+  wakeup_routine_phase:
+    name: "Aufwachroutine Phase"
+    options:
+      - "Inaktiv"
+      - "Phase 1 (1%)"
+      - "Phase 2 (10%)"
+      - "Phase 3 (40%)"
+      - "Phase 4 (100%)"
+      - "Abgeschlossen"
+    initial: "Inaktiv"
+    icon: mdi:weather-sunset-up
+
 # ============================================================================
 # DEVICE TRACKING
 # ============================================================================
-
-device_tracker:
-  - platform: ping
-    hosts:
-      gamingpc: 192.168.178.138
-    count: 2  # Reduced from 3 for faster response
-    scan_interval: 60  # Check every 60 seconds (reduces network traffic)
-    consider_home: 180  # 3 minutes (reduced from 10 min for faster detection)
-
 # ============================================================================
 # EXTERNAL FILE INCLUDES
 # ============================================================================

@@ -96,7 +96,7 @@
             - automation.motion_badezimmer_gross
             - automation.motion_flur_wohnung
             - automation.motion_haustur
-            - automation.motion_kuche
+            - automation.motion_kuche_2
             - automation.motion_esstisch
           data:
             stop_actions: true
@@ -184,7 +184,7 @@
             - automation.motion_badezimmer_gross
             - automation.motion_flur_wohnung
             - automation.motion_haustur
-            - automation.motion_kuche
+            - automation.motion_kuche_2
             - automation.motion_esstisch
         - alias: Reset Adaptive Lighting to default settings
           action: adaptive_lighting.change_switch_settings

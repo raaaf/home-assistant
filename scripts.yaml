@@ -323,3 +323,237 @@ light_sunrise:
   use_blueprint:
     path: steku/parabolic_alarm_script.yaml
   description: ''
+scene_enable_adaptive_lighting:
+  alias: 'Szene » Adaptive Beleuchtung aktivieren'
+  description: Aktiviert adaptive Beleuchtung für einen Raum mit Konflikt-Prüfung
+  icon: mdi:lightbulb-auto
+  mode: parallel
+  max: 10
+  fields:
+    room:
+      description: Raumname (arbeitszimmer, wohnzimmer, schlafzimmer, etc.)
+      example: wohnzimmer
+      required: true
+      selector:
+        text:
+    exclude_scenes:
+      description: Liste der Szenen, die NICHT aktiv sein dürfen (optional)
+      example: "movie,party,cooking"
+      required: false
+      default: ""
+      selector:
+        text:
+  sequence:
+  - variables:
+      switch_entity: "switch.adaptive_lighting_{{ room }}"
+      scenes_to_check: "{{ exclude_scenes.split(',') if exclude_scenes else [] }}"
+  - alias: Prüfe ob Switch existiert
+    if:
+    - condition: template
+      value_template: "{{ has_value(switch_entity) }}"
+    then: []
+    else:
+    - action: system_log.write
+      data:
+        message: "⚠️ Adaptive lighting switch {{ switch_entity }} does not exist for room {{ room }}"
+        level: warning
+    - stop: "Switch entity does not exist"
+  - alias: Prüfe Szenen-Konflikte
+    if:
+    - condition: template
+      value_template: >
+        {% set conflicts = namespace(found=false) %}
+        {% for scene in scenes_to_check %}
+          {% set scene_entity = 'input_boolean.' ~ scene.strip() %}
+          {% if has_value(scene_entity) and is_state(scene_entity, 'on') %}
+            {% set conflicts.found = true %}
+          {% endif %}
+        {% endfor %}
+        {{ not conflicts.found }}
+    then:
+    - action: switch.turn_on
+      target:
+        entity_id: "{{ switch_entity }}"
+    - action: logbook.log
+      data:
+        name: "Adaptive Beleuchtung"
+        message: "Adaptive Beleuchtung {{ room }} aktiviert"
+        domain: script
+scene_disable_adaptive_lighting:
+  alias: 'Szene » Adaptive Beleuchtung deaktivieren'
+  description: Deaktiviert adaptive Beleuchtung für einen Raum
+  icon: mdi:lightbulb-off
+  mode: parallel
+  max: 10
+  fields:
+    room:
+      description: Raumname (arbeitszimmer, wohnzimmer, schlafzimmer, etc.)
+      example: wohnzimmer
+      required: true
+      selector:
+        text:
+  sequence:
+  - variables:
+      switch_entity: "switch.adaptive_lighting_{{ room }}"
+  - alias: Prüfe ob Switch existiert
+    if:
+    - condition: template
+      value_template: "{{ has_value(switch_entity) }}"
+    then:
+    - action: switch.turn_off
+      target:
+        entity_id: "{{ switch_entity }}"
+    else:
+    - action: system_log.write
+      data:
+        message: "⚠️ Adaptive lighting switch {{ switch_entity }} does not exist for room {{ room }}"
+        level: warning
+    - stop: "Switch entity does not exist"
+scene_enable_motion_automations:
+  alias: 'Szene » Motion-Automationen aktivieren'
+  description: Aktiviert Motion-Automationen für einen Raum mit Konflikt-Prüfung
+  icon: mdi:motion-sensor
+  mode: parallel
+  max: 10
+  fields:
+    automations:
+      description: Liste der Automation-Entity-IDs (komma-getrennt)
+      example: "automation.motion_wohnzimmer,automation.motion_esstisch"
+      required: true
+      selector:
+        text:
+    exclude_scenes:
+      description: Liste der Szenen, die NICHT aktiv sein dürfen (optional)
+      example: "movie,party,cooking"
+      required: false
+      default: ""
+      selector:
+        text:
+  sequence:
+  - variables:
+      automation_list: "{{ automations.split(',') }}"
+      scenes_to_check: "{{ exclude_scenes.split(',') if exclude_scenes else [] }}"
+  - alias: Prüfe Szenen-Konflikte
+    if:
+    - condition: template
+      value_template: >
+        {% set conflicts = namespace(found=false) %}
+        {% for scene in scenes_to_check %}
+          {% set scene_entity = 'input_boolean.' ~ scene.strip() %}
+          {% if has_value(scene_entity) and is_state(scene_entity, 'on') %}
+            {% set conflicts.found = true %}
+          {% endif %}
+        {% endfor %}
+        {{ not conflicts.found }}
+    then:
+    - repeat:
+        for_each: "{{ automation_list }}"
+        sequence:
+        - alias: Aktiviere Automation wenn sie existiert
+          if:
+          - condition: template
+            value_template: "{{ has_value(repeat.item.strip()) }}"
+          then:
+          - action: automation.turn_on
+            target:
+              entity_id: "{{ repeat.item.strip() }}"
+          else:
+          - action: system_log.write
+            data:
+              message: "⚠️ Motion automation {{ repeat.item.strip() }} does not exist"
+              level: warning
+    - action: logbook.log
+      data:
+        name: "Motion Automationen"
+        message: "Motion-Automationen aktiviert: {{ automations }}"
+        domain: script
+scene_disable_motion_automations:
+  alias: 'Szene » Motion-Automationen deaktivieren'
+  description: Deaktiviert Motion-Automationen für einen Raum
+  icon: mdi:motion-sensor-off
+  mode: parallel
+  max: 10
+  fields:
+    automations:
+      description: Liste der Automation-Entity-IDs (komma-getrennt)
+      example: "automation.motion_wohnzimmer,automation.motion_esstisch"
+      required: true
+      selector:
+        text:
+  sequence:
+  - variables:
+      automation_list: "{{ automations.split(',') }}"
+  - repeat:
+      for_each: "{{ automation_list }}"
+      sequence:
+      - alias: Deaktiviere Automation wenn sie existiert
+        if:
+        - condition: template
+          value_template: "{{ has_value(repeat.item.strip()) }}"
+        then:
+        - action: automation.turn_off
+          target:
+            entity_id: "{{ repeat.item.strip() }}"
+          data:
+            stop_actions: true
+        else:
+        - action: system_log.write
+          data:
+            message: "⚠️ Motion automation {{ repeat.item.strip() }} does not exist"
+            level: warning
+scene_check_conflicts:
+  alias: 'Szene » Konflikt-Prüfung'
+  description: Prüft ob eine bestimmte Szene ohne Konflikte aktiviert werden kann
+  icon: mdi:check-circle
+  mode: single
+  fields:
+    scene_name:
+      description: Name der Szene die geprüft werden soll
+      example: movie
+      required: true
+      selector:
+        text:
+    conflicting_scenes:
+      description: Komma-getrennte Liste der konfliktierenden Szenen
+      example: "party,cooking,baden,sauna"
+      required: true
+      selector:
+        text:
+  sequence:
+  - variables:
+      scene_entity: "input_boolean.{{ scene_name }}"
+      conflicts_list: "{{ conflicting_scenes.split(',') }}"
+      has_conflict: >
+        {% set conflicts = namespace(found=false) %}
+        {% for scene in conflicts_list %}
+          {% set conflict_entity = 'input_boolean.' ~ scene.strip() %}
+          {% if has_value(conflict_entity) and is_state(conflict_entity, 'on') %}
+            {% set conflicts.found = true %}
+          {% endif %}
+        {% endfor %}
+        {{ conflicts.found }}
+  - alias: Prüfe ob Scene-Entity existiert
+    if:
+    - condition: template
+      value_template: "{{ not has_value(scene_entity) }}"
+    then:
+    - action: system_log.write
+      data:
+        message: "⚠️ Scene entity {{ scene_entity }} does not exist"
+        level: warning
+    - stop: "Scene entity does not exist"
+  - if:
+    - condition: template
+      value_template: "{{ has_conflict }}"
+    then:
+    - action: logbook.log
+      data:
+        name: "Szenen-Konflikt"
+        message: "Konflikt erkannt für {{ scene_name }}: eine andere Szene ist aktiv"
+        domain: script
+    - stop: "Konflikt mit anderer Szene"
+  - action: logbook.log
+    data:
+      name: "Szenen-Konflikt-Prüfung"
+      message: "Keine Konflikte für {{ scene_name }}"
+      domain: script

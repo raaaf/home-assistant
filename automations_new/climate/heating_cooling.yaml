@@ -309,17 +309,18 @@
 - id: '1743835898091'
   alias: Helper » Frostwarnung für Blumen (morgen früh unter 0°C)
   description: 'Sendet eine kritische Notification, wenn es in der Nacht auf morgen
-    Frost geben soll
+    Frost geben soll (nur einmal pro Frostperiode)
 
     '
   trigger:
   - at: '10:00:00'
     trigger: time
-  - at: '15:00:00'
-    trigger: time
   condition:
   - condition: template
     value_template: "{% if states('sensor.fuerth_daily') not in ['unknown', 'unavailable'] and state_attr('sensor.fuerth_daily', 'forecast') is not none %}\n  {% set forecast = state_attr('sensor.fuerth_daily', 'forecast') %}\n  {% if forecast and forecast | length > 0 %}\n    {{ forecast[0].templow < 0 }}\n  {% else %}\n    false\n  {% endif %}\n{% else %}\n  false\n{% endif %}\n"
+  - condition: state
+    entity_id: input_boolean.frost_warning_sent
+    state: 'off'
   action:
   - action: notify.alex_mail
     data:
@@ -333,6 +334,9 @@
         <p><em>Diese Nachricht wurde automatisch generiert basierend auf der Wettervorhersage.</em></p>
         </body>
         </html>
+  - action: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.frost_warning_sent
   mode: single
 - id: '1749643406352'
   alias: Ventilator » Individuelle Raumsteuerung (Optimiert)
@@ -546,9 +550,17 @@
     - conditions:
       - condition: trigger
         id: morning-boost
-      - condition: state
-        entity_id: input_boolean.alle_sind_weg
-        state: 'off'
+      - condition: or
+        conditions:
+        # Someone is home
+        - condition: state
+          entity_id: input_boolean.alle_sind_weg
+          state: 'off'
+        # OR away less than 24 hours (short absence like picking up kids)
+        - condition: template
+          value_template: >
+            {{ is_state('input_boolean.alle_sind_weg', 'on') and
+               (now() - states.input_boolean.alle_sind_weg.last_changed).total_seconds() < 86400 }}
       - condition: template
         value_template: '{{ now().month <= 4 or now().month >= 10 }}'
       - condition: template
@@ -568,23 +580,25 @@
           name: Heizung Morning Boost
           message: "Vorhersage < 20°C, Boost für 1,5h aktiviert"
           domain: climate
-      - delay: '01:30:00'
-      - action: switch.turn_off
+      - action: timer.start
         target:
-          entity_id: '{{ heating_switches }}'
-      - action: logbook.log
-        data:
-          name: Heizung Morning Boost beendet
-          message: "1,5h Boost abgeschlossen"
-          domain: climate
+          entity_id: timer.heizung_boost
 
     # === LAYER 2: AFTERNOON BOOST (15:00) ===
     - conditions:
       - condition: trigger
         id: afternoon-boost
-      - condition: state
-        entity_id: input_boolean.alle_sind_weg
-        state: 'off'
+      - condition: or
+        conditions:
+        # Someone is home
+        - condition: state
+          entity_id: input_boolean.alle_sind_weg
+          state: 'off'
+        # OR away less than 24 hours (short absence like picking up kids)
+        - condition: template
+          value_template: >
+            {{ is_state('input_boolean.alle_sind_weg', 'on') and
+               (now() - states.input_boolean.alle_sind_weg.last_changed).total_seconds() < 86400 }}
       - condition: template
         value_template: '{{ now().month <= 4 or now().month >= 10 }}'
       - condition: numeric_state
@@ -599,14 +613,42 @@
           name: Heizung Afternoon Boost
           message: "Außentemp < 8°C, Boost 1,5h vor Kinderankunft"
           domain: climate
-      - delay: '01:30:00'
-      - action: switch.turn_off
+      - action: timer.start
         target:
-          entity_id: '{{ heating_switches }}'
-      - action: logbook.log
-        data:
-          name: Heizung Afternoon Boost beendet
-          message: "1,5h Boost abgeschlossen, Räume bereit"
-          domain: climate
-  mode: queued
-  max: 2
+          entity_id: timer.heizung_boost
+  mode: single
+- id: '1749999999999'
+  alias: Heizung » Boost Timer Finished
+  description: 'Turns off heating when boost timer expires (restart-safe)'
+  trigger:
+  - platform: event
+    event_type: timer.finished
+    event_data:
+      entity_id: timer.heizung_boost
+  action:
+  - action: switch.turn_off
+    target:
+      entity_id:
+      - switch.heizung_kinderzimmer
+      - switch.heizung_schlafzimmer
+      - switch.heizung_wohnzimmer
+  - action: logbook.log
+    data:
+      name: Heizung Boost beendet
+      message: "1,5h Boost abgeschlossen (Timer)"
+      domain: climate
+  mode: single
+- id: '1743835898092'
+  alias: Helper » Frostwarnung zurücksetzen (jährlich im Mai)
+  description: 'Setzt den Frostwarnung-Status am 1. Mai zurück für die neue Saison'
+  trigger:
+  - platform: time
+    at: '08:00:00'
+  condition:
+  - condition: template
+    value_template: "{{ now().month == 5 and now().day == 1 }}"
+  action:
+  - action: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.frost_warning_sent
+  mode: single

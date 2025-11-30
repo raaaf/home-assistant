@@ -137,7 +137,8 @@
           preset_id: 9565033d-f2ea-4821-bfba-7dd9b35be20a
           targets:
             entity_id:
-            - light.alle_party_lichter
+            - light.alle_wohnzimmer_lichter
+            - light.alle_kuche_lichter
           transition: 45
           interval: 60
     - conditions:
@@ -250,7 +251,8 @@
           transition: 5
         target:
           entity_id:
-          - light.alle_party_lichter
+          - light.alle_wohnzimmer_lichter
+          - light.alle_kuche_lichter
     default: []
   mode: restart
 - id: '1744448757845'

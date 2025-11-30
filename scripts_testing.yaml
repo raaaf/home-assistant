@@ -1,0 +1,255 @@
+# Testing Scripts - Validation and Health Checks
+# Part of Home Assistant configuration
+
+validate_scene_infrastructure:
+  alias: 'Test » Validate Scene Infrastructure'
+  description: Comprehensive validation of scene management system
+  icon: mdi:check-decagram
+  mode: single
+  sequence:
+  - variables:
+      test_results: []
+      errors_found: 0
+
+  # Test 1: Verify all scene helper scripts exist
+  - alias: "Test 1: Helper Scripts Availability"
+    action: logbook.log
+    data:
+      name: "Scene Validation"
+      message: "Test 1: Checking helper scripts availability..."
+      domain: script
+
+  - if:
+    - condition: template
+      value_template: >
+        {{ has_value('script.scene_enable_adaptive_lighting') and
+           has_value('script.scene_disable_adaptive_lighting') and
+           has_value('script.scene_enable_motion_automations') and
+           has_value('script.scene_disable_motion_automations') and
+           has_value('script.scene_check_conflicts') }}
+    then:
+    - action: system_log.write
+      data:
+        message: "✓ Test 1 PASSED: All helper scripts exist"
+        level: info
+    else:
+    - action: system_log.write
+      data:
+        message: "✗ Test 1 FAILED: Missing helper scripts"
+        level: error
+
+  # Test 2: Verify input_select.active_scene exists and has correct options
+  - alias: "Test 2: Active Scene State Machine"
+    if:
+    - condition: template
+      value_template: >
+        {{ has_value('input_select.active_scene') and
+           'Film' in state_attr('input_select.active_scene', 'options') and
+           'Party' in state_attr('input_select.active_scene', 'options') and
+           'Keine' in state_attr('input_select.active_scene', 'options') }}
+    then:
+    - action: system_log.write
+      data:
+        message: "✓ Test 2 PASSED: Scene state machine configured correctly"
+        level: info
+    else:
+    - action: system_log.write
+      data:
+        message: "✗ Test 2 FAILED: Scene state machine misconfigured"
+        level: error
+
+  # Test 3: Verify all scene booleans exist
+  - alias: "Test 3: Scene Input Booleans"
+    if:
+    - condition: template
+      value_template: >
+        {{ has_value('input_boolean.movie') and
+           has_value('input_boolean.party') and
+           has_value('input_boolean.kochen') and
+           has_value('input_boolean.essen') and
+           has_value('input_boolean.baden') and
+           has_value('input_boolean.sauna') and
+           has_value('input_boolean.arbeit') and
+           has_value('input_boolean.gaming') }}
+    then:
+    - action: system_log.write
+      data:
+        message: "✓ Test 3 PASSED: All scene booleans exist"
+        level: info
+    else:
+    - action: system_log.write
+      data:
+        message: "✗ Test 3 FAILED: Missing scene booleans"
+        level: error
+
+  # Test 4: Verify motion automations exist
+  - alias: "Test 4: Motion Automations"
+    if:
+    - condition: template
+      value_template: >
+        {{ has_value('automation.motion_kuche_2') and
+           has_value('automation.motion_esstisch') and
+           has_value('automation.motion_badezimmer_gross') and
+           has_value('automation.arbeitszimmer_motion') }}
+    then:
+    - action: system_log.write
+      data:
+        message: "✓ Test 4 PASSED: All motion automations exist"
+        level: info
+    else:
+    - action: system_log.write
+      data:
+        message: "✗ Test 4 FAILED: Missing motion automations"
+        level: error
+
+  # Test 5: Verify dashboard sensors exist
+  - alias: "Test 5: Dashboard Sensors"
+    if:
+    - condition: template
+      value_template: >
+        {{ has_value('binary_sensor.any_scene_active') and
+           has_value('binary_sensor.scene_conflict_detected') and
+           has_value('binary_sensor.motion_automations_disabled') }}
+    then:
+    - action: system_log.write
+      data:
+        message: "✓ Test 5 PASSED: Dashboard sensors configured"
+        level: info
+    else:
+    - action: system_log.write
+      data:
+        message: "✗ Test 5 FAILED: Missing dashboard sensors"
+        level: error
+
+  # Final Report
+  - action: persistent_notification.create
+    data:
+      title: "✅ Scene Infrastructure Validation Complete"
+      message: >
+        Scene infrastructure validation completed.
+
+        Check system log for detailed results.
+
+        Current State:
+        - Active Scene: {{ states('input_select.active_scene') }}
+        - Scene Conflict: {{ states('binary_sensor.scene_conflict_detected') }}
+        - Motion Disabled: {{ states('binary_sensor.motion_automations_disabled') }}
+
+test_scene_activation:
+  alias: 'Test » Scene Activation Cycle'
+  description: Tests scene activation and deactivation cycle
+  icon: mdi:test-tube
+  mode: restart
+  sequence:
+  - action: system_log.write
+    data:
+      message: "🧪 Starting scene activation test cycle..."
+      level: info
+
+  # Save current state
+  - variables:
+      original_scene: "{{ states('input_select.active_scene') }}"
+
+  # Test Film scene
+  - action: logbook.log
+    data:
+      name: "Scene Test"
+      message: "Testing Film scene activation..."
+      domain: script
+
+  - action: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.test_scene_film
+
+  - delay: 00:00:02
+
+  - if:
+    - condition: template
+      value_template: "{{ is_state('input_select.active_scene', 'Film') }}"
+    then:
+    - action: system_log.write
+      data:
+        message: "✓ Film scene test PASSED"
+        level: info
+    else:
+    - action: system_log.write
+      data:
+        message: "✗ Film scene test FAILED"
+        level: error
+
+  - action: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.test_scene_film
+
+  - delay: 00:00:02
+
+  # Restore original state
+  - action: input_select.select_option
+    target:
+      entity_id: input_select.active_scene
+    data:
+      option: "{{ original_scene }}"
+
+  - action: persistent_notification.create
+    data:
+      title: "🧪 Scene Test Complete"
+      message: >
+        Scene activation test completed.
+
+        Original state restored: {{ original_scene }}
+
+        Check system log for detailed results.
+
+health_check_automations:
+  alias: 'Test » Automation Health Check'
+  description: Checks health status of all critical automations
+  icon: mdi:shield-check
+  mode: single
+  sequence:
+  - variables:
+      critical_automations:
+      - automation.motion_kuche_2
+      - automation.motion_esstisch
+      - automation.motion_badezimmer_gross
+      - automation.arbeitszimmer_motion
+      disabled_automations: >
+        {{ critical_automations | select('is_state', 'off') | list }}
+      unavailable_automations: >
+        {{ critical_automations | select('is_state', 'unavailable') | list }}
+
+  - if:
+    - condition: template
+      value_template: "{{ disabled_automations | length > 0 or unavailable_automations | length > 0 }}"
+    then:
+    - action: persistent_notification.create
+      data:
+        title: "⚠️ Automation Health Warning"
+        message: >
+          Some critical automations are not running:
+
+          {% if disabled_automations | length > 0 %}
+          **Disabled:**
+          {% for auto in disabled_automations %}
+          - {{ state_attr(auto, 'friendly_name') or auto }}
+          {% endfor %}
+          {% endif %}
+
+          {% if unavailable_automations | length > 0 %}
+          **Unavailable:**
+          {% for auto in unavailable_automations %}
+          - {{ state_attr(auto, 'friendly_name') or auto }}
+          {% endfor %}
+          {% endif %}
+    - action: system_log.write
+      data:
+        message: "⚠️ Automation health check found {{ (disabled_automations | length) + (unavailable_automations | length) }} issues"
+        level: warning
+    else:
+    - action: persistent_notification.create
+      data:
+        title: "✅ Automation Health Check Passed"
+        message: "All critical automations are running normally."
+    - action: system_log.write
+      data:
+        message: "✅ Automation health check passed - all systems nominal"
+        level: info

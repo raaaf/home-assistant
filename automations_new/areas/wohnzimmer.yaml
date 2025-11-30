@@ -61,12 +61,10 @@
         data:
           max_brightness: 40
           min_brightness: 5
-      - action: automation.turn_off
-        target:
-          entity_id:
-          - automation.motion_kuche_2  # Motion » Küche
-          - automation.motion_esstisch  # Motion » Esstisch
-        data: {}
+      - alias: "Deaktiviere Motion-Automationen"
+        action: script.scene_disable_motion_automations
+        data:
+          automations: "automation.motion_kuche_2,automation.motion_esstisch"
       - target:
           entity_id: light.hyperhdr
         data:
@@ -131,6 +129,12 @@
           entity_id: input_boolean.movie
         data: {}
         action: input_boolean.turn_off
+      - alias: "Setze aktive Szene zurück"
+        action: input_select.select_option
+        target:
+          entity_id: input_select.active_scene
+        data:
+          option: "Keine"
       - action: adaptive_lighting.change_switch_settings
         target:
           entity_id:
@@ -139,34 +143,16 @@
         data:
           max_brightness: 100
           min_brightness: 10
-      - alias: "Re-enable kitchen motion only if no conflicting scenes are active"
-        choose:
-        - conditions:
-          - condition: state
-            entity_id: input_boolean.kochen
-            state: 'off'
-          - condition: state
-            entity_id: input_boolean.party
-            state: 'off'
-          - condition: state
-            entity_id: input_boolean.party_wohnzimmer
-            state: 'off'
-          sequence:
-          - action: automation.turn_on
-            target:
-              entity_id: automation.motion_kuche_2  # Motion » Küche
-      - alias: "Re-enable dining table motion only if eating mode is off"
-        choose:
-        - conditions:
-          - condition: state
-            entity_id: input_boolean.essen
-            state: 'off'
-          sequence:
-          - action: automation.turn_on
-            metadata: {}
-            data: {}
-            target:
-              entity_id: automation.motion_esstisch  # Motion » Esstisch
+      - alias: "Reaktiviere Motion-Automationen mit Konflikt-Prüfung"
+        action: script.scene_enable_motion_automations
+        data:
+          automations: "automation.motion_kuche_2"
+          exclude_scenes: "kochen,party,party_wohnzimmer"
+      - alias: "Reaktiviere Esstisch-Motion mit Konflikt-Prüfung"
+        action: script.scene_enable_motion_automations
+        data:
+          automations: "automation.motion_esstisch"
+          exclude_scenes: "essen"
       - target:
           entity_id:
           - light.hyperhdr
@@ -202,34 +188,16 @@
             - light.alle_kuche_nachtlichter
             - light.alle_wohnzimmer_nachtlichter
           action: light.turn_on
-      - alias: "Re-enable kitchen motion only if no conflicting scenes are active"
-        choose:
-        - conditions:
-          - condition: state
-            entity_id: input_boolean.kochen
-            state: 'off'
-          - condition: state
-            entity_id: input_boolean.party
-            state: 'off'
-          - condition: state
-            entity_id: input_boolean.party_wohnzimmer
-            state: 'off'
-          sequence:
-          - action: automation.turn_on
-            target:
-              entity_id: automation.motion_kuche_2  # Motion » Küche
-      - alias: "Re-enable dining table motion only if eating mode is off"
-        choose:
-        - conditions:
-          - condition: state
-            entity_id: input_boolean.essen
-            state: 'off'
-          sequence:
-          - action: automation.turn_on
-            metadata: {}
-            data: {}
-            target:
-              entity_id: automation.motion_esstisch  # Motion » Esstisch
+      - alias: "Reaktiviere Motion-Automationen mit Konflikt-Prüfung"
+        action: script.scene_enable_motion_automations
+        data:
+          automations: "automation.motion_kuche_2"
+          exclude_scenes: "kochen,party,party_wohnzimmer"
+      - alias: "Reaktiviere Esstisch-Motion mit Konflikt-Prüfung"
+        action: script.scene_enable_motion_automations
+        data:
+          automations: "automation.motion_esstisch"
+          exclude_scenes: "essen"
     - conditions:
       - condition: trigger
         id: game-on
@@ -246,12 +214,10 @@
         data:
           max_brightness: 40
           min_brightness: 5
-      - action: automation.turn_off
-        target:
-          entity_id:
-          - automation.motion_kuche_2  # Motion » Küche
-          - automation.motion_esstisch  # Motion » Esstisch
-        data: {}
+      - alias: "Deaktiviere Motion-Automationen"
+        action: script.scene_disable_motion_automations
+        data:
+          automations: "automation.motion_kuche_2,automation.motion_esstisch"
       - target:
           entity_id: light.hyperhdr
         data:
@@ -300,17 +266,25 @@
         entity_id: input_boolean.alle_sind_weg
         state: 'off'
       sequence:
-      - target:
-          entity_id: light.weihnachtsbaum
-        data:
-          brightness_pct: "{% if now().hour >= 22 %}\n  {{ brightness_late }}\n{%\
-            \ else %}\n  {{ brightness_normal }}\n{% endif %}\n"
-          effect: '{{ effect_name }}'
-          transition: 3
-        action: light.turn_on
-      - target:
-          entity_id: switch.steckdose_avr
-        action: switch.turn_on
+      - if:
+        - condition: template
+          value_template: "{{ has_value('light.weihnachtsbaum') }}"
+        then:
+        - target:
+            entity_id: light.weihnachtsbaum
+          data:
+            brightness_pct: "{% if now().hour >= 22 %}\n  {{ brightness_late }}\n{%\
+              \ else %}\n  {{ brightness_normal }}\n{% endif %}\n"
+            effect: '{{ effect_name }}'
+            transition: 3
+          action: light.turn_on
+      - if:
+        - condition: template
+          value_template: "{{ has_value('switch.steckdose_avr') }}"
+        then:
+        - target:
+            entity_id: switch.steckdose_avr
+          action: switch.turn_on
     - conditions:
       - condition: trigger
         id: dim_lights
@@ -318,12 +292,23 @@
         entity_id: light.weihnachtsbaum
         state: 'on'
       sequence:
-      - target:
-          entity_id: light.weihnachtsbaum
-        data:
-          brightness_pct: '{{ brightness_late }}'
-          transition: 10
-        action: light.turn_on
+      - if:
+        - condition: template
+          value_template: "{{ has_value('light.weihnachtsbaum') }}"
+        then:
+        - target:
+            entity_id: light.weihnachtsbaum
+          data:
+            brightness_pct: '{{ brightness_late }}'
+            transition: 10
+          action: light.turn_on
+      - if:
+        - condition: template
+          value_template: "{{ has_value('switch.steckdose_avr') }}"
+        then:
+        - target:
+            entity_id: switch.steckdose_avr
+          action: switch.turn_off
     - conditions:
       - condition: trigger
         id: coming_home
@@ -332,29 +317,42 @@
       - condition: time
         before: 00:00:00
       sequence:
-      - target:
-          entity_id: light.weihnachtsbaum
-        data:
-          brightness_pct: "{% if now().hour >= 22 %}\n  {{ brightness_late }}\n{%\
-            \ else %}\n  {{ brightness_normal }}\n{% endif %}\n"
-          effect: '{{ effect_name }}'
-          transition: 3
-        action: light.turn_on
-      - target:
-          entity_id: switch.steckdose_avr
-        action: switch.turn_on
+      - if:
+        - condition: template
+          value_template: "{{ has_value('light.weihnachtsbaum') }}"
+        then:
+        - target:
+            entity_id: light.weihnachtsbaum
+          data:
+            brightness_pct: "{% if now().hour >= 22 %}\n  {{ brightness_late }}\n{%\
+              \ else %}\n  {{ brightness_normal }}\n{% endif %}\n"
+            effect: '{{ effect_name }}'
+            transition: 3
+          action: light.turn_on
+      - if:
+        - condition: template
+          value_template: "{{ has_value('switch.steckdose_avr') and now().hour < 22 }}"
+        then:
+        - target:
+            entity_id: switch.steckdose_avr
+          action: switch.turn_on
     - conditions:
       - condition: trigger
         id: midnight
       sequence:
-      - parallel:
+      - if:
+        - condition: template
+          value_template: "{{ has_value('light.weihnachtsbaum') }}"
+        then:
         - target:
             entity_id: light.weihnachtsbaum
           data:
             transition: 5
           action: light.turn_off
-        - delay:
-            seconds: 6
+      - if:
+        - condition: template
+          value_template: "{{ has_value('switch.steckdose_avr') }}"
+        then:
         - target:
             entity_id: switch.steckdose_avr
           action: switch.turn_off
@@ -421,7 +419,7 @@
           preset_id: de7eda64-84bf-4ed6-a4fa-76e0ebdd1968
           targets:
             entity_id:
-            - light.alle_party_wohnzimmer_lichter
+            - light.alle_wohnzimmer_lichter
           transition: 45
           interval: 60
     - conditions:
@@ -492,7 +490,7 @@
           transition: 5
         target:
           entity_id:
-          - light.alle_party_wohnzimmer_lichter
+          - light.alle_wohnzimmer_lichter
       - action: scene_presets.stop_dynamic_scene
         metadata: {}
         data:
@@ -543,7 +541,7 @@
       - data: {}
         target:
           entity_id: input_boolean.essen
-        action: switch.turn_off
+        action: input_boolean.turn_off
   mode: single
 - id: '1745924154398'
   alias: Motion » Esstisch
@@ -563,8 +561,8 @@
         entity_id: light.alle_kuche_nachtlichter
       night_lights_after_time: '22:00:00'
       night_lights_before_time: 06:00:00
-      night_time_delay: 1
-      time_delay: 15
+      night_time_delay: 0
+      time_delay: 0
       include_ambient: ambient_disabled
       ambient_light_sensor: sensor.balkon_motion_illuminance_safe
       ambient_light_options: ambient_light_option_disabled

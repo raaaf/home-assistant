@@ -182,7 +182,7 @@
   entities:
     - light.arbeitszimmer_decke
     - light.arbeitszimmer_pc_alle
-    - light.kinderzimmer_stehlampe
+    - light.arbeitszimmer_stehlampe
 
 - platform: group
   unique_id: alle_flur_lichter
@@ -251,7 +251,7 @@
   name: Alle Arbeitszimmer Nachtlichter
   entities:
     - light.arbeitszimmer_pc_alle
-    - light.kinderzimmer_stehlampe
+    - light.arbeitszimmer_stehlampe
 
 - platform: group
   unique_id: alle_flur_nachtlichter

@@ -25,7 +25,7 @@
     - light.wohnzimmer_spielematte_alle   # Zigbee-Gruppe (4 Lichter - synchron)
     - light.wohnzimmer_schrank_alle       # Zigbee-Gruppe (3 Lichter - synchron)
     - light.wohnzimmer_spieletisch        # Einzellicht (individuell gesteuert)
-  interval: 60
+  interval: 180  # Reduced from 60 to prevent MQTT flooding
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
   min_brightness: 10
@@ -46,8 +46,8 @@
   autoreset_control_seconds: 3600
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: true  # CRITICAL: Required for IKEA lights
-  send_split_delay: 0  # Delay between commands for IKEA lights
+  separate_turn_on_commands: false  # Disabled to reduce MQTT traffic
+  send_split_delay: 50  # 50ms between commands per official docs
   adapt_delay: 0  # Immediate adaptation for correct color on turn-on
   skip_redundant_commands: true
   intercept: true
@@ -60,7 +60,7 @@
     - light.kuche_decke_alle              # Zigbee-Gruppe (2 Lichter - synchron)
     - light.kuche_insel_alle              # Zigbee-Gruppe (2 Lichter - synchron)
     - light.kuche_schrank_alle            # Zigbee-Gruppe (2 Lichter - synchron)
-  interval: 60
+  interval: 180  # Reduced from 60 to prevent MQTT flooding
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
   min_brightness: 10
@@ -68,7 +68,6 @@
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
   max_color_temp: 4000 # IKEA maximum cool white
   prefer_rgb_color: false
-  separate_turn_on_commands: false  # Don't separate Zigbee groups into individual lights
   sleep_brightness: 10 # Consistent across all rooms
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 45  # Optimized for IKEA compatibility
@@ -82,8 +81,8 @@
   autoreset_control_seconds: 3600
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: true  # CRITICAL: Required for IKEA lights
-  send_split_delay: 0  # Delay between commands for IKEA lights
+  separate_turn_on_commands: false  # Disabled to reduce MQTT traffic
+  send_split_delay: 50  # 50ms between commands per official docs
   adapt_delay: 0  # Immediate adaptation for correct color on turn-on
   skip_redundant_commands: true
   intercept: true
@@ -100,7 +99,7 @@
     - light.schlafzimmer_decke_alle       # Zigbee-Gruppe (2 Lichter - synchron)
     - light.schlafzimmer_bett             # Einzellicht (individuell gesteuert)
     - light.schlafzimmer_tv               # Einzellicht (individuell gesteuert)
-  interval: 60
+  interval: 180  # Reduced from 60 to prevent MQTT flooding
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
   min_brightness: 10
@@ -121,8 +120,8 @@
   autoreset_control_seconds: 3600
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: true  # CRITICAL: Required for IKEA lights
-  send_split_delay: 0  # Delay between commands for IKEA lights
+  separate_turn_on_commands: false  # Disabled to reduce MQTT traffic
+  send_split_delay: 50  # 50ms between commands per official docs
   adapt_delay: 0  # Immediate adaptation for correct color on turn-on
   skip_redundant_commands: true
   intercept: true
@@ -135,8 +134,7 @@
     - light.kinderzimmer_decke            # Einzellicht (Hauptlicht)
     - light.kinderzimmer_bucher           # Einzellicht (Leselicht)
     - light.kinderzimmer_schrank          # Einzellicht (Akzentlicht)
-    - light.kinderzimmer_stehlampe        # Einzellicht (Stimmungslicht)
-  interval: 60
+  interval: 180  # Reduced from 60 to prevent MQTT flooding
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
   min_brightness: 10
@@ -157,8 +155,8 @@
   autoreset_control_seconds: 3600
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: true  # CRITICAL: Required for IKEA lights
-  send_split_delay: 0  # Delay between commands for IKEA lights
+  separate_turn_on_commands: false  # Disabled to reduce MQTT traffic
+  send_split_delay: 50  # 50ms between commands per official docs
   adapt_delay: 0  # Immediate adaptation for correct color on turn-on
   skip_redundant_commands: true
   intercept: true
@@ -175,7 +173,7 @@
     - light.badezimmer_decke_alle         # Zigbee-Gruppe (2 Lichter - synchron)
     - light.badezimmer_schrank            # Einzellicht (individuell gesteuert)
     - light.badezimmer_fenster            # Einzellicht (individuell gesteuert)
-  interval: 60
+  interval: 180  # Reduced from 60 to prevent MQTT flooding
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
   min_brightness: 10
@@ -196,8 +194,8 @@
   autoreset_control_seconds: 7200 # 2 hours for less frequently used rooms
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: true  # CRITICAL: Required for IKEA lights
-  send_split_delay: 0  # Delay between commands for IKEA lights
+  separate_turn_on_commands: false  # Disabled to reduce MQTT traffic
+  send_split_delay: 50  # 50ms between commands per official docs
   adapt_delay: 0  # Immediate adaptation for correct color on turn-on
   skip_redundant_commands: true
   intercept: true
@@ -208,7 +206,7 @@
 - name: "Waschzimmer"
   lights:
     - light.waschzimmer_decke
-  interval: 60
+  interval: 180  # Reduced from 60 to prevent MQTT flooding
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
   min_brightness: 10
@@ -229,8 +227,8 @@
   autoreset_control_seconds: 7200
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: true  # CRITICAL: Required for IKEA lights
-  send_split_delay: 0  # Delay between commands for IKEA lights
+  separate_turn_on_commands: false  # Disabled to reduce MQTT traffic
+  send_split_delay: 50  # 50ms between commands per official docs
   adapt_delay: 0  # Immediate adaptation for correct color on turn-on
   skip_redundant_commands: true
   intercept: true
@@ -246,7 +244,8 @@
   lights:
     - light.arbeitszimmer_decke           # Einzellicht (Hauptlicht)
     - light.arbeitszimmer_pc_alle         # Zigbee-Gruppe (2 Lichter - synchron)
-  interval: 60
+    - light.arbeitszimmer_stehlampe       # Einzellicht (Stimmungslicht)
+  interval: 180  # Reduced from 60 to prevent MQTT flooding
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
   min_brightness: 10
@@ -267,8 +266,8 @@
   autoreset_control_seconds: 3600
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: true  # CRITICAL: Required for IKEA lights
-  send_split_delay: 0  # Delay between commands for IKEA lights
+  separate_turn_on_commands: false  # Disabled to reduce MQTT traffic
+  send_split_delay: 50  # 50ms between commands per official docs
   adapt_delay: 0  # Immediate adaptation for correct color on turn-on
   skip_redundant_commands: true
   intercept: true
@@ -279,7 +278,7 @@
 - name: "Ankleide"
   lights:
     - light.ankleide_decke_alle           # Zigbee-Gruppe (2 Lichter - synchron)
-  interval: 60
+  interval: 180  # Reduced from 60 to prevent MQTT flooding
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
   min_brightness: 10
@@ -300,8 +299,8 @@
   autoreset_control_seconds: 7200
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: true  # CRITICAL: Required for IKEA lights
-  send_split_delay: 0  # Delay between commands for IKEA lights
+  separate_turn_on_commands: false  # Disabled to reduce MQTT traffic
+  send_split_delay: 50  # 50ms between commands per official docs
   adapt_delay: 0  # Immediate adaptation for correct color on turn-on
   skip_redundant_commands: true
   intercept: true
@@ -317,7 +316,7 @@
   lights:
     - light.flur_decke_alle               # Zigbee-Gruppe (6 Lichter - synchron)
     - light.flur_schrank_alle             # Zigbee-Gruppe (2 Lichter - synchron)
-  interval: 60
+  interval: 180  # Reduced from 60 to prevent MQTT flooding
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
   min_brightness: 10
@@ -338,8 +337,8 @@
   autoreset_control_seconds: 7200
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: true  # CRITICAL: Required for IKEA lights
-  send_split_delay: 0  # Delay between commands for IKEA lights
+  separate_turn_on_commands: false  # Disabled to reduce MQTT traffic
+  send_split_delay: 50  # 50ms between commands per official docs
   adapt_delay: 0  # Immediate adaptation for correct color on turn-on
   skip_redundant_commands: true
   intercept: true
@@ -355,7 +354,7 @@
   lights:
     - light.balkon_wand_alle              # Zigbee-Gruppe (2 Lichter - synchron)
     - light.balkon_blumen                 # Einzellicht (individuell gesteuert)
-  interval: 90 # Slower updates for outdoor
+  interval: 180  # Reduced from 90 to prevent MQTT flooding
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
   min_brightness: 10 # Lower minimum for outdoor ambiance
@@ -376,8 +375,8 @@
   autoreset_control_seconds: 7200 # Longer reset for outdoor
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: true  # CRITICAL: Required for IKEA lights
-  send_split_delay: 0  # Delay between commands for IKEA lights
+  separate_turn_on_commands: false  # Disabled to reduce MQTT traffic
+  send_split_delay: 50  # 50ms between commands per official docs
   adapt_delay: 0  # Immediate adaptation for correct color on turn-on
   skip_redundant_commands: true
   intercept: true

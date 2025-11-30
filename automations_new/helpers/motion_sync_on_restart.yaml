@@ -82,7 +82,7 @@
       sequence:
       - action: automation.turn_off
         target:
-          entity_id: automation.1672931243226  # Motion » Küche
+          entity_id: automation.motion_kuche_2  # Motion » Küche
         data: {}
   - alias: "Disable hallway motion if party mode is active"
     choose:
@@ -130,7 +130,7 @@
       sequence:
       - action: automation.turn_off
         target:
-          entity_id: automation.1672929418223  # Motion » Badezimmer Gross
+          entity_id: automation.motion_badezimmer_gross  # Motion » Badezimmer Gross
         data: {}
   - alias: "Disable dining table motion if eating mode is active"
     choose:
@@ -141,7 +141,7 @@
       sequence:
       - action: automation.turn_off
         target:
-          entity_id: automation.1745924154398  # Motion » Esstisch
+          entity_id: automation.motion_esstisch  # Motion » Esstisch
         data: {}
   - alias: "Disable additional motion if party mode is active"
     choose:
@@ -152,7 +152,7 @@
       sequence:
       - action: automation.turn_off
         target:
-          entity_id: automation.1692710690350  # Additional motion sensor
+          entity_id: automation.kinderzimmer_motion  # Motion » Kinderzimmer
         data: {}
   - alias: "Disable multiple motions if party mode is active"
     choose:

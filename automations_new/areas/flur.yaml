@@ -20,7 +20,7 @@
       night_lights_after_time: '22:00:00'
       night_lights_before_time: 06:00:00
       night_time_delay: 0
-      time_delay: 1
+      time_delay: 0
       include_ambient: ambient_enabled
       ambient_light_sensor: sensor.balkon_motion_illuminance_safe
       night_lights_conditions:
@@ -168,7 +168,7 @@
       night_lights_after_time: '22:00:00'
       night_lights_before_time: 06:00:00
       night_time_delay: 0
-      time_delay: 1
+      time_delay: 0
       include_ambient: ambient_disabled
       ambient_light_sensor: sensor.balkon_motion_illuminance_safe
       night_lights_conditions:
