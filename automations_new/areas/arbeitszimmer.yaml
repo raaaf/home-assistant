@@ -218,11 +218,7 @@
       ambient_light_value: 150
       ambient_light_high_value: 200
       include_bypass:
-      - bypass_enabled_turn_on
       - bypass_enabled_stop
-      motion_bypass_lights_on:
-      - input_boolean.arbeit
-      - input_boolean.gaming
       motion_bypass_lights_stop:
       - binary_sensor.arbeitszimmer_manual_control
       - input_boolean.arbeit  # Don't turn off lights while working
