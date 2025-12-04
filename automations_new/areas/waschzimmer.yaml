@@ -22,6 +22,11 @@
       time_delay: 0
       night_lights_after_time: '22:00:00'
       night_lights_before_time: 06:00:00
+      # Bypass motion turn-off when manual control is active
+      include_bypass:
+      - bypass_enabled_stop
+      motion_bypass_lights_stop:
+      - binary_sensor.waschzimmer_manual_control
 - id: '1727078110460'
   alias: Motion » Ankleide
   description: Bewegungsgesteuerte Beleuchtung in der Ankleide mit Nachtlicht-Modus
@@ -50,3 +55,8 @@
       ambient_light_options: ambient_light_option_disabled
       ambient_light_high_value: 200
       ambient_light_value: 150
+      # Bypass motion turn-off when manual control is active
+      include_bypass:
+      - bypass_enabled_stop
+      motion_bypass_lights_stop:
+      - binary_sensor.ankleide_manual_control

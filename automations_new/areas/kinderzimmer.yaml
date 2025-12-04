@@ -35,6 +35,11 @@
       ambient_light_high_value: 200
       include_device_tracker: zone_enabled
       zone: zone.home
+      # Bypass motion turn-off when manual control is active
+      include_bypass:
+      - bypass_enabled_stop
+      motion_bypass_lights_stop:
+      - binary_sensor.kinderzimmer_manual_control
 - id: '1722519561150'
   alias: Helper » Dynamische Kinder-Schlafzeiten
   description: 'Berechnet täglich optimale Schlafzeiten für Kinder basierend auf:
@@ -47,8 +52,8 @@
   conditions: []
   actions:
   - variables:
-      basis_einschlaf_schultag: '19:30:00'
-      basis_einschlaf_wochenende: '20:30:00'
+      basis_einschlaf_schultag: '20:00:00'
+      basis_einschlaf_wochenende: '21:00:00'
       basis_aufwach_schultag: 06:30:00
       basis_aufwach_wochenende: 07:30:00
       aktueller_monat: '{{ now().month | int }}'

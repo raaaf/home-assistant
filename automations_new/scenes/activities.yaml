@@ -123,14 +123,14 @@
       - action: automation.turn_off
         target:
           entity_id:
-          - automation.motion_kuche_2  # Motion sensor automation (living room)
-          - automation.motion_flur_wohnung  # Hallway motion sensor
-          - automation.arbeitszimmer_motion  # Bedroom motion sensor
-          - automation.motion_badezimmer_gross  # Kitchen motion sensor
-          - automation.motion_esstisch  # Bathroom motion sensor
-          - automation.arbeitszimmer_motion  # Office motion sensor
-          - automation.kinderzimmer_motion  # Additional motion sensor
-          - automation.motion_haustur  # Front door motion sensor
+          - automation.motion_kuche_2  # Kitchen motion
+          - automation.motion_flur_wohnung  # Hallway motion
+          - automation.arbeitszimmer_motion  # Office motion
+          - automation.motion_schlafzimmer  # Bedroom motion
+          - automation.motion_badezimmer_gross  # Bathroom motion
+          - automation.motion_esstisch  # Dining table motion
+          - automation.kinderzimmer_motion  # Kids room motion
+          - automation.motion_haustur  # Front door motion
         data: {}
       - action: scene_presets.start_dynamic_scene
         data:
@@ -197,10 +197,9 @@
           - switch.adaptive_lighting_schlafzimmer
           - switch.adaptive_lighting_waschzimmer
           - switch.adaptive_lighting_balkon
-      - alias: "Re-enable all motion sensors only if no conflicting scenes are active"
+      - alias: "Re-enable kitchen motion if no conflicting scenes"
         choose:
         - conditions:
-          # Kitchen motion - check movie, cooking, party_wohnzimmer
           - condition: state
             entity_id: input_boolean.movie
             state: 'off'
@@ -208,12 +207,15 @@
             entity_id: input_boolean.kochen
             state: 'off'
           - condition: state
+            entity_id: input_boolean.essen
+            state: 'off'
+          - condition: state
             entity_id: input_boolean.party_wohnzimmer
             state: 'off'
           sequence:
           - action: automation.turn_on
             target:
-              entity_id: automation.motion_kuche_2  # Motion sensor automation (kitchen)
+              entity_id: automation.motion_kuche_2  # Kitchen motion
       - alias: "Re-enable hallway motion if no conflicting scenes"
         choose:
         - conditions:
@@ -226,26 +228,62 @@
           sequence:
           - action: automation.turn_on
             target:
-              entity_id: automation.motion_flur_wohnung  # Hallway motion sensor
-      - alias: "Re-enable bedroom motion if work mode is off"
+              entity_id: automation.motion_flur_wohnung  # Hallway motion
+      - alias: "Re-enable office motion if work/gaming mode is off"
         choose:
         - conditions:
           - condition: state
             entity_id: input_boolean.arbeit
             state: 'off'
+          - condition: state
+            entity_id: input_boolean.gaming
+            state: 'off'
           sequence:
           - action: automation.turn_on
             target:
-              entity_id: automation.arbeitszimmer_motion  # Bedroom motion sensor
+              entity_id: automation.arbeitszimmer_motion  # Office motion
+      - alias: "Re-enable dining table motion if eating mode is off"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.essen
+            state: 'off'
+          sequence:
+          - action: automation.turn_on
+            target:
+              entity_id: automation.motion_esstisch  # Dining table motion
+      - alias: "Re-enable bathroom motion if sauna/baden mode is off"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.sauna
+            state: 'off'
+          - condition: state
+            entity_id: input_boolean.baden
+            state: 'off'
+          sequence:
+          - action: automation.turn_on
+            target:
+              entity_id: automation.motion_badezimmer_gross  # Bathroom motion
+      - alias: "Re-enable bedroom motion if gaming/schlafenszeit is off"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.gaming
+            state: 'off'
+          - condition: state
+            entity_id: input_boolean.schlafenszeit
+            state: 'off'
+          sequence:
+          - action: automation.turn_on
+            target:
+              entity_id: automation.motion_schlafzimmer  # Bedroom motion
       - alias: "Re-enable other motion sensors unconditionally"
         action: automation.turn_on
         target:
           entity_id:
-          - automation.motion_badezimmer_gross  # Bathroom motion sensor
-          - automation.motion_esstisch  # Dining table motion sensor
-          - automation.arbeitszimmer_motion  # Office motion sensor
-          - automation.kinderzimmer_motion  # Additional motion sensor
-          - automation.motion_haustur  # Front door motion sensor
+          - automation.kinderzimmer_motion  # Kids room motion
+          - automation.motion_haustur  # Front door motion
       - action: light.turn_off
         data:
           transition: 5
@@ -255,106 +293,4 @@
           - light.alle_kuche_lichter
     default: []
   mode: restart
-- id: '1744448757845'
-  alias: Szene » Arbeit
-  description: 'Aktiviert spezielle Lichtszene und deaktiviert Bewegung bei aktivem
-    Arbeitsmodus. Berücksichtigt auch Schlafenszeit für Beleuchtung.
-
-    '
-  triggers:
-  - trigger: state
-    entity_id: input_boolean.arbeit
-    to: 'on'
-    id: arbeit-on
-  - trigger: state
-    entity_id: input_boolean.arbeit
-    to: 'off'
-    id: arbeit-off
-  conditions:
-  - condition: state
-    entity_id: input_boolean.gaming
-    state: 'off'
-  actions:
-  - choose:
-    - alias: Arbeitsmodus aktivieren
-      conditions:
-      - condition: trigger
-        id: arbeit-on
-      sequence:
-      - alias: Bewegungsmelder Schlafzimmer deaktivieren
-        action: automation.turn_off
-        target:
-          entity_id: automation.arbeitszimmer_motion  # Bedroom motion sensor
-        data: {}
-      - choose:
-        - alias: Nach 21 Uhr - nur Nachtlichter (unabhängig von Helligkeit)
-          conditions:
-          - condition: template
-            value_template: '{{ now().hour >= 21 }}'
-          sequence:
-          - alias: Nachtlichter einschalten
-            action: light.turn_on
-            target:
-              entity_id: light.alle_arbeitszimmer_nachtlichter
-            data:
-              transition: 2
-        - alias: Sehr hell draußen - keine Lichter nötig
-          conditions:
-          - condition: numeric_state
-            entity_id: sensor.sunlight_pct
-            above: 70
-          sequence: []
-        - alias: Hell draußen - nur Nachtlichter
-          conditions:
-          - condition: numeric_state
-            entity_id: sensor.sunlight_pct
-            above: 40
-            below: 71
-          sequence:
-          - alias: Nachtlichter einschalten
-            action: light.turn_on
-            target:
-              entity_id: light.alle_arbeitszimmer_nachtlichter
-            data:
-              transition: 2
-        default:
-        - alias: Dunkel oder moderat - alle Arbeitslichter einschalten
-          action: light.turn_on
-          target:
-            entity_id:
-            - light.alle_arbeitszimmer_nachtlichter
-            - light.alle_arbeitszimmer_lichter
-          data:
-            transition: 2
-    - alias: Arbeitsmodus deaktivieren
-      conditions:
-      - condition: trigger
-        id: arbeit-off
-      sequence:
-      - alias: "Re-enable bedroom motion only if party and gaming modes are off"
-        choose:
-        - conditions:
-          - condition: state
-            entity_id: input_boolean.party
-            state: 'off'
-          - condition: state
-            entity_id: input_boolean.gaming
-            state: 'off'
-          sequence:
-          - alias: Bewegungsmelder Schlafzimmer aktivieren
-            action: automation.turn_on
-            target:
-              entity_id: automation.arbeitszimmer_motion  # Bedroom motion sensor
-            data: {}
-      - alias: Nur ausschalten wenn es dunkel ist
-        condition: template
-        value_template: "{{ has_value('sun.sun') and (state_attr('sun.sun', 'elevation') < 0 or \n   (has_value('input_boolean.schlafenszeit') and is_state('input_boolean.schlafenszeit',\
-          \ 'on'))) }}\n"
-      - alias: Alle Arbeitslichter ausschalten
-        action: light.turn_off
-        target:
-          entity_id:
-          - light.alle_arbeitszimmer_nachtlichter
-          - light.alle_arbeitszimmer_lichter
-        data: {}
-  mode: restart
+# "Szene » Arbeit" removed - now handled by arbeitszimmer.yaml with blueprint bypass

@@ -28,6 +28,10 @@
       ambient_light_options: ambient_light_option_enabled
       ambient_light_value: 150
       ambient_light_high_value: 200
+      # Bypass motion turn-off when manual control is active
+      include_bypass:
+      - bypass_enabled_stop
+      motion_bypass_lights_stop: binary_sensor.flur_manual_control
 - id: '1696841069890'
   alias: Flur » Robbi
   description: Steuert Staubsauger-Roboter mit verschiedenen Reinigungsplänen und
@@ -181,3 +185,7 @@
       ambient_light_options: ambient_light_option_enabled
       include_light_control:
       - use_brightness
+      # Bypass motion turn-off when manual control is active
+      include_bypass:
+      - bypass_enabled_stop
+      motion_bypass_lights_stop: binary_sensor.flur_manual_control

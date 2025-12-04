@@ -647,6 +647,20 @@ views:
           - entity: switch.adaptive_lighting_sleep_mode_wohnzimmer
         title: Sleep Mode
         state_color: true
+      - type: entities
+        entities:
+          - entity: binary_sensor.ankleide_manual_control
+          - entity: binary_sensor.arbeitszimmer_manual_control
+          - entity: binary_sensor.badezimmer_manual_control
+          - entity: binary_sensor.balkon_manual_control
+          - entity: binary_sensor.flur_manual_control
+          - entity: binary_sensor.kinderzimmer_manual_control
+          - entity: binary_sensor.kueche_manual_control
+          - entity: binary_sensor.schlafzimmer_manual_control
+          - entity: binary_sensor.waschzimmer_manual_control
+          - entity: binary_sensor.wohnzimmer_manual_control
+        title: Manual Control
+        state_color: true
   - theme: Backend-selected
     title: Battery
     path: battery

@@ -1,137 +1,15 @@
 # ============================================================================
-# HOME ASSISTANT LIGHT GROUPS - 2-LAYER ARCHITECTURE
+# HOME ASSISTANT LIGHT GROUPS
 # ============================================================================
 #
-# Layer 1: Subgroups for synchronous lights (same location/type)
-# Layer 2: Main room groups combining subgroups + individual lights
+# Layer 1 (Subgroups): Managed in Zigbee2MQTT groups
+# Layer 2 (Room groups): Defined below, combining Z2M groups + individual lights
 #
 # All groups have unique_id for UI editability
 #
 
 # =============================================================================
-# LAYER 1: SUBGROUPS - Synchrone Lichter
-# =============================================================================
-
-# Wohnzimmer Subgroups
-- platform: group
-  unique_id: wohnzimmer_wand_alle
-  name: Wohnzimmer Wand Alle
-  entities:
-    - light.wohnzimmer_wand_1
-    - light.wohnzimmer_wand_2
-    - light.wohnzimmer_wand_3
-    - light.wohnzimmer_wand_4
-    - light.wohnzimmer_wand_5
-    - light.wohnzimmer_wand_6
-
-- platform: group
-  unique_id: wohnzimmer_esstisch_alle
-  name: Wohnzimmer Esstisch Alle
-  entities:
-    - light.wohnzimmer_esstisch_1
-    - light.wohnzimmer_esstisch_2
-    - light.wohnzimmer_esstisch_3
-
-- platform: group
-  unique_id: wohnzimmer_spielematte_alle
-  name: Wohnzimmer Spielematte Alle
-  entities:
-    - light.wohnzimmer_spielematte_1
-    - light.wohnzimmer_spielematte_2
-    - light.wohnzimmer_spielematte_3
-    - light.wohnzimmer_spielematte_4
-
-- platform: group
-  unique_id: wohnzimmer_schrank_alle
-  name: Wohnzimmer Schrank Alle
-  entities:
-    - light.wohnzimmer_schrank_1
-    - light.wohnzimmer_schrank_2
-    - light.wohnzimmer_schrank_3
-
-# Küche Subgroups
-- platform: group
-  unique_id: kuche_decke_alle
-  name: Kuche Decke Alle
-  entities:
-    - light.kuche_decke_1
-    - light.kuche_decke_2
-
-- platform: group
-  unique_id: kuche_insel_alle
-  name: Kuche Insel Alle
-  entities:
-    - light.kuche_insel_oben
-    - light.kuche_insel_unten
-
-- platform: group
-  unique_id: kuche_schrank_alle
-  name: Kuche Schrank Alle
-  entities:
-    - light.kuche_schrank_1
-    - light.kuche_schrank_2
-
-# Schlafzimmer Subgroups
-- platform: group
-  unique_id: schlafzimmer_decke_alle
-  name: Schlafzimmer Decke Alle
-  entities:
-    - light.arbeitszimmer_decke_1
-    - light.arbeitszimmer_decke_2
-
-# Badezimmer Subgroups
-- platform: group
-  unique_id: badezimmer_decke_alle
-  name: Badezimmer Decke Alle
-  entities:
-    - light.badezimmer_decke_1
-    - light.badezimmer_decke_2
-
-# Arbeitszimmer Subgroups
-- platform: group
-  unique_id: arbeitszimmer_pc_alle
-  name: Arbeitszimmer PC Alle
-  entities:
-    - light.arbeitszimmer_pc_1
-    - light.arbeitszimmer_pc_2
-
-# Flur Subgroups
-- platform: group
-  unique_id: flur_decke_alle
-  name: Flur Decke Alle
-  entities:
-    - light.flur_decke_1
-    - light.flur_decke_2
-    - light.flur_decke_3
-    - light.flur_decke_4
-    - light.flur_decke_5
-    - light.flur_decke_6
-
-- platform: group
-  unique_id: flur_schrank_alle
-  name: Flur Schrank Alle
-  entities:
-    - light.flur_schrank_1
-    - light.flur_schrank_2
-
-# Ankleide Subgroups
-- platform: group
-  unique_id: ankleide_decke_alle
-  name: Ankleide Decke Alle
-  entities:
-    - light.ankleide_decke_1
-    - light.ankleide_decke_2
-
-# Balkon Subgroups
-- platform: group
-  unique_id: balkon_wand_alle
-  name: Balkon Wand Alle
-  entities:
-    - light.balkon_wand_1
-    - light.balkon_wand_2
-
-# =============================================================================
-# LAYER 2: HAUPTLICHTER - Raum-Aggregation (using subgroups)
+# HAUPTLICHTER - Raum-Aggregation (using Z2M subgroups)
 # =============================================================================
 
 - platform: group
@@ -189,6 +67,7 @@
   name: Alle Flur Lichter
   entities:
     - light.flur_decke_alle
+    - light.flur_schrank_alle
 
 - platform: group
   unique_id: alle_ankleide_lichter

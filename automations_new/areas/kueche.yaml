@@ -118,6 +118,10 @@
       - input_boolean.kochen
       include_bypass:
       - bypass_enabled_turn_on
+      - bypass_enabled_stop
+      motion_bypass_lights_stop:
+      - binary_sensor.kuche_manual_control
+      - input_boolean.kochen  # Don't turn off lights while cooking
 - id: '1688644812345'
   alias: Wasser » Küche leckt
   description: Überwacht Wassersensor in der Küche und alarmiert bei Leckage

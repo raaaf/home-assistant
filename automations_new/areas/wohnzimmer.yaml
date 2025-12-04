@@ -582,4 +582,7 @@
       ambient_light_high_value: 200
       motion_bypass_lights_on: []
       motion_bypass_lights_off: []
-      include_bypass: []
+      include_bypass:
+      - bypass_enabled_stop
+      motion_bypass_lights_stop:
+      - binary_sensor.wohnzimmer_manual_control

@@ -224,3 +224,8 @@
       night_time_delay: 0
       ambient_light_value: 150
       ambient_light_high_value: 200
+      # Bypass motion turn-off when manual control is active
+      include_bypass:
+      - bypass_enabled_stop
+      motion_bypass_lights_stop:
+      - binary_sensor.badezimmer_manual_control

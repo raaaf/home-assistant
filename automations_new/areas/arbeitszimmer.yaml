@@ -78,13 +78,44 @@
           entity_id: input_select.active_scene
         data:
           option: "Arbeit"
-      - delay:
-          seconds: 0.5
-      - action: light.turn_on
-        target:
-          entity_id: light.alle_arbeitszimmer_nachtlichter
-        data:
-          transition: 2
+      - choose:
+        - alias: Nach 21 Uhr - nur Nachtlichter
+          conditions:
+          - condition: template
+            value_template: '{{ now().hour >= 21 }}'
+          sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.alle_arbeitszimmer_nachtlichter
+            data:
+              transition: 2
+        - alias: Sehr hell draußen - keine Lichter nötig
+          conditions:
+          - condition: numeric_state
+            entity_id: sensor.sunlight_pct
+            above: 70
+          sequence: []
+        - alias: Hell draußen - nur Nachtlichter
+          conditions:
+          - condition: numeric_state
+            entity_id: sensor.sunlight_pct
+            above: 40
+            below: 71
+          sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.alle_arbeitszimmer_nachtlichter
+            data:
+              transition: 2
+        default:
+        - alias: Dunkel oder moderat - alle Arbeitslichter
+          action: light.turn_on
+          target:
+            entity_id:
+            - light.alle_arbeitszimmer_nachtlichter
+            - light.alle_arbeitszimmer_lichter
+          data:
+            transition: 2
     - alias: Arbeit ausschalten
       conditions:
       - condition: and
@@ -188,5 +219,11 @@
       ambient_light_high_value: 200
       include_bypass:
       - bypass_enabled_turn_on
+      - bypass_enabled_stop
       motion_bypass_lights_on:
       - input_boolean.arbeit
+      - input_boolean.gaming
+      motion_bypass_lights_stop:
+      - binary_sensor.arbeitszimmer_manual_control
+      - input_boolean.arbeit  # Don't turn off lights while working
+      - input_boolean.gaming  # Don't turn off lights while gaming

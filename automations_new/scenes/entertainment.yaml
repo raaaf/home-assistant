@@ -27,12 +27,7 @@
           entity_id:
           - switch.adaptive_lighting_schlafzimmer
           - switch.adaptive_lighting_arbeitszimmer
-      - alias: Disable office motion sensor
-        action: automation.turn_off
-        target:
-          entity_id: automation.arbeitszimmer_motion
-        data:
-          stop_actions: false
+      # Note: Office motion handled by blueprint bypass (input_boolean.gaming)
       - alias: Disable bedroom motion sensor
         action: automation.turn_off
         target:
@@ -55,22 +50,7 @@
           entity_id:
           - switch.adaptive_lighting_schlafzimmer
           - switch.adaptive_lighting_arbeitszimmer
-      - alias: Re-enable office motion sensor if conditions are met
-        choose:
-        - conditions:
-          - condition: state
-            entity_id: input_boolean.arbeit
-            state: 'off'
-          - condition: state
-            entity_id: input_boolean.party
-            state: 'off'
-          - condition: state
-            entity_id: input_boolean.schlafenszeit
-            state: 'off'
-          sequence:
-          - action: automation.turn_on
-            target:
-              entity_id: automation.arbeitszimmer_motion
+      # Note: Office motion handled by blueprint bypass (input_boolean.gaming)
       - alias: Re-enable bedroom motion sensor if conditions are met
         choose:
         - conditions:
@@ -79,6 +59,9 @@
             state: 'off'
           - condition: state
             entity_id: input_boolean.schlafenszeit
+            state: 'off'
+          - condition: state
+            entity_id: input_boolean.movie
             state: 'off'
           sequence:
           - action: automation.turn_on

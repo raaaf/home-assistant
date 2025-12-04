@@ -334,8 +334,8 @@
         data: {}
   mode: single
 - id: adaptive_lighting_sunset_color_transition
-  alias: Adaptive Lighting » Warm Color at Actual Sunset
-  description: Start warming color temperature at actual sunset while keeping brightness high
+  alias: Adaptive Lighting » Gradual Warm Color at Sunset
+  description: Gradually warm color temperature over 90 minutes starting at sunset
   triggers:
   - trigger: sun
     event: sunset
@@ -343,31 +343,34 @@
     id: sunset
   conditions: []
   actions:
-  - alias: Start 90-minute color warming at sunset (keep brightness high)
-    action: adaptive_lighting.change_switch_settings
-    target:
-      entity_id:
-      - switch.adaptive_lighting_arbeitszimmer
-      - switch.adaptive_lighting_ankleide
-      - switch.adaptive_lighting_badezimmer
-      - switch.adaptive_lighting_balkon
-      - switch.adaptive_lighting_flur
-      - switch.adaptive_lighting_kinderzimmer
-      - switch.adaptive_lighting_kueche
-      - switch.adaptive_lighting_schlafzimmer
-      - switch.adaptive_lighting_waschzimmer
-      - switch.adaptive_lighting_wohnzimmer
-    data:
-      # Start color transition now
-      min_sunset_time: >-
-        {{ now().strftime('%H:%M:%S') }}
-      # End color transition 90 minutes from now
-      max_sunset_time: >-
-        {{ (now() + timedelta(minutes=90)).strftime('%H:%M:%S') }}
-      # Keep brightness high during color transition
-      min_brightness: 80
-      max_brightness: 100
-  mode: single
+  - alias: Gradually reduce color temp from 4000K to 2200K over 90 minutes
+    repeat:
+      count: 18  # 18 steps x 5 minutes = 90 minutes total
+      sequence:
+      - alias: "Step {{ repeat.index }}/18: Set color temp to {{ 4000 - (repeat.index * 100) }}K"
+        action: adaptive_lighting.change_switch_settings
+        target:
+          entity_id:
+          - switch.adaptive_lighting_arbeitszimmer
+          - switch.adaptive_lighting_ankleide
+          - switch.adaptive_lighting_badezimmer
+          - switch.adaptive_lighting_balkon
+          - switch.adaptive_lighting_flur
+          - switch.adaptive_lighting_kinderzimmer
+          - switch.adaptive_lighting_kueche
+          - switch.adaptive_lighting_schlafzimmer
+          - switch.adaptive_lighting_waschzimmer
+          - switch.adaptive_lighting_wohnzimmer
+        data:
+          # Gradually reduce max_color_temp: 3900K → 3800K → ... → 2200K
+          max_color_temp: >-
+            {{ 4000 - (repeat.index * 100) }}
+          # Keep brightness high during color transition
+          min_brightness: 80
+          max_brightness: 100
+      - alias: Wait 5 minutes before next step
+        delay: "00:05:00"
+  mode: restart
 - id: adaptive_lighting_dynamic_sunset
   alias: Adaptive Lighting » Fade Over 30 Minutes When Schlafenszeit Starts
   description: When schlafenszeit activates, fade lights over 30 minutes
@@ -420,7 +423,7 @@
     id: sunrise
   conditions: []
   actions:
-  - alias: Reset all adaptive lighting switches to default conservative times
+  - alias: Reset all adaptive lighting switches to default settings
     action: adaptive_lighting.change_switch_settings
     target:
       entity_id:
@@ -435,9 +438,11 @@
       - switch.adaptive_lighting_waschzimmer
       - switch.adaptive_lighting_wohnzimmer
     data:
-      # Reset to conservative defaults (will be overridden in evening)
+      # Reset to defaults (will be overridden in evening)
       min_sunset_time: "20:00:00"
       max_sunset_time: "20:30:00"
       min_brightness: 10
       max_brightness: 100
+      # Reset color temp to allow full range (neutral white during day)
+      max_color_temp: 4000
   mode: single
