@@ -17,7 +17,7 @@
       include_night_lights: night_lights_disabled
       include_zone: zone_disabled
       zone: zone.home
-      time_delay: 0
+      time_delay: 1
       night_lights:
         entity_id: light.alle_balkon_lichter
       night_lights_after_time: '20:00:00'

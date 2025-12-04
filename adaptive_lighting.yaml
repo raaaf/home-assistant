@@ -25,7 +25,7 @@
     - light.wohnzimmer_spielematte_alle   # Zigbee-Gruppe (4 Lichter - synchron)
     - light.wohnzimmer_schrank_alle       # Zigbee-Gruppe (3 Lichter - synchron)
     - light.wohnzimmer_spieletisch        # Einzellicht (individuell gesteuert)
-  interval: 180  # Reduced from 60 to prevent MQTT flooding
+  interval: 300  # 5 min - reduced traffic while maintaining smoothness
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
   min_brightness: 10
@@ -60,7 +60,7 @@
     - light.kuche_decke_alle              # Zigbee-Gruppe (2 Lichter - synchron)
     - light.kuche_insel_alle              # Zigbee-Gruppe (2 Lichter - synchron)
     - light.kuche_schrank_alle            # Zigbee-Gruppe (2 Lichter - synchron)
-  interval: 180  # Reduced from 60 to prevent MQTT flooding
+  interval: 300  # 5 min - reduced traffic while maintaining smoothness
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
   min_brightness: 10
@@ -99,7 +99,7 @@
     - light.schlafzimmer_decke_alle       # Zigbee-Gruppe (2 Lichter - synchron)
     - light.schlafzimmer_bett             # Einzellicht (individuell gesteuert)
     - light.schlafzimmer_tv               # Einzellicht (individuell gesteuert)
-  interval: 180  # Reduced from 60 to prevent MQTT flooding
+  interval: 300  # 5 min - reduced traffic while maintaining smoothness
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
   min_brightness: 10
@@ -134,7 +134,7 @@
     - light.kinderzimmer_decke            # Einzellicht (Hauptlicht)
     - light.kinderzimmer_bucher           # Einzellicht (Leselicht)
     - light.kinderzimmer_schrank          # Einzellicht (Akzentlicht)
-  interval: 180  # Reduced from 60 to prevent MQTT flooding
+  interval: 300  # 5 min - reduced traffic while maintaining smoothness
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
   min_brightness: 10
@@ -173,7 +173,7 @@
     - light.badezimmer_decke_alle         # Zigbee-Gruppe (2 Lichter - synchron)
     - light.badezimmer_schrank            # Einzellicht (individuell gesteuert)
     - light.badezimmer_fenster            # Einzellicht (individuell gesteuert)
-  interval: 180  # Reduced from 60 to prevent MQTT flooding
+  interval: 300  # 5 min - reduced traffic while maintaining smoothness
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
   min_brightness: 10
@@ -206,7 +206,7 @@
 - name: "Waschzimmer"
   lights:
     - light.waschzimmer_decke
-  interval: 180  # Reduced from 60 to prevent MQTT flooding
+  interval: 300  # 5 min - reduced traffic while maintaining smoothness
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
   min_brightness: 10
@@ -245,7 +245,7 @@
     - light.arbeitszimmer_decke           # Einzellicht (Hauptlicht)
     - light.arbeitszimmer_pc_alle         # Zigbee-Gruppe (2 Lichter - synchron)
     - light.arbeitszimmer_stehlampe       # Einzellicht (Stimmungslicht)
-  interval: 180  # Reduced from 60 to prevent MQTT flooding
+  interval: 300  # 5 min - reduced traffic while maintaining smoothness
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
   min_brightness: 10
@@ -278,7 +278,7 @@
 - name: "Ankleide"
   lights:
     - light.ankleide_decke_alle           # Zigbee-Gruppe (2 Lichter - synchron)
-  interval: 180  # Reduced from 60 to prevent MQTT flooding
+  interval: 300  # 5 min - reduced traffic while maintaining smoothness
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
   min_brightness: 10
@@ -316,7 +316,7 @@
   lights:
     - light.flur_decke_alle               # Zigbee-Gruppe (6 Lichter - synchron)
     - light.flur_schrank_alle             # Zigbee-Gruppe (2 Lichter - synchron)
-  interval: 180  # Reduced from 60 to prevent MQTT flooding
+  interval: 300  # 5 min - reduced traffic while maintaining smoothness
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
   min_brightness: 10
@@ -354,7 +354,7 @@
   lights:
     - light.balkon_wand_alle              # Zigbee-Gruppe (2 Lichter - synchron)
     - light.balkon_blumen                 # Einzellicht (individuell gesteuert)
-  interval: 180  # Reduced from 90 to prevent MQTT flooding
+  interval: 300  # 5 min - reduced traffic while maintaining smoothness
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
   min_brightness: 10 # Lower minimum for outdoor ambiance

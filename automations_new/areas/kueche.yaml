@@ -93,8 +93,8 @@
         entity_id: light.alle_kuche_nachtlichter
       night_lights_after_time: '22:00:00'
       night_lights_before_time: 06:00:00
-      night_time_delay: 0
-      time_delay: 0
+      night_time_delay: 1
+      time_delay: 1
       include_ambient: ambient_enabled
       ambient_light_sensor: sensor.balkon_motion_illuminance_safe
       ambient_light_options: ambient_light_option_disabled

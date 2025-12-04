@@ -19,7 +19,7 @@
       - time_enabled
       night_lights_entity_state:
       - input_boolean.schlafenszeit
-      time_delay: 0
+      time_delay: 1
       night_lights_after_time: '22:00:00'
       night_lights_before_time: 06:00:00
       # Bypass motion turn-off when manual control is active
@@ -37,7 +37,7 @@
       - binary_sensor.ankleide_bewegungsmelder_occupancy
       light_switch:
         entity_id: light.alle_ankleide_lichter
-      time_delay: 0
+      time_delay: 1
       include_ambient: ambient_disabled
       ambient_light_sensor: sensor.balkon_motion_illuminance_safe
       include_night_lights: night_lights_enabled
@@ -47,7 +47,7 @@
       - input_boolean.schlafenszeit
       night_lights:
         entity_id: switch.ankleide_indirekt
-      night_time_delay: 0
+      night_time_delay: 1
       include_device_tracker: zone_enabled
       zone: zone.home
       night_lights_after_time: '22:00:00'

@@ -220,8 +220,8 @@
       night_light_transition_on: 3
       night_light_transition_off: 9
       boolean_scenes_scripts: input_boolean.musik_badezimmer
-      time_delay: 0
-      night_time_delay: 0
+      time_delay: 1
+      night_time_delay: 1
       ambient_light_value: 150
       ambient_light_high_value: 200
       # Bypass motion turn-off when manual control is active
