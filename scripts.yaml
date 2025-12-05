@@ -257,7 +257,7 @@ fade_volume:
           - bezier
           - linear
   variables:
-    steps_per_second: 10
+    steps_per_second: 2
     total_steps: '{{ (steps_per_second * duration) | int(0) }}'
     start_volume: "{% set current = state_attr(target_player, 'volume_level') | float(0)
       %} {% if current < 0.01 %}\n  0\n{% else %}\n  {{ current }}\n{% endif %}\n"
@@ -268,6 +268,7 @@ fade_volume:
       value_template: '{{ start_volume < 0.01 and volume_diff > 0 }}'
     then:
     - action: media_player.volume_set
+      continue_on_error: true
       data:
         entity_id: '{{ target_player }}'
         volume_level: 0
@@ -283,6 +284,7 @@ fade_volume:
           - target_volume) | abs) > 0.001 }}'
       sequence:
       - action: media_player.volume_set
+        continue_on_error: true
         data:
           entity_id: '{{ target_player }}'
           volume_level: "{% set progress = repeat.index / total_steps %} {% set current_start
@@ -299,6 +301,7 @@ fade_volume:
       - delay:
           milliseconds: '{{ (1000 / steps_per_second) | int }}'
   - action: media_player.volume_set
+    continue_on_error: true
     data:
       entity_id: '{{ target_player }}'
       volume_level: '{{ target_volume }}'

@@ -591,6 +591,17 @@ views:
     icon: ''
     badges: []
     cards:
+      - type: markdown
+        content: |
+          ## 🌅 Adaptive Lighting System
+
+          **Automatische Erkennung manueller Steuerung:**
+          - `take_over_control`: Pausiert AL bei manuellen Änderungen
+          - `detect_non_ha_changes`: Erkennt Änderungen via Siri, HomeKit, Schalter
+          - `autoreset_control`: Gibt nach 1-2h automatisch wieder frei
+
+          **Manual Control Status** zeigt, welche Räume gerade manuell gesteuert sind.
+        title: ℹ️ System-Info
       - type: entities
         entities:
           - entity: switch.adaptive_lighting_ankleide
