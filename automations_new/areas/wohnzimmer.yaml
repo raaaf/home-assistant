@@ -94,11 +94,7 @@
           data:
             transition: 6
           target:
-            entity_id:
-            - light.wohnzimmer_wand_alle
-            - light.wohnzimmer_spielematte_alle
-            - light.wohnzimmer_schrank_alle
-            - light.wohnzimmer_spieletisch
+            entity_id: light.alle_wohnzimmer_lichter
       - alias: "Turn off kitchen lights if not cooking"
         choose:
         - conditions:
@@ -403,8 +399,8 @@
         data: {}
         target:
           entity_id:
-          - light.wohnzimmer_wand_alle
-          - light.kuche_decke_alle
+          - light.alle_wohnzimmer_lichter
+          - light.alle_kuche_lichter
           - light.steckdose_kuechengeraete
       - action: automation.turn_off
         target:
@@ -555,7 +551,10 @@
       - binary_sensor.wohnzimmer_vibration_vibration
       - binary_sensor.wohnzimmer_vibration_2_vibration
       light_switch:
-        entity_id: light.wohnzimmer_esstisch_alle
+        entity_id:
+        - light.wohnzimmer_esstisch_1
+        - light.wohnzimmer_esstisch_2
+        - light.wohnzimmer_esstisch_3
       include_night_lights: night_lights_disabled
       night_lights:
         entity_id: light.alle_kuche_nachtlichter

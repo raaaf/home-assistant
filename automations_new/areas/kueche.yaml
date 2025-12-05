@@ -167,7 +167,10 @@
           brightness_pct: 70
           transition: 2
         target:
-          entity_id: light.wohnzimmer_esstisch_alle
+          entity_id:
+          - light.wohnzimmer_esstisch_1
+          - light.wohnzimmer_esstisch_2
+          - light.wohnzimmer_esstisch_3
     - conditions:
       - condition: trigger
         id: 'off'
@@ -181,7 +184,10 @@
       - data: {}
         action: light.turn_off
         target:
-          entity_id: light.wohnzimmer_esstisch_alle
+          entity_id:
+          - light.wohnzimmer_esstisch_1
+          - light.wohnzimmer_esstisch_2
+          - light.wohnzimmer_esstisch_3
       - alias: "Reset living room adaptive lighting settings to default"
         action: adaptive_lighting.change_switch_settings
         target:

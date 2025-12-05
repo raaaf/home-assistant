@@ -16,25 +16,51 @@
   unique_id: alle_wohnzimmer_lichter
   name: Alle Wohnzimmer Lichter
   entities:
-    - light.wohnzimmer_wand_alle
-    - light.wohnzimmer_esstisch_alle
-    - light.wohnzimmer_spielematte_alle
-    - light.wohnzimmer_schrank_alle
+    # Wohnzimmer Wand (6 lights)
+    - light.wohnzimmer_wand_1
+    - light.wohnzimmer_wand_2
+    - light.wohnzimmer_wand_3
+    - light.wohnzimmer_wand_4
+    - light.wohnzimmer_wand_5
+    - light.wohnzimmer_wand_6
+    # Wohnzimmer Esstisch (3 lights)
+    - light.wohnzimmer_esstisch_1
+    - light.wohnzimmer_esstisch_2
+    - light.wohnzimmer_esstisch_3
+    # Wohnzimmer Spielematte (4 lights)
+    - light.wohnzimmer_spielematte_1
+    - light.wohnzimmer_spielematte_2
+    - light.wohnzimmer_spielematte_3
+    - light.wohnzimmer_spielematte_4
+    # Wohnzimmer Schrank (3 lights)
+    - light.wohnzimmer_schrank_1
+    - light.wohnzimmer_schrank_2
+    - light.wohnzimmer_schrank_3
+    # Individual light
     - light.wohnzimmer_spieletisch
 
 - platform: group
   unique_id: alle_kuche_lichter
   name: Alle Kuche Lichter
   entities:
-    - light.kuche_decke_alle
-    - light.kuche_insel_alle
-    - light.kuche_schrank_alle
+    # Küche Decke (2 lights)
+    - light.kuche_decke_1
+    - light.kuche_decke_2
+    # Küche Insel (2 lights)
+    - light.kuche_insel_1
+    - light.kuche_insel_2
+    # Küche Schrank (2 lights)
+    - light.kuche_schrank_1
+    - light.kuche_schrank_2
 
 - platform: group
   unique_id: alle_schlafzimmer_lichter
   name: Alle Schlafzimmer Lichter
   entities:
-    - light.schlafzimmer_decke_alle
+    # Schlafzimmer Decke (2 lights)
+    - light.schlafzimmer_decke_1
+    - light.schlafzimmer_decke_2
+    # Individual lights
     - light.schlafzimmer_bett
     - light.schlafzimmer_tv
 
@@ -50,7 +76,10 @@
   unique_id: alle_badezimmer_lichter
   name: Alle Badezimmer Lichter
   entities:
-    - light.badezimmer_decke_alle
+    # Badezimmer Decke (2 lights)
+    - light.badezimmer_decke_1
+    - light.badezimmer_decke_2
+    # Individual lights
     - light.badezimmer_schrank
     - light.badezimmer_fenster
 
@@ -58,22 +87,36 @@
   unique_id: alle_arbeitszimmer_lichter
   name: Alle Arbeitszimmer Lichter
   entities:
+    # Individual light
     - light.arbeitszimmer_decke
-    - light.arbeitszimmer_pc_alle
+    # Arbeitszimmer PC (2 lights)
+    - light.arbeitszimmer_pc_1
+    - light.arbeitszimmer_pc_2
+    # Individual light
     - light.arbeitszimmer_stehlampe
 
 - platform: group
   unique_id: alle_flur_lichter
   name: Alle Flur Lichter
   entities:
-    - light.flur_decke_alle
-    - light.flur_schrank_alle
+    # Flur Decke (6 lights)
+    - light.flur_decke_1
+    - light.flur_decke_2
+    - light.flur_decke_3
+    - light.flur_decke_4
+    - light.flur_decke_5
+    - light.flur_decke_6
+    # Flur Schrank (2 lights)
+    - light.flur_schrank_1
+    - light.flur_schrank_2
 
 - platform: group
   unique_id: alle_ankleide_lichter
   name: Alle Ankleide Lichter
   entities:
-    - light.ankleide_decke_alle
+    # Ankleide Decke (2 lights)
+    - light.ankleide_decke_1
+    - light.ankleide_decke_2
 
 - platform: group
   unique_id: alle_waschzimmer_lichter
@@ -85,7 +128,10 @@
   unique_id: alle_balkon_lichter
   name: Alle Balkon Lichter
   entities:
-    - light.balkon_wand_alle
+    # Balkon Wand (2 lights)
+    - light.balkon_wand_1
+    - light.balkon_wand_2
+    # Individual light
     - light.balkon_blumen
 
 # =============================================================================
@@ -96,13 +142,19 @@
   unique_id: alle_wohnzimmer_nachtlichter
   name: Alle Wohnzimmer Nachtlichter
   entities:
-    - light.wohnzimmer_schrank_alle
+    # Wohnzimmer Schrank (3 lights)
+    - light.wohnzimmer_schrank_1
+    - light.wohnzimmer_schrank_2
+    - light.wohnzimmer_schrank_3
 
 - platform: group
   unique_id: alle_kuche_nachtlichter
   name: Alle Kuche Nachtlichter
   entities:
-    - light.kuche_schrank_alle
+    # Küche Schrank (2 lights)
+    - light.kuche_schrank_1
+    - light.kuche_schrank_2
+    # Individual light
     - light.kuche_insel_oben
 
 - platform: group
@@ -129,11 +181,16 @@
   unique_id: alle_arbeitszimmer_nachtlichter
   name: Alle Arbeitszimmer Nachtlichter
   entities:
-    - light.arbeitszimmer_pc_alle
+    # Arbeitszimmer PC (2 lights)
+    - light.arbeitszimmer_pc_1
+    - light.arbeitszimmer_pc_2
+    # Individual light
     - light.arbeitszimmer_stehlampe
 
 - platform: group
   unique_id: alle_flur_nachtlichter
   name: Alle Flur Nachtlichter
   entities:
-    - light.flur_schrank_alle
+    # Flur Schrank (2 lights)
+    - light.flur_schrank_1
+    - light.flur_schrank_2
