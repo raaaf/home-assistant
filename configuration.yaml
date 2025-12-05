@@ -457,7 +457,7 @@ template:
       - name: "Küche Manual Control"
         unique_id: kueche_manual_control
         state: >-
-          {{ (state_attr('switch.adaptive_lighting_kuche', 'manual_control') or []) | length > 0 }}
+          {{ (state_attr('switch.adaptive_lighting_kueche', 'manual_control') or []) | length > 0 }}
         icon: mdi:hand-back-right
 
       - name: "Schlafzimmer Manual Control"

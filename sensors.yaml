@@ -40,14 +40,14 @@
   details_format: "upcoming"
   value_template: *waste_days_template
   types:
-    - Papier
+    - Altpapier
 
 - platform: waste_collection_schedule
   name: Gelbersack
   details_format: "upcoming"
   value_template: *waste_days_template
   types:
-    - GelberSack
+    - Gelber Sack
 
 # History Stats - Heizungen (je Raum)
 - platform: history_stats
