@@ -39,34 +39,40 @@
   - choose:
     - alias: Arbeit einschalten
       conditions:
-      - condition: or
+      - condition: and
         conditions:
-        - alias: Alexandra arbeitet am Studio Display
-          condition: and
+        - alias: Arbeit ist noch nicht aktiv (verhindert Re-Trigger)
+          condition: state
+          entity_id: input_boolean.arbeit
+          state: 'off'
+        - condition: or
           conditions:
-          - condition: trigger
-            id: work-alex-on
-          - condition: or
+          - alias: Alexandra arbeitet am Studio Display
+            condition: and
             conditions:
-            - condition: numeric_state
-              entity_id: sensor.macbook_air_von_alexandra_displays
-              above: 1.5
-            - condition: state
-              entity_id: sensor.macbook_air_von_alexandra_display_name
-              state: "Studio Display"
-        - alias: Rafael arbeitet am Studio Display
-          condition: and
-          conditions:
-          - condition: trigger
-            id: work-rafael-on
-          - condition: or
+            - condition: trigger
+              id: work-alex-on
+            - condition: or
+              conditions:
+              - condition: numeric_state
+                entity_id: sensor.macbook_air_von_alexandra_displays
+                above: 1.5
+              - condition: state
+                entity_id: sensor.macbook_air_von_alexandra_display_name
+                state: "Studio Display"
+          - alias: Rafael arbeitet am Studio Display
+            condition: and
             conditions:
-            - condition: numeric_state
-              entity_id: sensor.macbook_pro_rafael_displays
-              above: 1.5
-            - condition: state
-              entity_id: sensor.macbook_pro_rafael_primary_display_name
-              state: "Studio Display"
+            - condition: trigger
+              id: work-rafael-on
+            - condition: or
+              conditions:
+              - condition: numeric_state
+                entity_id: sensor.macbook_pro_rafael_displays
+                above: 1.5
+              - condition: state
+                entity_id: sensor.macbook_pro_rafael_primary_display_name
+                state: "Studio Display"
       sequence:
       - action: input_boolean.turn_on
         target:
