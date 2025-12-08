@@ -47,8 +47,8 @@
     - light.kuche_decke_1
     - light.kuche_decke_2
     # Küche Insel (2 lights)
-    - light.kuche_insel_1
-    - light.kuche_insel_2
+    - light.kuche_insel_oben
+    - light.kuche_insel_unten
     # Küche Schrank (2 lights)
     - light.kuche_schrank_1
     - light.kuche_schrank_2
