@@ -55,12 +55,13 @@
   mode: single
 - id: '1744630508158'
   alias: Helper » Media Player nur wenn inaktiv aktualisieren
-  description: 'Führt alle 30 Minuten zwischen 06:00 und 22:00 Uhr ein Update für
+  description: 'Führt stündlich zwischen 06:00 und 22:00 Uhr ein Update für
     alle media_player-Entitäten durch, aber nur wenn sie nicht aktiv sind.
 
     '
   triggers:
-  - minutes: /30
+  - hours: /1
+    minutes: 0
     trigger: time_pattern
   conditions:
   - condition: time

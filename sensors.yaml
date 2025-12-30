@@ -184,73 +184,9 @@
         {% endif %}
 
     # ============================================================================
-    # STATUS SENSORS FÜR POWERCALC (ohne device_class)
-    # ============================================================================
-
-    # Netzwerk-Infrastruktur
-    fritzbox_7590_ax_always_on:
-      friendly_name: "FRITZ!Box 7590 AX Always On"
-      value_template: "on"
-      icon_template: "mdi:router-wireless"
-
-    fritzrepeater_1200_ax_always_on:
-      friendly_name: "FRITZ!Repeater 1200 AX Always On"
-      value_template: "on"
-      icon_template: "mdi:wifi-strength-4"
-
-    fritzrepeater_2400_always_on:
-      friendly_name: "FRITZ!Repeater 2400 Always On"
-      value_template: "on"
-      icon_template: "mdi:wifi-strength-4"
-
-    # Smart Home Zentrale
-    synology_ds720_always_on:
-      friendly_name: "Synology DS720+ Always On"
-      value_template: "on"
-      icon_template: "mdi:nas"
-
-    nuki_bridge_always_on:
-      friendly_name: "Nuki Bridge Always On"
-      value_template: "on"
-      icon_template: "mdi:bridge"
-
-    # Überwachung
-    camera_schlafzimmer_always_on:
-      friendly_name: "Kamera Schlafzimmer Always On"
-      value_template: "on"
-      icon_template: "mdi:camera"
-
-    camera_wohnzimmer_always_on:
-      friendly_name: "Kamera Wohnzimmer Always On"
-      value_template: "on"
-      icon_template: "mdi:camera"
-
-    # Haushaltsgeräte
-    wasserspender_always_on:
-      friendly_name: "Wasserspender Always On"
-      value_template: "on"
-      icon_template: "mdi:water-pump"
-
-    futterspender_always_on:
-      friendly_name: "Futterspender Always On"
-      value_template: "on"
-      icon_template: "mdi:bowl-mix"
-
-    kuehlschrank_always_on:
-      friendly_name: "Kühlschrank Always On"
-      value_template: "on"
-      icon_template: "mdi:fridge"
-
-    # Zustandsabhängige Geräte
-    luefter_waschzimmer_running:
-      friendly_name: "Lüfter Waschzimmer Running"
-      value_template: "{{ has_value('input_select.trockner') and is_state('input_select.trockner', 'Arbeitet') }}"
-      icon_template: "mdi:fan"
-      availability_template: "{{ states('input_select.trockner') not in ['unknown', 'unavailable'] }}"
-
-    # ============================================================================
     # NETZ EINSPEISUNG/BEZUG SENSORS (Phase-Based Calculation)
     # ============================================================================
+    # NOTE: Always-on device sensors are defined in binary_sensors.yaml with device_class: running
     
     stromzahler_saldiert:
       friendly_name: "Stromzähler Saldiert"

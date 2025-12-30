@@ -68,7 +68,7 @@ logger:
 recorder:
   purge_keep_days: 14
   auto_purge: true
-  commit_interval: 30
+  commit_interval: 5  # Reduced from 30 to minimize data loss on crash
   exclude:
     domains:
       - automation
@@ -669,17 +669,26 @@ utility_meter:
     source: sensor.ac_total_energy
     name: "AC Energie Täglich"
     cycle: daily
-    
+    offset:
+      hours: 0
+      minutes: 0
+
   # Utility meters for grid import/export tracking
   taglicher_netzbezug:
     source: sensor.netzbezug_energie
     name: "Täglicher Netzbezug"
     cycle: daily
-    
+    offset:
+      hours: 0
+      minutes: 0
+
   tagliche_einspeisung:
     source: sensor.einspeisung_energie
     name: "Tägliche Einspeisung"
     cycle: daily
+    offset:
+      hours: 0
+      minutes: 0
     
   # Utility Meter für Energy müssen Integration Sensoren verwenden
   # Diese werden automatisch durch Home Assistant Energy Dashboard erstellt
@@ -700,23 +709,6 @@ input_boolean:
   frost_warning_sent:
     name: "Frostwarnung gesendet"
     icon: mdi:snowflake-alert
-    initial: false
-  # Test triggers for scene validation
-  test_scene_film:
-    name: "Test Scene: Film"
-    icon: mdi:movie-play
-    initial: false
-  test_scene_party:
-    name: "Test Scene: Party"
-    icon: mdi:party-popper
-    initial: false
-  test_scene_kochen:
-    name: "Test Scene: Kochen"
-    icon: mdi:chef-hat
-    initial: false
-  test_scene_baden:
-    name: "Test Scene: Baden"
-    icon: mdi:bathtub
     initial: false
 
 input_datetime:
@@ -835,6 +827,8 @@ input_number:
     initial: 100
 
 input_select:
+  # DEPRECATED: active_scene is set by automations but not used for conditions
+  # TODO: Remove this and update automations to remove input_select.select_option calls
   active_scene:
     name: "Aktive Szene"
     options:
