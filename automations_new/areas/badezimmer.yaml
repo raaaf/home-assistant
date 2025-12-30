@@ -89,12 +89,6 @@
       - condition: trigger
         id: 'off'
       sequence:
-      - alias: "Setze aktive Szene zurück"
-        action: input_select.select_option
-        target:
-          entity_id: input_select.active_scene
-        data:
-          option: "Keine"
       - alias: "Reaktiviere adaptive Beleuchtung mit Konflikt-Prüfung"
         action: script.scene_enable_adaptive_lighting
         data:
@@ -159,12 +153,6 @@
       - condition: trigger
         id: 'off'
       sequence:
-      - alias: "Setze aktive Szene zurück"
-        action: input_select.select_option
-        target:
-          entity_id: input_select.active_scene
-        data:
-          option: "Keine"
       - alias: "Reaktiviere adaptive Beleuchtung mit Konflikt-Prüfung"
         action: script.scene_enable_adaptive_lighting
         data:

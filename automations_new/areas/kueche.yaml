@@ -45,12 +45,6 @@
       - condition: trigger
         id: 'off'
       sequence:
-      - alias: "Setze aktive Szene zurück"
-        action: input_select.select_option
-        target:
-          entity_id: input_select.active_scene
-        data:
-          option: "Keine"
       - alias: "Reset kitchen adaptive lighting settings to default"
         action: adaptive_lighting.change_switch_settings
         target:
@@ -175,12 +169,6 @@
       - condition: trigger
         id: 'off'
       sequence:
-      - alias: "Setze aktive Szene zurück"
-        action: input_select.select_option
-        target:
-          entity_id: input_select.active_scene
-        data:
-          option: "Keine"
       - data: {}
         action: light.turn_off
         target:

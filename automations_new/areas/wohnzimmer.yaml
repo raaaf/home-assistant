@@ -131,12 +131,6 @@
           entity_id: input_boolean.movie
         data: {}
         action: input_boolean.turn_off
-      - alias: "Setze aktive Szene zurück"
-        action: input_select.select_option
-        target:
-          entity_id: input_select.active_scene
-        data:
-          option: "Keine"
       - action: adaptive_lighting.change_switch_settings
         target:
           entity_id:

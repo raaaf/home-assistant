@@ -827,22 +827,6 @@ input_number:
     initial: 100
 
 input_select:
-  # DEPRECATED: active_scene is set by automations but not used for conditions
-  # TODO: Remove this and update automations to remove input_select.select_option calls
-  active_scene:
-    name: "Aktive Szene"
-    options:
-      - "Keine"
-      - "Film"
-      - "Party"
-      - "Kochen"
-      - "Essen"
-      - "Baden"
-      - "Sauna"
-      - "Arbeit"
-      - "Gaming"
-    initial: "Keine"
-    icon: mdi:play-circle
   wakeup_routine_phase:
     name: "Aufwachroutine Phase"
     options:
@@ -864,7 +848,6 @@ input_select:
 
 automation: !include_dir_merge_list automations_new/
 script: !include scripts.yaml
-scene: !include scenes.yaml
 sensor: !include sensors.yaml
 binary_sensor: !include binary_sensors.yaml
 group: !include groups.yaml

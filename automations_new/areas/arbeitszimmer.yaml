@@ -65,11 +65,6 @@
         - action: input_boolean.turn_on
           target:
             entity_id: input_boolean.arbeit
-        - action: input_select.select_option
-          target:
-            entity_id: input_select.active_scene
-          data:
-            option: "Arbeit"
       - alias: "Alex Lichter einschalten (Decke + Stehlampe)"
         choose:
         - alias: Nach 21 Uhr - nur Stehlampe (Nachtlicht)
@@ -138,11 +133,6 @@
         - action: input_boolean.turn_on
           target:
             entity_id: input_boolean.arbeit
-        - action: input_select.select_option
-          target:
-            entity_id: input_select.active_scene
-          data:
-            option: "Arbeit"
       - alias: "Rafael Lichter einschalten (PC 1 + PC 2)"
         choose:
         - alias: Nach 21 Uhr - PC Lichter (sind Nachtlichter)
@@ -210,11 +200,6 @@
         - action: input_boolean.turn_off
           target:
             entity_id: input_boolean.arbeit
-        - action: input_select.select_option
-          target:
-            entity_id: input_select.active_scene
-          data:
-            option: "Keine"
         - action: script.scene_enable_adaptive_lighting
           data:
             room: "arbeitszimmer"
@@ -247,11 +232,6 @@
         - action: input_boolean.turn_off
           target:
             entity_id: input_boolean.arbeit
-        - action: input_select.select_option
-          target:
-            entity_id: input_select.active_scene
-          data:
-            option: "Keine"
         - action: script.scene_enable_adaptive_lighting
           data:
             room: "arbeitszimmer"
@@ -275,12 +255,6 @@
         target:
           entity_id: input_boolean.gaming
         data: {}
-      - alias: "Setze aktive Szene"
-        action: input_select.select_option
-        target:
-          entity_id: input_select.active_scene
-        data:
-          option: "Gaming"
       - alias: "Deckenlampe ausschalten"
         action: light.turn_off
         target:
@@ -305,12 +279,6 @@
         target:
           entity_id: input_boolean.gaming
         data: {}
-      - alias: "Setze aktive Szene zurück"
-        action: input_select.select_option
-        target:
-          entity_id: input_select.active_scene
-        data:
-          option: "Keine"
       - alias: "Dynamic Scene stoppen"
         action: scene_presets.stop_dynamic_scenes_for_targets
         data:

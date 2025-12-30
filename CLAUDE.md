@@ -375,7 +375,6 @@ input_number.fan_speed_low, medium, high, max
 
 ### Input Select (Choices)
 ```yaml
-input_select.active_scene    # Current scene selector
 input_select.wakeup_routine_phase  # Wake-up phase tracking
 ```
 

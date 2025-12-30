@@ -38,28 +38,8 @@ validate_scene_infrastructure:
         message: "✗ Test 1 FAILED: Missing helper scripts"
         level: error
 
-  # Test 2: Verify input_select.active_scene exists and has correct options
-  - alias: "Test 2: Active Scene State Machine"
-    if:
-    - condition: template
-      value_template: >
-        {{ has_value('input_select.active_scene') and
-           'Film' in state_attr('input_select.active_scene', 'options') and
-           'Party' in state_attr('input_select.active_scene', 'options') and
-           'Keine' in state_attr('input_select.active_scene', 'options') }}
-    then:
-    - action: system_log.write
-      data:
-        message: "✓ Test 2 PASSED: Scene state machine configured correctly"
-        level: info
-    else:
-    - action: system_log.write
-      data:
-        message: "✗ Test 2 FAILED: Scene state machine misconfigured"
-        level: error
-
-  # Test 3: Verify all scene booleans exist
-  - alias: "Test 3: Scene Input Booleans"
+  # Test 2: Verify all scene booleans exist
+  - alias: "Test 2: Scene Input Booleans"
     if:
     - condition: template
       value_template: >
@@ -74,16 +54,16 @@ validate_scene_infrastructure:
     then:
     - action: system_log.write
       data:
-        message: "✓ Test 3 PASSED: All scene booleans exist"
+        message: "✓ Test 2 PASSED: All scene booleans exist"
         level: info
     else:
     - action: system_log.write
       data:
-        message: "✗ Test 3 FAILED: Missing scene booleans"
+        message: "✗ Test 2 FAILED: Missing scene booleans"
         level: error
 
-  # Test 4: Verify motion automations exist
-  - alias: "Test 4: Motion Automations"
+  # Test 3: Verify motion automations exist
+  - alias: "Test 3: Motion Automations"
     if:
     - condition: template
       value_template: >
@@ -94,16 +74,16 @@ validate_scene_infrastructure:
     then:
     - action: system_log.write
       data:
-        message: "✓ Test 4 PASSED: All motion automations exist"
+        message: "✓ Test 3 PASSED: All motion automations exist"
         level: info
     else:
     - action: system_log.write
       data:
-        message: "✗ Test 4 FAILED: Missing motion automations"
+        message: "✗ Test 3 FAILED: Missing motion automations"
         level: error
 
-  # Test 5: Verify dashboard sensors exist
-  - alias: "Test 5: Dashboard Sensors"
+  # Test 4: Verify dashboard sensors exist
+  - alias: "Test 4: Dashboard Sensors"
     if:
     - condition: template
       value_template: >
@@ -113,12 +93,12 @@ validate_scene_infrastructure:
     then:
     - action: system_log.write
       data:
-        message: "✓ Test 5 PASSED: Dashboard sensors configured"
+        message: "✓ Test 4 PASSED: Dashboard sensors configured"
         level: info
     else:
     - action: system_log.write
       data:
-        message: "✗ Test 5 FAILED: Missing dashboard sensors"
+        message: "✗ Test 4 FAILED: Missing dashboard sensors"
         level: error
 
   # Final Report
@@ -131,74 +111,9 @@ validate_scene_infrastructure:
         Check system log for detailed results.
 
         Current State:
-        - Active Scene: {{ states('input_select.active_scene') }}
+        - Any Scene Active: {{ states('binary_sensor.any_scene_active') }}
         - Scene Conflict: {{ states('binary_sensor.scene_conflict_detected') }}
         - Motion Disabled: {{ states('binary_sensor.motion_automations_disabled') }}
-
-test_scene_activation:
-  alias: 'Test » Scene Activation Cycle'
-  description: Tests scene activation and deactivation cycle
-  icon: mdi:test-tube
-  mode: restart
-  sequence:
-  - action: system_log.write
-    data:
-      message: "🧪 Starting scene activation test cycle..."
-      level: info
-
-  # Save current state
-  - variables:
-      original_scene: "{{ states('input_select.active_scene') }}"
-
-  # Test Film scene
-  - action: logbook.log
-    data:
-      name: "Scene Test"
-      message: "Testing Film scene activation..."
-      domain: script
-
-  - action: input_boolean.turn_on
-    target:
-      entity_id: input_boolean.test_scene_film
-
-  - delay: 00:00:02
-
-  - if:
-    - condition: template
-      value_template: "{{ is_state('input_select.active_scene', 'Film') }}"
-    then:
-    - action: system_log.write
-      data:
-        message: "✓ Film scene test PASSED"
-        level: info
-    else:
-    - action: system_log.write
-      data:
-        message: "✗ Film scene test FAILED"
-        level: error
-
-  - action: input_boolean.turn_off
-    target:
-      entity_id: input_boolean.test_scene_film
-
-  - delay: 00:00:02
-
-  # Restore original state
-  - action: input_select.select_option
-    target:
-      entity_id: input_select.active_scene
-    data:
-      option: "{{ original_scene }}"
-
-  - action: persistent_notification.create
-    data:
-      title: "🧪 Scene Test Complete"
-      message: >
-        Scene activation test completed.
-
-        Original state restored: {{ original_scene }}
-
-        Check system log for detailed results.
 
 health_check_automations:
   alias: 'Test » Automation Health Check'

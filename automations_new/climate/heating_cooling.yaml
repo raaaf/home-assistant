@@ -91,6 +91,10 @@
   - condition: state
     entity_id: input_boolean.alle_sind_weg
     state: 'off'
+  - alias: Fenster/Türen müssen geschlossen sein für AC
+    condition: state
+    entity_id: binary_sensor.fenster_tueren
+    state: 'off'
   action:
   - variables:
       arbeit_aktiv: '{{ has_value(''input_boolean.arbeit'') and is_state(''input_boolean.arbeit'', ''on'') }}'

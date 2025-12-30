@@ -343,9 +343,16 @@
     id: sunset
   conditions: []
   actions:
-  - alias: Gradually reduce color temp from 4000K to 2200K over 90 minutes
+  - alias: Gradually reduce color temp from 4000K to 2200K over 90 minutes (aborts if scene activates)
     repeat:
-      count: 18  # 18 steps x 5 minutes = 90 minutes total
+      while:
+        - alias: Keine Szene aktiv (Film, Party, etc.)
+          condition: state
+          entity_id: binary_sensor.any_scene_active
+          state: 'off'
+        - alias: Max 18 Iterationen (90 Minuten)
+          condition: template
+          value_template: "{{ repeat.index <= 18 }}"
       sequence:
       - alias: "Step {{ repeat.index }}/18: Set color temp to {{ 4000 - (repeat.index * 100) }}K"
         action: adaptive_lighting.change_switch_settings
