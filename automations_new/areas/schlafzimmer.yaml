@@ -230,3 +230,65 @@
       entity_id: switch.arbeitszimmer_steckdose
     action: switch.turn_on
   mode: single
+- id: 'schlafzimmer_appletv_ambilight'
+  alias: 'Licht » Schlafzimmer TV Ambilight'
+  description: Schaltet Ambilight ein wenn Apple TV abspielt, deaktiviert Motion-Automation
+  triggers:
+    - trigger: state
+      entity_id: media_player.appletv
+      to: playing
+      id: playing
+    - trigger: state
+      entity_id: media_player.appletv
+      from: playing
+      id: stopped
+  conditions: []
+  actions:
+    - choose:
+        - conditions:
+            - condition: trigger
+              id: playing
+          sequence:
+            - action: automation.turn_off
+              target:
+                entity_id: automation.motion_arbeitszimmer
+              data:
+                stop_actions: true
+            - action: switch.turn_off
+              target:
+                entity_id: switch.adaptive_lighting_adapt_brightness_schlafzimmer
+            - delay:
+                milliseconds: 300
+            - action: light.turn_off
+              target:
+                entity_id: light.alle_schlafzimmer_lichter
+            - delay:
+                milliseconds: 500
+            - action: light.turn_on
+              target:
+                entity_id: light.schlafzimmer_tv
+              data:
+                brightness_pct: 30
+            - delay:
+                milliseconds: 500
+            - action: adaptive_lighting.apply
+              data:
+                entity_id: switch.adaptive_lighting_schlafzimmer
+                lights:
+                  - light.schlafzimmer_tv
+                adapt_brightness: false
+                adapt_color: true
+        - conditions:
+            - condition: trigger
+              id: stopped
+          sequence:
+            - action: light.turn_off
+              target:
+                entity_id: light.schlafzimmer_tv
+            - action: switch.turn_on
+              target:
+                entity_id: switch.adaptive_lighting_adapt_brightness_schlafzimmer
+            - action: automation.turn_on
+              target:
+                entity_id: automation.motion_arbeitszimmer
+  mode: single

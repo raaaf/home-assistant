@@ -294,3 +294,51 @@
           message: 'Admin notification service nicht verfügbar für Fehler: {{ error_message }}'
   mode: queued
   max: 10
+
+- id: '1733679600000'
+  alias: System » Z2M OTA Updates
+  description: Checks for and triggers Zigbee2MQTT OTA firmware updates daily at 19:30
+  mode: single
+  triggers:
+    - trigger: time_pattern
+      hours: '19'
+      minutes: '30'
+  conditions: []
+  actions:
+    - alias: Get list of Z2M devices needing an update
+      variables:
+        update_entities: >
+          {{ integration_entities('mqtt')
+             | select('match', '^update\\.')
+             | select('is_state', 'on')
+             | reject('is_state_attr', 'in_progress', true)
+             | list }}
+    - alias: Run OTA update on devices with updates
+      repeat:
+        for_each: '{{ update_entities }}'
+        sequence:
+          - alias: Get Z2M device name from entity
+            variables:
+              triggered_entity: '{{ repeat.item }}'
+              device_name: >
+                {{ repeat.item | replace('update.', '') | regex_replace('_firmware$|_update$', '') }}
+          - alias: Send MQTT message to Z2M to request update
+            action: mqtt.publish
+            data:
+              qos: '0'
+              retain: false
+              topic: zigbee2mqtt/bridge/request/device/ota_update/update
+              payload: '{"id": "{{ device_name }}"}'
+          - alias: Wait a minute for the Z2M update to start
+            wait_template: "{{ is_state_attr(triggered_entity, 'in_progress', true) }}"
+            timeout: '00:01:00'
+            continue_on_timeout: true
+          - alias: Wait up to 1 hour for the OTA upgrade to finish
+            wait_template: "{{ is_state_attr(triggered_entity, 'in_progress', false) }}"
+            timeout: '01:00:00'
+            continue_on_timeout: true
+          - alias: Log completed update
+            action: logbook.log
+            data:
+              name: Z2M OTA Update
+              message: 'Firmware update completed for {{ device_name }}'

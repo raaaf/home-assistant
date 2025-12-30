@@ -253,6 +253,9 @@
     value_template: " {% set last = state_attr('automation.notification_co2_zu_hoch',\
       \ 'last_triggered') %}\n    {{ last is none or (now() - last).total_seconds()\
       \ > 30 * 60 }}"
+  - condition: state
+    entity_id: input_boolean.schlafenszeit
+    state: 'off'
   actions:
   - data:
       message: Der Wert liegt aktuell bei {{ states('sensor.qingping_air_monitor_lite_co2_carbon_dioxide') | int(0)

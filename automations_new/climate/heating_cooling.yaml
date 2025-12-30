@@ -535,7 +535,7 @@
   - at: "06:30:00"
     id: morning-boost
     trigger: time
-  - at: "15:30:00"
+  - at: "14:30:00"
     id: afternoon-boost
     trigger: time
   condition: []
@@ -603,7 +603,7 @@
         value_template: '{{ now().month <= 4 or now().month >= 10 }}'
       - condition: numeric_state
         entity_id: sensor.temperatur_aussen
-        below: 8
+        below: 10
       sequence:
       - action: switch.turn_on
         target:

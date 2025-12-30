@@ -560,3 +560,63 @@ scene_check_conflicts:
       name: "Szenen-Konflikt-Prüfung"
       message: "Keine Konflikte für {{ scene_name }}"
       domain: script
+
+reload_media_players:
+  alias: Reload Media Players
+  description: Aktualisiert den Status aller Media Player
+  icon: mdi:refresh
+  mode: single
+  sequence:
+    - action: homeassistant.update_entity
+      target:
+        entity_id:
+          - media_player.appletv
+          - media_player.wohnzimmer
+          - media_player.denon_avr_x3200w
+          - media_player.homepod_arbeitszimmer
+          - media_player.homepod_badezimmer
+          - media_player.homepod_kinderzimmer
+          - media_player.homepod_kuche
+          - media_player.homepod_schlafzimmer
+          - media_player.homepod_wohnzimmer
+
+heizung_boost:
+  alias: Heizung Boost
+  description: Toggle für manuellen 1,5h Heizungsboost
+  icon: mdi:radiator
+  mode: single
+  sequence:
+    - if:
+        - condition: state
+          entity_id: timer.heizung_boost
+          state: active
+      then:
+        - action: timer.cancel
+          target:
+            entity_id: timer.heizung_boost
+        - action: switch.turn_off
+          target:
+            entity_id:
+              - switch.heizung_kinderzimmer
+              - switch.heizung_schlafzimmer
+              - switch.heizung_wohnzimmer
+        - action: logbook.log
+          data:
+            name: Heizung Boost
+            message: "Boost manuell gestoppt"
+            domain: climate
+      else:
+        - action: switch.turn_on
+          target:
+            entity_id:
+              - switch.heizung_kinderzimmer
+              - switch.heizung_schlafzimmer
+              - switch.heizung_wohnzimmer
+        - action: timer.start
+          target:
+            entity_id: timer.heizung_boost
+        - action: logbook.log
+          data:
+            name: Heizung Boost
+            message: "1,5h Boost gestartet"
+            domain: climate

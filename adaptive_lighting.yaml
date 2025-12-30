@@ -66,7 +66,7 @@
   autoreset_control_seconds: 3600
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: false  # Disabled to reduce MQTT traffic
+  separate_turn_on_commands: true   # Enabled for IKEA bulb compatibility
   send_split_delay: 50  # 50ms between commands per official docs
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
   skip_redundant_commands: true
@@ -107,7 +107,7 @@
   autoreset_control_seconds: 3600
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: false  # Disabled to reduce MQTT traffic
+  separate_turn_on_commands: true   # Enabled for IKEA bulb compatibility
   send_split_delay: 50  # 50ms between commands per official docs
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
   skip_redundant_commands: true
@@ -149,7 +149,7 @@
   autoreset_control_seconds: 3600
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: false  # Disabled to reduce MQTT traffic
+  separate_turn_on_commands: true   # Enabled for IKEA bulb compatibility
   send_split_delay: 50  # 50ms between commands per official docs
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
   skip_redundant_commands: true
@@ -184,7 +184,7 @@
   autoreset_control_seconds: 3600
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: false  # Disabled to reduce MQTT traffic
+  separate_turn_on_commands: true   # Enabled for IKEA bulb compatibility
   send_split_delay: 50  # 50ms between commands per official docs
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
   skip_redundant_commands: true
@@ -226,7 +226,7 @@
   autoreset_control_seconds: 7200 # 2 hours for less frequently used rooms
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: false  # Disabled to reduce MQTT traffic
+  separate_turn_on_commands: true   # Enabled for IKEA bulb compatibility
   send_split_delay: 50  # 50ms between commands per official docs
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
   skip_redundant_commands: true
@@ -259,7 +259,7 @@
   autoreset_control_seconds: 7200
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: false  # Disabled to reduce MQTT traffic
+  separate_turn_on_commands: true   # Enabled for IKEA bulb compatibility
   send_split_delay: 50  # 50ms between commands per official docs
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
   skip_redundant_commands: true
@@ -302,7 +302,7 @@
   autoreset_control_seconds: 3600
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: false  # Disabled to reduce MQTT traffic
+  separate_turn_on_commands: true   # Enabled for IKEA bulb compatibility
   send_split_delay: 50  # 50ms between commands per official docs
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
   skip_redundant_commands: true
@@ -337,7 +337,7 @@
   autoreset_control_seconds: 7200
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: false  # Disabled to reduce MQTT traffic
+  separate_turn_on_commands: true   # Enabled for IKEA bulb compatibility
   send_split_delay: 50  # 50ms between commands per official docs
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
   skip_redundant_commands: true
@@ -362,6 +362,7 @@
     # Flur Schrank (2 lights)
     - light.flur_schrank_1
     - light.flur_schrank_2
+    - light.stahltraeger
   interval: 300  # 5 min - reduced traffic while maintaining smoothness
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
@@ -383,7 +384,7 @@
   autoreset_control_seconds: 7200
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: false  # Disabled to reduce MQTT traffic
+  separate_turn_on_commands: true   # Enabled for IKEA bulb compatibility
   send_split_delay: 50  # 50ms between commands per official docs
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
   skip_redundant_commands: true
@@ -424,7 +425,7 @@
   autoreset_control_seconds: 7200 # Longer reset for outdoor
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: false  # Disabled to reduce MQTT traffic
+  separate_turn_on_commands: true   # Enabled for IKEA bulb compatibility
   send_split_delay: 50  # 50ms between commands per official docs
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
   skip_redundant_commands: true

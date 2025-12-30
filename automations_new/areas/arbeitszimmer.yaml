@@ -37,62 +37,49 @@
   condition: []
   action:
   - choose:
-    - alias: Arbeit einschalten
+    # ==================== ALEX ARBEIT EINSCHALTEN ====================
+    - alias: Alex Arbeit einschalten (Decke + Stehlampe)
       conditions:
-      - condition: and
+      - condition: trigger
+        id: work-alex-on
+      - alias: Gaming ist nicht aktiv
+        condition: state
+        entity_id: input_boolean.gaming
+        state: 'off'
+      - alias: Alexandra arbeitet am Studio Display
+        condition: or
         conditions:
-        - alias: Arbeit ist noch nicht aktiv (verhindert Re-Trigger)
-          condition: state
+        - condition: numeric_state
+          entity_id: sensor.macbook_air_von_alexandra_displays
+          above: 1.5
+        - condition: state
+          entity_id: sensor.macbook_air_von_alexandra_display_name
+          state: "Studio Display"
+      sequence:
+      - alias: "Arbeit-Szene aktivieren (falls noch nicht aktiv)"
+        if:
+        - condition: state
           entity_id: input_boolean.arbeit
           state: 'off'
-        - condition: or
-          conditions:
-          - alias: Alexandra arbeitet am Studio Display
-            condition: and
-            conditions:
-            - condition: trigger
-              id: work-alex-on
-            - condition: or
-              conditions:
-              - condition: numeric_state
-                entity_id: sensor.macbook_air_von_alexandra_displays
-                above: 1.5
-              - condition: state
-                entity_id: sensor.macbook_air_von_alexandra_display_name
-                state: "Studio Display"
-          - alias: Rafael arbeitet am Studio Display
-            condition: and
-            conditions:
-            - condition: trigger
-              id: work-rafael-on
-            - condition: or
-              conditions:
-              - condition: numeric_state
-                entity_id: sensor.macbook_pro_rafael_displays
-                above: 1.5
-              - condition: state
-                entity_id: sensor.macbook_pro_rafael_primary_display_name
-                state: "Studio Display"
-      sequence:
-      - action: input_boolean.turn_on
-        target:
-          entity_id: input_boolean.arbeit
-        data: {}
-      - alias: "Setze aktive Szene"
-        action: input_select.select_option
-        target:
-          entity_id: input_select.active_scene
-        data:
-          option: "Arbeit"
-      - choose:
-        - alias: Nach 21 Uhr - nur Nachtlichter
+        then:
+        - action: input_boolean.turn_on
+          target:
+            entity_id: input_boolean.arbeit
+        - action: input_select.select_option
+          target:
+            entity_id: input_select.active_scene
+          data:
+            option: "Arbeit"
+      - alias: "Alex Lichter einschalten (Decke + Stehlampe)"
+        choose:
+        - alias: Nach 21 Uhr - nur Stehlampe (Nachtlicht)
           conditions:
           - condition: template
             value_template: '{{ now().hour >= 21 }}'
           sequence:
           - action: light.turn_on
             target:
-              entity_id: light.alle_arbeitszimmer_nachtlichter
+              entity_id: light.arbeitszimmer_stehlampe
             data:
               transition: 2
         - alias: Sehr hell draußen - keine Lichter nötig
@@ -101,7 +88,7 @@
             entity_id: sensor.sunlight_pct
             above: 70
           sequence: []
-        - alias: Hell draußen - nur Nachtlichter
+        - alias: Hell draußen - nur Stehlampe
           conditions:
           - condition: numeric_state
             entity_id: sensor.sunlight_pct
@@ -110,61 +97,179 @@
           sequence:
           - action: light.turn_on
             target:
-              entity_id: light.alle_arbeitszimmer_nachtlichter
+              entity_id: light.arbeitszimmer_stehlampe
             data:
               transition: 2
         default:
-        - alias: Dunkel oder moderat - alle Arbeitslichter
+        - alias: Dunkel oder moderat - Decke + Stehlampe
           action: light.turn_on
           target:
             entity_id:
-            - light.alle_arbeitszimmer_nachtlichter
-            - light.alle_arbeitszimmer_lichter
+            - light.arbeitszimmer_decke
+            - light.arbeitszimmer_stehlampe
           data:
             transition: 2
-    - alias: Arbeit ausschalten
+
+    # ==================== RAFAEL ARBEIT EINSCHALTEN ====================
+    - alias: Rafael Arbeit einschalten (PC 1 + PC 2)
+      conditions:
+      - condition: trigger
+        id: work-rafael-on
+      - alias: Gaming ist nicht aktiv
+        condition: state
+        entity_id: input_boolean.gaming
+        state: 'off'
+      - alias: Rafael arbeitet am Studio Display
+        condition: or
+        conditions:
+        - condition: numeric_state
+          entity_id: sensor.macbook_pro_rafael_displays
+          above: 1.5
+        - condition: state
+          entity_id: sensor.macbook_pro_rafael_primary_display_name
+          state: "Studio Display"
+      sequence:
+      - alias: "Arbeit-Szene aktivieren (falls noch nicht aktiv)"
+        if:
+        - condition: state
+          entity_id: input_boolean.arbeit
+          state: 'off'
+        then:
+        - action: input_boolean.turn_on
+          target:
+            entity_id: input_boolean.arbeit
+        - action: input_select.select_option
+          target:
+            entity_id: input_select.active_scene
+          data:
+            option: "Arbeit"
+      - alias: "Rafael Lichter einschalten (PC 1 + PC 2)"
+        choose:
+        - alias: Nach 21 Uhr - PC Lichter (sind Nachtlichter)
+          conditions:
+          - condition: template
+            value_template: '{{ now().hour >= 21 }}'
+          sequence:
+          - action: light.turn_on
+            target:
+              entity_id:
+              - light.arbeitszimmer_pc_1
+              - light.arbeitszimmer_pc_2
+            data:
+              transition: 2
+        - alias: Sehr hell draußen - keine Lichter nötig
+          conditions:
+          - condition: numeric_state
+            entity_id: sensor.sunlight_pct
+            above: 70
+          sequence: []
+        - alias: Hell draußen - PC Lichter
+          conditions:
+          - condition: numeric_state
+            entity_id: sensor.sunlight_pct
+            above: 40
+            below: 71
+          sequence:
+          - action: light.turn_on
+            target:
+              entity_id:
+              - light.arbeitszimmer_pc_1
+              - light.arbeitszimmer_pc_2
+            data:
+              transition: 2
+        default:
+        - alias: Dunkel oder moderat - PC 1 + PC 2
+          action: light.turn_on
+          target:
+            entity_id:
+            - light.arbeitszimmer_pc_1
+            - light.arbeitszimmer_pc_2
+          data:
+            transition: 2
+
+    # ==================== ALEX ARBEIT AUSSCHALTEN ====================
+    - alias: Alex Arbeit ausschalten (Decke + Stehlampe aus)
+      conditions:
+      - condition: trigger
+        id: work-alex-off
+      sequence:
+      - alias: "Alex Lichter ausschalten"
+        action: light.turn_off
+        target:
+          entity_id:
+          - light.arbeitszimmer_decke
+          - light.arbeitszimmer_stehlampe
+        data:
+          transition: 2
+      - alias: "Arbeit-Szene deaktivieren wenn Rafael auch aus"
+        if:
+        - condition: state
+          entity_id: binary_sensor.macbook_pro_rafael_active
+          state: 'off'
+        then:
+        - action: input_boolean.turn_off
+          target:
+            entity_id: input_boolean.arbeit
+        - action: input_select.select_option
+          target:
+            entity_id: input_select.active_scene
+          data:
+            option: "Keine"
+        - action: script.scene_enable_adaptive_lighting
+          data:
+            room: "arbeitszimmer"
+            exclude_scenes: ""
+        - action: script.scene_enable_motion_automations
+          data:
+            automations: "automation.arbeitszimmer_motion"
+            exclude_scenes: "party"
+
+    # ==================== RAFAEL ARBEIT AUSSCHALTEN ====================
+    - alias: Rafael Arbeit ausschalten (PC 1 + PC 2 aus)
+      conditions:
+      - condition: trigger
+        id: work-rafael-off
+      sequence:
+      - alias: "Rafael Lichter ausschalten"
+        action: light.turn_off
+        target:
+          entity_id:
+          - light.arbeitszimmer_pc_1
+          - light.arbeitszimmer_pc_2
+        data:
+          transition: 2
+      - alias: "Arbeit-Szene deaktivieren wenn Alex auch aus"
+        if:
+        - condition: state
+          entity_id: binary_sensor.macbook_air_von_alexandra_active
+          state: 'off'
+        then:
+        - action: input_boolean.turn_off
+          target:
+            entity_id: input_boolean.arbeit
+        - action: input_select.select_option
+          target:
+            entity_id: input_select.active_scene
+          data:
+            option: "Keine"
+        - action: script.scene_enable_adaptive_lighting
+          data:
+            room: "arbeitszimmer"
+            exclude_scenes: ""
+        - action: script.scene_enable_motion_automations
+          data:
+            automations: "automation.arbeitszimmer_motion"
+            exclude_scenes: "party"
+    - alias: Gaming einschalten
       conditions:
       - condition: and
         conditions:
-        - alias: Ausschalt-Trigger empfangen
-          condition: or
-          conditions:
-          - condition: trigger
-            id: work-alex-off
-          - condition: trigger
-            id: work-rafael-off
-        - alias: Alle Arbeitsgeräte sind aus
-          condition: template
-          value_template: >
-            {{ has_value('binary_sensor.macbook_air_von_alexandra_active') and
-               is_state('binary_sensor.macbook_air_von_alexandra_active', 'off') and
-               has_value('binary_sensor.macbook_pro_rafael_active') and
-               is_state('binary_sensor.macbook_pro_rafael_active', 'off') }}
-      sequence:
-      - action: input_boolean.turn_off
-        target:
+        - condition: trigger
+          id: gaming-on
+        - alias: Arbeit ist nicht aktiv (gegenseitiger Ausschluss)
+          condition: state
           entity_id: input_boolean.arbeit
-        data: {}
-      - alias: "Setze aktive Szene zurück"
-        action: input_select.select_option
-        target:
-          entity_id: input_select.active_scene
-        data:
-          option: "Keine"
-      - alias: "Reaktiviere adaptive Beleuchtung"
-        action: script.scene_enable_adaptive_lighting
-        data:
-          room: "arbeitszimmer"
-          exclude_scenes: ""
-      - alias: "Reaktiviere Motion-Automationen mit Konflikt-Prüfung"
-        action: script.scene_enable_motion_automations
-        data:
-          automations: "automation.arbeitszimmer_motion"
-          exclude_scenes: "party"
-    - alias: Gaming einschalten
-      conditions:
-      - condition: trigger
-        id: gaming-on
+          state: 'off'
       sequence:
       - action: input_boolean.turn_on
         target:
@@ -176,6 +281,21 @@
           entity_id: input_select.active_scene
         data:
           option: "Gaming"
+      - alias: "Deckenlampe ausschalten"
+        action: light.turn_off
+        target:
+          entity_id: light.arbeitszimmer_decke
+        data:
+          transition: 2
+      - alias: "Vapor wave Dynamic Scene starten"
+        action: scene_presets.start_dynamic_scene
+        data:
+          preset_id: "3984c3b7-6608-482f-84be-d2ffe39dbb1a"
+          targets:
+            entity_id: light.alle_arbeitszimmer_nachtlichter
+          brightness: 127
+          transition: 30
+          interval: 60
     - alias: Gaming ausschalten
       conditions:
       - condition: trigger
@@ -191,6 +311,24 @@
           entity_id: input_select.active_scene
         data:
           option: "Keine"
+      - alias: "Dynamic Scene stoppen"
+        action: scene_presets.stop_dynamic_scenes_for_targets
+        data:
+          targets:
+            entity_id: light.alle_arbeitszimmer_nachtlichter
+      - alias: "Alle Arbeitszimmer-Lichter ausschalten"
+        action: light.turn_off
+        target:
+          entity_id:
+          - light.alle_arbeitszimmer_nachtlichter
+          - light.arbeitszimmer_decke
+        data:
+          transition: 2
+      - alias: "Reaktiviere adaptive Beleuchtung"
+        action: script.scene_enable_adaptive_lighting
+        data:
+          room: "arbeitszimmer"
+          exclude_scenes: ""
   mode: restart
 - id: '1730279567232'
   alias: Motion » Arbeitszimmer

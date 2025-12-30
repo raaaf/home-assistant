@@ -125,7 +125,7 @@
       curve: linear
       target_player: media_player.homepods
       duration: 600
-      target_volume: 0.45
+      target_volume: 0.35
   - delay: 00:04:05
   - action: input_boolean.turn_off
     target:

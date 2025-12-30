@@ -429,6 +429,26 @@ views:
                         - dry
                         - fan_only
                         - 'off'
+                  - type: custom:mushroom-template-card
+                    primary: Heizung Boost
+                    secondary: >
+                      {% if is_state("timer.heizung_boost", "active") %}
+                        {% set finish = state_attr("timer.heizung_boost", "finishes_at") %}
+                        {% if finish %}
+                          {% set remaining = as_datetime(finish) - now() %}
+                          {% set hours = remaining.seconds // 3600 %}
+                          {% set minutes = (remaining.seconds % 3600) // 60 %}
+                          {{ hours }}:{{ '%02d' % minutes }} verbleibend
+                        {% endif %}
+                      {% else %}
+                        1,5h Boost starten
+                      {% endif %}
+                    icon: mdi:radiator
+                    icon_color: '{{ "red" if is_state("timer.heizung_boost", "active") else "grey" }}'
+                    tap_action:
+                      action: call-service
+                      service: script.heizung_boost
+                    layout: horizontal
                   - type: custom:mushroom-entity-card
                     entity: switch.heizung_kinderzimmer
                     name: Kinderzimmer

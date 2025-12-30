@@ -40,6 +40,29 @@
     - light.wohnzimmer_spieletisch
 
 - platform: group
+  unique_id: alle_wohnzimmer_lichter_ohne_esstisch
+  name: Alle Wohnzimmer Lichter ohne Esstisch
+  entities:
+    # Wohnzimmer Wand (6 lights)
+    - light.wohnzimmer_wand_1
+    - light.wohnzimmer_wand_2
+    - light.wohnzimmer_wand_3
+    - light.wohnzimmer_wand_4
+    - light.wohnzimmer_wand_5
+    - light.wohnzimmer_wand_6
+    # Wohnzimmer Spielematte (4 lights)
+    - light.wohnzimmer_spielematte_1
+    - light.wohnzimmer_spielematte_2
+    - light.wohnzimmer_spielematte_3
+    - light.wohnzimmer_spielematte_4
+    # Wohnzimmer Schrank (3 lights)
+    - light.wohnzimmer_schrank_1
+    - light.wohnzimmer_schrank_2
+    - light.wohnzimmer_schrank_3
+    # Individual light
+    - light.wohnzimmer_spieletisch
+
+- platform: group
   unique_id: alle_kuche_lichter
   name: Alle Kuche Lichter
   entities:
@@ -109,6 +132,7 @@
     # Flur Schrank (2 lights)
     - light.flur_schrank_1
     - light.flur_schrank_2
+    - light.stahltraeger
 
 - platform: group
   unique_id: alle_ankleide_lichter
@@ -194,3 +218,4 @@
     # Flur Schrank (2 lights)
     - light.flur_schrank_1
     - light.flur_schrank_2
+    - light.stahltraeger
