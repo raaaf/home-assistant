@@ -65,15 +65,15 @@
         target:
           entity_id:
           - cover.kinderzimmer_rollo
-          - cover.schlafzimmer_rollo
+          - cover.arbeitszimmer_rollo
       - action: cover.open_cover
         target:
-          entity_id: cover.arbeitszimmer_rollo
+          entity_id: cover.schlafzimmer_rollo
       - delay:
           seconds: 4
       - action: cover.stop_cover
         target:
-          entity_id: cover.arbeitszimmer_rollo
+          entity_id: cover.schlafzimmer_rollo
       - action: logbook.log
         data:
           name: Rollos Morgen (Arbeitstag)
@@ -90,12 +90,12 @@
           entity_id: cover.rollos_sonnenaufgang
       - action: cover.open_cover
         target:
-          entity_id: cover.arbeitszimmer_rollo
+          entity_id: cover.schlafzimmer_rollo
       - delay:
           seconds: 4
       - action: cover.stop_cover
         target:
-          entity_id: cover.arbeitszimmer_rollo
+          entity_id: cover.schlafzimmer_rollo
       - action: logbook.log
         data:
           name: Rollos Morgen (Wochenende)
@@ -168,7 +168,7 @@
         target:
           entity_id:
           - cover.rollos_sonnenaufgang
-          - cover.arbeitszimmer_rollo
+          - cover.schlafzimmer_rollo
         data: {}
       - action: cover.open_cover
         target:
