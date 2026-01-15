@@ -1,0 +1,204 @@
+# HomeKit/Siri Manual Control Detection
+# ============================================================================
+#
+# Detects when Siri/HomeKit changes light settings (brightness, color temp,
+# or color) and marks the light as manually controlled using AL's native
+# set_manual_control service.
+#
+# Benefits of using AL's native manual_control:
+# - AL stops ALL adaptation for the light
+# - Auto-resets when light turns off (built-in AL behavior)
+# - Motion automations already check binary_sensor.{room}_manual_control
+#
+# Created: 2026-01-03
+# Updated: 2026-01-03 - Switched to AL's native manual_control
+#
+
+- id: 'homekit_manual_control_detection'
+  alias: "Licht » HomeKit Manual Control"
+  description: >
+    Erkennt wenn Siri/HomeKit die Helligkeit ändert und markiert das Licht
+    als manuell gesteuert. AL stoppt die Anpassung bis das Licht aus- und
+    wieder eingeschaltet wird.
+  mode: parallel
+  max: 20
+
+  triggers:
+    - trigger: state
+      entity_id:
+        # Wohnzimmer (17 lights)
+        - light.wohnzimmer_wand_1
+        - light.wohnzimmer_wand_2
+        - light.wohnzimmer_wand_3
+        - light.wohnzimmer_wand_4
+        - light.wohnzimmer_wand_5
+        - light.wohnzimmer_wand_6
+        - light.wohnzimmer_esstisch_1
+        - light.wohnzimmer_esstisch_2
+        - light.wohnzimmer_esstisch_3
+        - light.wohnzimmer_spielematte_1
+        - light.wohnzimmer_spielematte_2
+        - light.wohnzimmer_spielematte_3
+        - light.wohnzimmer_spielematte_4
+        - light.wohnzimmer_schrank_1
+        - light.wohnzimmer_schrank_2
+        - light.wohnzimmer_schrank_3
+        - light.wohnzimmer_spieletisch
+        # Küche (6 lights)
+        - light.kuche_decke_1
+        - light.kuche_decke_2
+        - light.kuche_insel_oben
+        - light.kuche_insel_unten
+        - light.kuche_schrank_1
+        - light.kuche_schrank_2
+        # Schlafzimmer (4 lights)
+        - light.schlafzimmer_decke_1
+        - light.schlafzimmer_decke_2
+        - light.schlafzimmer_bett
+        - light.schlafzimmer_tv
+        # Kinderzimmer (3 lights)
+        - light.kinderzimmer_decke
+        - light.kinderzimmer_bucher
+        - light.kinderzimmer_schrank
+        # Badezimmer (4 lights)
+        - light.badezimmer_decke_1
+        - light.badezimmer_decke_2
+        - light.badezimmer_schrank
+        - light.badezimmer_fenster
+        # Waschzimmer (1 light)
+        - light.waschzimmer_decke
+        # Arbeitszimmer (4 lights)
+        - light.arbeitszimmer_decke
+        - light.arbeitszimmer_pc_1
+        - light.arbeitszimmer_pc_2
+        - light.arbeitszimmer_stehlampe
+        # Ankleide (2 lights)
+        - light.ankleide_decke_1
+        - light.ankleide_decke_2
+        # Flur (9 lights)
+        - light.flur_decke_1
+        - light.flur_decke_2
+        - light.flur_decke_3
+        - light.flur_decke_4
+        - light.flur_decke_5
+        - light.flur_decke_6
+        - light.flur_schrank_1
+        - light.flur_schrank_2
+        - light.stahltraeger
+        # Balkon (3 lights)
+        - light.balkon_wand_1
+        - light.balkon_wand_2
+        - light.balkon_blumen
+
+  conditions:
+    # Light must be on
+    - condition: template
+      value_template: "{{ trigger.to_state.state == 'on' }}"
+
+    # Only trigger for external commands (HomeKit/Siri/Physical/HA UI)
+    # NOT for Adaptive Lighting's own adjustments
+    - condition: template
+      value_template: >
+        {% set ctx = trigger.to_state.context %}
+        {% set is_external = ctx.parent_id is none %}
+        {% set is_user = ctx.user_id is not none %}
+        {% set is_al = ':al:' in (ctx.id | default('')) %}
+        {{ (is_external or is_user) and not is_al }}
+
+    # Must have actual change in brightness, color_temp, or color (not just state update)
+    - condition: template
+      value_template: >
+        {% set old = trigger.from_state.attributes %}
+        {% set new = trigger.to_state.attributes %}
+        {% set brightness_changed = (old.get('brightness', 0) | int(0) - new.get('brightness', 0) | int(0)) | abs > 5 %}
+        {% set old_ct = old.get('color_temp') %}
+        {% set new_ct = new.get('color_temp') %}
+        {% set color_temp_changed = old_ct is not none and new_ct is not none and (old_ct | int(0) - new_ct | int(0)) | abs > 10 %}
+        {% set hs_changed = old.get('hs_color') != new.get('hs_color') and new.get('hs_color') is not none %}
+        {% set rgb_changed = old.get('rgb_color') != new.get('rgb_color') and new.get('rgb_color') is not none %}
+        {{ brightness_changed or color_temp_changed or hs_changed or rgb_changed }}
+
+  variables:
+    light_entity: "{{ trigger.entity_id }}"
+    room_map:
+      light.wohnzimmer_wand_1: wohnzimmer
+      light.wohnzimmer_wand_2: wohnzimmer
+      light.wohnzimmer_wand_3: wohnzimmer
+      light.wohnzimmer_wand_4: wohnzimmer
+      light.wohnzimmer_wand_5: wohnzimmer
+      light.wohnzimmer_wand_6: wohnzimmer
+      light.wohnzimmer_esstisch_1: wohnzimmer
+      light.wohnzimmer_esstisch_2: wohnzimmer
+      light.wohnzimmer_esstisch_3: wohnzimmer
+      light.wohnzimmer_spielematte_1: wohnzimmer
+      light.wohnzimmer_spielematte_2: wohnzimmer
+      light.wohnzimmer_spielematte_3: wohnzimmer
+      light.wohnzimmer_spielematte_4: wohnzimmer
+      light.wohnzimmer_schrank_1: wohnzimmer
+      light.wohnzimmer_schrank_2: wohnzimmer
+      light.wohnzimmer_schrank_3: wohnzimmer
+      light.wohnzimmer_spieletisch: wohnzimmer
+      light.kuche_decke_1: kueche
+      light.kuche_decke_2: kueche
+      light.kuche_insel_oben: kueche
+      light.kuche_insel_unten: kueche
+      light.kuche_schrank_1: kueche
+      light.kuche_schrank_2: kueche
+      light.schlafzimmer_decke_1: schlafzimmer
+      light.schlafzimmer_decke_2: schlafzimmer
+      light.schlafzimmer_bett: schlafzimmer
+      light.schlafzimmer_tv: schlafzimmer
+      light.kinderzimmer_decke: kinderzimmer
+      light.kinderzimmer_bucher: kinderzimmer
+      light.kinderzimmer_schrank: kinderzimmer
+      light.badezimmer_decke_1: badezimmer
+      light.badezimmer_decke_2: badezimmer
+      light.badezimmer_schrank: badezimmer
+      light.badezimmer_fenster: badezimmer
+      light.waschzimmer_decke: waschzimmer
+      light.arbeitszimmer_decke: arbeitszimmer
+      light.arbeitszimmer_pc_1: arbeitszimmer
+      light.arbeitszimmer_pc_2: arbeitszimmer
+      light.arbeitszimmer_stehlampe: arbeitszimmer
+      light.ankleide_decke_1: ankleide
+      light.ankleide_decke_2: ankleide
+      light.flur_decke_1: flur
+      light.flur_decke_2: flur
+      light.flur_decke_3: flur
+      light.flur_decke_4: flur
+      light.flur_decke_5: flur
+      light.flur_decke_6: flur
+      light.flur_schrank_1: flur
+      light.flur_schrank_2: flur
+      light.stahltraeger: flur
+      light.balkon_wand_1: balkon
+      light.balkon_wand_2: balkon
+      light.balkon_blumen: balkon
+    room: "{{ room_map.get(light_entity, 'unknown') }}"
+    al_switch: "switch.adaptive_lighting_{{ room }}"
+
+  actions:
+    - condition: template
+      value_template: "{{ room != 'unknown' }}"
+
+    - condition: template
+      value_template: "{{ has_value(al_switch) }}"
+
+    # Mark the light as manually controlled using AL's native service
+    # AL will auto-reset when the light turns off
+    - action: adaptive_lighting.set_manual_control
+      data:
+        entity_id: "{{ al_switch }}"
+        lights:
+          - "{{ light_entity }}"
+        manual_control: true
+
+    # Log the event
+    - action: logbook.log
+      data:
+        name: "Manual Control"
+        message: >
+          {{ room | capitalize }}: {{ light_entity | replace('light.', '') }} manuell geändert.
+          AL-Anpassung pausiert bis Licht aus/ein.
+        domain: light
+        entity_id: "{{ light_entity }}"

@@ -72,8 +72,8 @@
           entity_id: input_boolean.alle_sind_weg
           state: 'off'
         then:
-        - alias: Set very low brightness for wake-up routine (let AL handle color)
-          action: adaptive_lighting.change_switch_settings
+        - alias: "AL temporär deaktivieren für Wake-Up (verhindert Intercept + Manual Control)"
+          action: switch.turn_off
           target:
             entity_id:
             - switch.adaptive_lighting_arbeitszimmer
@@ -83,9 +83,6 @@
             - switch.adaptive_lighting_kueche
             - switch.adaptive_lighting_schlafzimmer
             - switch.adaptive_lighting_wohnzimmer
-          data:
-            max_brightness: 1
-            min_brightness: 1
         - alias: Motion-Automationen STOPPEN (während Wake-Up-Routine)
           action: automation.turn_off
           target:
@@ -102,8 +99,8 @@
             stop_actions: true
         # 30-Minute Gradual Wake-Up Light Routine (Research-Backed)
         # Exponential brightness curve: 1% → 10% → 40% → 100%
-        # Color temp: Adaptive Lighting handles circadian rhythm automatically
-        - alias: "Phase 1: Initial light at 1% (AL sets color for wake-up time)"
+        # Color temp: Warm 2200K (454 mireds) for gentle wake-up
+        - alias: "Phase 1: Initial light at 1% (warm 2200K)"
           action: light.turn_on
           target:
             entity_id:
@@ -116,54 +113,59 @@
             - light.alle_kuche_lichter
           data:
             brightness_pct: 1
+            color_temp_kelvin: 2200
+            transition: 30  # 30s sanftes Einschalten
         - alias: "Warte 10 Minuten (Augen passen sich an)"
           delay: 00:10:00
-        - alias: "Phase 2: Erhöhe auf 10% Helligkeit (AL adapts color)"
-          action: adaptive_lighting.change_switch_settings
+        - alias: "Phase 2: Erhöhe auf 10% Helligkeit (2500K)"
+          action: light.turn_on
           target:
             entity_id:
-            - switch.adaptive_lighting_arbeitszimmer
-            - switch.adaptive_lighting_badezimmer
-            - switch.adaptive_lighting_flur
-            - switch.adaptive_lighting_kinderzimmer
-            - switch.adaptive_lighting_kueche
-            - switch.adaptive_lighting_schlafzimmer
-            - switch.adaptive_lighting_wohnzimmer
+            - light.alle_schlafzimmer_lichter
+            - light.alle_kinderzimmer_lichter
+            - light.alle_wohnzimmer_lichter
+            - light.alle_arbeitszimmer_lichter
+            - light.alle_badezimmer_lichter
+            - light.alle_flur_lichter
+            - light.alle_kuche_lichter
           data:
-            max_brightness: 10
-            min_brightness: 10
+            brightness_pct: 10
+            color_temp_kelvin: 2500
+            transition: 300  # 5 Min sanfter Übergang
         - alias: "Warte 10 Minuten (langsame Anpassung)"
           delay: 00:10:00
-        - alias: "Phase 3: Erhöhe auf 40% Helligkeit (AL adapts color)"
-          action: adaptive_lighting.change_switch_settings
+        - alias: "Phase 3: Erhöhe auf 40% Helligkeit (3000K)"
+          action: light.turn_on
           target:
             entity_id:
-            - switch.adaptive_lighting_arbeitszimmer
-            - switch.adaptive_lighting_badezimmer
-            - switch.adaptive_lighting_flur
-            - switch.adaptive_lighting_kinderzimmer
-            - switch.adaptive_lighting_kueche
-            - switch.adaptive_lighting_schlafzimmer
-            - switch.adaptive_lighting_wohnzimmer
+            - light.alle_schlafzimmer_lichter
+            - light.alle_kinderzimmer_lichter
+            - light.alle_wohnzimmer_lichter
+            - light.alle_arbeitszimmer_lichter
+            - light.alle_badezimmer_lichter
+            - light.alle_flur_lichter
+            - light.alle_kuche_lichter
           data:
-            max_brightness: 40
-            min_brightness: 40
+            brightness_pct: 40
+            color_temp_kelvin: 3000
+            transition: 300  # 5 Min sanfter Übergang
         - alias: "Warte 10 Minuten (fortgesetzte Anpassung)"
           delay: 00:10:00
-        - alias: "Phase 4: Volle Helligkeit (100%, AL handles optimal wake color)"
-          action: adaptive_lighting.change_switch_settings
+        - alias: "Phase 4: Volle Helligkeit (100%, 4000K)"
+          action: light.turn_on
           target:
             entity_id:
-            - switch.adaptive_lighting_arbeitszimmer
-            - switch.adaptive_lighting_badezimmer
-            - switch.adaptive_lighting_flur
-            - switch.adaptive_lighting_kinderzimmer
-            - switch.adaptive_lighting_kueche
-            - switch.adaptive_lighting_schlafzimmer
-            - switch.adaptive_lighting_wohnzimmer
+            - light.alle_schlafzimmer_lichter
+            - light.alle_kinderzimmer_lichter
+            - light.alle_wohnzimmer_lichter
+            - light.alle_arbeitszimmer_lichter
+            - light.alle_badezimmer_lichter
+            - light.alle_flur_lichter
+            - light.alle_kuche_lichter
           data:
-            max_brightness: 100
-            min_brightness: 100
+            brightness_pct: 100
+            color_temp_kelvin: 4000
+            transition: 300  # 5 Min sanfter Übergang
         - alias: "Warte bis 8:00 Uhr (Motion-Sensoren bleiben deaktiviert)"
           delay:
             seconds: >-
@@ -186,8 +188,8 @@
             - automation.motion_haustur
             - automation.motion_kuche_2
             - automation.motion_esstisch
-        - alias: Reset Adaptive Lighting to default settings
-          action: adaptive_lighting.change_switch_settings
+        - alias: "AL wieder aktivieren nach Wake-Up"
+          action: switch.turn_on
           target:
             entity_id:
             - switch.adaptive_lighting_arbeitszimmer
@@ -197,9 +199,6 @@
             - switch.adaptive_lighting_kueche
             - switch.adaptive_lighting_schlafzimmer
             - switch.adaptive_lighting_wohnzimmer
-          data:
-            max_brightness: 100
-            min_brightness: 10
     - alias: Sonnenaufgang - Schlafenszeit beenden
       conditions:
       - condition: trigger
