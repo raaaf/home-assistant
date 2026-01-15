@@ -16,7 +16,6 @@
         entity_id:
           - light.alle_flur_nachtlichter
           - light.stahltraeger
-          - switch.flur_licht
       night_lights_after_time: '22:00:00'
       night_lights_before_time: 06:00:00
       night_time_delay: 1

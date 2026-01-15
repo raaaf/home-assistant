@@ -52,6 +52,11 @@
         data:
           max_brightness: 100
           min_brightness: 10
+      - alias: "Re-enable Adaptive Lighting with conflict check"
+        action: script.scene_enable_adaptive_lighting
+        data:
+          room: "kueche"
+          exclude_scenes: "movie,party,party_wohnzimmer"
       - alias: "Reaktiviere Motion-Automationen mit Konflikt-Prüfung"
         action: script.scene_enable_motion_automations
         data:
@@ -183,6 +188,11 @@
         data:
           max_brightness: 100
           min_brightness: 10
+      - alias: "Re-enable Adaptive Lighting with conflict check"
+        action: script.scene_enable_adaptive_lighting
+        data:
+          room: "wohnzimmer"
+          exclude_scenes: "movie,party,party_wohnzimmer"
       - alias: "Reaktiviere Motion-Automationen mit Konflikt-Prüfung"
         action: script.scene_enable_motion_automations
         data:

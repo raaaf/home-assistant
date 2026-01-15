@@ -73,9 +73,8 @@
         entity_id: sensor.zhimi_vb4_bce4_pm25_density
         below: 10
       - alias: Luftreiniger läuft gerade
-        condition: state
-        entity_id: fan.zhimi_vb4_bce4_air_purifier
-        state: 'on'
+        condition: template
+        value_template: "{{ has_value('fan.zhimi_vb4_bce4_air_purifier') and is_state('fan.zhimi_vb4_bce4_air_purifier', 'on') }}"
       sequence:
       - alias: Luftreiniger ausschalten
         action: fan.turn_off
@@ -86,9 +85,8 @@
       - condition: trigger
         id: excellent
       - alias: Luftreiniger läuft gerade
-        condition: state
-        entity_id: fan.zhimi_vb4_bce4_air_purifier
-        state: 'on'
+        condition: template
+        value_template: "{{ has_value('fan.zhimi_vb4_bce4_air_purifier') and is_state('fan.zhimi_vb4_bce4_air_purifier', 'on') }}"
       - alias: Luftreiniger ist verfügbar
         condition: template
         value_template: '{{ has_value(''fan.zhimi_vb4_bce4_air_purifier'') }}'
@@ -118,9 +116,8 @@
       - condition: trigger
         id: poor
       - alias: Luftreiniger läuft nicht
-        condition: state
-        entity_id: fan.zhimi_vb4_bce4_air_purifier
-        state: 'off'
+        condition: template
+        value_template: "{{ has_value('fan.zhimi_vb4_bce4_air_purifier') and is_state('fan.zhimi_vb4_bce4_air_purifier', 'off') }}"
       - alias: Jemand ist zu Hause
         condition: state
         entity_id: input_boolean.alle_sind_weg
@@ -242,12 +239,34 @@
       entity_id: media_player.appletv
       from: playing
       id: stopped
-  conditions: []
+    - trigger: time_pattern
+      seconds: "/30"
+      id: poll-check
+  conditions:
+    - condition: or
+      conditions:
+        - condition: and
+          conditions:
+            - condition: trigger
+              id:
+                - playing
+                - stopped
+            - condition: template
+              value_template: "{{ has_value('media_player.appletv') }}"
+        - condition: and
+          conditions:
+            - condition: template
+              value_template: "{{ is_state('media_player.appletv', 'playing') and has_value('media_player.appletv') }}"
+            - condition: state
+              entity_id: automation.motion_schlafzimmer
+              state: 'on'
   actions:
     - choose:
         - conditions:
             - condition: trigger
-              id: playing
+              id:
+                - playing
+                - poll-check
           sequence:
             - action: automation.turn_off
               target:

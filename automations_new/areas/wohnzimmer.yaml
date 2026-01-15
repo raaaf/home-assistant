@@ -32,6 +32,12 @@
     id: game-on
     trigger: state
   - entity_id:
+    - media_player.denon_avr_x3200w
+    attribute: source
+    to: CBL/SAT
+    id: movie-on
+    trigger: state
+  - entity_id:
     - media_player.wohnzimmer
     from: playing
     to: paused
@@ -41,13 +47,23 @@
       seconds: 15
     id: paused
     trigger: state
-  conditions: []
+  conditions:
+    - condition: or
+      conditions:
+        - condition: trigger
+          id:
+            - movie-on
+            - game-on
+            - 'off'
+            - paused
+        - condition: template
+          value_template: "{{ has_value('media_player.wohnzimmer') }}"
   actions:
   - choose:
     - alias: "Movie oder Game Start"
       conditions:
       - condition: template
-        value_template: "{{ trigger.id in ['on', 'game-on'] }}"
+        value_template: "{{ trigger.id in ['on', 'game-on', 'movie-on'] }}"
       sequence:
       - action: input_boolean.turn_on
         target:
@@ -76,7 +92,7 @@
           entity_id: light.hyperhdr
         data:
           effect: USB Capture
-          brightness_pct: "{{ 60 if trigger.id == 'on' else 100 }}"
+          brightness_pct: 50
       - action: light.turn_off
         data:
           transition: 6
@@ -139,6 +155,16 @@
         data:
           max_brightness: 100
           min_brightness: 10
+      - alias: "Re-enable Living Room Adaptive Lighting with conflict check"
+        action: script.scene_enable_adaptive_lighting
+        data:
+          room: "wohnzimmer"
+          exclude_scenes: "kochen,essen,party,party_wohnzimmer"
+      - alias: "Re-enable Kitchen Adaptive Lighting with conflict check"
+        action: script.scene_enable_adaptive_lighting
+        data:
+          room: "kueche"
+          exclude_scenes: "kochen,party,party_wohnzimmer"
       - alias: "Reaktiviere Motion-Automationen mit Konflikt-Prüfung"
         action: script.scene_enable_motion_automations
         data:
@@ -252,9 +278,8 @@
     - conditions:
       - condition: trigger
         id: dim_lights
-      - condition: state
-        entity_id: light.weihnachtsbaum
-        state: 'on'
+      - condition: template
+        value_template: "{{ has_value('light.weihnachtsbaum') and is_state('light.weihnachtsbaum', 'on') }}"
       sequence:
       - if:
         - condition: template
