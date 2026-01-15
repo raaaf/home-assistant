@@ -132,7 +132,6 @@
     # Flur Schrank (2 lights)
     - light.flur_schrank_1
     - light.flur_schrank_2
-    - light.stahltraeger
 
 - platform: group
   unique_id: alle_ankleide_lichter
@@ -218,4 +217,3 @@
     # Flur Schrank (2 lights)
     - light.flur_schrank_1
     - light.flur_schrank_2
-    - light.stahltraeger

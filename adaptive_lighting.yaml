@@ -362,7 +362,6 @@
     # Flur Schrank (2 lights)
     - light.flur_schrank_1
     - light.flur_schrank_2
-    - light.stahltraeger
   interval: 300  # 5 min - reduced traffic while maintaining smoothness
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
