@@ -74,12 +74,7 @@
         {{ states('sensor.solarproduktion_gestern') | float(0) | round(1) }}
       
       verbrauch_brutto: '{{ (verbrauch_netto + solarproduktion_gestern) | round(1) }}'
-      strompreis: >-
-        {% if states('sensor.butzabatza_electricity_price') not in ['unknown', 'unavailable'] %}
-          {{ states('sensor.butzabatza_electricity_price') | float(0.30) }}
-        {% else %}
-          0.30
-        {% endif %}
+      strompreis: "{{ 0.2876 }}"
       kosten_ohne_solar: '{{ (verbrauch_brutto * strompreis) | round(2) }}'
       ersparnis_gestern: '{{ (solarproduktion_gestern * strompreis) | round(2) }}'
       kosten_nach_solar: '{{ (verbrauch_netto * strompreis) | round(2) }}'

@@ -664,6 +664,49 @@ template:
           precipitation_unit: "{{ state_attr('weather.fuerth_bayern', 'precipitation_unit') }}"
           forecast: "{{ daily_forecast['weather.fuerth_bayern'].forecast[:5] }}"
 
+  # Strompreis PLAN-B Flow12 (ab 2025)
+  - sensor:
+      - name: "Strompreis aktuell"
+        unique_id: strompreis_aktuell
+        unit_of_measurement: "€/kWh"
+        state_class: measurement
+        state: "{{ 0.2876 }}"
+        icon: mdi:currency-eur
+
+      - name: "Stromkosten heute"
+        unique_id: stromkosten_heute
+        unit_of_measurement: "€"
+        device_class: monetary
+        state_class: total_increasing
+        state: >-
+          {{ (states('sensor.taglicher_netzbezug') | float(0) * 0.2876) | round(2) }}
+        icon: mdi:cash
+        availability: "{{ is_number(states('sensor.taglicher_netzbezug')) }}"
+
+      - name: "Solar-Ersparnis heute"
+        unique_id: solar_ersparnis_heute
+        unit_of_measurement: "€"
+        device_class: monetary
+        state: >-
+          {{ (states('sensor.ac_energy_daily') | float(0) * 0.2876) | round(2) }}
+        icon: mdi:piggy-bank
+        availability: "{{ is_number(states('sensor.ac_energy_daily')) }}"
+
+      - name: "Stromkosten Monat geschätzt"
+        unique_id: stromkosten_monat_geschaetzt
+        unit_of_measurement: "€"
+        device_class: monetary
+        state: >-
+          {% set verbrauch_monat = states('sensor.taglicher_netzbezug') | float(0) %}
+          {% set tag_im_monat = now().day %}
+          {% set tage_gesamt = ((now().replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)).day %}
+          {% set durchschnitt = verbrauch_monat / tag_im_monat if tag_im_monat > 0 else 0 %}
+          {% set arbeitspreis = durchschnitt * tage_gesamt * 0.2876 %}
+          {% set grundpreis = 16.54 %}
+          {{ (arbeitspreis + grundpreis) | round(2) }}
+        icon: mdi:calendar-month
+        availability: "{{ is_number(states('sensor.taglicher_netzbezug')) }}"
+
 utility_meter:
   ac_energy_daily:
     source: sensor.ac_total_energy

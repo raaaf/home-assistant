@@ -406,6 +406,26 @@ views:
                     entity: switch.trockner
                     layout: vertical
               - type: grid
+                title: Energiekosten
+                square: false
+                columns: 3
+                cards:
+                  - type: custom:mushroom-entity-card
+                    entity: sensor.stromkosten_heute
+                    name: Heute
+                    icon_color: amber
+                    layout: vertical
+                  - type: custom:mushroom-entity-card
+                    entity: sensor.solar_ersparnis_heute
+                    name: Solar-Ersparnis
+                    icon_color: green
+                    layout: vertical
+                  - type: custom:mushroom-entity-card
+                    entity: sensor.stromkosten_monat_geschaetzt
+                    name: Monat (geschätzt)
+                    icon_color: deep-orange
+                    layout: vertical
+              - type: grid
                 title: Heizung
                 square: false
                 columns: 2
@@ -638,20 +658,6 @@ views:
         state_color: true
       - type: entities
         entities:
-          - entity: switch.adaptive_lighting_adapt_brightness_ankleide
-          - entity: switch.adaptive_lighting_adapt_brightness_arbeitszimmer
-          - entity: switch.adaptive_lighting_adapt_brightness_badezimmer
-          - entity: switch.adaptive_lighting_adapt_brightness_balkon
-          - entity: switch.adaptive_lighting_adapt_brightness_flur
-          - entity: switch.adaptive_lighting_adapt_brightness_kinderzimmer
-          - entity: switch.adaptive_lighting_adapt_brightness_kueche
-          - entity: switch.adaptive_lighting_adapt_brightness_schlafzimmer
-          - entity: switch.adaptive_lighting_adapt_brightness_waschzimmer
-          - entity: switch.adaptive_lighting_adapt_brightness_wohnzimmer
-        title: Helligkeit
-        state_color: true
-      - type: entities
-        entities:
           - entity: switch.adaptive_lighting_adapt_color_ankleide
           - entity: switch.adaptive_lighting_adapt_color_arbeitszimmer
           - entity: switch.adaptive_lighting_adapt_color_badezimmer
@@ -686,7 +692,7 @@ views:
           - entity: binary_sensor.balkon_manual_control
           - entity: binary_sensor.flur_manual_control
           - entity: binary_sensor.kinderzimmer_manual_control
-          - entity: binary_sensor.kueche_manual_control
+          - entity: binary_sensor.kuche_manual_control
           - entity: binary_sensor.schlafzimmer_manual_control
           - entity: binary_sensor.waschzimmer_manual_control
           - entity: binary_sensor.wohnzimmer_manual_control
