@@ -278,12 +278,20 @@
           - action: automation.turn_on
             target:
               entity_id: automation.motion_schlafzimmer  # Bedroom motion
-      - alias: "Re-enable other motion sensors unconditionally"
+      - alias: "Re-enable kinderzimmer motion if schlafenszeit is off"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.schlafenszeit
+            state: 'off'
+          sequence:
+          - action: automation.turn_on
+            target:
+              entity_id: automation.kinderzimmer_motion  # Kids room motion
+      - alias: "Re-enable front door motion"
         action: automation.turn_on
         target:
-          entity_id:
-          - automation.kinderzimmer_motion  # Kids room motion
-          - automation.motion_haustur  # Front door motion
+          entity_id: automation.motion_haustur  # Front door motion
       - action: light.turn_off
         data:
           transition: 5

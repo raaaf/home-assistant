@@ -385,9 +385,8 @@
                 domain: lock
       - alias: Klimaanlage ausschalten wenn an
         if:
-        - condition: state
-          entity_id: climate.ac
-          state: 'on'
+        - condition: template
+          value_template: "{{ has_value('climate.ac') and is_state('climate.ac', 'on') }}"
         then:
         - action: climate.turn_off
           target:
@@ -518,9 +517,8 @@
                     critical: 1
       - alias: Klimaanlage ausschalten wenn an
         if:
-        - condition: state
-          entity_id: climate.ac
-          state: 'on'
+        - condition: template
+          value_template: "{{ has_value('climate.ac') and is_state('climate.ac', 'on') }}"
         then:
         - action: climate.turn_off
           target:

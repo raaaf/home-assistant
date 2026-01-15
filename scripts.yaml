@@ -277,11 +277,6 @@ fade_volume:
       while:
       - condition: template
         value_template: '{{ repeat.index <= total_steps }}'
-      - condition: template
-        value_template: '{{ has_value(target_player) and state_attr(target_player, ''volume_level'') is not none }}'
-      - condition: template
-        value_template: '{{ ((state_attr(target_player, ''volume_level'') | float(0)
-          - target_volume) | abs) > 0.001 }}'
       sequence:
       - action: media_player.volume_set
         continue_on_error: true
@@ -573,19 +568,22 @@ reload_media_players:
           - media_player.appletv
           - media_player.wohnzimmer
           - media_player.denon_avr_x3200w
-          - media_player.homepod_arbeitszimmer
+          - media_player.arbeitszimmer_2
           - media_player.homepod_badezimmer
           - media_player.homepod_kinderzimmer
-          - media_player.homepod_kuche
-          - media_player.homepod_schlafzimmer
-          - media_player.homepod_wohnzimmer
+          - media_player.homepod_kueche
 
 heizung_boost:
   alias: Heizung Boost
-  description: Toggle für manuellen 1,5h Heizungsboost
+  description: Toggle für manuellen 1,5h Heizungsboost mit Verifikation
   icon: mdi:radiator
   mode: single
   sequence:
+    - variables:
+        heating_switches:
+          - switch.heizung_kinderzimmer
+          - switch.heizung_schlafzimmer
+          - switch.heizung_wohnzimmer
     - if:
         - condition: state
           entity_id: timer.heizung_boost
@@ -596,10 +594,20 @@ heizung_boost:
             entity_id: timer.heizung_boost
         - action: switch.turn_off
           target:
-            entity_id:
-              - switch.heizung_kinderzimmer
-              - switch.heizung_schlafzimmer
-              - switch.heizung_wohnzimmer
+            entity_id: "{{ heating_switches }}"
+        - delay: "00:00:03"
+        # Verify and retry once if needed
+        - variables:
+            still_on: >
+              {{ heating_switches | select('is_state', 'on') | list }}
+        - if:
+            - condition: template
+              value_template: "{{ still_on | length > 0 }}"
+          then:
+            - action: switch.turn_off
+              target:
+                entity_id: "{{ still_on }}"
+            - delay: "00:00:03"
         - action: logbook.log
           data:
             name: Heizung Boost
@@ -608,10 +616,7 @@ heizung_boost:
       else:
         - action: switch.turn_on
           target:
-            entity_id:
-              - switch.heizung_kinderzimmer
-              - switch.heizung_schlafzimmer
-              - switch.heizung_wohnzimmer
+            entity_id: "{{ heating_switches }}"
         - action: timer.start
           target:
             entity_id: timer.heizung_boost
