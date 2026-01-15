@@ -549,6 +549,27 @@
       - switch.heizung_kinderzimmer
       - switch.heizung_schlafzimmer
       - switch.heizung_wohnzimmer
+      temp_source: >-
+        {% if trigger.id == 'morning-boost' %}
+          {% set forecast = state_attr('sensor.fuerth_daily', 'forecast') %}
+          {% if forecast and forecast | length > 0 %}
+            {{ forecast[0].temperature | float(5) }}
+          {% else %}
+            5
+          {% endif %}
+        {% else %}
+          {{ states('sensor.temperatur_aussen') | float(5) }}
+        {% endif %}
+      boost_duration: >-
+        {% if temp_source | float < 0 %}
+          03:00:00
+        {% elif temp_source | float < 5 %}
+          02:00:00
+        {% elif temp_source | float < 10 %}
+          01:30:00
+        {% else %}
+          00:00:00
+        {% endif %}
   - choose:
     # === LAYER 1: MORNING BOOST (06:00) ===
     - conditions:
@@ -568,13 +589,7 @@
       - condition: template
         value_template: '{{ now().month <= 4 or now().month >= 10 }}'
       - condition: template
-        value_template: >
-          {% set forecast = state_attr('sensor.fuerth_daily', 'forecast') %}
-          {% if forecast and forecast|length > 0 %}
-            {{ forecast[0].temperature < 20 }}
-          {% else %}
-            false
-          {% endif %}
+        value_template: "{{ boost_duration != '00:00:00' }}"
       sequence:
       - action: switch.turn_on
         target:
@@ -582,11 +597,13 @@
       - action: logbook.log
         data:
           name: Heizung Morning Boost
-          message: "Vorhersage < 20°C, Boost für 1,5h aktiviert"
+          message: "Vorhersage {{ temp_source | round(1) }}°C → Boost {{ boost_duration }}"
           domain: climate
       - action: timer.start
         target:
           entity_id: timer.heizung_boost
+        data:
+          duration: "{{ boost_duration }}"
 
     # === LAYER 2: AFTERNOON BOOST (15:00) ===
     - conditions:
@@ -605,9 +622,8 @@
                (now() - states.input_boolean.alle_sind_weg.last_changed).total_seconds() < 86400 }}
       - condition: template
         value_template: '{{ now().month <= 4 or now().month >= 10 }}'
-      - condition: numeric_state
-        entity_id: sensor.temperatur_aussen
-        below: 10
+      - condition: template
+        value_template: "{{ boost_duration != '00:00:00' }}"
       sequence:
       - action: switch.turn_on
         target:
@@ -615,32 +631,165 @@
       - action: logbook.log
         data:
           name: Heizung Afternoon Boost
-          message: "Außentemp < 8°C, Boost 1,5h vor Kinderankunft"
+          message: "Außentemp {{ temp_source | round(1) }}°C → Boost {{ boost_duration }}"
           domain: climate
       - action: timer.start
         target:
           entity_id: timer.heizung_boost
+        data:
+          duration: "{{ boost_duration }}"
   mode: single
 - id: '1749999999999'
   alias: Heizung » Boost Timer Finished
-  description: 'Turns off heating when boost timer expires (restart-safe)'
+  description: 'Turns off heating when boost timer expires with verification and retry'
   trigger:
   - platform: event
     event_type: timer.finished
     event_data:
       entity_id: timer.heizung_boost
   action:
-  - action: switch.turn_off
-    target:
-      entity_id:
+  - variables:
+      heating_switches:
       - switch.heizung_kinderzimmer
       - switch.heizung_schlafzimmer
       - switch.heizung_wohnzimmer
+  # First attempt: Turn off all switches
+  - action: switch.turn_off
+    target:
+      entity_id: "{{ heating_switches }}"
+  - delay: "00:00:03"
+  # Verification loop with retry (max 3 attempts)
+  - alias: Verify and retry if needed
+    repeat:
+      count: 3
+      sequence:
+      - variables:
+          still_on: >
+            {{ heating_switches | select('is_state', 'on') | list }}
+      - if:
+        - condition: template
+          value_template: "{{ still_on | length == 0 }}"
+        then:
+        - action: logbook.log
+          data:
+            name: Heizung Boost beendet
+            message: "1,5h Boost abgeschlossen - alle Schalter aus (Versuch {{ repeat.index }})"
+            domain: climate
+        - stop: "All switches confirmed off"
+        else:
+        - action: logbook.log
+          data:
+            name: Heizung Boost Retry
+            message: "Versuch {{ repeat.index }}/3: Schalter noch an: {{ still_on | join(', ') }}"
+            domain: climate
+        - action: switch.turn_off
+          target:
+            entity_id: "{{ still_on }}"
+        - delay: "00:00:05"
+  # Final check after all retries
+  - variables:
+      final_check: >
+        {{ heating_switches | select('is_state', 'on') | list }}
+  - if:
+    - condition: template
+      value_template: "{{ final_check | length > 0 }}"
+    then:
+    - action: logbook.log
+      data:
+        name: Heizung Boost FEHLER
+        message: "WARNUNG: Nach 3 Versuchen noch aktiv: {{ final_check | join(', ') }}"
+        domain: climate
+    - action: persistent_notification.create
+      data:
+        title: "Heizung Boost Fehler"
+        message: "Schalter konnten nicht ausgeschaltet werden: {{ final_check | join(', ') }}"
+        notification_id: heizung_boost_error
+  mode: single
+- id: '1750000000001'
+  alias: Heizung » Safety Watchdog (2h Limit)
+  description: 'Safety backup: Turns off heating if on > 2 hours without active timer'
+  trigger:
+  - trigger: time_pattern
+    minutes: "/15"
+  condition:
+  - condition: state
+    entity_id: timer.heizung_boost
+    state: idle
+  action:
+  - variables:
+      heating_switches:
+      - switch.heizung_kinderzimmer
+      - switch.heizung_schlafzimmer
+      - switch.heizung_wohnzimmer
+      max_on_seconds: 7200
+      switches_on_too_long: >
+        {% set result = namespace(switches=[]) %}
+        {% for sw in heating_switches %}
+          {% if is_state(sw, 'on') %}
+            {% set on_duration = (now() - states[sw].last_changed).total_seconds() %}
+            {% if on_duration > max_on_seconds %}
+              {% set result.switches = result.switches + [sw] %}
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+        {{ result.switches }}
+  - condition: template
+    value_template: "{{ switches_on_too_long | length > 0 }}"
   - action: logbook.log
     data:
-      name: Heizung Boost beendet
-      message: "1,5h Boost abgeschlossen (Timer)"
+      name: Heizung Safety Watchdog
+      message: "WARNUNG: Schalter > 2h an ohne Timer: {{ switches_on_too_long | join(', ') }} - schalte aus"
       domain: climate
+  - action: switch.turn_off
+    target:
+      entity_id: "{{ switches_on_too_long }}"
+  - delay: "00:00:03"
+  - variables:
+      still_on_after: >
+        {{ switches_on_too_long | select('is_state', 'on') | list }}
+  - if:
+    - condition: template
+      value_template: "{{ still_on_after | length > 0 }}"
+    then:
+    - action: switch.turn_off
+      target:
+        entity_id: "{{ still_on_after }}"
+    - action: persistent_notification.create
+      data:
+        title: "Heizung Safety Watchdog"
+        message: "Schalter waren > 2h an ohne Timer: {{ switches_on_too_long | join(', ') }}"
+        notification_id: heizung_watchdog_warning
+  mode: single
+- id: '1750000000002'
+  alias: Heizung » Restart Recovery Check
+  description: 'After HA restart: Verify heating state matches timer state'
+  trigger:
+  - trigger: homeassistant
+    event: start
+  action:
+  - delay: "00:00:30"
+  - variables:
+      heating_switches:
+      - switch.heizung_kinderzimmer
+      - switch.heizung_schlafzimmer
+      - switch.heizung_wohnzimmer
+      timer_active: "{{ is_state('timer.heizung_boost', 'active') }}"
+      switches_on: >
+        {{ heating_switches | select('is_state', 'on') | list }}
+  - if:
+    - condition: template
+      value_template: "{{ switches_on | length > 0 and not timer_active }}"
+    then:
+    - action: logbook.log
+      data:
+        name: Heizung Restart Recovery
+        message: "Nach Neustart: Heizung an ({{ switches_on | join(', ') }}) aber Timer inaktiv"
+        domain: climate
+    - action: persistent_notification.create
+      data:
+        title: "Heizung Status nach Neustart"
+        message: "Heizung ist an aber Timer ist inaktiv. Watchdog prüft alle 15 min. Schalter: {{ switches_on | join(', ') }}"
+        notification_id: heizung_restart_check
   mode: single
 - id: '1743835898092'
   alias: Helper » Frostwarnung zurücksetzen (jährlich im Mai)
