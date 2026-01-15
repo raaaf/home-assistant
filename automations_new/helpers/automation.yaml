@@ -38,31 +38,20 @@
     action: media_player.turn_on
     target:
       entity_id:
+      - media_player.arbeitszimmer_2
       - media_player.homepod_badezimmer
       - media_player.homepod_kinderzimmer
-      - media_player.homepod_kuche
-      - media_player.homepod_schlafzimmer
-      - media_player.homepod_wohnzimmer
-      - media_player.homepod_arbeitszimmer
+      - media_player.homepod_kueche
   - delay: 00:00:03
   - alias: "Entity-Status aktualisieren"
     action: homeassistant.update_entity
     target:
       entity_id:
+      - media_player.arbeitszimmer_2
       - media_player.homepod_badezimmer
       - media_player.homepod_kinderzimmer
-      - media_player.homepod_kuche
-      - media_player.homepod_schlafzimmer
-      - media_player.homepod_wohnzimmer
-      - media_player.homepod_arbeitszimmer
+      - media_player.homepod_kueche
       - media_player.homepods
-  - delay: 00:00:02
-  - alias: "Lautstärke auf 0 setzen (Vorbereitung für Fade)"
-    action: media_player.volume_set
-    data:
-      volume_level: 0
-    target:
-      entity_id: media_player.homepods
   - action: logbook.log
     data:
       name: HomePod Pre-Wake
@@ -90,36 +79,18 @@
     after: 05:00:00
     before: '10:00:00'
   actions:
-  - action: media_player.volume_set
-    data:
-      volume_level: 0
-    target:
-      entity_id: media_player.homepods
-  - wait_template: '{{ state_attr(''media_player.homepods'', ''volume_level'') | float(1)
-      <= 0.01 }}'
-    timeout: 00:00:05
-    continue_on_timeout: true
-  - action: input_boolean.turn_on
+  - alias: "HomeKit-Trigger (startet Musik via Apple Home mit 5% Volume)"
+    action: input_boolean.turn_on
     target:
       entity_id:
       - input_boolean.werktag_aufwachen
       - input_boolean.werktag_musik
-    data: {}
-  - wait_template: '{{ has_value(''media_player.homepods'') and is_state(''media_player.homepods'', ''playing'') }}'
-    timeout: 00:00:15
+  - alias: "Warten bis Musik spielt"
+    wait_template: '{{ is_state(''media_player.homepods'', ''playing'') }}'
+    timeout: 00:00:20
     continue_on_timeout: true
-  - delay: 00:00:03
-  - if:
-    - condition: template
-      value_template: '{{ state_attr(''media_player.homepods'', ''volume_level'')
-        | float(0) > 0.1 }}'
-    then:
-    - action: media_player.volume_set
-      data:
-        volume_level: 0.01
-      target:
-        entity_id: media_player.homepods
-    - delay: 00:00:01
+  - alias: "Kurz warten bis HomeKit Volume gesetzt hat"
+    delay: 00:00:05
   - action: script.fade_volume
     data:
       curve: linear
