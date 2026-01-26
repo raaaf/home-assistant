@@ -38,18 +38,22 @@
     action: media_player.turn_on
     target:
       entity_id:
+      - media_player.homepod_arbeitszimmer
       - media_player.arbeitszimmer_2
       - media_player.homepod_badezimmer
       - media_player.homepod_kinderzimmer
+      - media_player.homepod_kuche
       - media_player.homepod_kueche
   - delay: 00:00:03
   - alias: "Entity-Status aktualisieren"
     action: homeassistant.update_entity
     target:
       entity_id:
+      - media_player.homepod_arbeitszimmer
       - media_player.arbeitszimmer_2
       - media_player.homepod_badezimmer
       - media_player.homepod_kinderzimmer
+      - media_player.homepod_kuche
       - media_player.homepod_kueche
       - media_player.homepods
   - action: logbook.log

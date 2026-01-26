@@ -16,9 +16,11 @@
       - media_player.appletv
       - media_player.wohnzimmer
       - media_player.denon_avr_x3200w
+      - media_player.homepod_arbeitszimmer
       - media_player.arbeitszimmer_2
       - media_player.homepod_badezimmer
       - media_player.homepod_kinderzimmer
+      - media_player.homepod_kuche
       - media_player.homepod_kueche
       - media_player.smarttv_4k
     action: homeassistant.update_entity
@@ -39,14 +41,16 @@
     before: '22:00:00'
   variables:
     media_players:
-      - media_player.apple_tv
+      - media_player.appletv
+      - media_player.wohnzimmer
       - media_player.denon_avr_x3200w
+      - media_player.homepod_arbeitszimmer
       - media_player.arbeitszimmer_2
       - media_player.homepod_badezimmer
       - media_player.homepod_kinderzimmer
+      - media_player.homepod_kuche
       - media_player.homepod_kueche
       - media_player.smarttv_4k
-      - media_player.wohnzimmer
     idle_players: >
       {{ media_players | select('has_value') | reject('is_state', 'playing') | list }}
   actions:
@@ -59,3 +63,71 @@
         target:
           entity_id: "{{ idle_players[repeat.index - 1] }}"
   mode: single
+- id: '1737546250999'
+  alias: Helper » HomeKit Controller Reload bei Verbindungsverlust
+  description: Lädt die HomeKit Controller Integration neu, wenn HomePods oder Apple TVs unavailable werden
+  triggers:
+  - trigger: state
+    entity_id:
+    # HomePods (6)
+    - media_player.homepod_arbeitszimmer
+    - media_player.arbeitszimmer_2
+    - media_player.homepod_badezimmer
+    - media_player.homepod_kinderzimmer
+    - media_player.homepod_kuche
+    - media_player.homepod_kueche
+    # Apple TVs (2)
+    - media_player.appletv
+    - media_player.wohnzimmer
+    to: unavailable
+    for:
+      seconds: 30
+  conditions:
+  - condition: template
+    value_template: "{{ trigger.from_state is not defined or trigger.from_state.state != 'unavailable' }}"
+  variables:
+    all_devices:
+      - media_player.homepod_arbeitszimmer
+      - media_player.arbeitszimmer_2
+      - media_player.homepod_badezimmer
+      - media_player.homepod_kinderzimmer
+      - media_player.homepod_kuche
+      - media_player.homepod_kueche
+      - media_player.appletv
+      - media_player.wohnzimmer
+  actions:
+  - choose:
+    - alias: "Manueller Trigger - alle Geräte neu laden"
+      conditions:
+        - condition: template
+          value_template: "{{ trigger.entity_id is not defined }}"
+      sequence:
+      - repeat:
+          for_each: "{{ all_devices | select('has_value') | list }}"
+          sequence:
+          - condition: template
+            value_template: "{{ device_id(repeat.item) is not none }}"
+          - action: homeassistant.reload_config_entry
+            target:
+              device_id: "{{ device_id(repeat.item) }}"
+            continue_on_error: true
+          - delay:
+              seconds: 2
+      - action: logbook.log
+        data:
+          name: Apple TV Reload
+          message: "Manueller Trigger - alle Apple TV/HomePod Config Entries neu geladen"
+    default:
+    - alias: "Automatischer Trigger - einzelnes Gerät neu laden"
+      delay:
+        seconds: 10
+    - action: homeassistant.reload_config_entry
+      target:
+        device_id: "{{ device_id(trigger.entity_id) }}"
+      continue_on_error: true
+    - action: logbook.log
+      data:
+        name: Apple TV Reload
+        message: "{{ trigger.entity_id }} wurde unavailable - Config Entry neu geladen"
+  mode: parallel
+  max: 4

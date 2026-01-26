@@ -163,3 +163,34 @@
             </body>
             </html>
   mode: single
+- id: '1736000000001'
+  alias: "Benachrichtigung » Robbi Fehler"
+  description: "Benachrichtigt wenn der Staubsauger einen Fehler hat oder stecken bleibt"
+  triggers:
+  - trigger: state
+    entity_id: vacuum.robbi_2
+    to: error
+    id: error
+  - trigger: state
+    entity_id: vacuum.robbi_2
+    attribute: status
+    to: "Stuck"
+    id: stuck
+  conditions:
+  - condition: template
+    value_template: "{{ states('vacuum.robbi_2') not in ['unknown', 'unavailable'] }}"
+  actions:
+  - action: notify.family
+    data:
+      title: "🤖 Robbi braucht Hilfe"
+      message: >
+        {% if trigger.id == 'stuck' %}
+        Robbi steckt fest und braucht Hilfe!
+        {% else %}
+        Robbi hat einen Fehler: {{ state_attr('vacuum.robbi_2', 'status') | default('Unbekannt') }}
+        {% endif %}
+        Akku: {{ state_attr('vacuum.robbi_2', 'battery_level') | default('?') }}%
+      data:
+        push:
+          interruption-level: time-sensitive
+  mode: single
