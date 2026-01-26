@@ -98,7 +98,82 @@
       - condition: trigger
         id: 'on'
       sequence:
-      - action: switch.turn_off
+      # 1. Disable motion automations FIRST (stop new triggers)
+      - alias: "Disable motion automations first"
+        action: automation.turn_off
+        target:
+          entity_id:
+          - automation.motion_kuche_2  # Kitchen motion
+          - automation.motion_flur_wohnung  # Hallway motion
+          - automation.arbeitszimmer_motion  # Office motion
+          - automation.motion_schlafzimmer  # Bedroom motion
+          - automation.motion_badezimmer_gross  # Bathroom motion
+          - automation.motion_esstisch  # Dining table motion
+          - automation.kinderzimmer_motion  # Kids room motion
+          - automation.motion_haustur  # Front door motion
+      # 2. Mark white-only lights as manual control (prevents AL from touching them)
+      # Note: Must call separately per switch - can't pass multiple switches with lights
+      - alias: "Mark Wohnzimmer white lights as manual"
+        action: adaptive_lighting.set_manual_control
+        data:
+          entity_id: switch.adaptive_lighting_wohnzimmer
+          lights:
+          - light.wohnzimmer_wand_1
+          - light.wohnzimmer_wand_2
+          - light.wohnzimmer_wand_3
+          - light.wohnzimmer_wand_4
+          - light.wohnzimmer_wand_5
+          - light.wohnzimmer_wand_6
+          - light.wohnzimmer_esstisch_2
+          - light.wohnzimmer_esstisch_3
+          manual_control: true
+      - alias: "Mark Küche white lights as manual"
+        action: adaptive_lighting.set_manual_control
+        data:
+          entity_id: switch.adaptive_lighting_kueche
+          lights:
+          - light.kuche_decke_1
+          - light.kuche_decke_2
+          manual_control: true
+      - alias: "Mark Flur white lights as manual"
+        action: adaptive_lighting.set_manual_control
+        data:
+          entity_id: switch.adaptive_lighting_flur
+          lights:
+          - light.flur_decke_1
+          - light.flur_decke_2
+          - light.flur_decke_3
+          - light.flur_decke_4
+          - light.flur_decke_5
+          - light.flur_decke_6
+          manual_control: true
+      - alias: "Mark Schlafzimmer white lights as manual"
+        action: adaptive_lighting.set_manual_control
+        data:
+          entity_id: switch.adaptive_lighting_schlafzimmer
+          lights:
+          - light.schlafzimmer_decke_1
+          - light.schlafzimmer_decke_2
+          - light.schlafzimmer_tv
+          manual_control: true
+      - alias: "Mark Ankleide white lights as manual"
+        action: adaptive_lighting.set_manual_control
+        data:
+          entity_id: switch.adaptive_lighting_ankleide
+          lights:
+          - light.ankleide_decke_1
+          - light.ankleide_decke_2
+          manual_control: true
+      - alias: "Mark Kinderzimmer white lights as manual"
+        action: adaptive_lighting.set_manual_control
+        data:
+          entity_id: switch.adaptive_lighting_kinderzimmer
+          lights:
+          - light.kinderzimmer_decke
+          manual_control: true
+      # 3. Disable AL switches (prevents any adaptation)
+      - alias: "Disable adaptive lighting"
+        action: switch.turn_off
         target:
           entity_id:
           - switch.adaptive_lighting_wohnzimmer
@@ -110,7 +185,13 @@
           - switch.adaptive_lighting_schlafzimmer
           - switch.adaptive_lighting_waschzimmer
           - switch.adaptive_lighting_balkon
-      - action: light.turn_off
+      # 4. Wait for in-flight commands to complete
+      - alias: "Wait for in-flight commands"
+        delay:
+          milliseconds: 500
+      # 5. Turn off ALL lights (clean slate)
+      - alias: "Turn off all lights"
+        action: light.turn_off
         data:
           transition: 5
         target:
@@ -120,31 +201,102 @@
           - light.alle_flur_lichter
           - light.alle_schlafzimmer_lichter
           - light.alle_ankleide_lichter
-      - action: automation.turn_off
-        target:
-          entity_id:
-          - automation.motion_kuche_2  # Kitchen motion
-          - automation.motion_flur_wohnung  # Hallway motion
-          - automation.arbeitszimmer_motion  # Office motion
-          - automation.motion_schlafzimmer  # Bedroom motion
-          - automation.motion_badezimmer_gross  # Bathroom motion
-          - automation.motion_esstisch  # Dining table motion
-          - automation.kinderzimmer_motion  # Kids room motion
-          - automation.motion_haustur  # Front door motion
-        data: {}
-      - action: scene_presets.start_dynamic_scene
+          - light.alle_badezimmer_lichter
+          - light.alle_kinderzimmer_lichter
+      # 6. Start dynamic scene on RGB lights ONLY
+      - alias: "Start dynamic scene on RGB lights only"
+        action: scene_presets.start_dynamic_scene
         data:
           preset_id: 9565033d-f2ea-4821-bfba-7dd9b35be20a
           targets:
             entity_id:
-            - light.alle_wohnzimmer_lichter
-            - light.alle_kuche_lichter
+            - light.alle_wohnzimmer_rgb_lichter
+            - light.alle_kuche_rgb_lichter
+            - light.alle_flur_rgb_lichter
+            - light.alle_schlafzimmer_rgb_lichter
+            - light.alle_badezimmer_rgb_lichter
+            - light.alle_kinderzimmer_rgb_lichter
           transition: 45
           interval: 60
     - conditions:
       - condition: trigger
         id: 'off'
       sequence:
+      - alias: "Turn off all party lights"
+        action: light.turn_off
+        data:
+          transition: 5
+        target:
+          entity_id:
+          - light.alle_wohnzimmer_lichter
+          - light.alle_kuche_lichter
+          - light.alle_flur_lichter
+          - light.alle_schlafzimmer_lichter
+          - light.alle_ankleide_lichter
+          - light.alle_badezimmer_lichter
+          - light.alle_kinderzimmer_lichter
+      - delay:
+          seconds: 6
+      # Clear manual control flags before re-enabling AL
+      # Note: Must call separately per switch - can't pass multiple switches with lights
+      - alias: "Clear Wohnzimmer manual control"
+        action: adaptive_lighting.set_manual_control
+        data:
+          entity_id: switch.adaptive_lighting_wohnzimmer
+          lights:
+          - light.wohnzimmer_wand_1
+          - light.wohnzimmer_wand_2
+          - light.wohnzimmer_wand_3
+          - light.wohnzimmer_wand_4
+          - light.wohnzimmer_wand_5
+          - light.wohnzimmer_wand_6
+          - light.wohnzimmer_esstisch_2
+          - light.wohnzimmer_esstisch_3
+          manual_control: false
+      - alias: "Clear Küche manual control"
+        action: adaptive_lighting.set_manual_control
+        data:
+          entity_id: switch.adaptive_lighting_kueche
+          lights:
+          - light.kuche_decke_1
+          - light.kuche_decke_2
+          manual_control: false
+      - alias: "Clear Flur manual control"
+        action: adaptive_lighting.set_manual_control
+        data:
+          entity_id: switch.adaptive_lighting_flur
+          lights:
+          - light.flur_decke_1
+          - light.flur_decke_2
+          - light.flur_decke_3
+          - light.flur_decke_4
+          - light.flur_decke_5
+          - light.flur_decke_6
+          manual_control: false
+      - alias: "Clear Schlafzimmer manual control"
+        action: adaptive_lighting.set_manual_control
+        data:
+          entity_id: switch.adaptive_lighting_schlafzimmer
+          lights:
+          - light.schlafzimmer_decke_1
+          - light.schlafzimmer_decke_2
+          - light.schlafzimmer_tv
+          manual_control: false
+      - alias: "Clear Ankleide manual control"
+        action: adaptive_lighting.set_manual_control
+        data:
+          entity_id: switch.adaptive_lighting_ankleide
+          lights:
+          - light.ankleide_decke_1
+          - light.ankleide_decke_2
+          manual_control: false
+      - alias: "Clear Kinderzimmer manual control"
+        action: adaptive_lighting.set_manual_control
+        data:
+          entity_id: switch.adaptive_lighting_kinderzimmer
+          lights:
+          - light.kinderzimmer_decke
+          manual_control: false
       - alias: "Re-enable living room adaptive lighting if party_wohnzimmer is off"
         choose:
         - conditions:
@@ -265,7 +417,7 @@
           - action: automation.turn_on
             target:
               entity_id: automation.motion_badezimmer_gross  # Bathroom motion
-      - alias: "Re-enable bedroom motion if gaming/schlafenszeit is off"
+      - alias: "Re-enable bedroom motion if gaming/schlafenszeit is off and no TV playing"
         choose:
         - conditions:
           - condition: state
@@ -274,6 +426,11 @@
           - condition: state
             entity_id: input_boolean.schlafenszeit
             state: 'off'
+          - condition: not
+            conditions:
+            - condition: state
+              entity_id: media_player.appletv
+              state: 'playing'
           sequence:
           - action: automation.turn_on
             target:
@@ -292,13 +449,60 @@
         action: automation.turn_on
         target:
           entity_id: automation.motion_haustur  # Front door motion
-      - action: light.turn_off
-        data:
-          transition: 5
-        target:
-          entity_id:
-          - light.alle_wohnzimmer_lichter
-          - light.alle_kuche_lichter
     default: []
   mode: restart
 # "Szene » Arbeit" removed - now handled by arbeitszimmer.yaml with blueprint bypass
+
+# Guardian automation to prevent white-only lights from turning on during party mode
+- id: 'party_white_light_guardian'
+  alias: 'Party » Weisslicht Wächter'
+  description: Schaltet Weiss-Lichter sofort aus wenn sie während Party eingeschaltet werden
+  mode: queued
+  max: 20
+  triggers:
+  - trigger: state
+    entity_id:
+    # Wohnzimmer
+    - light.wohnzimmer_wand_1
+    - light.wohnzimmer_wand_2
+    - light.wohnzimmer_wand_3
+    - light.wohnzimmer_wand_4
+    - light.wohnzimmer_wand_5
+    - light.wohnzimmer_wand_6
+    - light.wohnzimmer_esstisch_2
+    - light.wohnzimmer_esstisch_3
+    # Küche
+    - light.kuche_decke_1
+    - light.kuche_decke_2
+    # Flur
+    - light.flur_decke_1
+    - light.flur_decke_2
+    - light.flur_decke_3
+    - light.flur_decke_4
+    - light.flur_decke_5
+    - light.flur_decke_6
+    # Schlafzimmer
+    - light.schlafzimmer_decke_1
+    - light.schlafzimmer_decke_2
+    - light.schlafzimmer_tv
+    # Ankleide
+    - light.ankleide_decke_1
+    - light.ankleide_decke_2
+    # Kinderzimmer
+    - light.kinderzimmer_decke
+    to: 'on'
+  conditions:
+  - condition: or
+    conditions:
+    - condition: state
+      entity_id: input_boolean.party
+      state: 'on'
+    - condition: state
+      entity_id: input_boolean.party_wohnzimmer
+      state: 'on'
+  actions:
+  - action: light.turn_off
+    target:
+      entity_id: "{{ trigger.entity_id }}"
+    data:
+      transition: 1
