@@ -78,17 +78,35 @@
         action: switch.turn_on
       - action: scene_presets.start_dynamic_scene
         data:
-          preset_id: 68e8b68e-8237-48a6-bf5f-f62258dd2ff3
+          preset_id: 454176dd-7d24-43de-86c4-ee73f8febbec  # Ruby glow (warm für Sauna)
           targets:
             entity_id:
             - light.alle_badezimmer_lichter
             - light.alle_badezimmer_nachtlichter
-          transition: 45
-          interval: 60
+          brightness: 70
+          transition: 90
+          interval: 120
     - conditions:
       - condition: trigger
         id: 'off'
       sequence:
+      - action: scene_presets.stop_dynamic_scene
+        data:
+          id: 454176dd-7d24-43de-86c4-ee73f8febbec  # Ruby glow
+      - action: light.turn_off
+        data:
+          transition: 5
+        target:
+          entity_id:
+          - light.alle_badezimmer_lichter
+          - light.alle_badezimmer_nachtlichter
+      - action: cover.set_cover_position
+        target:
+          entity_id: cover.badezimmer_rollo
+        data:
+          position: 100
+      - delay:
+          seconds: 6
       - alias: "Reaktiviere adaptive Beleuchtung mit Konflikt-Prüfung"
         action: script.scene_enable_adaptive_lighting
         data:
@@ -99,15 +117,6 @@
         data:
           automations: "automation.motion_badezimmer_gross"
           exclude_scenes: "baden"
-      - action: cover.set_cover_position
-        target:
-          entity_id: cover.badezimmer_rollo
-        data:
-          position: 100
-      - action: scene_presets.stop_dynamic_scene
-        metadata: {}
-        data:
-          id: 68e8b68e-8237-48a6-bf5f-f62258dd2ff3
     default: []
   mode: restart
 - id: '1662822489094'
@@ -141,18 +150,30 @@
           automations: "automation.motion_badezimmer_gross"
       - action: scene_presets.start_dynamic_scene
         data:
-          preset_id: a6ba3a6e-1e3a-41fd-84f2-f7b021935deb
+          preset_id: ffbf7ff8-dc4a-4c56-b157-7a59113be7b7  # Tropical twilight (warm für Baden)
           targets:
             entity_id:
             - light.alle_badezimmer_lichter
             - light.alle_badezimmer_nachtlichter
-          brightness: 101
-          transition: 45
-          interval: 60
+          brightness: 100
+          transition: 60
+          interval: 90
     - conditions:
       - condition: trigger
         id: 'off'
       sequence:
+      - action: scene_presets.stop_dynamic_scene
+        data:
+          id: ffbf7ff8-dc4a-4c56-b157-7a59113be7b7  # Tropical twilight
+      - action: light.turn_off
+        data:
+          transition: 5
+        target:
+          entity_id:
+          - light.alle_badezimmer_lichter
+          - light.alle_badezimmer_nachtlichter
+      - delay:
+          seconds: 6
       - alias: "Reaktiviere adaptive Beleuchtung mit Konflikt-Prüfung"
         action: script.scene_enable_adaptive_lighting
         data:
@@ -163,22 +184,6 @@
         data:
           automations: "automation.motion_badezimmer_gross"
           exclude_scenes: "sauna"
-      - delay:
-          hours: 0
-          minutes: 5
-          seconds: 0
-      - action: light.turn_off
-        metadata: {}
-        data:
-          transition: 5
-        target:
-          entity_id:
-          - light.alle_badezimmer_lichter
-          - light.alle_badezimmer_nachtlichter
-      - action: scene_presets.stop_dynamic_scene
-        metadata: {}
-        data:
-          id: a6ba3a6e-1e3a-41fd-84f2-f7b021935deb
     default: []
   mode: restart
 - id: '1672929418223'

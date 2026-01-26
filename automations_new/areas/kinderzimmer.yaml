@@ -33,8 +33,6 @@
       night_light_brightness: 5
       ambient_light_value: 150
       ambient_light_high_value: 200
-      include_device_tracker: zone_enabled
-      zone: zone.home
       # Bypass motion turn-off when manual control is active
       include_bypass:
       - bypass_enabled_stop

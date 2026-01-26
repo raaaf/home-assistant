@@ -10,7 +10,7 @@
     '
   triggers:
   - trigger: state
-    entity_id: binary_sensor.macbook_air_von_alexandra_active
+    entity_id: binary_sensor.macbook_pro_2_active
     to: 'on'
     id: work-alex-on
   - trigger: state
@@ -18,7 +18,7 @@
     to: 'on'
     id: work-rafael-on
   - trigger: state
-    entity_id: binary_sensor.macbook_air_von_alexandra_active
+    entity_id: binary_sensor.macbook_pro_2_active
     to: 'off'
     id: work-alex-off
   - trigger: state
@@ -50,10 +50,10 @@
         condition: or
         conditions:
         - condition: numeric_state
-          entity_id: sensor.macbook_air_von_alexandra_displays
+          entity_id: sensor.macbook_pro_2_displays
           above: 1.5
         - condition: state
-          entity_id: sensor.macbook_air_von_alexandra_display_name
+          entity_id: sensor.macbook_pro_2_display_name
           state: "Studio Display"
       sequence:
       - alias: "Arbeit-Szene aktivieren (falls noch nicht aktiv)"
@@ -65,43 +65,28 @@
         - action: input_boolean.turn_on
           target:
             entity_id: input_boolean.arbeit
-      - alias: "Alex Lichter einschalten (Decke + Stehlampe)"
-        choose:
-        - alias: Nach 21 Uhr - nur Stehlampe (Nachtlicht)
+      - alias: "Stehlampe immer einschalten"
+        action: light.turn_on
+        target:
+          entity_id: light.arbeitszimmer_stehlampe
+        data:
+          transition: 2
+      - alias: "Decke nur bei Rollo zu oder dunkel einschalten"
+        if:
+        - condition: or
           conditions:
-          - condition: template
-            value_template: '{{ now().hour >= 21 }}'
-          sequence:
-          - action: light.turn_on
-            target:
-              entity_id: light.arbeitszimmer_stehlampe
-            data:
-              transition: 2
-        - alias: Sehr hell draußen - keine Lichter nötig
-          conditions:
-          - condition: numeric_state
+          - alias: Rollo ist geschlossen
+            condition: state
+            entity_id: cover.arbeitszimmer_rollo
+            state: 'closed'
+          - alias: Dunkel draußen
+            condition: numeric_state
             entity_id: sensor.sunlight_pct
-            above: 70
-          sequence: []
-        - alias: Hell draußen - nur Stehlampe
-          conditions:
-          - condition: numeric_state
-            entity_id: sensor.sunlight_pct
-            above: 40
-            below: 71
-          sequence:
-          - action: light.turn_on
-            target:
-              entity_id: light.arbeitszimmer_stehlampe
-            data:
-              transition: 2
-        default:
-        - alias: Dunkel oder moderat - Decke + Stehlampe
-          action: light.turn_on
+            below: 40
+        then:
+        - action: light.turn_on
           target:
-            entity_id:
-            - light.arbeitszimmer_decke
-            - light.arbeitszimmer_stehlampe
+            entity_id: light.arbeitszimmer_decke
           data:
             transition: 2
 
@@ -133,43 +118,20 @@
         - action: input_boolean.turn_on
           target:
             entity_id: input_boolean.arbeit
-      - alias: "Rafael Lichter einschalten (PC 1 + PC 2)"
-        choose:
-        - alias: Nach 21 Uhr - PC Lichter (sind Nachtlichter)
+      - alias: "Rafael Lichter einschalten (PC 1 + PC 2) nur bei Rollo zu oder dunkel"
+        if:
+        - condition: or
           conditions:
-          - condition: template
-            value_template: '{{ now().hour >= 21 }}'
-          sequence:
-          - action: light.turn_on
-            target:
-              entity_id:
-              - light.arbeitszimmer_pc_1
-              - light.arbeitszimmer_pc_2
-            data:
-              transition: 2
-        - alias: Sehr hell draußen - keine Lichter nötig
-          conditions:
-          - condition: numeric_state
+          - alias: Rollo ist geschlossen
+            condition: state
+            entity_id: cover.arbeitszimmer_rollo
+            state: 'closed'
+          - alias: Dunkel draußen
+            condition: numeric_state
             entity_id: sensor.sunlight_pct
-            above: 70
-          sequence: []
-        - alias: Hell draußen - PC Lichter
-          conditions:
-          - condition: numeric_state
-            entity_id: sensor.sunlight_pct
-            above: 40
-            below: 71
-          sequence:
-          - action: light.turn_on
-            target:
-              entity_id:
-              - light.arbeitszimmer_pc_1
-              - light.arbeitszimmer_pc_2
-            data:
-              transition: 2
-        default:
-        - alias: Dunkel oder moderat - PC 1 + PC 2
-          action: light.turn_on
+            below: 40
+        then:
+        - action: light.turn_on
           target:
             entity_id:
             - light.arbeitszimmer_pc_1
@@ -200,6 +162,8 @@
         - action: input_boolean.turn_off
           target:
             entity_id: input_boolean.arbeit
+        - delay:
+            seconds: 3
         - action: script.scene_enable_adaptive_lighting
           data:
             room: "arbeitszimmer"
@@ -226,12 +190,14 @@
       - alias: "Arbeit-Szene deaktivieren wenn Alex auch aus"
         if:
         - condition: state
-          entity_id: binary_sensor.macbook_air_von_alexandra_active
+          entity_id: binary_sensor.macbook_pro_2_active
           state: 'off'
         then:
         - action: input_boolean.turn_off
           target:
             entity_id: input_boolean.arbeit
+        - delay:
+            seconds: 3
         - action: script.scene_enable_adaptive_lighting
           data:
             room: "arbeitszimmer"
@@ -264,12 +230,12 @@
       - alias: "Vapor wave Dynamic Scene starten"
         action: scene_presets.start_dynamic_scene
         data:
-          preset_id: "3984c3b7-6608-482f-84be-d2ffe39dbb1a"
+          preset_id: "3984c3b7-6608-482f-84be-d2ffe39dbb1a"  # Vapor wave
           targets:
             entity_id: light.alle_arbeitszimmer_nachtlichter
-          brightness: 127
-          transition: 30
-          interval: 60
+          brightness: 140
+          transition: 20
+          interval: 45
     - alias: Gaming ausschalten
       conditions:
       - condition: trigger
@@ -292,6 +258,8 @@
           - light.arbeitszimmer_decke
         data:
           transition: 2
+      - delay:
+          seconds: 3
       - alias: "Reaktiviere adaptive Beleuchtung"
         action: script.scene_enable_adaptive_lighting
         data:
@@ -318,8 +286,6 @@
       - input_boolean.schlafenszeit
       include_sun: sun_disabled
       time_delay: 1
-      include_device_tracker: zone_enabled
-      zone: zone.home
       night_time_delay: 1
       include_night_light_control:
       - if_lights_are_on_adjust_when_crossing_over

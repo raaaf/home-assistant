@@ -15,8 +15,6 @@
       include_light_control: dont_use_brightness
       include_sun: sun_enabled
       include_night_lights: night_lights_disabled
-      include_zone: zone_disabled
-      zone: zone.home
       time_delay: 1
       night_lights:
         entity_id: light.alle_balkon_lichter
@@ -29,7 +27,6 @@
       - input_boolean.schlafenszeit
       night_lights_conditions:
       - sun_enabled
-      include_device_tracker: zone_enabled
       include_night_light_control:
       - if_lights_are_on_adjust_when_crossing_over
       night_lights_sun_elevation: -4

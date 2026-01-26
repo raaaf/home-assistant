@@ -45,6 +45,15 @@
       - condition: trigger
         id: 'off'
       sequence:
+      - action: light.turn_off
+        data:
+          transition: 5
+        target:
+          entity_id:
+          - light.alle_kuche_lichter
+          - light.alle_kuche_nachtlichter
+      - delay:
+          seconds: 6
       - alias: "Reset kitchen adaptive lighting settings to default"
         action: adaptive_lighting.change_switch_settings
         target:
@@ -62,18 +71,6 @@
         data:
           automations: "automation.motion_kuche_2"
           exclude_scenes: "movie,party,party_wohnzimmer"
-      - delay:
-          hours: 0
-          minutes: 0
-          seconds: 30
-          milliseconds: 0
-      - data:
-          transition: 10
-        action: light.turn_off
-        target:
-          entity_id:
-          - light.alle_kuche_lichter
-          - light.alle_kuche_nachtlichter
     default: []
   mode: restart
 - id: '1672931243226'
@@ -97,8 +94,6 @@
       include_ambient: ambient_enabled
       ambient_light_sensor: sensor.balkon_motion_illuminance_safe
       ambient_light_options: ambient_light_option_disabled
-      include_zone: zone_enabled
-      zone: zone.home
       ambient_light_value: 150
       include_time: time_disabled
       after_time: 06:00:00
@@ -174,13 +169,16 @@
       - condition: trigger
         id: 'off'
       sequence:
-      - data: {}
-        action: light.turn_off
+      - action: light.turn_off
+        data:
+          transition: 5
         target:
           entity_id:
           - light.wohnzimmer_esstisch_1
           - light.wohnzimmer_esstisch_2
           - light.wohnzimmer_esstisch_3
+      - delay:
+          seconds: 6
       - alias: "Reset living room adaptive lighting settings to default"
         action: adaptive_lighting.change_switch_settings
         target:
@@ -198,5 +196,70 @@
         data:
           automations: "automation.motion_esstisch"
           exclude_scenes: "movie"
+    default: []
+  mode: restart
+
+- id: '1737900000001'
+  alias: Scenen » Abwaschen
+  description: Aktiviert Deckenbeleuchtung und Küchengeräte zum Abwaschen
+  trigger:
+  - entity_id:
+    - input_boolean.abwaschen
+    to: 'on'
+    id: 'on'
+    trigger: state
+  - entity_id:
+    - input_boolean.abwaschen
+    to: 'off'
+    id: 'off'
+    trigger: state
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: 'on'
+      sequence:
+      - alias: "Deaktiviere Motion-Automation"
+        action: script.scene_disable_motion_automations
+        data:
+          automations: "automation.motion_kuche_2"
+      - action: light.turn_on
+        target:
+          entity_id:
+          - light.kuche_decke_1
+          - light.kuche_decke_2
+        data:
+          brightness_pct: 100
+          transition: 2
+      - action: switch.turn_on
+        target:
+          entity_id: switch.steckdose_kuechengeraete
+    - conditions:
+      - condition: trigger
+        id: 'off'
+      sequence:
+      - action: light.turn_off
+        data:
+          transition: 5
+        target:
+          entity_id:
+          - light.kuche_decke_1
+          - light.kuche_decke_2
+      - action: switch.turn_off
+        target:
+          entity_id: switch.steckdose_kuechengeraete
+      - delay:
+          seconds: 3
+      - alias: "Re-enable Adaptive Lighting with conflict check"
+        action: script.scene_enable_adaptive_lighting
+        data:
+          room: "kueche"
+          exclude_scenes: "kochen,party,party_wohnzimmer"
+      - alias: "Reaktiviere Motion-Automationen mit Konflikt-Prüfung"
+        action: script.scene_enable_motion_automations
+        data:
+          automations: "automation.motion_kuche_2"
+          exclude_scenes: "kochen,party,party_wohnzimmer"
     default: []
   mode: restart

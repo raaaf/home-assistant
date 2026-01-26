@@ -48,8 +48,6 @@
       night_lights:
         entity_id: switch.ankleide_indirekt
       night_time_delay: 1
-      include_device_tracker: zone_enabled
-      zone: zone.home
       night_lights_after_time: '22:00:00'
       night_lights_before_time: 06:00:00
       ambient_light_options: ambient_light_option_disabled

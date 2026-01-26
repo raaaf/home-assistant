@@ -47,10 +47,6 @@
     to: 'on'
     for: 00:05:00
     id: alles
-  - trigger: state
-    entity_id: vacuum.robbi_2
-    to: returning
-    id: empty
   condition: []
   action:
   - choose:
@@ -63,10 +59,6 @@
         action: input_boolean.turn_off
         target:
           entity_id: input_boolean.robbi_lief_heute_bereits
-      - alias: 'Reset: Küche erledigt'
-        action: input_boolean.turn_off
-        target:
-          entity_id: input_boolean.robbi_kitchen_done
     - alias: Tägliche Vollreinigung an Werktagen (Mo-Fr 8:30)
       conditions:
       - condition: trigger
@@ -78,9 +70,11 @@
         condition: state
         entity_id: input_boolean.robbi_lief_heute_bereits
         state: 'off'
-      - alias: Robbi ist verfügbar
+      - alias: Robbi ist angedockt und bereit
         condition: template
-        value_template: '{{ has_value(''vacuum.robbi_2'') and states(''vacuum.robbi_2'') not in [''cleaning'', ''returning''] }}'
+        value_template: >
+          {{ is_state('vacuum.robbi_2', 'docked')
+             and (state_attr('vacuum.robbi_2', 'battery_level') | int(0)) >= 20 }}
       sequence:
       - alias: Vollreinigung starten (Mop-Plan gesteuert durch Roborock App)
         action: vacuum.start
@@ -98,11 +92,11 @@
         condition: state
         entity_id: input_boolean.robbi_lief_heute_bereits
         state: 'off'
-      - alias: Robbi ist verfügbar
+      - alias: Robbi ist angedockt und bereit
         condition: template
-        value_template: '{{ has_value(''vacuum.robbi_2'') and states(''vacuum.robbi_2'') not in [''cleaning'', ''returning''] }}
-
-          '
+        value_template: >
+          {{ is_state('vacuum.robbi_2', 'docked')
+             and (state_attr('vacuum.robbi_2', 'battery_level') | int(0)) >= 20 }}
       sequence:
       - alias: Vollreinigung starten
         action: vacuum.start
@@ -112,42 +106,4 @@
         action: input_boolean.turn_on
         target:
           entity_id: input_boolean.robbi_lief_heute_bereits
-    - alias: Küche nachsaugen nach Hauptreinigung
-      conditions:
-      - condition: trigger
-        id: empty
-      - alias: Jemand ist zu Hause
-        condition: state
-        entity_id: input_boolean.alle_sind_weg
-        state: 'off'
-      - alias: Küche noch nicht erledigt
-        condition: state
-        entity_id: input_boolean.robbi_kitchen_done
-        state: 'off'
-      - alias: Hauptreinigung war heute schon
-        condition: state
-        entity_id: input_boolean.robbi_lief_heute_bereits
-        state: 'on'
-      - alias: Reinigung dauerte mindestens 15 Minuten
-        condition: template
-        value_template: '{{ has_value(''sensor.roborock_a27_737e_props_clean_time'') and states(''sensor.roborock_a27_737e_props_clean_time'')
-          | int(0) >= 15 }}
-
-          '
-      - alias: Zwischen 8 und 20 Uhr
-        condition: time
-        after: 08:00:00
-        before: '20:00:00'
-      - alias: Robbi ist verfügbar für Küche
-        condition: template
-        value_template: '{{ has_value(''vacuum.robbi_2'') and states(''vacuum.robbi_2'') not in [''cleaning''] }}
-
-          '
-      sequence:
-      - alias: Küchen-Reinigungsscript ausführen
-        action: script.robbi_go_to_kitchen
-      - alias: Küche als erledigt markieren
-        action: input_boolean.turn_on
-        target:
-          entity_id: input_boolean.robbi_kitchen_done
   mode: restart
