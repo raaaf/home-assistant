@@ -558,7 +558,7 @@
             5
           {% endif %}
         {% else %}
-          {{ states('sensor.temperatur_aussen') | float(5) }}
+          {{ state_attr('weather.fuerth_bayern', 'temperature') | float(5) }}
         {% endif %}
       boost_duration: >-
         {% if temp_source | float < 0 %}
@@ -631,7 +631,7 @@
       - action: logbook.log
         data:
           name: Heizung Afternoon Boost
-          message: "Außentemp {{ temp_source | round(1) }}°C → Boost {{ boost_duration }}"
+          message: "DWD {{ temp_source | round(1) }}°C → Boost {{ boost_duration }}"
           domain: climate
       - action: timer.start
         target:

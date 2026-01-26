@@ -421,7 +421,7 @@ views:
                     icon_color: green
                     layout: vertical
                   - type: custom:mushroom-entity-card
-                    entity: sensor.stromkosten_monat_geschaetzt
+                    entity: sensor.stromkosten_monat_geschatzt
                     name: Monat (geschätzt)
                     icon_color: deep-orange
                     layout: vertical

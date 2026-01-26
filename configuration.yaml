@@ -677,7 +677,7 @@ template:
         unique_id: stromkosten_heute
         unit_of_measurement: "€"
         device_class: monetary
-        state_class: total_increasing
+        state_class: total
         state: >-
           {{ (states('sensor.taglicher_netzbezug') | float(0) * 0.2876) | round(2) }}
         icon: mdi:cash
@@ -688,9 +688,9 @@ template:
         unit_of_measurement: "€"
         device_class: monetary
         state: >-
-          {{ (states('sensor.ac_energy_daily') | float(0) * 0.2876) | round(2) }}
+          {{ (states('sensor.dtu_ac_daily_energy') | float(0) / 1000 * 0.2876) | round(2) }}
         icon: mdi:piggy-bank
-        availability: "{{ is_number(states('sensor.ac_energy_daily')) }}"
+        availability: "{{ is_number(states('sensor.dtu_ac_daily_energy')) }}"
 
       - name: "Stromkosten Monat geschätzt"
         unique_id: stromkosten_monat_geschaetzt
@@ -708,13 +708,8 @@ template:
         availability: "{{ is_number(states('sensor.taglicher_netzbezug')) }}"
 
 utility_meter:
-  ac_energy_daily:
-    source: sensor.ac_total_energy
-    name: "AC Energie Täglich"
-    cycle: daily
-    offset:
-      hours: 0
-      minutes: 0
+  # ac_energy_daily: REMOVED - sensor.dtu_ac_daily_energy from Hoymiles already resets daily
+  # Use sensor.dtu_ac_daily_energy directly instead
 
   # Utility meters for grid import/export tracking
   taglicher_netzbezug:
@@ -752,6 +747,10 @@ input_boolean:
   frost_warning_sent:
     name: "Frostwarnung gesendet"
     icon: mdi:snowflake-alert
+    initial: false
+  abwaschen:
+    name: "Abwaschen"
+    icon: mdi:dishwasher
     initial: false
 
 input_datetime:

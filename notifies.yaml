@@ -18,7 +18,7 @@
 - name: alex
   platform: group
   services:
-    - service: mobile_app_macbook_air
+    - service: mobile_app_macbook_pro_2
     - service: mobile_app_alex_iphone
 
 # Email Notifications

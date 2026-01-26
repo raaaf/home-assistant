@@ -112,28 +112,6 @@ brightness_decrease:
       entity_id: '{{ entities_on }}'
     data:
       brightness: '{{ new_brightness }}'
-robbi_go_to_kitchen:
-  alias: Robbi in die Küche
-  description: Sendet Robbi zur Küchenreinigung mit leisem Modus
-  icon: mdi:robot-vacuum
-  mode: single
-  sequence:
-  - condition: template
-    value_template: '{{ states(''vacuum.robbi_2'') not in [''unknown'', ''unavailable'']
-      }}'
-  - action: vacuum.set_fan_speed
-    target:
-      entity_id: vacuum.robbi_2
-    data:
-      fan_speed: Silent
-  - action: vacuum.send_command
-    target:
-      entity_id: vacuum.robbi_2
-    data:
-      command: app_goto_target
-      params:
-      - 31279
-      - 24178
 tts_random_greeting:
   alias: Zufällige Begrüßung (Benachrichtigung)
   description: Sendet eine zufällige Begrüßung als Mobile- und Persistente-Benachrichtigung
@@ -568,9 +546,11 @@ reload_media_players:
           - media_player.appletv
           - media_player.wohnzimmer
           - media_player.denon_avr_x3200w
+          - media_player.homepod_arbeitszimmer
           - media_player.arbeitszimmer_2
           - media_player.homepod_badezimmer
           - media_player.homepod_kinderzimmer
+          - media_player.homepod_kuche
           - media_player.homepod_kueche
 
 heizung_boost:

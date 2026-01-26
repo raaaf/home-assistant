@@ -105,14 +105,11 @@
         {#
           Priority order for yesterday's solar production (kWh):
           1) UI helper input_number.solarproduktion_gestern saved at 23:55
-          2) Utility meter last_period from sensor.ac_energy_daily
-          3) DTU daily energy statistics fallback (Wh -> kWh)
+          2) DTU daily energy statistics fallback (Wh -> kWh)
         #}
         {% set helper = states('input_number.solarproduktion_gestern') %}
         {% if helper not in ['unknown', 'unavailable', ''] and helper | float(0) > 0 %}
           {{ helper | float(0) | round(2) }}
-        {% elif state_attr('sensor.ac_energy_daily', 'last_period') is not none and state_attr('sensor.ac_energy_daily', 'last_period') | float(0) > 0 %}
-          {{ state_attr('sensor.ac_energy_daily', 'last_period') | float(0) | round(2) }}
         {% else %}
           {% set today = now().date() %}
           {% set yesterday = (today - timedelta(days=1)).isoformat() %}
@@ -143,15 +140,15 @@
       value_template: >-
         {% set elevation = state_attr('sun.sun', 'elevation') | float(0) %}
         {% set cloud_coverage = state_attr('weather.fuerth_bayern', 'cloud_coverage') | float(0) %}
-        {% set cloud_factor = (1 - (0.75 * (cloud_coverage / 100) ** 3)) %}
-        {% set min_elevation = -6 %}
-        {% set max_elevation = 90 %}
-        {% set adjusted_elevation = elevation - min_elevation %}
-        {% set adjusted_elevation = [adjusted_elevation, 0] | max %}
-        {% set adjusted_elevation = [adjusted_elevation, max_elevation - min_elevation] | min %}
-        {% set adjusted_elevation = adjusted_elevation / (max_elevation - min_elevation) %}
-        {% set adjusted_elevation = adjusted_elevation * 100 %}
-        {% set brightness = adjusted_elevation * cloud_factor %}
+        {# Base brightness: 0° = 0%, 15°+ = 100% (sunny day = 100%) #}
+        {% set base = [[(elevation / 15) * 100, 0] | max, 100] | min %}
+        {# Only heavy clouds (>80%) reduce brightness, max 50% reduction #}
+        {% if cloud_coverage > 80 %}
+          {% set cloud_factor = 1 - (0.5 * (cloud_coverage - 80) / 20) %}
+        {% else %}
+          {% set cloud_factor = 1 %}
+        {% endif %}
+        {% set brightness = base * cloud_factor %}
         {{ brightness | round }}
 
     night_state:

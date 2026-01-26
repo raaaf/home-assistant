@@ -44,7 +44,7 @@
           data:
             push:
               interruption-level: critical
-      - action: notify.mobile_app_macbook_air
+      - action: notify.mobile_app_macbook_pro_2
         data:
           title: "Haustür Klingel"
           message: "{{ now().strftime('%A, %H:%M Uhr, %d.%m.%Y') }} - {{ anwesenheits_status }}"
@@ -68,7 +68,7 @@
       - condition: template
         value_template: "{{ alex_zuhause and not rafael_zuhause }}"
       sequence:
-      - action: notify.mobile_app_macbook_air
+      - action: notify.mobile_app_macbook_pro_2
         data:
           title: "Haustür Klingel"
           message: "{{ now().strftime('%A, %H:%M Uhr, %d.%m.%Y') }} - {{ anwesenheits_status }}"
