@@ -217,3 +217,101 @@
     # Flur Schrank (2 lights)
     - light.flur_schrank_1
     - light.flur_schrank_2
+
+# =============================================================================
+# PARTY LICHTER - RGB und Weiss-nur Gruppen fuer Party-Modus
+# =============================================================================
+
+- platform: group
+  unique_id: alle_wohnzimmer_rgb_lichter
+  name: Alle Wohnzimmer RGB Lichter
+  entities:
+    # Wohnzimmer Spielematte (4 lights)
+    - light.wohnzimmer_spielematte_1
+    - light.wohnzimmer_spielematte_2
+    - light.wohnzimmer_spielematte_3
+    - light.wohnzimmer_spielematte_4
+    # Wohnzimmer Schrank (3 lights)
+    - light.wohnzimmer_schrank_1
+    - light.wohnzimmer_schrank_2
+    - light.wohnzimmer_schrank_3
+    # Individual RGB lights
+    - light.wohnzimmer_esstisch_1
+    - light.wohnzimmer_spieletisch
+
+- platform: group
+  unique_id: alle_kuche_rgb_lichter
+  name: Alle Kuche RGB Lichter
+  entities:
+    # Küche Insel (2 lights)
+    - light.kuche_insel_oben
+    - light.kuche_insel_unten
+    # Küche Schrank (2 lights)
+    - light.kuche_schrank_1
+    - light.kuche_schrank_2
+
+- platform: group
+  unique_id: alle_flur_rgb_lichter
+  name: Alle Flur RGB Lichter
+  entities:
+    # Flur Schrank (2 lights)
+    - light.flur_schrank_1
+    - light.flur_schrank_2
+
+- platform: group
+  unique_id: alle_schlafzimmer_rgb_lichter
+  name: Alle Schlafzimmer RGB Lichter
+  entities:
+    - light.schlafzimmer_bett
+
+- platform: group
+  unique_id: alle_badezimmer_rgb_lichter
+  name: Alle Badezimmer RGB Lichter
+  entities:
+    # Badezimmer Decke (2 lights)
+    - light.badezimmer_decke_1
+    - light.badezimmer_decke_2
+    # Individual lights
+    - light.badezimmer_schrank
+    - light.badezimmer_fenster
+
+- platform: group
+  unique_id: alle_kinderzimmer_rgb_lichter
+  name: Alle Kinderzimmer RGB Lichter
+  entities:
+    - light.kinderzimmer_bucher
+    - light.kinderzimmer_schrank
+
+- platform: group
+  unique_id: alle_party_weiss_lichter
+  name: Alle Party Weiss Lichter
+  entities:
+    # Wohnzimmer Wand (6 lights)
+    - light.wohnzimmer_wand_1
+    - light.wohnzimmer_wand_2
+    - light.wohnzimmer_wand_3
+    - light.wohnzimmer_wand_4
+    - light.wohnzimmer_wand_5
+    - light.wohnzimmer_wand_6
+    # Wohnzimmer Esstisch (2 lights)
+    - light.wohnzimmer_esstisch_2
+    - light.wohnzimmer_esstisch_3
+    # Küche Decke (2 lights)
+    - light.kuche_decke_1
+    - light.kuche_decke_2
+    # Flur Decke (6 lights)
+    - light.flur_decke_1
+    - light.flur_decke_2
+    - light.flur_decke_3
+    - light.flur_decke_4
+    - light.flur_decke_5
+    - light.flur_decke_6
+    # Schlafzimmer (3 lights)
+    - light.schlafzimmer_decke_1
+    - light.schlafzimmer_decke_2
+    - light.schlafzimmer_tv
+    # Ankleide (2 lights)
+    - light.ankleide_decke_1
+    - light.ankleide_decke_2
+    # Kinderzimmer (1 light)
+    - light.kinderzimmer_decke
