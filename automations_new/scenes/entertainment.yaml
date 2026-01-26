@@ -63,6 +63,11 @@
           - condition: state
             entity_id: input_boolean.movie
             state: 'off'
+          - condition: not
+            conditions:
+            - condition: state
+              entity_id: media_player.appletv
+              state: 'playing'
           sequence:
           - action: automation.turn_on
             target:
