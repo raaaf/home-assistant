@@ -78,7 +78,7 @@
         action: switch.turn_on
       - action: scene_presets.start_dynamic_scene
         data:
-          preset_id: 454176dd-7d24-43de-86c4-ee73f8febbec  # Ruby glow (warm für Sauna)
+          preset_id: 2233f218-fd5b-4fa7-a7fd-cbe81eea8e15  # Forest adventure (Wald für Sauna)
           targets:
             entity_id:
             - light.alle_badezimmer_lichter
@@ -92,7 +92,7 @@
       sequence:
       - action: scene_presets.stop_dynamic_scene
         data:
-          id: 454176dd-7d24-43de-86c4-ee73f8febbec  # Ruby glow
+          id: 2233f218-fd5b-4fa7-a7fd-cbe81eea8e15  # Forest adventure
       - action: light.turn_off
         data:
           transition: 5

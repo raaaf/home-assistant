@@ -76,17 +76,33 @@
         data:
           max_brightness: 40
           min_brightness: 5
-      - alias: "Deaktiviere Küchen-Motion wenn nicht gekocht wird"
+      - alias: "Deaktiviere Küchen-Motion wenn nicht gekocht oder abgewaschen wird"
         choose:
         - conditions:
           - condition: state
             entity_id: input_boolean.kochen
             state: 'off'
+          - condition: state
+            entity_id: input_boolean.abwaschen
+            state: 'off'
           sequence:
           - action: script.scene_disable_motion_automations
             data:
               automations: "automation.motion_kuche_2"
-      # Esstisch-Motion bleibt immer aktiv
+      - alias: "Deaktiviere Spieletisch-Motion"
+        action: automation.turn_off
+        target:
+          entity_id: automation.motion_spieletisch
+      - alias: "Deaktiviere Esstisch-Motion wenn nicht gegessen wird"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.essen
+            state: 'off'
+          sequence:
+          - action: automation.turn_off
+            target:
+              entity_id: automation.motion_esstisch
       - action: light.turn_on
         target:
           entity_id: light.hyperhdr
@@ -116,11 +132,14 @@
             transition: 6
           target:
             entity_id: light.alle_wohnzimmer_lichter_ohne_esstisch
-      - alias: "Turn off kitchen lights if not cooking"
+      - alias: "Turn off kitchen lights if not cooking or dishwashing"
         choose:
         - conditions:
           - condition: state
             entity_id: input_boolean.kochen
+            state: 'off'
+          - condition: state
+            entity_id: input_boolean.abwaschen
             state: 'off'
           sequence:
           - action: light.turn_off
@@ -128,10 +147,13 @@
               transition: 6
             target:
               entity_id: light.alle_kuche_lichter
-      - alias: "Turn off hallway lights if not cooking"
+      - alias: "Turn off hallway lights if not cooking or dishwashing"
         if:
         - condition: state
           entity_id: input_boolean.kochen
+          state: 'off'
+        - condition: state
+          entity_id: input_boolean.abwaschen
           state: 'off'
         then:
         - action: light.turn_off
@@ -139,6 +161,21 @@
             transition: 6
           target:
             entity_id: light.alle_flur_lichter
+      - alias: "Leselicht wiederherstellen falls aktiv"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.leselicht
+            state: 'on'
+          sequence:
+          - delay:
+              milliseconds: 500
+          - action: light.turn_on
+            target:
+              entity_id: light.wohnzimmer_wand_2
+            data:
+              brightness_pct: 100
+              color_temp_kelvin: 4000
     - conditions:
       - condition: trigger
         id: 'off'
@@ -164,17 +201,21 @@
         action: script.scene_enable_adaptive_lighting
         data:
           room: "kueche"
-          exclude_scenes: "kochen,party,party_wohnzimmer"
+          exclude_scenes: "kochen,abwaschen,party,party_wohnzimmer"
       - alias: "Reaktiviere Motion-Automationen mit Konflikt-Prüfung"
         action: script.scene_enable_motion_automations
         data:
           automations: "automation.motion_kuche_2"
-          exclude_scenes: "kochen,party,party_wohnzimmer"
+          exclude_scenes: "kochen,abwaschen,party,party_wohnzimmer"
       - alias: "Reaktiviere Esstisch-Motion mit Konflikt-Prüfung"
         action: script.scene_enable_motion_automations
         data:
           automations: "automation.motion_esstisch"
           exclude_scenes: "essen"
+      - alias: "Reaktiviere Spieletisch-Motion"
+        action: automation.turn_on
+        target:
+          entity_id: automation.motion_spieletisch
       - target:
           entity_id:
           - light.hyperhdr
@@ -220,6 +261,10 @@
         data:
           automations: "automation.motion_esstisch"
           exclude_scenes: "essen"
+      - alias: "Reaktiviere Spieletisch-Motion"
+        action: automation.turn_on
+        target:
+          entity_id: automation.motion_spieletisch
   mode: restart
 - id: '1671133998236'
   alias: Wohnzimmer » Weihnachtsbaum
@@ -379,13 +424,23 @@
         id: 'on'
       sequence:
       # 1. Disable motion automations FIRST (stop new triggers)
-      - alias: "Disable motion automations first"
+      - alias: "Disable motion automations"
         action: automation.turn_off
         target:
           entity_id:
           - automation.motion_kuche_2
           - automation.motion_flur_wohnung
-          - automation.motion_esstisch
+          - automation.motion_spieletisch
+      - alias: "Deaktiviere Esstisch-Motion wenn nicht gegessen wird"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.essen
+            state: 'off'
+          sequence:
+          - action: automation.turn_off
+            target:
+              entity_id: automation.motion_esstisch
       # 2. Mark white-only lights as manual control (prevents AL from touching them)
       # Note: Must call separately per switch - can't pass multiple switches with lights
       - alias: "Mark Wohnzimmer white lights as manual"
@@ -429,6 +484,21 @@
           - light.alle_wohnzimmer_lichter
           - light.alle_kuche_lichter
           - light.steckdose_kuechengeraete
+      - alias: "Leselicht wiederherstellen falls aktiv"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.leselicht
+            state: 'on'
+          sequence:
+          - delay:
+              milliseconds: 500
+          - action: light.turn_on
+            target:
+              entity_id: light.wohnzimmer_wand_2
+            data:
+              brightness_pct: 100
+              color_temp_kelvin: 4000
       # 6. Start dynamic scene on RGB lights ONLY
       - alias: "Start dynamic scene on RGB lights only"
         action: scene_presets.start_dynamic_scene
@@ -444,15 +514,20 @@
       - condition: trigger
         id: 'off'
       sequence:
-      - action: scene_presets.stop_dynamic_scene
+      - alias: "Stop dynamic scene for party lights"
+        action: scene_presets.stop_dynamic_scenes_for_targets
         data:
-          id: de7eda64-84bf-4ed6-a4fa-76e0ebdd1968
+          targets:
+            entity_id:
+            - light.alle_wohnzimmer_rgb_lichter
+            - light.alle_kuche_rgb_lichter
       - action: light.turn_off
         data:
           transition: 5
         target:
           entity_id:
           - light.alle_wohnzimmer_lichter
+          - light.alle_kuche_lichter
       - delay:
           seconds: 6
       # Clear manual control flags before re-enabling AL
@@ -537,6 +612,35 @@
           - action: automation.turn_on
             target:
               entity_id: automation.motion_flur_wohnung
+      - alias: "Reaktiviere Esstisch-Motion wenn nicht gegessen wird und kein Film/Party"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.essen
+            state: 'off'
+          - condition: state
+            entity_id: input_boolean.movie
+            state: 'off'
+          - condition: state
+            entity_id: input_boolean.party
+            state: 'off'
+          sequence:
+          - action: automation.turn_on
+            target:
+              entity_id: automation.motion_esstisch
+      - alias: "Reaktiviere Spieletisch-Motion wenn kein Film/Party"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.movie
+            state: 'off'
+          - condition: state
+            entity_id: input_boolean.party
+            state: 'off'
+          sequence:
+          - action: automation.turn_on
+            target:
+              entity_id: automation.motion_spieletisch
     default: []
   mode: restart
 - id: '1744714272996'
@@ -622,8 +726,6 @@
       include_night_light_control:
       - use_brightness
       ambient_light_high_value: 200
-      motion_bypass_lights_on: []
-      motion_bypass_lights_off: []
       include_bypass:
       - bypass_enabled_stop
       motion_bypass_lights_stop:
@@ -648,3 +750,58 @@
       - bypass_enabled_stop
       motion_bypass_lights_stop:
       - binary_sensor.wohnzimmer_manual_control
+- id: 'scene_leselicht'
+  alias: 'Scenen » Leselicht'
+  description: Leselicht im Wohnzimmer ein-/ausschalten
+  triggers:
+  - trigger: state
+    entity_id: input_boolean.leselicht
+    to: 'on'
+    id: 'on'
+  - trigger: state
+    entity_id: input_boolean.leselicht
+    to: 'off'
+    id: 'off'
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: 'on'
+      sequence:
+      - alias: "Manual Control zuruecksetzen falls aktiv"
+        action: adaptive_lighting.set_manual_control
+        data:
+          entity_id: switch.adaptive_lighting_wohnzimmer
+          lights:
+          - light.wohnzimmer_wand_2
+          manual_control: false
+      - action: light.turn_on
+        target:
+          entity_id: light.wohnzimmer_wand_2
+      - alias: "Adaptive Lighting Werte anwenden"
+        action: adaptive_lighting.apply
+        data:
+          entity_id: switch.adaptive_lighting_wohnzimmer
+          lights:
+          - light.wohnzimmer_wand_2
+          turn_on_lights: true
+    - conditions:
+      - condition: trigger
+        id: 'off'
+      sequence:
+      - action: light.turn_off
+        target:
+          entity_id: light.wohnzimmer_wand_2
+        data:
+          transition: 2
+      - delay:
+          seconds: 3
+      - alias: "Manual Control zuruecksetzen"
+        action: adaptive_lighting.set_manual_control
+        data:
+          entity_id: switch.adaptive_lighting_wohnzimmer
+          lights:
+          - light.wohnzimmer_wand_2
+          manual_control: false
+  mode: restart

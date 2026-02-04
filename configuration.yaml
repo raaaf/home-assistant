@@ -697,7 +697,7 @@ template:
         unit_of_measurement: "€"
         device_class: monetary
         state: >-
-          {% set verbrauch_monat = states('sensor.taglicher_netzbezug') | float(0) %}
+          {% set verbrauch_monat = states('sensor.monatlicher_netzbezug') | float(0) %}
           {% set tag_im_monat = now().day %}
           {% set tage_gesamt = ((now().replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)).day %}
           {% set durchschnitt = verbrauch_monat / tag_im_monat if tag_im_monat > 0 else 0 %}
@@ -705,7 +705,7 @@ template:
           {% set grundpreis = 16.54 %}
           {{ (arbeitspreis + grundpreis) | round(2) }}
         icon: mdi:calendar-month
-        availability: "{{ is_number(states('sensor.taglicher_netzbezug')) }}"
+        availability: "{{ is_number(states('sensor.monatlicher_netzbezug')) }}"
 
 utility_meter:
   # ac_energy_daily: REMOVED - sensor.dtu_ac_daily_energy from Hoymiles already resets daily
@@ -727,7 +727,14 @@ utility_meter:
     offset:
       hours: 0
       minutes: 0
-    
+
+  monatlicher_netzbezug:
+    source: sensor.netzbezug_energie
+    name: "Monatlicher Netzbezug"
+    cycle: monthly
+    offset:
+      days: 0
+
   # Utility Meter für Energy müssen Integration Sensoren verwenden
   # Diese werden automatisch durch Home Assistant Energy Dashboard erstellt
   # Falls sie nicht existieren, können sie über Settings > Energy konfiguriert werden
@@ -751,6 +758,10 @@ input_boolean:
   abwaschen:
     name: "Abwaschen"
     icon: mdi:dishwasher
+    initial: false
+  leselicht:
+    name: "Leselicht"
+    icon: mdi:book-open-page-variant
     initial: false
 
 input_datetime:

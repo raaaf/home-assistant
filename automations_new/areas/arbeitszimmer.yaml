@@ -178,6 +178,10 @@
       conditions:
       - condition: trigger
         id: work-rafael-off
+      - alias: Gaming ist nicht aktiv (PC-Lichter werden dort benoetigt)
+        condition: state
+        entity_id: input_boolean.gaming
+        state: 'off'
       sequence:
       - alias: "Rafael Lichter ausschalten"
         action: light.turn_off
@@ -227,15 +231,13 @@
           entity_id: light.arbeitszimmer_decke
         data:
           transition: 2
-      - alias: "Vapor wave Dynamic Scene starten"
-        action: scene_presets.start_dynamic_scene
+      - alias: "Colorloop effect starten"
+        action: light.turn_on
+        target:
+          entity_id: light.alle_arbeitszimmer_nachtlichter
         data:
-          preset_id: "3984c3b7-6608-482f-84be-d2ffe39dbb1a"  # Vapor wave
-          targets:
-            entity_id: light.alle_arbeitszimmer_nachtlichter
-          brightness: 140
-          transition: 20
-          interval: 45
+          effect: colorloop
+          brightness_pct: 30
     - alias: Gaming ausschalten
       conditions:
       - condition: trigger
@@ -245,11 +247,12 @@
         target:
           entity_id: input_boolean.gaming
         data: {}
-      - alias: "Dynamic Scene stoppen"
-        action: scene_presets.stop_dynamic_scenes_for_targets
+      - alias: "Colorloop effect stoppen"
+        action: light.turn_on
+        target:
+          entity_id: light.alle_arbeitszimmer_nachtlichter
         data:
-          targets:
-            entity_id: light.alle_arbeitszimmer_nachtlichter
+          effect: none
       - alias: "Alle Arbeitszimmer-Lichter ausschalten"
         action: light.turn_off
         target:

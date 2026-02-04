@@ -593,33 +593,3 @@
       entity_id: switch.steckdose_pc_alex
     data: {}
   mode: single
-- id: '1736456789003'
-  alias: Helper » Rafael Arbeitszimmer Steckdose aus wenn weg
-  description: Schaltet die Arbeitszimmer-Steckdose von Rafael aus wenn er das Gebäude verlässt
-  triggers:
-  - entity_id: person.rafael
-    zone: zone.home
-    event: leave
-    trigger: zone
-  conditions: []
-  actions:
-  - action: switch.turn_off
-    target:
-      entity_id: switch.steckdose_arbeitszimmer
-    data: {}
-  mode: single
-- id: '1736456789004'
-  alias: Helper » Rafael Arbeitszimmer Steckdose an wenn zurück
-  description: Schaltet die Arbeitszimmer-Steckdose von Rafael ein wenn er zurück kommt
-  triggers:
-  - entity_id: person.rafael
-    zone: zone.home
-    event: enter
-    trigger: zone
-  conditions: []
-  actions:
-  - action: switch.turn_on
-    target:
-      entity_id: switch.steckdose_arbeitszimmer
-    data: {}
-  mode: single

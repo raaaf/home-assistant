@@ -101,7 +101,18 @@
       target_player: media_player.homepods
       duration: 600
       target_volume: 0.35
-  - delay: 00:04:05
+  - alias: "HomePod Minis lauter stellen (40%)"
+    delay: 00:00:02
+  - action: media_player.volume_set
+    target:
+      entity_id:
+      - media_player.homepod_badezimmer
+      - media_player.homepod_kinderzimmer
+      - media_player.homepod_arbeitszimmer
+      - media_player.arbeitszimmer_2
+    data:
+      volume_level: 0.40
+  - delay: 00:04:03
   - action: input_boolean.turn_off
     target:
       entity_id:

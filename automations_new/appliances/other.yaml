@@ -8,12 +8,10 @@
   triggers:
   - trigger: state
     entity_id: sensor.mmgg_fi1_2081_cleantime
-    attribute: clearnserve.cleantime
     to: '1'
     id: reinigung
   - trigger: state
     entity_id: sensor.mmgg_fi1_2081_desiccant_left_time
-    attribute: clearnserve.cleantime
     to: '1'
     id: filter
   conditions:
