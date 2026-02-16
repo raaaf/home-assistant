@@ -7,12 +7,7 @@
   description: 'Intelligente Rollosteuerung basierend auf: - Sonnenelevation (Tageslicht)
     - Sonnenstand (Azimuth & Elevation) - Temperaturvorhersage - Anwesenheit'
   trigger:
-  - id: morgens-arbeitstag
-    platform: numeric_state
-    entity_id: sun.sun
-    attribute: elevation
-    above: 0
-  - id: morgens-freiertag
+  - id: morgens
     platform: numeric_state
     entity_id: sun.sun
     attribute: elevation
@@ -55,7 +50,7 @@
   - choose:
     - conditions:
       - condition: trigger
-        id: morgens-arbeitstag
+        id: morgens
       - condition: template
         value_template: '{{ ist_arbeitstag }}'
       sequence:
@@ -70,7 +65,7 @@
         target:
           entity_id: cover.schlafzimmer_rollo
       - delay:
-          seconds: 3
+          milliseconds: 3500
       - action: cover.stop_cover
         target:
           entity_id: cover.schlafzimmer_rollo
@@ -81,7 +76,7 @@
           domain: cover
     - conditions:
       - condition: trigger
-        id: morgens-freiertag
+        id: morgens
       - condition: template
         value_template: '{{ not ist_arbeitstag }}'
       sequence:
@@ -92,7 +87,7 @@
         target:
           entity_id: cover.schlafzimmer_rollo
       - delay:
-          seconds: 3
+          milliseconds: 3500
       - action: cover.stop_cover
         target:
           entity_id: cover.schlafzimmer_rollo

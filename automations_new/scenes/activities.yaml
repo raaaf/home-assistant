@@ -518,8 +518,6 @@
     - light.wohnzimmer_wand_4
     - light.wohnzimmer_wand_5
     - light.wohnzimmer_wand_6
-    - light.wohnzimmer_esstisch_2
-    - light.wohnzimmer_esstisch_3
     # Küche
     - light.kuche_decke_1
     - light.kuche_decke_2
@@ -533,7 +531,6 @@
     # Schlafzimmer
     - light.schlafzimmer_decke_1
     - light.schlafzimmer_decke_2
-    - light.schlafzimmer_tv
     # Ankleide
     - light.ankleide_decke_1
     - light.ankleide_decke_2

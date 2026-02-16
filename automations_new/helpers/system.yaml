@@ -20,7 +20,7 @@
       - media_player.arbeitszimmer_2
       - media_player.homepod_badezimmer
       - media_player.homepod_kinderzimmer
-      - media_player.homepod_kuche
+      - media_player.homepod_wohnzimmer
       - media_player.homepod_kueche
       - media_player.smarttv_4k
     action: homeassistant.update_entity
@@ -48,7 +48,7 @@
       - media_player.arbeitszimmer_2
       - media_player.homepod_badezimmer
       - media_player.homepod_kinderzimmer
-      - media_player.homepod_kuche
+      - media_player.homepod_wohnzimmer
       - media_player.homepod_kueche
       - media_player.smarttv_4k
     idle_players: >
@@ -74,7 +74,7 @@
     - media_player.arbeitszimmer_2
     - media_player.homepod_badezimmer
     - media_player.homepod_kinderzimmer
-    - media_player.homepod_kuche
+    - media_player.homepod_wohnzimmer
     - media_player.homepod_kueche
     # Apple TVs (2)
     - media_player.appletv
@@ -91,7 +91,7 @@
       - media_player.arbeitszimmer_2
       - media_player.homepod_badezimmer
       - media_player.homepod_kinderzimmer
-      - media_player.homepod_kuche
+      - media_player.homepod_wohnzimmer
       - media_player.homepod_kueche
       - media_player.appletv
       - media_player.wohnzimmer

@@ -19,31 +19,40 @@ This is a sophisticated German-language Home Assistant configuration for a smart
 
 ## Quick Reference
 
+### Environment Constraints
+
+- **No Docker access**: Claude Code has no access to the Docker host. Do not suggest `docker exec` commands for validation, reload, or log viewing.
+- **HA REST API** is available via `$HA_URL` and `$HA_TOKEN` (stored in `~/.claude/settings.json` env).
+- YAML syntax validation can be done locally with `yamllint`.
+
 ### Key Commands
 
 ```bash
-# Validate Home Assistant configuration
-docker exec homeassistant ha core check
-
-# Check YAML syntax
+# Check YAML syntax (local, works without Docker)
 yamllint automations_new/**/*.yaml
-
-# Reload without restart
-docker exec homeassistant ha automation reload
-docker exec homeassistant ha script reload
-docker exec homeassistant ha template reload
-
-# Full restart (only when changing configuration.yaml)
-docker exec homeassistant ha core restart
-
-# View logs
-docker logs homeassistant
-tail -100 /Volumes/config/home-assistant.log
 
 # Git operations
 git -C /Volumes/config status
 git -C /Volumes/config diff
 git -C /Volumes/config log --oneline -10
+
+# HA REST API (uses $HA_URL and $HA_TOKEN from env)
+# Check config
+curl -s -H "Authorization: Bearer $HA_TOKEN" "$HA_URL/api/config" | jq .version
+
+# Reload automations
+curl -s -X POST -H "Authorization: Bearer $HA_TOKEN" "$HA_URL/api/services/automation/reload"
+
+# Reload scripts
+curl -s -X POST -H "Authorization: Bearer $HA_TOKEN" "$HA_URL/api/services/script/reload"
+
+# Call a service (example: script.fade_volume)
+curl -s -X POST -H "Authorization: Bearer $HA_TOKEN" -H "Content-Type: application/json" \
+  "$HA_URL/api/services/script/fade_volume" \
+  -d '{"target_player":"media_player.homepod_kueche","target_volume":0.20,"duration":30,"curve":"linear"}'
+
+# View recent logs
+curl -s -H "Authorization: Bearer $HA_TOKEN" "$HA_URL/api/error_log" | tail -50
 ```
 
 ### Important Paths

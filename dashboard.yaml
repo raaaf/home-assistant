@@ -62,7 +62,7 @@ views:
                 entity: person.alex
                 use_entity_picture: true
               - type: entity
-                entity: vacuum.robbi_2
+                entity: vacuum.s7_maxv
               - type: entity
                 entity: sensor.count_lights_on
               - type: conditional
@@ -76,17 +76,17 @@ views:
                   entity: sensor.hausverbrauch_gesamt
                   icon: mdi:flash
                   icon_color: >-
-                    {% set power = states('sensor.hausverbrauch_gesamt') | float(0) %} {% if power < 500 %}
+                    {% set power = states('sensor.hausverbrauch_gesamt') |
+                    float(0) %} {% if power < 500 %}
                       green
                     {% elif power < 2000 %}
                       amber
                     {% else %}
                       red
                     {% endif %}
-
                   content: >-
-                    {{ states('sensor.hausverbrauch_gesamt') | float(0) | round(0) }} W
-
+                    {{ states('sensor.hausverbrauch_gesamt') | float(0) |
+                    round(0) }} W
               - type: conditional
                 conditions:
                   - entity: sensor.steckdose_bkk_power
@@ -94,21 +94,21 @@ views:
                   - entity: sensor.steckdose_bkk_power
                     state_not: unknown
                   - condition: template
-                    value: "{{ states('sensor.steckdose_bkk_power') | float(0) > 5 }}"
+                    value: '{{ states(''sensor.steckdose_bkk_power'') | float(0) > 5 }}'
                 chip:
                   type: template
                   entity: sensor.steckdose_bkk_power
                   icon: mdi:solar-power
                   icon_color: >-
-                    {% set pv = states('sensor.steckdose_bkk_power') | float(0) %} {% if pv > 150 %}
+                    {% set pv = states('sensor.steckdose_bkk_power') | float(0)
+                    %} {% if pv > 150 %}
                       amber
                     {% else %}
                       blue
                     {% endif %}
-
                   content: >-
-                    {{ states('sensor.steckdose_bkk_power') | float(0) | round(0) }} W
-
+                    {{ states('sensor.steckdose_bkk_power') | float(0) |
+                    round(0) }} W
               - type: conditional
                 conditions:
                   - condition: numeric_state
@@ -120,7 +120,6 @@ views:
                   icon_color: red
                   content: >-
                     {{states('sensor.qingping_air_monitor_lite_co2_carbon_dioxide')}}
-
                   entity: sensor.qingping_air_monitor_lite_co2_carbon_dioxide
               - type: conditional
                 conditions:
@@ -176,16 +175,6 @@ views:
                   icon_color: red
                   content: Flur
                   entity: switch.heizung_flur
-              - type: conditional
-                conditions:
-                  - entity: switch.heizung_badezimmer
-                    state: 'on'
-                chip:
-                  type: template
-                  icon: mdi:heating-coil
-                  icon_color: red
-                  content: Badezimmer
-                  entity: switch.heizung_badezimmer
               - type: conditional
                 conditions:
                   - entity: switch.heizung_kinderzimmer
@@ -258,7 +247,7 @@ views:
                   type: template
                   icon: mdi:door-open
                   icon_color: yellow
-                  content: Arbeitszimmer
+                  content: Schlafzimmer
               - type: conditional
                 conditions:
                   - entity: binary_sensor.wohnzimmer_kontaktsensor_contact
@@ -303,7 +292,7 @@ views:
                   type: template
                   icon: mdi:door-open
                   icon_color: yellow
-                  content: Schlafzimmer
+                  content: Arbeitszimmer
               - type: conditional
                 conditions:
                   - entity: binary_sensor.kinderzimmer_kontaktsensor_contact
@@ -335,7 +324,7 @@ views:
                     state: Arbeitet
                 chip:
                   type: template
-                  icon: mdi:washing-machine
+                  icon: mdi:tumble-dryer
                   content: Trockner arbeitet
               - type: conditional
                 conditions:
@@ -343,7 +332,7 @@ views:
                     state: Fertig
                 chip:
                   type: template
-                  icon: mdi:washing-machine
+                  icon: mdi:tumble-dryer
                   content: Trockner fertig
       - type: custom:gap-card
         view_layout:
@@ -451,7 +440,7 @@ views:
                         - 'off'
                   - type: custom:mushroom-template-card
                     primary: Heizung Boost
-                    secondary: >
+                    secondary: |
                       {% if is_state("timer.heizung_boost", "active") %}
                         {% set finish = state_attr("timer.heizung_boost", "finishes_at") %}
                         {% if finish %}
@@ -464,7 +453,9 @@ views:
                         1,5h Boost starten
                       {% endif %}
                     icon: mdi:radiator
-                    icon_color: '{{ "red" if is_state("timer.heizung_boost", "active") else "grey" }}'
+                    icon_color: >-
+                      {{ "red" if is_state("timer.heizung_boost", "active") else
+                      "grey" }}
                     tap_action:
                       action: call-service
                       service: script.heizung_boost
@@ -531,12 +522,12 @@ views:
                     icon: mdi:door-open
                   - type: custom:mushroom-entity-card
                     entity: binary_sensor.schlafzimmer_kontaktsensor_contact
-                    name: Arbeitszimmer
+                    name: Schlafzimmer
                     layout: horizontal
                     icon: mdi:door-open
                   - type: custom:mushroom-entity-card
                     entity: binary_sensor.arbeitszimmer_kontaktsensor_contact
-                    name: Schlafzimmer
+                    name: Arbeitszimmer
                     layout: horizontal
                     icon: mdi:door-open
                   - type: custom:mushroom-entity-card
@@ -632,15 +623,22 @@ views:
     badges: []
     cards:
       - type: markdown
-        content: |
+        content: >
           ## 🌅 Adaptive Lighting System
 
+
           **Automatische Erkennung manueller Steuerung:**
+
           - `take_over_control`: Pausiert AL bei manuellen Änderungen
-          - `detect_non_ha_changes`: Erkennt Änderungen via Siri, HomeKit, Schalter
+
+          - `detect_non_ha_changes`: Erkennt Änderungen via Siri, HomeKit,
+          Schalter
+
           - `autoreset_control`: Gibt nach 1-2h automatisch wieder frei
 
-          **Manual Control Status** zeigt, welche Räume gerade manuell gesteuert sind.
+
+          **Manual Control Status** zeigt, welche Räume gerade manuell gesteuert
+          sind.
         title: ℹ️ System-Info
       - type: entities
         entities:
@@ -714,7 +712,7 @@ views:
           include:
             - attributes:
                 device_class: battery
-              state: <= 100
+              state: <= 30
           exclude:
             - name: /[Ll]ow/
             - name: /[Ss]tate/
@@ -727,199 +725,107 @@ views:
     sections:
       - type: grid
         cards:
-          - type: custom:xiaomi-vacuum-map-card
-            map_source:
-              camera: camera.robbi_live_map
-            calibration_source:
-              camera: true
-            entity: vacuum.robbi_2
-            vacuum_platform: default
+          - type: tile
+            entity: vacuum.s7_maxv
+            name: Robbi
+            features:
+              - type: vacuum-commands
+                commands:
+                  - start_pause
+                  - stop
+                  - return_home
+                  - locate
             grid_options:
               columns: full
               rows: auto
         column_span: 2
-  - theme: Backend-selected
-    title: All Lights
-    path: test
-    type: custom:masonry-layout
-    layout:
-      columns: 2
-    badges: []
-    cards:
-      - type: custom:auto-entities
-        card:
-          type: entities
-        filter:
-          include:
-            - domain: light
-          exclude: []
-        sort:
-          method: friendly_name
-          reverse: false
-  - title: Sensoren
-    path: sensoren
-    cards:
-      - type: custom:auto-entities
-        card:
-          type: entities
-          title: Running Automations
-          show_header_toggle: false
-        filter:
-          include:
-            - domain: automation
-              not:
-                attributes:
-                  current: 0
-              options:
-                type: custom:template-entity-row
-                toggle: true
-                secondary: >
-                  {{relative_time(state_attr(config.entity,'last_triggered'))}} ago, {{state_attr(config.entity,'current') }} Running
-
-                hold_action: |
-                  {
-                    "action": "navigate",
-                    "navigation_path": "/config/automation/trace/{{state_attr(config.entity,'friendly_name')}}"
-                  }
-        sort:
-          method: last_triggered
-          reverse: true
-      - type: custom:auto-entities
-        card:
-          type: entities
-          title: Recent Automations
-          show_header_toggle: false
-        filter:
-          include:
-            - domain: automation
-              state: 'on'
-              last_triggered: <= 5
-              options:
-                type: custom:template-entity-row
-                toggle: true
-                secondary: >
-                  {% if state_attr(config.entity,'last_triggered') %} {{relative_time(state_attr(config.entity,'last_triggered'))}} ago {% else %} Never triggered {% endif %}
-
-                hold_action: |
-                  {
-                    "action": "navigate",
-                    "navigation_path": "/config/automation/trace/{{state_attr(config.entity,'friendly_name')}}"
-                  }
-          exclude:
-            - attributes:
-                last_triggered: null
-        sort:
-          method: last_triggered
-          reverse: true
-      - type: custom:auto-entities
-        card:
-          type: entities
-          title: Automations off
-          show_header_toggle: false
-        filter:
-          include:
-            - domain: automation
-              state: 'off'
-              options:
-                secondary_info: last-triggered
-          exclude:
-            - attributes:
-                last_triggered: null
-        sort:
-          method: last_triggered
-          reverse: true
-      - type: custom:auto-entities
-        card:
-          type: entities
-          title: Automations off never triggered
-          show_header_toggle: false
-        filter:
-          include:
-            - domain: automation
-              state: 'off'
-              attributes:
-                last_triggered: null
-      - type: custom:auto-entities
-        card:
-          type: entities
-          title: Automations on never triggered
-          show_header_toggle: false
-        filter:
-          include:
-            - domain: automation
-              state: 'on'
-              attributes:
-                last_triggered: null
-              options:
-                type: custom:template-entity-row
-                toggle: true
-                secondary: >
-                  {% if state_attr(config.entity,'last_triggered') %} {{relative_time(state_attr(config.entity,'last_triggered'))}} ago {% else %} Never triggered {% endif %}
-
-                hold_action: |
-                  {
-                    "action": "navigate",
-                    "navigation_path": "/config/automation/trace/{{state_attr(config.entity,'friendly_name')}}"
-                  }
-      - type: custom:auto-entities
-        card:
-          type: entities
-          title: Last updated Sensors
-        filter:
-          include:
-            - domain: sensor
-              options:
-                secondary_info: last-updated
-        sort:
-          method: last_updated
-          numeric: true
-          reverse: false
-          count: 20
-      - type: custom:auto-entities
-        card:
-          type: entities
-          title: Sensor off never triggered
-          show_header_toggle: false
-        filter:
-          include:
-            - domain: sensor
-              state: 'off'
-              attributes:
-                last_triggered: null
-  - title: Temperatur
-    path: temperatur
-    cards:
-      - type: custom:auto-entities
-        card:
-          type: entities
-        filter:
-          include:
-            - device_manufacturer: Aqara
-          exclude:
-            - name: '*Aqara*'
-            - name: '* Battery'
-            - name: '* Atmospheric *'
-            - name: '* Humidity *'
-            - name: '* Humidity'
-            - name: '* Identify'
-            - name: '* Sensor'
-            - name: '* Leak *'
-            - name: '* Flurlicht'
-            - name: '*Motion*'
-            - name: '*Vibration*'
-            - name: '*Kontakt*'
-            - name: '*Rollo*'
-            - name: '*Steckdose*'
-            - name: '*Smart Essential*'
-            - name: '*Stehlampe*'
-            - name: '*Wasser*'
-        sort:
-          method: friendly_name
-    type: panel
+      - type: grid
+        cards:
+          - type: heading
+            heading: Status
+          - type: tile
+            entity: sensor.s7_maxv_status
+            name: Status
+          - type: tile
+            entity: sensor.s7_maxv_battery
+            name: Akku
+            color: green
+          - type: tile
+            entity: sensor.s7_maxv_cleaning_area
+            name: Flaeche
+          - type: tile
+            entity: sensor.s7_maxv_cleaning_time
+            name: Reinigungszeit
+          - type: tile
+            entity: sensor.s7_maxv_current_room
+            name: Aktueller Raum
+          - type: tile
+            entity: sensor.s7_maxv_vacuum_error
+            name: Fehler
+      - type: grid
+        cards:
+          - type: heading
+            heading: Einstellungen
+          - type: tile
+            entity: select.s7_maxv_mop_mode
+            name: Wischmodus
+          - type: tile
+            entity: select.s7_maxv_mop_intensity
+            name: Wischintensitaet
+          - type: tile
+            entity: binary_sensor.s7_maxv_mop_attached
+            name: Wischmopp
+          - type: tile
+            entity: binary_sensor.s7_maxv_water_box_attached
+            name: Wassertank
+          - type: tile
+            entity: switch.s7_maxv_do_not_disturb
+            name: Nicht stoeren
+          - type: tile
+            entity: number.s7_maxv_volume
+            name: Lautstaerke
+      - type: grid
+        cards:
+          - type: heading
+            heading: Verbrauchsmaterial
+          - type: tile
+            entity: sensor.s7_maxv_main_brush_time_left
+            name: Hauptbuerste
+          - type: tile
+            entity: sensor.s7_maxv_side_brush_time_left
+            name: Seitenbuerste
+          - type: tile
+            entity: sensor.s7_maxv_filter_time_left
+            name: Filter
+          - type: tile
+            entity: sensor.s7_maxv_sensor_time_left
+            name: Sensoren
+          - type: tile
+            entity: sensor.s7_maxv_dock_maintenance_brush_time_left
+            name: Dock-Buerste
+          - type: tile
+            entity: sensor.s7_maxv_dock_strainer_time_left
+            name: Dock-Sieb
+      - type: grid
+        cards:
+          - type: heading
+            heading: Statistiken
+          - type: tile
+            entity: sensor.s7_maxv_total_cleaning_count
+            name: Reinigungen gesamt
+          - type: tile
+            entity: sensor.s7_maxv_total_cleaning_time
+            name: Gesamtzeit
+          - type: tile
+            entity: sensor.s7_maxv_total_cleaning_area
+            name: Gesamtflaeche
+          - type: tile
+            entity: sensor.s7_maxv_last_clean_begin
+            name: Letzte Reinigung
   - type: sections
     max_columns: 4
     title: Utility
-    path: utlity
+    path: utility
     sections:
       - type: grid
         cards:
@@ -1014,11 +920,6 @@ views:
             name: 'Scene: Arbeit'
           - entity: input_boolean.gaming
             name: 'Scene: Gaming'
-          - type: divider
-          - entity: input_boolean.test_scene_film
-          - entity: input_boolean.test_scene_party
-          - entity: input_boolean.test_scene_kochen
-          - entity: input_boolean.test_scene_baden
       - type: custom:auto-entities
         card:
           type: entities
@@ -1056,7 +957,6 @@ views:
           state_color: true
         filter:
           include:
-            - entity_id: input_boolean.gaming
             - entity_id: input_boolean.test_morning_routine
             - entity_id: input_boolean.haustur_besucher_inside
             - domain: input_datetime

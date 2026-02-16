@@ -161,6 +161,10 @@
             transition: 6
           target:
             entity_id: light.alle_flur_lichter
+        - alias: "Deaktiviere Flur-Motion"
+          action: automation.turn_off
+          target:
+            entity_id: automation.motion_flur_wohnung
       - alias: "Leselicht wiederherstellen falls aktiv"
         choose:
         - conditions:
@@ -216,10 +220,16 @@
         action: automation.turn_on
         target:
           entity_id: automation.motion_spieletisch
+      - alias: "Reaktiviere Flur-Motion mit Konflikt-Prüfung"
+        action: script.scene_enable_motion_automations
+        data:
+          automations: "automation.motion_flur_wohnung"
+          exclude_scenes: "party,party_wohnzimmer"
       - target:
           entity_id:
           - light.hyperhdr
           - light.alle_kuche_nachtlichter
+          - light.alle_wohnzimmer_nachtlichter
         data: {}
         action: light.turn_off
     - conditions:
@@ -674,7 +684,7 @@
             - 30765
             - 1
         target:
-          entity_id: vacuum.robbi_2
+          entity_id: vacuum.s7_maxv
       - action: input_boolean.turn_off
         metadata: {}
         data: {}
@@ -697,7 +707,6 @@
     path: Blackshome/sensor-light.yaml
     input:
       motion_trigger:
-      - binary_sensor.motion_esstisch
       - binary_sensor.wohnzimmer_vibration_2_vibration
       light_switch:
         entity_id:

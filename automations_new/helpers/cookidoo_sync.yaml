@@ -1,0 +1,64 @@
+# Helpers - Cookidoo Sync
+# Syncs Cookidoo shopping list items to Apple Reminders via iOS Shortcut
+# iOS Personal Automation triggers the Shortcut automatically on notification
+
+- id: '1738500000001'
+  alias: "Helper \xBB Cookidoo Einkaufsliste Sync"
+  description: >
+    Synchronisiert Cookidoo-Einkaufsliste zu Apple Reminders
+    via iOS Shortcut. Sendet Notification an beide iPhones,
+    iOS Personal Automation fuehrt den Shortcut automatisch aus.
+  triggers:
+    - trigger: state
+      entity_id: todo.cookidoo_shopping_list
+      id: cookidoo-changed
+  conditions:
+    - condition: template
+      value_template: >
+        {{ has_value('todo.cookidoo_shopping_list') }}
+    - condition: template
+      value_template: >
+        {{ states('todo.cookidoo_shopping_list') | int(0) > 0 }}
+  actions:
+    - alias: "Cookidoo Items abrufen"
+      action: todo.get_items
+      target:
+        entity_id: todo.cookidoo_shopping_list
+      data:
+        status:
+          - needs_action
+      response_variable: cookidoo_response
+
+    - variables:
+        cookidoo_items: >
+          {{ cookidoo_response['todo.cookidoo_shopping_list']['items']
+             | map(attribute='summary') | list }}
+
+    # Notification an beide iPhones - Body enthaelt NUR die Items (eine pro Zeile)
+    # iOS Personal Automation triggert auf Title "Cookidoo" und parst den Body
+    - alias: "Notification an Rafael iPhone"
+      action: notify.mobile_app_iphone_rafael
+      data:
+        title: "Cookidoo: {{ cookidoo_items | length }} Artikel"
+        message: "{{ cookidoo_items | join('\n') }}"
+
+    - alias: "Notification an Alex iPhone"
+      action: notify.mobile_app_alex_iphone
+      data:
+        title: "Cookidoo: {{ cookidoo_items | length }} Artikel"
+        message: "{{ cookidoo_items | join('\n') }}"
+
+    # Alle Cookidoo-Items als erledigt markieren (verschwindet aus der App)
+    - repeat:
+        for_each: "{{ cookidoo_items }}"
+        sequence:
+          - action: todo.update_item
+            target:
+              entity_id: todo.cookidoo_shopping_list
+            data:
+              item: "{{ repeat.item }}"
+              status: completed
+          - delay:
+              milliseconds: 500
+  mode: single
+  max_exceeded: silent

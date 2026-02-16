@@ -237,6 +237,8 @@
     - light.wohnzimmer_schrank_3
     # Individual RGB lights
     - light.wohnzimmer_esstisch_1
+    - light.wohnzimmer_esstisch_2
+    - light.wohnzimmer_esstisch_3
     - light.wohnzimmer_spieletisch
 
 - platform: group
@@ -263,6 +265,7 @@
   name: Alle Schlafzimmer RGB Lichter
   entities:
     - light.schlafzimmer_bett
+    - light.schlafzimmer_tv
 
 - platform: group
   unique_id: alle_badezimmer_rgb_lichter
@@ -293,9 +296,6 @@
     - light.wohnzimmer_wand_4
     - light.wohnzimmer_wand_5
     - light.wohnzimmer_wand_6
-    # Wohnzimmer Esstisch (2 lights)
-    - light.wohnzimmer_esstisch_2
-    - light.wohnzimmer_esstisch_3
     # Küche Decke (2 lights)
     - light.kuche_decke_1
     - light.kuche_decke_2
@@ -306,10 +306,9 @@
     - light.flur_decke_4
     - light.flur_decke_5
     - light.flur_decke_6
-    # Schlafzimmer (3 lights)
+    # Schlafzimmer (2 lights)
     - light.schlafzimmer_decke_1
     - light.schlafzimmer_decke_2
-    - light.schlafzimmer_tv
     # Ankleide (2 lights)
     - light.ankleide_decke_1
     - light.ankleide_decke_2

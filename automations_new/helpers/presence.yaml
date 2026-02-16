@@ -306,14 +306,14 @@
           entity_id: input_boolean.robbi_lief_heute_bereits
           state: 'off'
         - condition: template
-          value_template: '{{ states(''vacuum.robbi_2'') not in [''unknown'', ''unavailable'',
+          value_template: '{{ states(''vacuum.s7_maxv'') not in [''unknown'', ''unavailable'',
             ''cleaning'', ''returning''] }}
 
             '
         then:
         - action: vacuum.start
           target:
-            entity_id: vacuum.robbi_2
+            entity_id: vacuum.s7_maxv
           data: {}
       - alias: HomePods stoppen
         action: media_player.media_stop

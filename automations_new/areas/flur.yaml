@@ -73,13 +73,13 @@
       - alias: Robbi ist angedockt und bereit
         condition: template
         value_template: >
-          {{ is_state('vacuum.robbi_2', 'docked')
-             and (state_attr('vacuum.robbi_2', 'battery_level') | int(0)) >= 20 }}
+          {{ is_state('vacuum.s7_maxv', 'docked')
+             and (states('sensor.s7_maxv_battery') | int(0)) >= 20 }}
       sequence:
       - alias: Vollreinigung starten (Mop-Plan gesteuert durch Roborock App)
         action: vacuum.start
         target:
-          entity_id: vacuum.robbi_2
+          entity_id: vacuum.s7_maxv
       - alias: Merken dass Robbi heute schon lief
         action: input_boolean.turn_on
         target:
@@ -95,13 +95,13 @@
       - alias: Robbi ist angedockt und bereit
         condition: template
         value_template: >
-          {{ is_state('vacuum.robbi_2', 'docked')
-             and (state_attr('vacuum.robbi_2', 'battery_level') | int(0)) >= 20 }}
+          {{ is_state('vacuum.s7_maxv', 'docked')
+             and (states('sensor.s7_maxv_battery') | int(0)) >= 20 }}
       sequence:
       - alias: Vollreinigung starten
         action: vacuum.start
         target:
-          entity_id: vacuum.robbi_2
+          entity_id: vacuum.s7_maxv
       - alias: Merken dass Robbi heute schon lief
         action: input_boolean.turn_on
         target:

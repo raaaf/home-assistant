@@ -42,7 +42,7 @@
       - media_player.arbeitszimmer_2
       - media_player.homepod_badezimmer
       - media_player.homepod_kinderzimmer
-      - media_player.homepod_kuche
+      - media_player.homepod_wohnzimmer
       - media_player.homepod_kueche
   - delay: 00:00:03
   - alias: "Entity-Status aktualisieren"
@@ -53,7 +53,7 @@
       - media_player.arbeitszimmer_2
       - media_player.homepod_badezimmer
       - media_player.homepod_kinderzimmer
-      - media_player.homepod_kuche
+      - media_player.homepod_wohnzimmer
       - media_player.homepod_kueche
       - media_player.homepods
   - action: logbook.log
@@ -66,7 +66,7 @@
 - id: '1696241451967'
   alias: Helper » Workday Musik
   description: 'Startet sanfte Musik zum Aufwachen an Werktagen. Nutzt alle HomePods
-    (4 Minis + 2 OG) in einer Gruppe.
+    (6 Minis) in einer Gruppe.
 
     '
   triggers:
@@ -110,6 +110,7 @@
       - media_player.homepod_kinderzimmer
       - media_player.homepod_arbeitszimmer
       - media_player.arbeitszimmer_2
+      - media_player.homepod_wohnzimmer
     data:
       volume_level: 0.40
   - delay: 00:04:03

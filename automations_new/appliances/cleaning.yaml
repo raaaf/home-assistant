@@ -6,26 +6,21 @@
   alias: "Benachrichtigung » Robbi Wartung"
   description: "Überwacht Staubsauger-Roboter und erstellt Wartungsaufgaben (Filter, Bürsten, Sensoren) mit TTS-Ansagen bei kritischen Werten"
   triggers:
-  - trigger: template
-    value_template: >-
-      {% set level = state_attr('vacuum.robbi_2', 'brush_cleaner.brush_life_level') %}
-      {{ level is not none and level | int(100) < 10 }}
+  - trigger: numeric_state
+    entity_id: sensor.s7_maxv_main_brush_time_left
+    below: 20
     id: hauptbueste
-  - trigger: template
-    value_template: >-
-      {% set level = state_attr('vacuum.robbi_2', 'brush_life_level-10-2') %}
-      {{ level is not none and level | int(100) < 10 }}
+  - trigger: numeric_state
+    entity_id: sensor.s7_maxv_side_brush_time_left
+    below: 20
     id: seitenbueste
-  - trigger: template
-    value_template: >-
-      {% set level = state_attr('vacuum.robbi_2', 'filter.filter_life_level') %}
-      {{ level is not none and level | int(100) < 10 }}
+  - trigger: numeric_state
+    entity_id: sensor.s7_maxv_filter_time_left
+    below: 20
     id: filter
-  - trigger: template
-    value_template: >-
-      {% set props = state_attr('vacuum.robbi_2', 'props') %}
-      {{ props is not none and 
-         props.get('sensor_dirty_time', 9999) | int(9999) < 5000 }}
+  - trigger: numeric_state
+    entity_id: sensor.s7_maxv_sensor_time_left
+    below: 20
     id: sensoren
   conditions:
   - alias: "Nicht öfter als alle 12 Stunden triggern"
@@ -36,7 +31,7 @@
   - alias: "Robbi ist verfügbar (nicht unbekannt/unavailable)"
     condition: template
     value_template: >-
-      {{ states('vacuum.robbi_2') not in ['unknown', 'unavailable'] }}
+      {{ states('vacuum.s7_maxv') not in ['unknown', 'unavailable'] }}
   actions:
   - choose:
     - alias: "Hauptbürste wechseln"
@@ -53,9 +48,9 @@
               Robbi Wartung erforderlich
 
               Wartungsaufgabe: Hauptbürste wechseln
-              Verbleibende Lebensdauer: {{
-                state_attr('vacuum.robbi_2', 'brush_cleaner.brush_life_level') | int(0)
-              }}%
+              Verbleibende Zeit: {{
+                states('sensor.s7_maxv_main_brush_time_left') | int(0)
+              }} Stunden
 
               Bitte die Hauptbürste von Robbi wechseln, wenn es dir möglich ist.
     
@@ -73,9 +68,9 @@
               Robbi Wartung erforderlich
 
               Wartungsaufgabe: Seitenbürste wechseln
-              Verbleibende Lebensdauer: {{
-                state_attr('vacuum.robbi_2', 'brush_life_level-10-2') | int(0)
-              }}%
+              Verbleibende Zeit: {{
+                states('sensor.s7_maxv_side_brush_time_left') | int(0)
+              }} Stunden
 
               Bitte die Seitenbürste von Robbi wechseln, wenn es dir möglich ist.
         # Mobile Benachrichtigung bei kritischem Wert (<5%)
@@ -94,9 +89,9 @@
               Robbi Wartung erforderlich
 
               Wartungsaufgabe: Filter wechseln
-              Verbleibende Lebensdauer: {{
-                state_attr('vacuum.robbi_2', 'filter.filter_life_level') | int(0)
-              }}%
+              Verbleibende Zeit: {{
+                states('sensor.s7_maxv_filter_time_left') | int(0)
+              }} Stunden
 
               Bitte den Filter von Robbi wechseln, wenn es dir möglich ist.
 
@@ -114,9 +109,9 @@
               Robbi Wartung erforderlich
 
               Wartungsaufgabe: Sensoren reinigen
-              Sensor Status: {{
-                state_attr('vacuum.robbi_2', 'props').get('sensor_dirty_time', 'unbekannt')
-              }} verbleibend
+              Verbleibende Zeit: {{
+                states('sensor.s7_maxv_sensor_time_left') | int(0)
+              }} Stunden
 
               Bitte die Sensoren von Robbi reinigen, wenn es dir möglich ist.
     default:
@@ -168,28 +163,27 @@
   description: "Benachrichtigt wenn der Staubsauger einen Fehler hat oder stecken bleibt"
   triggers:
   - trigger: state
-    entity_id: vacuum.robbi_2
+    entity_id: vacuum.s7_maxv
     to: error
     id: error
   - trigger: state
-    entity_id: vacuum.robbi_2
-    attribute: status
-    to: "Stuck"
+    entity_id: sensor.s7_maxv_status
+    to: "stuck"
     id: stuck
   conditions:
   - condition: template
-    value_template: "{{ states('vacuum.robbi_2') not in ['unknown', 'unavailable'] }}"
+    value_template: "{{ states('vacuum.s7_maxv') not in ['unknown', 'unavailable'] }}"
   actions:
   - action: notify.family
     data:
-      title: "🤖 Robbi braucht Hilfe"
+      title: "Robbi braucht Hilfe"
       message: >
         {% if trigger.id == 'stuck' %}
         Robbi steckt fest und braucht Hilfe!
         {% else %}
-        Robbi hat einen Fehler: {{ state_attr('vacuum.robbi_2', 'status') | default('Unbekannt') }}
+        Robbi hat einen Fehler: {{ states('sensor.s7_maxv_status') | default('Unbekannt') }}
         {% endif %}
-        Akku: {{ state_attr('vacuum.robbi_2', 'battery_level') | default('?') }}%
+        Akku: {{ states('sensor.s7_maxv_battery') | default('?') }}%
       data:
         push:
           interruption-level: time-sensitive

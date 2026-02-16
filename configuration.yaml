@@ -81,7 +81,7 @@ recorder:
       - sensor.system_monitor_last_boot
       - sensor.date
       - sensor.date_time_iso
-      - sensor.roborock_a27_737e_status  # Excluded due to state list too long (>255 chars)
+      - sensor.s7_maxv_status  # Excluded due to state list too long (>255 chars)
       # Exclude specific problematic energy sensors that cause utility meter errors
       - sensor.homepod_arbeitszimmer_energy
       - sensor.kamera_schlafzimmer_energy
@@ -93,7 +93,7 @@ recorder:
       - sensor.*_current_consumption
       - sensor.*_voltage
       - sensor.*_current
-      - sensor.roborock_*
+      - sensor.s7_maxv_*
       # Exclude specific problematic utility meter sensors
       - sensor.homepod_*_energy_*
       - sensor.kamera_*_energy_*
@@ -205,73 +205,6 @@ powercalc:
 # ============================================================================
 
 template:
-  # Vacuum/Robot sensors
-  - sensor:
-      - name: "Xiaomi Vacuum Charging State"
-        unique_id: xiaomi_vacuum_charging_state
-        icon: "mdi:battery-charging-medium"
-        state: >
-          {% if states('vacuum.robbi_2') == 'docked' %}
-            {% if state_attr('vacuum.robbi_2', 'battery_level') | int(0) < 100 %}
-              charging
-            {% else %}
-              docked
-            {% endif %}
-          {% elif states('vacuum.robbi_2') == 'cleaning' %}
-            cleaning
-          {% elif states('vacuum.robbi_2') == 'returning' %}
-            returning
-          {% else %}
-            idle
-          {% endif %}
-
-      - name: "Roborock Status Simplified"
-        unique_id: roborock_status_simplified
-        icon: "mdi:robot-vacuum"
-        state: >
-          {% set vacuum_state = states('vacuum.robbi_2') %}
-          {% if vacuum_state == 'docked' %}
-            docked
-          {% elif vacuum_state == 'cleaning' %}
-            cleaning
-          {% elif vacuum_state == 'returning' %}
-            returning
-          {% elif vacuum_state == 'paused' %}
-            paused
-          {% elif vacuum_state == 'error' %}
-            error
-          {% elif vacuum_state == 'idle' %}
-            idle
-          {% elif vacuum_state in ['unknown', 'unavailable'] %}
-            unavailable
-          {% else %}
-            {{ vacuum_state }}
-          {% endif %}
-        availability: >
-          {{ states('vacuum.robbi_2') not in ['unknown', 'unavailable'] }}
-      - name: "Roborock A27 Status Fixed"
-        unique_id: roborock_a27_status_fixed
-        icon: "mdi:robot-vacuum"
-        state: >
-          {% set vacuum = states('vacuum.robbi_2') %}
-          {% if vacuum == 'docked' %}
-            Docked
-          {% elif vacuum == 'cleaning' %}
-            Cleaning
-          {% elif vacuum == 'returning' %}
-            Returning
-          {% elif vacuum == 'paused' %}
-            Paused
-          {% elif vacuum == 'error' %}
-            Error
-          {% elif vacuum == 'idle' %}
-            Idle
-          {% else %}
-            {{ vacuum | title }}
-          {% endif %}
-        availability: >
-          {{ states('vacuum.robbi_2') not in ['unknown', 'unavailable'] }}
-
   # Time-based sensors
   - sensor:
       - name: "WakeUp Light Timestamp"
@@ -878,6 +811,42 @@ input_number:
     unit_of_measurement: "%"
     icon: mdi:fan
     initial: 100
+  # Saved HomePod volumes for scene-based volume control
+  saved_volume_wohnzimmer:
+    name: "Gespeicherte Lautstärke Wohnzimmer"
+    min: 0
+    max: 1
+    step: 0.01
+    icon: mdi:volume-high
+    initial: 0.35
+  saved_volume_kueche:
+    name: "Gespeicherte Lautstärke Küche"
+    min: 0
+    max: 1
+    step: 0.01
+    icon: mdi:volume-high
+    initial: 0.35
+  saved_volume_badezimmer:
+    name: "Gespeicherte Lautstärke Badezimmer"
+    min: 0
+    max: 1
+    step: 0.01
+    icon: mdi:volume-high
+    initial: 0.35
+  saved_volume_kinderzimmer:
+    name: "Gespeicherte Lautstärke Kinderzimmer"
+    min: 0
+    max: 1
+    step: 0.01
+    icon: mdi:volume-high
+    initial: 0.35
+  saved_volume_arbeitszimmer:
+    name: "Gespeicherte Lautstärke Arbeitszimmer"
+    min: 0
+    max: 1
+    step: 0.01
+    icon: mdi:volume-high
+    initial: 0.35
 
 input_select:
   wakeup_routine_phase:
@@ -924,6 +893,3 @@ backup:
 # System Monitor integration must be configured via UI
 # Go to Settings > Devices & Services > Add Integration > System Monitor
 # This will create entities like sensor.processor_use_percent, etc.
-
-
-  

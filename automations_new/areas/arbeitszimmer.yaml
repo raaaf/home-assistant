@@ -33,6 +33,22 @@
     entity_id: binary_sensor.gaming_pc
     to: 'off'
     id: gaming-off
+  - trigger: state
+    entity_id: input_boolean.gaming
+    to: 'on'
+    id: gaming-on
+  - trigger: state
+    entity_id: input_boolean.gaming
+    to: 'off'
+    id: gaming-off
+  - trigger: numeric_state
+    entity_id: sensor.sunlight_pct
+    below: 40
+    id: getting-dark
+  - trigger: state
+    entity_id: cover.arbeitszimmer_rollo
+    to: 'closed'
+    id: getting-dark
 
   condition: []
   action:
@@ -53,10 +69,10 @@
           entity_id: sensor.macbook_pro_2_displays
           above: 1.5
         - condition: state
-          entity_id: sensor.macbook_pro_2_display_name
+          entity_id: sensor.macbook_pro_2_primary_display_name
           state: "Studio Display"
       sequence:
-      - alias: "Arbeit-Szene aktivieren (falls noch nicht aktiv)"
+      - alias: "Arbeit aktivieren (falls noch nicht aktiv)"
         if:
         - condition: state
           entity_id: input_boolean.arbeit
@@ -65,24 +81,34 @@
         - action: input_boolean.turn_on
           target:
             entity_id: input_boolean.arbeit
-      - alias: "Stehlampe immer einschalten"
-        action: light.turn_on
-        target:
-          entity_id: light.arbeitszimmer_stehlampe
-        data:
-          transition: 2
-      - alias: "Decke nur bei Rollo zu oder dunkel einschalten"
+      - alias: "Stehlampe einschalten (nur wenn aus)"
         if:
-        - condition: or
+        - condition: state
+          entity_id: light.arbeitszimmer_stehlampe
+          state: 'off'
+        then:
+        - action: light.turn_on
+          target:
+            entity_id: light.arbeitszimmer_stehlampe
+          data:
+            transition: 2
+      - alias: "Decke nur bei Rollo zu oder dunkel einschalten (nur wenn aus)"
+        if:
+        - condition: and
           conditions:
-          - alias: Rollo ist geschlossen
-            condition: state
-            entity_id: cover.arbeitszimmer_rollo
-            state: 'closed'
-          - alias: Dunkel draußen
-            condition: numeric_state
-            entity_id: sensor.sunlight_pct
-            below: 40
+          - condition: state
+            entity_id: light.arbeitszimmer_decke
+            state: 'off'
+          - condition: or
+            conditions:
+            - alias: Rollo ist geschlossen
+              condition: state
+              entity_id: cover.arbeitszimmer_rollo
+              state: 'closed'
+            - alias: Dunkel draußen
+              condition: numeric_state
+              entity_id: sensor.sunlight_pct
+              below: 40
         then:
         - action: light.turn_on
           target:
@@ -109,7 +135,7 @@
           entity_id: sensor.macbook_pro_rafael_primary_display_name
           state: "Studio Display"
       sequence:
-      - alias: "Arbeit-Szene aktivieren (falls noch nicht aktiv)"
+      - alias: "Arbeit aktivieren (falls noch nicht aktiv)"
         if:
         - condition: state
           entity_id: input_boolean.arbeit
@@ -118,18 +144,71 @@
         - action: input_boolean.turn_on
           target:
             entity_id: input_boolean.arbeit
-      - alias: "Rafael Lichter einschalten (PC 1 + PC 2) nur bei Rollo zu oder dunkel"
+      - alias: "Rafael Lichter einschalten (PC 1 + PC 2) nur bei Rollo zu oder dunkel (nur wenn aus)"
         if:
-        - condition: or
+        - condition: and
           conditions:
-          - alias: Rollo ist geschlossen
-            condition: state
-            entity_id: cover.arbeitszimmer_rollo
-            state: 'closed'
-          - alias: Dunkel draußen
-            condition: numeric_state
-            entity_id: sensor.sunlight_pct
-            below: 40
+          - alias: Mindestens ein Licht ist aus
+            condition: template
+            value_template: >
+              {{ is_state('light.arbeitszimmer_pc_1', 'off') or
+                 is_state('light.arbeitszimmer_pc_2', 'off') }}
+          - condition: or
+            conditions:
+            - alias: Rollo ist geschlossen
+              condition: state
+              entity_id: cover.arbeitszimmer_rollo
+              state: 'closed'
+            - alias: Dunkel draußen
+              condition: numeric_state
+              entity_id: sensor.sunlight_pct
+              below: 40
+        then:
+        - action: light.turn_on
+          target:
+            entity_id:
+            - light.arbeitszimmer_pc_1
+            - light.arbeitszimmer_pc_2
+          data:
+            transition: 2
+
+    # ==================== DUNKEL WAEHREND ARBEIT ====================
+    - alias: Lichter einschalten wenn es waehrend der Arbeit dunkel wird
+      conditions:
+      - condition: trigger
+        id: getting-dark
+      - alias: Arbeit ist aktiv
+        condition: state
+        entity_id: input_boolean.arbeit
+        state: 'on'
+      - alias: Gaming ist nicht aktiv
+        condition: state
+        entity_id: input_boolean.gaming
+        state: 'off'
+      sequence:
+      - alias: "Alex Decke einschalten wenn sie arbeitet (nur wenn aus)"
+        if:
+        - condition: state
+          entity_id: binary_sensor.macbook_pro_2_active
+          state: 'on'
+        - condition: state
+          entity_id: light.arbeitszimmer_decke
+          state: 'off'
+        then:
+        - action: light.turn_on
+          target:
+            entity_id: light.arbeitszimmer_decke
+          data:
+            transition: 2
+      - alias: "Rafael PC-Lichter einschalten wenn er arbeitet (nur wenn aus)"
+        if:
+        - condition: state
+          entity_id: binary_sensor.macbook_pro_rafael_active
+          state: 'on'
+        - condition: template
+          value_template: >
+            {{ is_state('light.arbeitszimmer_pc_1', 'off') or
+               is_state('light.arbeitszimmer_pc_2', 'off') }}
         then:
         - action: light.turn_on
           target:
@@ -144,6 +223,10 @@
       conditions:
       - condition: trigger
         id: work-alex-off
+      - alias: Gaming ist nicht aktiv (Lichter werden dort evtl. benoetigt)
+        condition: state
+        entity_id: input_boolean.gaming
+        state: 'off'
       sequence:
       - alias: "Alex Lichter ausschalten"
         action: light.turn_off
@@ -212,32 +295,45 @@
             exclude_scenes: "party"
     - alias: Gaming einschalten
       conditions:
-      - condition: and
-        conditions:
-        - condition: trigger
-          id: gaming-on
-        - alias: Arbeit ist nicht aktiv (gegenseitiger Ausschluss)
-          condition: state
-          entity_id: input_boolean.arbeit
-          state: 'off'
+      - condition: trigger
+        id: gaming-on
       sequence:
       - action: input_boolean.turn_on
         target:
           entity_id: input_boolean.gaming
-        data: {}
-      - alias: "Deckenlampe ausschalten"
-        action: light.turn_off
+      - alias: "Adaptive Lighting sofort ausschalten (Race Condition vermeiden)"
+        action: switch.turn_off
         target:
-          entity_id: light.arbeitszimmer_decke
-        data:
-          transition: 2
-      - alias: "Colorloop effect starten"
+          entity_id: switch.adaptive_lighting_arbeitszimmer
+      - delay:
+          seconds: 1
+      - alias: "Decke und Stehlampe ausschalten wenn nicht gearbeitet wird"
+        if:
+        - condition: state
+          entity_id: input_boolean.arbeit
+          state: 'off'
+        then:
+        - action: light.turn_off
+          target:
+            entity_id:
+            - light.arbeitszimmer_decke
+            - light.arbeitszimmer_stehlampe
+          data:
+            transition: 2
+      - alias: "PC 1 Gaming-Farbe (Blau)"
         action: light.turn_on
         target:
-          entity_id: light.alle_arbeitszimmer_nachtlichter
+          entity_id: light.arbeitszimmer_pc_1
         data:
-          effect: colorloop
-          brightness_pct: 30
+          hs_color: [230, 100]
+          brightness_pct: 50
+      - alias: "PC 2 Gaming-Farbe (Magenta)"
+        action: light.turn_on
+        target:
+          entity_id: light.arbeitszimmer_pc_2
+        data:
+          hs_color: [290, 85]
+          brightness_pct: 50
     - alias: Gaming ausschalten
       conditions:
       - condition: trigger
@@ -247,27 +343,89 @@
         target:
           entity_id: input_boolean.gaming
         data: {}
-      - alias: "Colorloop effect stoppen"
-        action: light.turn_on
-        target:
-          entity_id: light.alle_arbeitszimmer_nachtlichter
-        data:
-          effect: none
-      - alias: "Alle Arbeitszimmer-Lichter ausschalten"
+      - alias: "Gaming-Lichter ausschalten"
         action: light.turn_off
         target:
           entity_id:
-          - light.alle_arbeitszimmer_nachtlichter
-          - light.arbeitszimmer_decke
+          - light.arbeitszimmer_pc_1
+          - light.arbeitszimmer_pc_2
         data:
           transition: 2
-      - delay:
-          seconds: 3
-      - alias: "Reaktiviere adaptive Beleuchtung"
-        action: script.scene_enable_adaptive_lighting
-        data:
-          room: "arbeitszimmer"
-          exclude_scenes: ""
+      - alias: "Pruefen ob jemand arbeitet"
+        choose:
+        - alias: "Jemand arbeitet - Arbeit aktivieren"
+          conditions:
+          - condition: or
+            conditions:
+            - condition: state
+              entity_id: binary_sensor.macbook_pro_rafael_active
+              state: 'on'
+            - condition: state
+              entity_id: binary_sensor.macbook_pro_2_active
+              state: 'on'
+          sequence:
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.arbeit
+          - alias: "Rafael Lichter einschalten wenn aktiv und dunkel"
+            if:
+            - condition: and
+              conditions:
+              - condition: state
+                entity_id: binary_sensor.macbook_pro_rafael_active
+                state: 'on'
+              - condition: or
+                conditions:
+                - condition: state
+                  entity_id: cover.arbeitszimmer_rollo
+                  state: 'closed'
+                - condition: numeric_state
+                  entity_id: sensor.sunlight_pct
+                  below: 40
+            then:
+            - action: light.turn_on
+              target:
+                entity_id:
+                - light.arbeitszimmer_pc_1
+                - light.arbeitszimmer_pc_2
+              data:
+                transition: 2
+          - alias: "Alex Lichter einschalten wenn aktiv und dunkel"
+            if:
+            - condition: and
+              conditions:
+              - condition: state
+                entity_id: binary_sensor.macbook_pro_2_active
+                state: 'on'
+              - condition: or
+                conditions:
+                - condition: state
+                  entity_id: cover.arbeitszimmer_rollo
+                  state: 'closed'
+                - condition: numeric_state
+                  entity_id: sensor.sunlight_pct
+                  below: 40
+            then:
+            - action: light.turn_on
+              target:
+                entity_id:
+                - light.arbeitszimmer_stehlampe
+                - light.arbeitszimmer_decke
+              data:
+                transition: 2
+        default:
+        - alias: "Niemand arbeitet - Decke aus + AL reaktivieren"
+          action: light.turn_off
+          target:
+            entity_id: light.arbeitszimmer_decke
+          data:
+            transition: 2
+        - delay:
+            seconds: 3
+        - action: script.scene_enable_adaptive_lighting
+          data:
+            room: "arbeitszimmer"
+            exclude_scenes: ""
   mode: restart
 - id: '1730279567232'
   alias: Motion » Arbeitszimmer

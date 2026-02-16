@@ -235,11 +235,13 @@ fade_volume:
           - bezier
           - linear
   variables:
-    steps_per_second: 2
-    total_steps: '{{ (steps_per_second * duration) | int(0) }}'
+    min_step_size: 0.005
     start_volume: "{% set current = state_attr(target_player, 'volume_level') | float(0)
       %} {% if current < 0.01 %}\n  0\n{% else %}\n  {{ current }}\n{% endif %}\n"
     volume_diff: '{{ (target_volume - start_volume) | float(0) }}'
+    volume_based_steps: '{{ ((volume_diff | abs) / min_step_size) | int(1) }}'
+    time_based_steps: '{{ (2 * duration) | int(1) }}'
+    total_steps: '{{ [volume_based_steps, time_based_steps] | min }}'
   sequence:
   - if:
     - condition: template
@@ -272,7 +274,7 @@ fade_volume:
             }}\n  {% else %}\n    {# Linear #}\n    {{ (start_volume + progress *
             volume_diff) | float(0) | round(3) }}\n  {% endif %}\n{% endif %}"
       - delay:
-          milliseconds: '{{ (1000 / steps_per_second) | int }}'
+          milliseconds: '{{ ((duration * 1000) / total_steps) | int(500) }}'
   - action: media_player.volume_set
     continue_on_error: true
     data:
@@ -550,7 +552,7 @@ reload_media_players:
           - media_player.arbeitszimmer_2
           - media_player.homepod_badezimmer
           - media_player.homepod_kinderzimmer
-          - media_player.homepod_kuche
+          - media_player.homepod_wohnzimmer
           - media_player.homepod_kueche
 
 heizung_boost:

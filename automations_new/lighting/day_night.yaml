@@ -20,9 +20,6 @@
     above: -3.5
     id: sun
   - trigger: time
-    at: 06:45:00
-    id: sun
-  - trigger: time
     at: sensor.einschlafzeit_timestamp
     id: einschlafzeit
   - trigger: state
@@ -59,6 +56,23 @@
           - switch.adaptive_lighting_sleep_mode_waschzimmer
           - switch.adaptive_lighting_sleep_mode_wohnzimmer
           - switch.adaptive_lighting_sleep_mode_schlafzimmer
+      - alias: "Abend-Szenen zurücksetzen (verhindert verwaiste Motion-Deaktivierungen)"
+        action: input_boolean.turn_off
+        target:
+          entity_id:
+          - input_boolean.movie
+          - input_boolean.party
+          - input_boolean.party_wohnzimmer
+          - input_boolean.gaming
+      - alias: "Warte auf Szenen-Cleanup Kaskade (Party/Party-WZ haben eigene Off-Handler)"
+        delay:
+          seconds: 5
+      - alias: "Flur und Arbeitszimmer Motion sicherstellen (Sicherheitsnetz für Film/Gaming)"
+        action: automation.turn_on
+        target:
+          entity_id:
+          - automation.motion_flur_wohnung
+          - automation.arbeitszimmer_motion
       - alias: Sanftes Aufwachlicht nur an Werktagen wenn jemand da ist
         if:
         - alias: Ist Werktag
@@ -149,6 +163,14 @@
               {% else %}
                 0
               {% endif %}
+        - alias: "08:00 Uhr: Kinderzimmer und Wohnzimmer Lichter ausschalten"
+          action: light.turn_off
+          target:
+            entity_id:
+            - light.alle_kinderzimmer_lichter
+            - light.alle_wohnzimmer_lichter
+            - light.alle_schlafzimmer_lichter
+            - light.alle_arbeitszimmer_lichter
         - alias: Motion-Automationen wieder aktivieren für Wake-Up Räume (außer Schlafzimmer)
           action: automation.turn_on
           target:
@@ -168,10 +190,13 @@
               target:
                 entity_id: automation.motion_schlafzimmer
     # AL war nie deaktiviert - keine Reaktivierung nötig
-    - alias: Sonnenaufgang - Schlafenszeit beenden
+    - alias: Sonnenaufgang - Schlafenszeit beenden (Fallback)
       conditions:
       - condition: trigger
         id: sun
+      - condition: state
+        entity_id: input_boolean.schlafenszeit
+        state: 'on'
       sequence:
       - alias: Schlafenszeit automatisch beenden bei Sonnenaufgang
         action: input_boolean.turn_off
