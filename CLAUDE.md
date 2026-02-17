@@ -538,9 +538,15 @@ The recorder is configured to:
 | `notify.family` | Rafael + Alex (mobile) |
 | `notify.rafael` | Rafael (MacBook + iPhone) |
 | `notify.alex` | Alex (MacBook + iPhone) |
-| `notify.rafael_mail` | Rafael (email) |
-| `notify.alex_mail` | Alex (email) |
 | `notify.critical_alerts` | Both (mobile + email) |
+
+### Notification Strategy
+
+E-Mail-Notifications (`notify.rafael_mail`, `notify.alex_mail`) wurden vollstaendig ersetzt durch:
+- **Push** (`notify.rafael` / `notify.alex`) fuer sofortige Aufmerksamkeit
+- **Persistent Notification** (`persistent_notification.create`) als Erinnerung in der HA-Oberflaeche
+
+Jede Persistent Notification hat eine eindeutige `notification_id` (z.B. `robbi_hauptbuerste`, `waschmaschine_fertig`), damit sie nicht doppelt erscheint und manuell weggeklickt werden kann.
 
 ### TTS Notifications
 

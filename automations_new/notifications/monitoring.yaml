@@ -10,10 +10,15 @@
     input:
       time: '10:00:00'
       actions:
-      - action: notify.rafael_mail
+      - action: notify.rafael
         data:
-          title: Nicht erreichbare Geräte
+          title: "Nicht erreichbare Geräte"
           message: '{{entities}}'
+      - action: persistent_notification.create
+        data:
+          title: "Nicht erreichbare Geräte"
+          message: '{{entities}}'
+          notification_id: unavailable_entities
       monday_enabled: true
       tuesday_enabled: true
       wednesday_enabled: true
@@ -138,17 +143,15 @@
       data:
         message: Außensensor offline - prüfe Batterie!
         level: warning
-    - action: notify.rafael_mail
+    - action: notify.rafael
       data:
         title: "Außensensor offline"
-        message: |
-          Außensensor offline
-
-          Problem: Der Außensensor liefert keine Daten.
-
-          Bitte überprüfe die Batterie des Sensors und stelle sicher, dass er ordnungsgemäß funktioniert.
-
-          Diese Nachricht wurde automatisch generiert.
+        message: "Der Außensensor liefert keine Daten. Bitte Batterie prüfen."
+    - action: persistent_notification.create
+      data:
+        title: "Außensensor offline"
+        message: "Der Außensensor liefert keine Daten. Bitte die Batterie des Sensors überprüfen."
+        notification_id: aussensensor_offline
   mode: single
 - id: '1725893400001'
   alias: Security » Haustür Überwachung
@@ -297,23 +300,15 @@
           group: system_alerts
           push:
             interruption-level: critical
-    - action: notify.rafael_mail
+    - action: persistent_notification.create
       data:
-        title: "Bewegungsmelder ausgefallen"
-        message: |
-          Bewegungsmelder ausgefallen
-
-          Sensor: {{ sensor_name }}
-          Entity ID: {{ sensor_id }}
+        title: "Bewegungsmelder ausgefallen — {{ sensor_name }}"
+        message: >
+          Sensor: {{ sensor_name }} ({{ sensor_id }})
           Status: {{ trigger.to_state.state }}
           Ausgefallen seit: {{ duration }}
-
-          Bitte überprüfe:
-          - Batterie des Sensors
-          - Zigbee-Verbindung
-          - Sensor-Position
-
-          Diese Nachricht wurde automatisch generiert.
+          Bitte prüfen: Batterie, Zigbee-Verbindung, Position
+        notification_id: "motion_sensor_{{ sensor_id | replace('.', '_') }}"
   - action: logbook.log
     data:
       name: Bewegungsmelder ausgefallen

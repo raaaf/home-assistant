@@ -31,16 +31,15 @@
       room_name_raw: "{{ trigger.entity_id | regex_replace('^sensor.heizung_', '') | regex_replace('_an$', '') }}"
       room_name_display: "{{ room_name_raw | replace('_', ' ') | title }}"
       heating_hours: "{{ trigger.to_state.state }}"
-  - action: notify.rafael_mail
+  - action: notify.rafael
     data:
-      title: "Heizung läuft zu lange - {{ room_name_display }}"
-      message: |
-        Heizung läuft zu lange
-
-        Raum: {{ room_name_display }}
-        Laufzeit: {{ heating_hours }} Stunden
-
-        Die Heizung im {{ room_name_display }} läuft seit mehr als 4 Stunden. Bitte überprüfe die Einstellungen oder ob eventuell ein Fenster geöffnet ist.
+      title: "Heizung läuft zu lange — {{ room_name_display }}"
+      message: "{{ room_name_display }}: {{ heating_hours }}h. Fenster offen?"
+  - action: persistent_notification.create
+    data:
+      title: "Heizung läuft zu lange — {{ room_name_display }}"
+      message: "Die Heizung im {{ room_name_display }} läuft seit {{ heating_hours }} Stunden. Bitte Einstellungen prüfen oder ob ein Fenster offen ist."
+      notification_id: "heizung_{{ room_name_raw }}"
   mode: single
 - id: '1738322846270'
   alias: Notification » Stromverbrauch gestern

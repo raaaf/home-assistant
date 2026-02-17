@@ -77,16 +77,11 @@
                 push:
                   interruption-level: critical
           
-          # Email notification
-          - action: notify.rafael_mail
+          - action: persistent_notification.create
             data:
               title: "Waschmaschine ist fertig"
-              message: |
-                Waschmaschine ist fertig
-
-                Fertigstellung: {{ now().strftime('%H:%M Uhr') }}
-
-                Die Waschmaschine hat ihren Waschgang beendet. Bitte hänge die Wäsche auf, wenn es dir möglich ist.
+              message: "Fertig um {{ now().strftime('%H:%M Uhr') }}. Bitte die Wäsche aufhängen."
+              notification_id: waschmaschine_fertig
     
     - alias: "Waschmaschine aus"
       conditions:
@@ -184,18 +179,11 @@
                 push:
                   interruption-level: critical
           
-          # Email notification
-          - action: notify.rafael_mail
+          - action: persistent_notification.create
             data:
-              title: "🧺 Trockner ist fertig"
-              message: >
-                <html>
-                <body>
-                <h2>🧺 Trockner ist fertig</h2>
-                <p><strong>Fertigstellung:</strong> {{ now().strftime('%H:%M Uhr') }}</p>
-                <p>Der Trockner hat seinen Trockengang beendet. Bitte hole die Wäsche raus, wenn es dir möglich ist.</p>
-                </body>
-                </html>
+              title: "Trockner ist fertig"
+              message: "Fertig um {{ now().strftime('%H:%M Uhr') }}. Bitte die Wäsche rausholen."
+              notification_id: trockner_fertig
 
     - alias: "Fertig-Trigger ignorieren (außer Reihenfolge)"
       conditions:

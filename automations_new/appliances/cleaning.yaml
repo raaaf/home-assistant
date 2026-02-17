@@ -39,81 +39,60 @@
       - condition: trigger
         id: hauptbueste
       sequence:
-      - parallel:
-        # Email notification
-        - action: notify.rafael_mail
-          data:
-            title: "Robbi Wartung - Hauptbürste wechseln"
-            message: |
-              Robbi Wartung erforderlich
-
-              Wartungsaufgabe: Hauptbürste wechseln
-              Verbleibende Zeit: {{
-                states('sensor.s7_maxv_main_brush_time_left') | int(0)
-              }} Stunden
-
-              Bitte die Hauptbürste von Robbi wechseln, wenn es dir möglich ist.
+      - action: notify.rafael
+        data:
+          title: "Robbi Wartung — Hauptbürste wechseln"
+          message: "Verbleibend: {{ states('sensor.s7_maxv_main_brush_time_left') | int(0) }}h"
+      - action: persistent_notification.create
+        data:
+          title: "Robbi Wartung — Hauptbürste wechseln"
+          message: "Verbleibende Zeit: {{ states('sensor.s7_maxv_main_brush_time_left') | int(0) }} Stunden. Bitte die Hauptbürste von Robbi wechseln."
+          notification_id: robbi_hauptbuerste
     
     - alias: "Seitenbürste wechseln"
       conditions:
       - condition: trigger
         id: seitenbueste
       sequence:
-      - parallel:
-        # Email notification
-        - action: notify.rafael_mail
-          data:
-            title: "Robbi Wartung - Seitenbürste wechseln"
-            message: |
-              Robbi Wartung erforderlich
-
-              Wartungsaufgabe: Seitenbürste wechseln
-              Verbleibende Zeit: {{
-                states('sensor.s7_maxv_side_brush_time_left') | int(0)
-              }} Stunden
-
-              Bitte die Seitenbürste von Robbi wechseln, wenn es dir möglich ist.
-        # Mobile Benachrichtigung bei kritischem Wert (<5%)
+      - action: notify.rafael
+        data:
+          title: "Robbi Wartung — Seitenbürste wechseln"
+          message: "Verbleibend: {{ states('sensor.s7_maxv_side_brush_time_left') | int(0) }}h"
+      - action: persistent_notification.create
+        data:
+          title: "Robbi Wartung — Seitenbürste wechseln"
+          message: "Verbleibende Zeit: {{ states('sensor.s7_maxv_side_brush_time_left') | int(0) }} Stunden. Bitte die Seitenbürste von Robbi wechseln."
+          notification_id: robbi_seitenbuerste
     
     - alias: "Filter wechseln"
       conditions:
       - condition: trigger
         id: filter
       sequence:
-      - parallel:
-        # Email notification
-        - action: notify.rafael_mail
-          data:
-            title: "Robbi Wartung - Filter wechseln"
-            message: |
-              Robbi Wartung erforderlich
-
-              Wartungsaufgabe: Filter wechseln
-              Verbleibende Zeit: {{
-                states('sensor.s7_maxv_filter_time_left') | int(0)
-              }} Stunden
-
-              Bitte den Filter von Robbi wechseln, wenn es dir möglich ist.
+      - action: notify.rafael
+        data:
+          title: "Robbi Wartung — Filter wechseln"
+          message: "Verbleibend: {{ states('sensor.s7_maxv_filter_time_left') | int(0) }}h"
+      - action: persistent_notification.create
+        data:
+          title: "Robbi Wartung — Filter wechseln"
+          message: "Verbleibende Zeit: {{ states('sensor.s7_maxv_filter_time_left') | int(0) }} Stunden. Bitte den Filter von Robbi wechseln."
+          notification_id: robbi_filter
 
     - alias: "Sensoren reinigen"
       conditions:
       - condition: trigger
         id: sensoren
       sequence:
-      - parallel:
-        # Email notification
-        - action: notify.rafael_mail
-          data:
-            title: "Robbi Wartung - Sensoren reinigen"
-            message: |
-              Robbi Wartung erforderlich
-
-              Wartungsaufgabe: Sensoren reinigen
-              Verbleibende Zeit: {{
-                states('sensor.s7_maxv_sensor_time_left') | int(0)
-              }} Stunden
-
-              Bitte die Sensoren von Robbi reinigen, wenn es dir möglich ist.
+      - action: notify.rafael
+        data:
+          title: "Robbi Wartung — Sensoren reinigen"
+          message: "Verbleibend: {{ states('sensor.s7_maxv_sensor_time_left') | int(0) }}h"
+      - action: persistent_notification.create
+        data:
+          title: "Robbi Wartung — Sensoren reinigen"
+          message: "Verbleibende Zeit: {{ states('sensor.s7_maxv_sensor_time_left') | int(0) }} Stunden. Bitte die Sensoren von Robbi reinigen."
+          notification_id: robbi_sensoren
     default:
     # Fallback wenn unbekannter Trigger - log only
     - action: logbook.log
@@ -141,22 +120,15 @@
     value_template: >-
       {{ states('sensor.zhimi_vb4_bce4_filter_life_level') not in ['unknown', 'unavailable'] }}
   actions:
-  - parallel:
-      # Email notification
-      - action: notify.rafael_mail
-        data:
-          title: "🌬️ Luftreiniger Wartung - Filter wechseln"
-          message: >
-            <html>
-            <body>
-            <h2>🌬️ Luftreiniger Wartung erforderlich</h2>
-            <p><strong>Wartungsaufgabe:</strong> Filter wechseln</p>
-            <p><strong>Verbleibende Lebensdauer:</strong> {{
-              states('sensor.zhimi_vb4_bce4_filter_life_level') | int(0)
-            }}%</p>
-            <p>Bitte den Filter des Luftreinigers wechseln, wenn es dir möglich ist.</p>
-            </body>
-            </html>
+  - action: notify.rafael
+    data:
+      title: "Luftreiniger — Filter wechseln"
+      message: "Verbleibende Lebensdauer: {{ states('sensor.zhimi_vb4_bce4_filter_life_level') | int(0) }}%"
+  - action: persistent_notification.create
+    data:
+      title: "Luftreiniger — Filter wechseln"
+      message: "Verbleibende Lebensdauer: {{ states('sensor.zhimi_vb4_bce4_filter_life_level') | int(0) }}%. Bitte den Filter des Luftreinigers wechseln."
+      notification_id: luftreiniger_filter
   mode: single
 - id: '1736000000001'
   alias: "Benachrichtigung » Robbi Fehler"

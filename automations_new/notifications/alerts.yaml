@@ -166,44 +166,43 @@
         id:
         - wasser-leer
       sequence:
-      - action: notify.rafael_mail
+      - action: notify.rafael
         data:
-          title: "Wasserspender - Braucht Wasser"
-          message: |
-            Wasserspender Wartung
-
-            Problem: Wassertank ist leer
-
-            Bitte fülle den Wasserspender mit frischem Wasser auf.
+          title: "Wasserspender — Braucht Wasser"
+          message: "Wassertank ist leer. Bitte auffüllen."
+      - action: persistent_notification.create
+        data:
+          title: "Wasserspender — Braucht Wasser"
+          message: "Wassertank ist leer. Bitte den Wasserspender mit frischem Wasser auffüllen."
+          notification_id: wasserspender_wasser
     - conditions:
       - condition: trigger
         id:
         - pumpe
       sequence:
-      - action: notify.rafael_mail
+      - action: notify.rafael
         data:
-          title: "Wasserspender - Pumpe prüfen"
-          message: |
-            Wasserspender Wartung
-
-            Problem: Pumpe blockiert
-
-            Bitte überprüfe die Pumpe des Wasserspenders und behebe eventuelle Blockierungen.
+          title: "Wasserspender — Pumpe prüfen"
+          message: "Pumpe blockiert. Bitte überprüfen."
+      - action: persistent_notification.create
+        data:
+          title: "Wasserspender — Pumpe prüfen"
+          message: "Pumpe blockiert. Bitte die Pumpe des Wasserspenders überprüfen und eventuelle Blockierungen beheben."
+          notification_id: wasserspender_pumpe
     - conditions:
       - condition: trigger
         id:
         - clean
       sequence:
-      - action: notify.rafael_mail
+      - action: notify.rafael
         data:
-          title: "Wasserspender - Reinigung erforderlich"
-          message: |
-            Wasserspender Wartung
-
-            Aufgabe: Reinigung erforderlich
-
-            Es ist Zeit für die regelmäßige Reinigung des Wasserspenders.
-            Bitte führe eine gründliche Reinigung durch.
+          title: "Wasserspender — Reinigung erforderlich"
+          message: "Zeit für die regelmäßige Reinigung."
+      - action: persistent_notification.create
+        data:
+          title: "Wasserspender — Reinigung erforderlich"
+          message: "Es ist Zeit für die regelmäßige Reinigung des Wasserspenders."
+          notification_id: wasserspender_reinigung
   mode: single
 - id: '1700477276036'
   alias: Notification » Season Change

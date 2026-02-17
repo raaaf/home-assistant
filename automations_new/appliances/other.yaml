@@ -32,38 +32,30 @@
       - condition: trigger
         id: filter
       sequence:
-      - parallel:
-          # Email notification
-          - action: notify.rafael_mail
-            data:
-              title: "🐾 Futterspender Wartung - Filter ersetzen"
-              message: >
-                <html>
-                <body>
-                <h2>🐾 Futterspender Wartung erforderlich</h2>
-                <p><strong>Wartungsaufgabe:</strong> Filter ersetzen</p>
-                <p>Bitte ersetze den Filter des Futterspenders, wenn es dir möglich ist.</p>
-                </body>
-                </html>
+      - action: notify.rafael
+        data:
+          title: "Futterspender — Filter ersetzen"
+          message: "Bitte den Filter des Futterspenders ersetzen."
+      - action: persistent_notification.create
+        data:
+          title: "Futterspender — Filter ersetzen"
+          message: "Bitte den Filter des Futterspenders ersetzen."
+          notification_id: futterspender_filter
     
     - alias: "Futterspender reinigen"
       conditions:
       - condition: trigger
         id: reinigung
       sequence:
-      - parallel:
-          # Email notification
-          - action: notify.rafael_mail
-            data:
-              title: "🐾 Futterspender Wartung - Reinigung erforderlich"
-              message: >
-                <html>
-                <body>
-                <h2>🐾 Futterspender Wartung erforderlich</h2>
-                <p><strong>Wartungsaufgabe:</strong> Futterspender reinigen</p>
-                <p>Bitte führe eine gründliche Reinigung des Futterspenders durch.</p>
-                </body>
-                </html>
+      - action: notify.rafael
+        data:
+          title: "Futterspender — Reinigung erforderlich"
+          message: "Bitte den Futterspender gründlich reinigen."
+      - action: persistent_notification.create
+        data:
+          title: "Futterspender — Reinigung erforderlich"
+          message: "Bitte eine gründliche Reinigung des Futterspenders durchführen."
+          notification_id: futterspender_reinigung
 
     default:
     # Fallback bei unbekanntem Trigger - log only
