@@ -318,7 +318,13 @@
       - alias: HomePods stoppen
         action: media_player.media_stop
         target:
-          entity_id: media_player.homepods
+          entity_id:
+          - media_player.homepod_wohnzimmer
+          - media_player.homepod_kueche
+          - media_player.homepod_badezimmer
+          - media_player.homepod_kinderzimmer
+          - media_player.arbeitszimmer
+          - media_player.schlafzimmer
         data: {}
       - alias: Türe abschließen wenn offen
         if:

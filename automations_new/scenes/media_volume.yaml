@@ -83,12 +83,43 @@
             - condition: trigger
               id: schlafenszeit-an
           sequence:
-            - action: script.fade_volume
-              data:
-                target_player: media_player.homepods
-                target_volume: 0.15
-                duration: 60
-                curve: linear
+            - parallel:
+                - action: script.fade_volume
+                  data:
+                    target_player: media_player.homepod_wohnzimmer
+                    target_volume: 0.20
+                    duration: 60
+                    curve: linear
+                - action: script.fade_volume
+                  data:
+                    target_player: media_player.homepod_kueche
+                    target_volume: 0.20
+                    duration: 60
+                    curve: linear
+                - action: script.fade_volume
+                  data:
+                    target_player: media_player.homepod_badezimmer
+                    target_volume: 0.20
+                    duration: 60
+                    curve: linear
+                - action: script.fade_volume
+                  data:
+                    target_player: media_player.homepod_kinderzimmer
+                    target_volume: 0.20
+                    duration: 60
+                    curve: linear
+                - action: script.fade_volume
+                  data:
+                    target_player: media_player.arbeitszimmer
+                    target_volume: 0.20
+                    duration: 60
+                    curve: linear
+                - action: script.fade_volume
+                  data:
+                    target_player: media_player.schlafzimmer
+                    target_volume: 0.20
+                    duration: 60
+                    curve: linear
 
         # =======================================================
         # SCHLAFENSZEIT AUS — Fade back to 35% (if no scene active)
@@ -105,12 +136,43 @@
                         is_state('input_boolean.sauna', 'on') or
                         is_state('input_boolean.party_wohnzimmer', 'on') or
                         is_state('input_boolean.party', 'on')) }}
-            - action: script.fade_volume
-              data:
-                target_player: media_player.homepods
-                target_volume: 0.35
-                duration: 60
-                curve: linear
+            - parallel:
+                - action: script.fade_volume
+                  data:
+                    target_player: media_player.homepod_wohnzimmer
+                    target_volume: 0.35
+                    duration: 60
+                    curve: linear
+                - action: script.fade_volume
+                  data:
+                    target_player: media_player.homepod_kueche
+                    target_volume: 0.35
+                    duration: 60
+                    curve: linear
+                - action: script.fade_volume
+                  data:
+                    target_player: media_player.homepod_badezimmer
+                    target_volume: 0.35
+                    duration: 60
+                    curve: linear
+                - action: script.fade_volume
+                  data:
+                    target_player: media_player.homepod_kinderzimmer
+                    target_volume: 0.35
+                    duration: 60
+                    curve: linear
+                - action: script.fade_volume
+                  data:
+                    target_player: media_player.arbeitszimmer
+                    target_volume: 0.35
+                    duration: 60
+                    curve: linear
+                - action: script.fade_volume
+                  data:
+                    target_player: media_player.schlafzimmer
+                    target_volume: 0.35
+                    duration: 60
+                    curve: linear
 
         # =======================================================
         # KOCHEN AN — Küche to 35%
@@ -156,7 +218,7 @@
                   target:
                     entity_id: media_player.homepod_kueche
                   data:
-                    volume_level: 0.15
+                    volume_level: 0.20
                 - action: media_player.media_stop
                   target:
                     entity_id: media_player.homepod_kueche
@@ -217,7 +279,7 @@
                   target:
                     entity_id: media_player.homepod_wohnzimmer
                   data:
-                    volume_level: 0.15
+                    volume_level: 0.20
                 - action: media_player.media_stop
                   target:
                     entity_id: media_player.homepod_wohnzimmer
@@ -280,7 +342,7 @@
                   target:
                     entity_id: media_player.homepod_badezimmer
                   data:
-                    volume_level: 0.15
+                    volume_level: 0.20
                 - action: media_player.media_stop
                   target:
                     entity_id: media_player.homepod_badezimmer
@@ -342,7 +404,7 @@
                   target:
                     entity_id: media_player.homepod_badezimmer
                   data:
-                    volume_level: 0.15
+                    volume_level: 0.20
                 - action: media_player.media_stop
                   target:
                     entity_id: media_player.homepod_badezimmer
@@ -361,7 +423,7 @@
                       {% endif %}
 
         # =======================================================
-        # ARBEIT AN — Arbeitszimmer (Stereopaar) to 25%
+        # ARBEIT AN — Arbeitszimmer to 25%
         # =======================================================
         - conditions:
             - condition: trigger
@@ -369,7 +431,7 @@
           sequence:
             - condition: template
               value_template: >
-                {{ states('media_player.homepod_arbeitszimmer') in ['playing', 'paused'] }}
+                {{ states('media_player.arbeitszimmer') in ['playing', 'paused'] }}
             - if:
                 - condition: template
                   value_template: >
@@ -380,12 +442,10 @@
                     entity_id: input_number.saved_volume_arbeitszimmer
                   data:
                     value: >
-                      {{ state_attr('media_player.homepod_arbeitszimmer', 'volume_level') | float(0.35) }}
+                      {{ state_attr('media_player.arbeitszimmer', 'volume_level') | float(0.35) }}
             - action: media_player.volume_set
               target:
-                entity_id:
-                  - media_player.homepod_arbeitszimmer
-                  - media_player.arbeitszimmer_2
+                entity_id: media_player.arbeitszimmer
               data:
                 volume_level: 0.25
 
@@ -403,22 +463,16 @@
               then:
                 - action: media_player.volume_set
                   target:
-                    entity_id:
-                      - media_player.homepod_arbeitszimmer
-                      - media_player.arbeitszimmer_2
+                    entity_id: media_player.arbeitszimmer
                   data:
-                    volume_level: 0.15
+                    volume_level: 0.20
                 - action: media_player.media_stop
                   target:
-                    entity_id:
-                      - media_player.homepod_arbeitszimmer
-                      - media_player.arbeitszimmer_2
+                    entity_id: media_player.arbeitszimmer
               else:
                 - action: media_player.volume_set
                   target:
-                    entity_id:
-                      - media_player.homepod_arbeitszimmer
-                      - media_player.arbeitszimmer_2
+                    entity_id: media_player.arbeitszimmer
                   data:
                     volume_level: >
                       {% if is_state('input_boolean.party', 'on') %}
@@ -507,7 +561,7 @@
                       - media_player.homepod_wohnzimmer
                       - media_player.homepod_kueche
                   data:
-                    volume_level: 0.15
+                    volume_level: 0.20
                 - action: media_player.media_stop
                   target:
                     entity_id:
@@ -651,11 +705,11 @@
                     entity_id: media_player.homepod_kinderzimmer
                   data:
                     volume_level: 0.50
-            # Arbeitszimmer (Stereopaar)
+            # Arbeitszimmer
             - if:
                 - condition: template
                   value_template: >
-                    {{ states('media_player.homepod_arbeitszimmer') in ['playing', 'paused'] }}
+                    {{ states('media_player.arbeitszimmer') in ['playing', 'paused'] }}
               then:
                 - if:
                     - condition: template
@@ -667,12 +721,10 @@
                         entity_id: input_number.saved_volume_arbeitszimmer
                       data:
                         value: >
-                          {{ state_attr('media_player.homepod_arbeitszimmer', 'volume_level') | float(0.35) }}
+                          {{ state_attr('media_player.arbeitszimmer', 'volume_level') | float(0.35) }}
                 - action: media_player.volume_set
                   target:
-                    entity_id:
-                      - media_player.homepod_arbeitszimmer
-                      - media_player.arbeitszimmer_2
+                    entity_id: media_player.arbeitszimmer
                   data:
                     volume_level: >
                       {% if is_state('input_boolean.arbeit', 'on') %}
@@ -680,6 +732,23 @@
                       {% else %}
                         0.50
                       {% endif %}
+            # Schlafzimmer
+            - if:
+                - condition: template
+                  value_template: >
+                    {{ states('media_player.schlafzimmer') in ['playing', 'paused'] }}
+              then:
+                - action: input_number.set_value
+                  target:
+                    entity_id: input_number.saved_volume_schlafzimmer
+                  data:
+                    value: >
+                      {{ state_attr('media_player.schlafzimmer', 'volume_level') | float(0.35) }}
+                - action: media_player.volume_set
+                  target:
+                    entity_id: media_player.schlafzimmer
+                  data:
+                    volume_level: 0.50
 
         # =======================================================
         # PARTY AUS — Restore all 6 HomePods
@@ -700,10 +769,10 @@
                       - media_player.homepod_kueche
                       - media_player.homepod_badezimmer
                       - media_player.homepod_kinderzimmer
-                      - media_player.homepod_arbeitszimmer
-                      - media_player.arbeitszimmer_2
+                      - media_player.arbeitszimmer
+                      - media_player.schlafzimmer
                   data:
-                    volume_level: 0.15
+                    volume_level: 0.20
                 - action: media_player.media_stop
                   target:
                     entity_id:
@@ -711,8 +780,8 @@
                       - media_player.homepod_kueche
                       - media_player.homepod_badezimmer
                       - media_player.homepod_kinderzimmer
-                      - media_player.homepod_arbeitszimmer
-                      - media_player.arbeitszimmer_2
+                      - media_player.arbeitszimmer
+                      - media_player.schlafzimmer
               else:
                 # Wohnzimmer
                 - action: media_player.volume_set
@@ -760,12 +829,10 @@
                   data:
                     volume_level: >
                       {{ states('input_number.saved_volume_kinderzimmer') | float(0.35) }}
-                # Arbeitszimmer (Stereopaar)
+                # Arbeitszimmer
                 - action: media_player.volume_set
                   target:
-                    entity_id:
-                      - media_player.homepod_arbeitszimmer
-                      - media_player.arbeitszimmer_2
+                    entity_id: media_player.arbeitszimmer
                   data:
                     volume_level: >
                       {% if is_state('input_boolean.arbeit', 'on') %}
@@ -773,5 +840,12 @@
                       {% else %}
                         {{ states('input_number.saved_volume_arbeitszimmer') | float(0.35) }}
                       {% endif %}
+                # Schlafzimmer
+                - action: media_player.volume_set
+                  target:
+                    entity_id: media_player.schlafzimmer
+                  data:
+                    volume_level: >
+                      {{ states('input_number.saved_volume_schlafzimmer') | float(0.35) }}
   mode: queued
   max: 4

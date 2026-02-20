@@ -60,29 +60,27 @@
       
       # Mobile Benachrichtigungen + Persistent Notification
       - parallel:
-          # Mobile Benachrichtigungen (kritisch - funktioniert überall)
-          - action: notify.rafael
+        # Mobile Benachrichtigungen (kritisch - funktioniert überall)
+        - action: notify.rafael
+          data:
+            title: "Waschmaschine ist fertig"
+            message: "Fertig um {{ now().strftime('%H:%M Uhr') }}"
             data:
-              title: "Waschmaschine ist fertig"
-              message: "Fertig um {{ now().strftime('%H:%M Uhr') }}"
-              data:
-                push:
-                  interruption-level: critical
-          
-          - action: notify.alex
+              push:
+                interruption-level: critical
+        - action: notify.alex
+          data:
+            title: "Waschmaschine ist fertig"
+            message: "Fertig um {{ now().strftime('%H:%M Uhr') }}"
             data:
-              title: "Waschmaschine ist fertig"
-              message: "Fertig um {{ now().strftime('%H:%M Uhr') }}"
-              data:
-                push:
-                  interruption-level: critical
-          
-          - action: persistent_notification.create
-            data:
-              title: "Waschmaschine ist fertig"
-              message: "Fertig um {{ now().strftime('%H:%M Uhr') }}. Bitte die Wäsche aufhängen."
-              notification_id: waschmaschine_fertig
-    
+              push:
+                interruption-level: critical
+        - action: persistent_notification.create
+          data:
+            title: "Waschmaschine ist fertig"
+            message: "Fertig um {{ now().strftime('%H:%M Uhr') }}. Bitte die Wäsche aufhängen."
+            notification_id: waschmaschine_fertig
+
     - alias: "Waschmaschine aus"
       conditions:
       - condition: trigger
@@ -162,28 +160,26 @@
       
       # Mobile Benachrichtigungen + Persistent Notification
       - parallel:
-          # Mobile Benachrichtigungen (kritisch - funktioniert überall)
-          - action: notify.rafael
+        # Mobile Benachrichtigungen (kritisch - funktioniert überall)
+        - action: notify.rafael
+          data:
+            title: "🧺 Trockner ist fertig"
+            message: "Der Trockner ist fertig! ({{ now().strftime('%H:%M Uhr') }})"
             data:
-              title: "🧺 Trockner ist fertig"
-              message: "Der Trockner ist fertig! ({{ now().strftime('%H:%M Uhr') }})"
-              data:
-                push:
-                  interruption-level: critical
-          
-          - action: notify.alex
+              push:
+                interruption-level: critical
+        - action: notify.alex
+          data:
+            title: "🧺 Trockner ist fertig"
+            message: "Der Trockner ist fertig! ({{ now().strftime('%H:%M Uhr') }})"
             data:
-              title: "🧺 Trockner ist fertig"
-              message: "Der Trockner ist fertig! ({{ now().strftime('%H:%M Uhr') }})"
-              data:
-                push:
-                  interruption-level: critical
-          
-          - action: persistent_notification.create
-            data:
-              title: "Trockner ist fertig"
-              message: "Fertig um {{ now().strftime('%H:%M Uhr') }}. Bitte die Wäsche rausholen."
-              notification_id: trockner_fertig
+              push:
+                interruption-level: critical
+        - action: persistent_notification.create
+          data:
+            title: "Trockner ist fertig"
+            message: "Fertig um {{ now().strftime('%H:%M Uhr') }}. Bitte die Wäsche rausholen."
+            notification_id: trockner_fertig
 
     - alias: "Fertig-Trigger ignorieren (außer Reihenfolge)"
       conditions:

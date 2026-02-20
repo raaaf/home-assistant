@@ -16,8 +16,8 @@
       - media_player.appletv
       - media_player.wohnzimmer
       - media_player.denon_avr_x3200w
-      - media_player.homepod_arbeitszimmer
-      - media_player.arbeitszimmer_2
+      - media_player.arbeitszimmer
+      - media_player.schlafzimmer
       - media_player.homepod_badezimmer
       - media_player.homepod_kinderzimmer
       - media_player.homepod_wohnzimmer
@@ -44,8 +44,8 @@
       - media_player.appletv
       - media_player.wohnzimmer
       - media_player.denon_avr_x3200w
-      - media_player.homepod_arbeitszimmer
-      - media_player.arbeitszimmer_2
+      - media_player.arbeitszimmer
+      - media_player.schlafzimmer
       - media_player.homepod_badezimmer
       - media_player.homepod_kinderzimmer
       - media_player.homepod_wohnzimmer
@@ -70,8 +70,8 @@
   - trigger: state
     entity_id:
     # HomePods (6)
-    - media_player.homepod_arbeitszimmer
-    - media_player.arbeitszimmer_2
+    - media_player.arbeitszimmer
+    - media_player.schlafzimmer
     - media_player.homepod_badezimmer
     - media_player.homepod_kinderzimmer
     - media_player.homepod_wohnzimmer
@@ -87,8 +87,8 @@
     value_template: "{{ trigger.from_state is not defined or trigger.from_state.state != 'unavailable' }}"
   variables:
     all_devices:
-      - media_player.homepod_arbeitszimmer
-      - media_player.arbeitszimmer_2
+      - media_player.arbeitszimmer
+      - media_player.schlafzimmer
       - media_player.homepod_badezimmer
       - media_player.homepod_kinderzimmer
       - media_player.homepod_wohnzimmer
