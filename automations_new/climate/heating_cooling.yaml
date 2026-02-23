@@ -531,7 +531,7 @@
   max: 4
 - id: '1749999999998'
   alias: Heizung » Smart Floor Control (Predictive)
-  description: 'Predictive floor heating control for slow-response system (1-2h warmup). Morning boost based on forecast, afternoon boost based on actual temp. Only controls Kinderzimmer, Schlafzimmer, Wohnzimmer.'
+  description: 'Predictive floor heating control for slow-response system (1-2h warmup). Morning boost based on current outdoor temp, afternoon boost based on daily high forecast. Only controls Kinderzimmer, Schlafzimmer, Wohnzimmer.'
   trigger:
   - at: "06:30:00"
     id: morning-boost
@@ -548,14 +548,14 @@
       - switch.heizung_wohnzimmer
       temp_source: >-
         {% if trigger.id == 'morning-boost' %}
+          {{ state_attr('weather.fuerth_bayern', 'temperature') | float(5) }}
+        {% else %}
           {% set forecast = state_attr('sensor.fuerth_daily', 'forecast') %}
           {% if forecast and forecast | length > 0 %}
             {{ forecast[0].temperature | float(5) }}
           {% else %}
             5
           {% endif %}
-        {% else %}
-          {{ state_attr('weather.fuerth_bayern', 'temperature') | float(5) }}
         {% endif %}
       boost_duration: >-
         {% if temp_source | float < 0 %}
@@ -594,7 +594,7 @@
       - action: logbook.log
         data:
           name: Heizung Morning Boost
-          message: "Vorhersage {{ temp_source | round(1) }}°C → Boost {{ boost_duration }}"
+          message: "Außentemperatur {{ temp_source | round(1) }}°C → Boost {{ boost_duration }}"
           domain: climate
       - action: timer.start
         target:
@@ -628,7 +628,7 @@
       - action: logbook.log
         data:
           name: Heizung Afternoon Boost
-          message: "DWD {{ temp_source | round(1) }}°C → Boost {{ boost_duration }}"
+          message: "Tages-Höchstwert {{ temp_source | round(1) }}°C → Boost {{ boost_duration }}"
           domain: climate
       - action: timer.start
         target:
