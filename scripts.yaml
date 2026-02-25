@@ -189,7 +189,7 @@ notification_with_icon:
 fade_volume:
   alias: Fade Volume
   mode: parallel
-  max: 10
+  max: 20
   fields:
     target_player:
       name: Target media player
@@ -250,8 +250,9 @@ fade_volume:
     then:
     - action: media_player.volume_set
       continue_on_error: true
-      data:
+      target:
         entity_id: '{{ target_player }}'
+      data:
         volume_level: 0
     - delay: '00:00:00.5'
   - repeat:
@@ -261,8 +262,9 @@ fade_volume:
       sequence:
       - action: media_player.volume_set
         continue_on_error: true
-        data:
+        target:
           entity_id: '{{ target_player }}'
+        data:
           volume_level: "{% set progress = repeat.index / total_steps %} {% set current_start
             = state_attr(target_player, 'volume_level') | float(0) %}\n{# Sicherheit:
             Nie über Ziel hinaus #} {% if progress >= 1 %}\n  {{ target_volume }}\n{%
@@ -278,8 +280,9 @@ fade_volume:
           milliseconds: '{{ ((duration * 1000) / total_steps) | int(500) }}'
   - action: media_player.volume_set
     continue_on_error: true
-    data:
+    target:
       entity_id: '{{ target_player }}'
+    data:
       volume_level: '{{ target_volume }}'
   - action: system_log.write
     data:
