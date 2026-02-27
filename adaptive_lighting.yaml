@@ -6,12 +6,15 @@
 # Optimized for Bavarian climate, daily routines, and circadian rhythm health
 # UPDATED: Optimized for Zigbee2MQTT with mixed Philips Hue & IKEA lights
 # FIXED: Disabled detect_non_ha_changes to prevent random light turn-ons (2025-12-05)
+# UPDATED 2026-02-26: Reduced Zigbee traffic & false manual_control triggers:
+#   - separate_turn_on_commands: false  (weniger MQTT-Messages pro Zyklus)
+#   - take_over_control_mode: pause_changed  (pausiert nur geänderte Attribute)
+#   - adapt_only_on_bare_turn_on: false  (reverted - caused 100% brightness on motion trigger)
 #
 # Key principles:
 # - Sleep color temps at 1800K for optimal circadian rhythm support
 # - Room-specific timing based on usage patterns
 # - IKEA-compatible transitions (10-15s max) to prevent bulb lockups
-# - Separate commands for IKEA lights to avoid simultaneous brightness/color changes
 # - Higher brightness for safety areas (bathrooms, hallways)
 # - Extended evening hours for work and outdoor spaces
 # - detect_non_ha_changes: false prevents Z2M state polling from triggering lights
@@ -45,7 +48,7 @@
     - light.wohnzimmer_schrank_3
     # Individual light
     - light.wohnzimmer_spieletisch
-  interval: 300  # 5 min - reduced traffic while maintaining smoothness
+  interval: 900  # 15 min - reduced Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
   min_brightness: 10
@@ -62,11 +65,12 @@
   min_sunset_time: "20:00:00"  # Dynamic: Overridden by automation based on sleep time
   max_sunset_time: "20:30:00"
   take_over_control: true
+  take_over_control_mode: pause_changed  # Only pause changed attributes (not entire room)
   detect_non_ha_changes: false  # Disabled - prevents random turn-ons with Z2M state updates
   autoreset_control_seconds: 3600
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: true   # Enabled for IKEA bulb compatibility
+  separate_turn_on_commands: false  # Disabled - reduces MQTT traffic (fewer messages per cycle)
   send_split_delay: 50  # 50ms between commands per official docs
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
   skip_redundant_commands: true
@@ -86,7 +90,7 @@
     # Küche Schrank (2 lights)
     - light.kuche_schrank_1
     - light.kuche_schrank_2
-  interval: 300  # 5 min - reduced traffic while maintaining smoothness
+  interval: 900  # 15 min - reduced Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
   min_brightness: 10
@@ -103,11 +107,12 @@
   min_sunset_time: "20:00:00"  # Dynamic: Overridden by automation based on sleep time
   max_sunset_time: "20:30:00"
   take_over_control: true
+  take_over_control_mode: pause_changed  # Only pause changed attributes (not entire room)
   detect_non_ha_changes: false  # Disabled - prevents random turn-ons with Z2M state updates
   autoreset_control_seconds: 3600
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: true   # Enabled for IKEA bulb compatibility
+  separate_turn_on_commands: false  # Disabled - reduces MQTT traffic (fewer messages per cycle)
   send_split_delay: 50  # 50ms between commands per official docs
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
   skip_redundant_commands: true
@@ -128,7 +133,7 @@
     # Individual lights
     - light.schlafzimmer_bett
     - light.schlafzimmer_tv
-  interval: 300  # 5 min - reduced traffic while maintaining smoothness
+  interval: 900  # 15 min - reduced Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
   min_brightness: 10
@@ -145,11 +150,12 @@
   min_sunset_time: "20:00:00"  # Dynamic: Overridden by automation based on sleep time
   max_sunset_time: "20:30:00"
   take_over_control: true
+  take_over_control_mode: pause_changed  # Only pause changed attributes (not entire room)
   detect_non_ha_changes: false  # Disabled - prevents random turn-ons with Z2M state updates
   autoreset_control_seconds: 3600
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: true   # Enabled for IKEA bulb compatibility
+  separate_turn_on_commands: false  # Disabled - reduces MQTT traffic (fewer messages per cycle)
   send_split_delay: 50  # 50ms between commands per official docs
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
   skip_redundant_commands: true
@@ -163,7 +169,7 @@
     - light.kinderzimmer_decke            # Einzellicht (Hauptlicht)
     - light.kinderzimmer_bucher           # Einzellicht (Leselicht)
     - light.kinderzimmer_schrank          # Einzellicht (Akzentlicht)
-  interval: 300  # 5 min - reduced traffic while maintaining smoothness
+  interval: 900  # 15 min - reduced Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
   min_brightness: 10
@@ -180,11 +186,12 @@
   min_sunset_time: "20:00:00"  # Dynamic: Overridden by automation based on sleep time
   max_sunset_time: "20:30:00"
   take_over_control: true
+  take_over_control_mode: pause_changed  # Only pause changed attributes (not entire room)
   detect_non_ha_changes: false  # Disabled - prevents random turn-ons with Z2M state updates
   autoreset_control_seconds: 3600
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: true   # Enabled for IKEA bulb compatibility
+  separate_turn_on_commands: false  # Disabled - reduces MQTT traffic (fewer messages per cycle)
   send_split_delay: 50  # 50ms between commands per official docs
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
   skip_redundant_commands: true
@@ -205,7 +212,7 @@
     # Individual lights
     - light.badezimmer_schrank
     - light.badezimmer_fenster
-  interval: 300  # 5 min - reduced traffic while maintaining smoothness
+  interval: 900  # 15 min - reduced Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
   min_brightness: 10
@@ -222,11 +229,12 @@
   min_sunset_time: "20:00:00"  # Dynamic: Overridden by automation based on sleep time
   max_sunset_time: "20:30:00"
   take_over_control: true
+  take_over_control_mode: pause_changed  # Only pause changed attributes (not entire room)
   detect_non_ha_changes: false  # Disabled - prevents random turn-ons with Z2M state updates
   autoreset_control_seconds: 7200 # 2 hours for less frequently used rooms
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: true   # Enabled for IKEA bulb compatibility
+  separate_turn_on_commands: false  # Disabled - reduces MQTT traffic (fewer messages per cycle)
   send_split_delay: 50  # 50ms between commands per official docs
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
   skip_redundant_commands: true
@@ -238,7 +246,7 @@
 - name: "Waschzimmer"
   lights:
     - light.waschzimmer_decke
-  interval: 300  # 5 min - reduced traffic while maintaining smoothness
+  interval: 900  # 15 min - reduced Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
   min_brightness: 10
@@ -255,11 +263,12 @@
   min_sunset_time: "20:00:00"  # Dynamic: Overridden by automation based on sleep time
   max_sunset_time: "20:30:00"
   take_over_control: true
+  take_over_control_mode: pause_changed  # Only pause changed attributes (not entire room)
   detect_non_ha_changes: false  # Disabled - prevents random turn-ons with Z2M state updates
   autoreset_control_seconds: 7200
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: true   # Enabled for IKEA bulb compatibility
+  separate_turn_on_commands: false  # Disabled - reduces MQTT traffic (fewer messages per cycle)
   send_split_delay: 50  # 50ms between commands per official docs
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
   skip_redundant_commands: true
@@ -281,7 +290,7 @@
     - light.arbeitszimmer_pc_2
     # Individual light
     - light.arbeitszimmer_stehlampe
-  interval: 300  # 5 min - reduced traffic while maintaining smoothness
+  interval: 900  # 15 min - reduced Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
   min_brightness: 10
@@ -298,11 +307,12 @@
   min_sunset_time: "20:00:00"  # Dynamic: Overridden by automation based on sleep time
   max_sunset_time: "20:30:00"
   take_over_control: true
+  take_over_control_mode: pause_changed  # Only pause changed attributes (not entire room)
   detect_non_ha_changes: false  # Disabled - prevents random turn-ons with Z2M state updates
   autoreset_control_seconds: 3600
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: true   # Enabled for IKEA bulb compatibility
+  separate_turn_on_commands: false  # Disabled - reduces MQTT traffic (fewer messages per cycle)
   send_split_delay: 50  # 50ms between commands per official docs
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
   skip_redundant_commands: true
@@ -316,7 +326,7 @@
     # Ankleide Decke (2 lights)
     - light.ankleide_decke_1
     - light.ankleide_decke_2
-  interval: 300  # 5 min - reduced traffic while maintaining smoothness
+  interval: 900  # 15 min - reduced Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
   min_brightness: 10
@@ -333,11 +343,12 @@
   min_sunset_time: "20:00:00"  # Dynamic: Overridden by automation based on sleep time
   max_sunset_time: "20:30:00"
   take_over_control: true
+  take_over_control_mode: pause_changed  # Only pause changed attributes (not entire room)
   detect_non_ha_changes: false  # Disabled - prevents random turn-ons with Z2M state updates
   autoreset_control_seconds: 7200
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: true   # Enabled for IKEA bulb compatibility
+  separate_turn_on_commands: false  # Disabled - reduces MQTT traffic (fewer messages per cycle)
   send_split_delay: 50  # 50ms between commands per official docs
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
   skip_redundant_commands: true
@@ -362,7 +373,7 @@
     # Flur Schrank (2 lights)
     - light.flur_schrank_1
     - light.flur_schrank_2
-  interval: 300  # 5 min - reduced traffic while maintaining smoothness
+  interval: 900  # 15 min - reduced Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
   min_brightness: 10
@@ -379,11 +390,12 @@
   min_sunset_time: "20:00:00"  # Dynamic: Overridden by automation based on sleep time
   max_sunset_time: "20:30:00"
   take_over_control: true
+  take_over_control_mode: pause_changed  # Only pause changed attributes (not entire room)
   detect_non_ha_changes: false  # Disabled - prevents random turn-ons with Z2M state updates
   autoreset_control_seconds: 7200
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: true   # Enabled for IKEA bulb compatibility
+  separate_turn_on_commands: false  # Disabled - reduces MQTT traffic (fewer messages per cycle)
   send_split_delay: 50  # 50ms between commands per official docs
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
   skip_redundant_commands: true
@@ -403,7 +415,7 @@
     - light.balkon_wand_2
     # Individual light
     - light.balkon_blumen
-  interval: 300  # 5 min - reduced traffic while maintaining smoothness
+  interval: 900  # 15 min - reduced Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
   min_brightness: 10 # Lower minimum for outdoor ambiance
@@ -420,11 +432,12 @@
   min_sunset_time: "20:00:00"  # Dynamic: Overridden by automation based on sleep time
   max_sunset_time: "20:30:00"
   take_over_control: true
+  take_over_control_mode: pause_changed  # Only pause changed attributes (not entire room)
   detect_non_ha_changes: false  # Disabled - prevents random turn-ons with Z2M state updates
   autoreset_control_seconds: 7200 # Longer reset for outdoor
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: true   # Enabled for IKEA bulb compatibility
+  separate_turn_on_commands: false  # Disabled - reduces MQTT traffic (fewer messages per cycle)
   send_split_delay: 50  # 50ms between commands per official docs
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
   skip_redundant_commands: true

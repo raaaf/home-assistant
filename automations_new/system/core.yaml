@@ -342,3 +342,48 @@
             data:
               name: Z2M OTA Update
               message: 'Firmware update completed for {{ device_name }}'
+
+- id: '1740930000000'
+  alias: System » Adaptive Lighting Settings nach Neustart
+  description: >
+    Stellt optimierte AL-Einstellungen nach jedem HA-Neustart wieder her.
+    Hintergrund: AL speichert Konfiguration in Config Entries (nicht YAML),
+    daher müssen Änderungen via change_switch_settings nach Neustarts neu gesetzt werden.
+    Änderungen: separate_turn_on_commands=false (weniger MQTT-Traffic),
+    take_over_control_mode=pause_changed (pausiert nur geänderte Attribute).
+    adapt_only_on_bare_turn_on bleibt false - true verursacht 100% Helligkeit beim Einschalten
+    via Automationen mit expliziten Werten (wird als manual_control fehlinterpretiert).
+  mode: single
+  triggers:
+    - trigger: homeassistant
+      event: start
+  conditions: []
+  actions:
+    - alias: Kurz warten bis AL-Switches bereit sind
+      delay: "00:00:30"
+    - alias: AL-Einstellungen für alle Räume setzen
+      repeat:
+        for_each:
+          - switch.adaptive_lighting_wohnzimmer
+          - switch.adaptive_lighting_kueche
+          - switch.adaptive_lighting_schlafzimmer
+          - switch.adaptive_lighting_kinderzimmer
+          - switch.adaptive_lighting_badezimmer
+          - switch.adaptive_lighting_waschzimmer
+          - switch.adaptive_lighting_arbeitszimmer
+          - switch.adaptive_lighting_ankleide
+          - switch.adaptive_lighting_flur
+          - switch.adaptive_lighting_balkon
+        sequence:
+          - action: adaptive_lighting.change_switch_settings
+            data:
+              entity_id: "{{ repeat.item }}"
+              separate_turn_on_commands: false
+              take_over_control_mode: pause_changed
+              adapt_only_on_bare_turn_on: false
+              use_defaults: current
+    - alias: Abschluss loggen
+      action: logbook.log
+      data:
+        name: Adaptive Lighting Setup
+        message: Optimierte AL-Einstellungen nach Neustart gesetzt (10 Räume)
