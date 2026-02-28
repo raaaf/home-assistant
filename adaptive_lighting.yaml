@@ -51,7 +51,7 @@
   interval: 900  # 15 min - reduced Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
-  min_brightness: 10
+  min_brightness: 20
   max_brightness: 100
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
   max_color_temp: 4000 # IKEA maximum cool white
@@ -93,7 +93,7 @@
   interval: 900  # 15 min - reduced Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
-  min_brightness: 10
+  min_brightness: 20
   max_brightness: 100
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
   max_color_temp: 4000 # IKEA maximum cool white
@@ -215,7 +215,7 @@
   interval: 900  # 15 min - reduced Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
-  min_brightness: 10
+  min_brightness: 30
   max_brightness: 100
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
   max_color_temp: 4000 # IKEA maximum cool white
@@ -249,7 +249,7 @@
   interval: 900  # 15 min - reduced Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
-  min_brightness: 10
+  min_brightness: 30
   max_brightness: 100
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
   max_color_temp: 4000 # IKEA maximum cool white
@@ -293,7 +293,7 @@
   interval: 900  # 15 min - reduced Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
-  min_brightness: 10
+  min_brightness: 30
   max_brightness: 100
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
   max_color_temp: 4000 # IKEA maximum cool white
@@ -376,7 +376,7 @@
   interval: 900  # 15 min - reduced Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
-  min_brightness: 10
+  min_brightness: 20
   max_brightness: 100
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
   max_color_temp: 4000 # IKEA maximum cool white
@@ -418,7 +418,7 @@
   interval: 900  # 15 min - reduced Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 1  # Prevents color flashing
-  min_brightness: 10 # Lower minimum for outdoor ambiance
+  min_brightness: 30
   max_brightness: 100
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
   max_color_temp: 4000 # IKEA maximum cool white
