@@ -231,14 +231,14 @@ views:
                   entity: fan.xiaomi_smart_air_purifier_4_pro
               - type: conditional
                 conditions:
-                  - entity: lock.smart_lock_pro
+                  - entity: lock.nuki_haustur_lock
                     state: unlocked
                 chip:
                   type: template
                   icon: mdi:door-open
                   icon_color: yellow
                   content: Wohnungstür aufgeschlossen
-                  entity: lock.smart_lock_pro
+                  entity: lock.nuki_haustur_lock
               - type: conditional
                 conditions:
                   - entity: binary_sensor.schlafzimmer_kontaktsensor_contact

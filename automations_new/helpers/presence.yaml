@@ -197,12 +197,12 @@
     to: 'off'
     id: alle-da
   - trigger: state
-    entity_id: lock.smart_lock_pro
+    entity_id: lock.nuki_haustur_lock
     to: locked
     for: 00:15:00
     id: locked
   - trigger: state
-    entity_id: lock.smart_lock_pro
+    entity_id: lock.nuki_haustur_lock
     to: unlocked
     id: unlocked
   - trigger: time
@@ -329,7 +329,7 @@
       - alias: Türe abschließen wenn offen
         if:
         - condition: state
-          entity_id: lock.smart_lock_pro
+          entity_id: lock.nuki_haustur_lock
           state: unlocked
         - alias: Verifikation - Alle sind wirklich weg
           condition: and
@@ -352,7 +352,7 @@
         - alias: Finale Prüfung vor dem Abschließen
           if:
           - condition: state
-            entity_id: lock.smart_lock_pro
+            entity_id: lock.nuki_haustur_lock
             state: unlocked
           - condition: template
             value_template: "{{ has_value('person.rafael') and is_state('person.rafael', 'not_home') }}"
@@ -361,16 +361,16 @@
           then:
           - action: lock.lock
             target:
-              entity_id: lock.smart_lock_pro
+              entity_id: lock.nuki_haustur_lock
             data: {}
           - alias: Warte auf Verriegelungsbestätigung (max 30 Sek)
-            wait_template: "{{ is_state('lock.smart_lock_pro', 'locked') }}"
+            wait_template: "{{ is_state('lock.nuki_haustur_lock', 'locked') }}"
             timeout: "00:00:30"
             continue_on_timeout: true
           - alias: Prüfe ob Verriegelung erfolgreich war
             if:
             - condition: template
-              value_template: "{{ not is_state('lock.smart_lock_pro', 'locked') }}"
+              value_template: "{{ not is_state('lock.nuki_haustur_lock', 'locked') }}"
             then:
             - action: notify.family
               data:
@@ -406,12 +406,12 @@
       - alias: Türe aufschließen wenn abgeschlossen
         if:
         - condition: state
-          entity_id: lock.smart_lock_pro
+          entity_id: lock.nuki_haustur_lock
           state: locked
         then:
         - action: lock.unlock
           target:
-            entity_id: lock.smart_lock_pro
+            entity_id: lock.nuki_haustur_lock
           data: {}
       - alias: Werktag-Musik kurz aktivieren (Trigger für andere Automationen)
         action: input_boolean.turn_on
@@ -496,21 +496,21 @@
       - alias: Türe abschließen wenn offen
         if:
         - condition: state
-          entity_id: lock.smart_lock_pro
+          entity_id: lock.nuki_haustur_lock
           state: unlocked
         then:
         - action: lock.lock
           target:
-            entity_id: lock.smart_lock_pro
+            entity_id: lock.nuki_haustur_lock
           data: {}
         - alias: Warte auf Verriegelungsbestätigung (max 30 Sek)
-          wait_template: "{{ is_state('lock.smart_lock_pro', 'locked') }}"
+          wait_template: "{{ is_state('lock.nuki_haustur_lock', 'locked') }}"
           timeout: "00:00:30"
           continue_on_timeout: true
         - alias: Benachrichtigung bei Fehler
           if:
           - condition: template
-            value_template: "{{ not is_state('lock.smart_lock_pro', 'locked') }}"
+            value_template: "{{ not is_state('lock.nuki_haustur_lock', 'locked') }}"
           then:
           - action: notify.family
             data:
@@ -543,16 +543,16 @@
       - alias: Türe automatisch abschließen
         action: lock.lock
         target:
-          entity_id: lock.smart_lock_pro
+          entity_id: lock.nuki_haustur_lock
         data: {}
       - alias: Warte auf Verriegelungsbestätigung (max 30 Sek)
-        wait_template: "{{ is_state('lock.smart_lock_pro', 'locked') }}"
+        wait_template: "{{ is_state('lock.nuki_haustur_lock', 'locked') }}"
         timeout: "00:00:30"
         continue_on_timeout: true
       - alias: Benachrichtigung bei Fehler
         if:
         - condition: template
-          value_template: "{{ not is_state('lock.smart_lock_pro', 'locked') }}"
+          value_template: "{{ not is_state('lock.nuki_haustur_lock', 'locked') }}"
         then:
         - action: notify.family
           data:
