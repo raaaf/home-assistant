@@ -58,9 +58,9 @@
   - variables:
       # Check if we have historical data or need to use current values
       has_historical_data: >-
-        {{ state_attr('sensor.taglicher_netzbezug','last_period') is not none 
+        {{ state_attr('sensor.taglicher_netzbezug','last_period') is not none
            and state_attr('sensor.taglicher_netzbezug','last_period') | float(0) > 0 }}
-      
+
       verbrauch_netto: >-
         {% set last = state_attr('sensor.taglicher_netzbezug','last_period') %}
         {% if last is not none and last | float(0) > 0 %}
@@ -68,17 +68,17 @@
         {% else %}
           {{ states('sensor.taglicher_netzbezug') | float(0) | round(1) }}
         {% endif %}
-      
+
       solarproduktion_gestern: >-
         {{ states('sensor.solarproduktion_gestern') | float(0) | round(1) }}
-      
+
       verbrauch_brutto: '{{ (verbrauch_netto + solarproduktion_gestern) | round(1) }}'
       strompreis: "{{ 0.2876 }}"
       kosten_ohne_solar: '{{ (verbrauch_brutto * strompreis) | round(2) }}'
       ersparnis_gestern: '{{ (solarproduktion_gestern * strompreis) | round(2) }}'
       kosten_nach_solar: '{{ (verbrauch_netto * strompreis) | round(2) }}'
       datum_gestern: '{{ (now() - timedelta(days=1)).strftime(''%d.%m.%Y'') }}'
-      
+
       # Eigenverbrauchsquote berechnen (aligned with sensor.pv_eigenverbrauch_quote)
       eigenverbrauch_quote: >-
         {% set sensor_val = states('sensor.pv_eigenverbrauch_quote') %}
@@ -116,8 +116,8 @@
     action: logbook.log
   mode: single
 - id: '1740960000000'
-  alias: Notification >> Monatlicher Energiebericht
-  description: Sendet am 1. jeden Monats einen HTML-Energiebericht des Vormonats per E-Mail
+  alias: Notification » Monatlicher Energiebericht
+  description: Sendet am 1. jeden Monats einen HTML-Energiebericht des Vormonats per E-Mail und Push-Benachrichtigung
   triggers:
   - at: '00:15:00'
     trigger: time
@@ -265,4 +265,10 @@
             Generiert von Home Assistant am {{ now().strftime('%d.%m.%Y %H:%M') }}
           </p>
           </body></html>
+  - action: notify.rafael
+    data:
+      title: "Energiebericht {{ vormonat }}"
+      message: >-
+        Solar {{ solarproduktion_kwh }} kWh · Eigenverbrauch {{ eigenverbrauchsquote }}% ·
+        Netzbezug {{ netzbezug_kwh }} kWh · Kosten {{ kosten_gesamt }} € (Ersparnis {{ ersparnis_solar }} €)
   mode: single

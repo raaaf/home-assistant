@@ -38,7 +38,7 @@
       before: '21:00:00'
     - condition: template
       value_template: >
-        {% set last = state_attr('automation.notification_stromueberschuss_gerate_einschalten', 'last_triggered') %}
+        {% set last = state_attr('automation.notification_stromuberschuss_gerate_einschalten', 'last_triggered') %}
         {{ last is none or (now() - last).total_seconds() > 3 * 60 * 60 }}
     - condition: template
       value_template: >
@@ -88,7 +88,6 @@
         message: "{{ persistent_message }}"
         notification_id: stromueberschuss_geraete
   mode: single
-  max_exceeded: silent
 
 - id: '1740000000002'
   alias: Helper » Stromüberschuss Notification aufräumen
@@ -113,4 +112,3 @@
       data:
         notification_id: stromueberschuss_geraete
   mode: single
-  max_exceeded: silent
