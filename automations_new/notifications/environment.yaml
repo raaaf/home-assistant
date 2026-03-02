@@ -105,13 +105,164 @@
         {% endif %}
   - data:
       message: >-
-        Tagesstatistik {{ datum_gestern }}: 
-        Verbrauch {{ verbrauch_brutto }} kWh (Netto: {{ verbrauch_netto }} kWh), 
-        Solar {{ solarproduktion_gestern }} kWh, 
-        PV-Eigenverbrauchsquote {{ eigenverbrauch_quote }}%, 
-        Anteil Solar am Verbrauch {{ solaranteil_verbrauch }}%, 
+        Tagesstatistik {{ datum_gestern }}:
+        Verbrauch {{ verbrauch_brutto }} kWh (Netto: {{ verbrauch_netto }} kWh),
+        Solar {{ solarproduktion_gestern }} kWh,
+        PV-Eigenverbrauchsquote {{ eigenverbrauch_quote }}%,
+        Anteil Solar am Verbrauch {{ solaranteil_verbrauch }}%,
         Kosten {{ kosten_nach_solar }} € (Ersparnis: {{ ersparnis_gestern }} €)
       name: Energie-Bilanz
       domain: automation
     action: logbook.log
+  mode: single
+- id: '1740960000000'
+  alias: Notification >> Monatlicher Energiebericht
+  description: Sendet am 1. jeden Monats einen HTML-Energiebericht des Vormonats per E-Mail
+  triggers:
+  - at: '00:15:00'
+    trigger: time
+  conditions:
+  - condition: template
+    value_template: "{{ now().day == 1 }}"
+  - condition: template
+    value_template: >-
+      {{ state_attr('sensor.monatlicher_netzbezug', 'last_period') is not none
+         and state_attr('sensor.monatliche_einspeisung', 'last_period') is not none
+         and state_attr('sensor.monatliche_solarproduktion', 'last_period') is not none }}
+  actions:
+  - variables:
+      strompreis: "{{ 0.2876 }}"
+      grundpreis_monat: "{{ 16.54 }}"
+      vormonat: "{{ (now().replace(day=1) - timedelta(days=1)).strftime('%B %Y') }}"
+
+      netzbezug_kwh: >-
+        {{ state_attr('sensor.monatlicher_netzbezug', 'last_period') | float(0) | round(2) }}
+
+      einspeisung_kwh: >-
+        {{ state_attr('sensor.monatliche_einspeisung', 'last_period') | float(0) | round(2) }}
+
+      solarproduktion_kwh: >-
+        {{ (state_attr('sensor.monatliche_solarproduktion', 'last_period') | float(0) / 1000) | round(2) }}
+
+      solar_eigenverbrauch_kwh: >-
+        {{ [solarproduktion_kwh | float(0) - einspeisung_kwh | float(0), 0] | max | round(2) }}
+
+      verbrauch_brutto_kwh: >-
+        {{ (netzbezug_kwh | float(0) + solar_eigenverbrauch_kwh | float(0)) | round(2) }}
+
+      eigenverbrauchsquote: >-
+        {% set solar = solarproduktion_kwh | float(0) %}
+        {% if solar > 0 %}
+          {{ ((solar_eigenverbrauch_kwh | float(0) / solar) * 100) | round(1) }}
+        {% else %}
+          0
+        {% endif %}
+
+      solaranteil_verbrauch: >-
+        {% set brutto = verbrauch_brutto_kwh | float(0) %}
+        {% if brutto > 0 %}
+          {{ ((solar_eigenverbrauch_kwh | float(0) / brutto) * 100) | round(1) }}
+        {% else %}
+          0
+        {% endif %}
+
+      kosten_arbeitspreis: >-
+        {{ (netzbezug_kwh | float(0) * strompreis | float(0)) | round(2) }}
+
+      kosten_gesamt: >-
+        {{ (kosten_arbeitspreis | float(0) + grundpreis_monat | float(0)) | round(2) }}
+
+      ersparnis_solar: >-
+        {{ (solar_eigenverbrauch_kwh | float(0) * strompreis | float(0)) | round(2) }}
+
+      kosten_ohne_solar: >-
+        {{ (verbrauch_brutto_kwh | float(0) * strompreis | float(0) + grundpreis_monat | float(0)) | round(2) }}
+
+  - action: notify.rafael_mail
+    data:
+      title: "Energiebericht {{ vormonat }}"
+      message: >-
+        Energiebericht für {{ vormonat }}:
+        Verbrauch brutto {{ verbrauch_brutto_kwh }} kWh,
+        Netzbezug {{ netzbezug_kwh }} kWh,
+        Solar {{ solarproduktion_kwh }} kWh,
+        Eigenverbrauch {{ solar_eigenverbrauch_kwh }} kWh,
+        Einspeisung {{ einspeisung_kwh }} kWh,
+        PV-Eigenverbrauchsquote {{ eigenverbrauchsquote }}%,
+        Solaranteil {{ solaranteil_verbrauch }}%,
+        Kosten {{ kosten_gesamt }} EUR (Arbeitspreis {{ kosten_arbeitspreis }} EUR + Grundpreis {{ grundpreis_monat }} EUR),
+        Ersparnis durch Solar {{ ersparnis_solar }} EUR,
+        Kosten ohne Solar {{ kosten_ohne_solar }} EUR.
+      data:
+        html: >-
+          <html><body style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+          <h2 style="color:#1a73e8;border-bottom:2px solid #1a73e8;padding-bottom:8px;">
+            Energiebericht — {{ vormonat }}
+          </h2>
+
+          <h3 style="color:#444;margin-top:24px;">Verbrauch</h3>
+          <table style="width:100%;border-collapse:collapse;">
+            <tr style="background:#f5f5f5;">
+              <td style="padding:8px 12px;border:1px solid #ddd;">Gesamtverbrauch (brutto)</td>
+              <td style="padding:8px 12px;border:1px solid #ddd;text-align:right;font-weight:bold;">{{ verbrauch_brutto_kwh }} kWh</td>
+            </tr>
+            <tr>
+              <td style="padding:8px 12px;border:1px solid #ddd;">Netzbezug</td>
+              <td style="padding:8px 12px;border:1px solid #ddd;text-align:right;">{{ netzbezug_kwh }} kWh</td>
+            </tr>
+            <tr style="background:#f5f5f5;">
+              <td style="padding:8px 12px;border:1px solid #ddd;">Solar-Eigenverbrauch</td>
+              <td style="padding:8px 12px;border:1px solid #ddd;text-align:right;">{{ solar_eigenverbrauch_kwh }} kWh</td>
+            </tr>
+          </table>
+
+          <h3 style="color:#444;margin-top:24px;">Solar</h3>
+          <table style="width:100%;border-collapse:collapse;">
+            <tr style="background:#f5f5f5;">
+              <td style="padding:8px 12px;border:1px solid #ddd;">Solarproduktion gesamt</td>
+              <td style="padding:8px 12px;border:1px solid #ddd;text-align:right;font-weight:bold;">{{ solarproduktion_kwh }} kWh</td>
+            </tr>
+            <tr>
+              <td style="padding:8px 12px;border:1px solid #ddd;">Einspeisung ins Netz</td>
+              <td style="padding:8px 12px;border:1px solid #ddd;text-align:right;">{{ einspeisung_kwh }} kWh</td>
+            </tr>
+            <tr style="background:#f5f5f5;">
+              <td style="padding:8px 12px;border:1px solid #ddd;">PV-Eigenverbrauchsquote</td>
+              <td style="padding:8px 12px;border:1px solid #ddd;text-align:right;">{{ eigenverbrauchsquote }} %</td>
+            </tr>
+            <tr>
+              <td style="padding:8px 12px;border:1px solid #ddd;">Solaranteil am Verbrauch</td>
+              <td style="padding:8px 12px;border:1px solid #ddd;text-align:right;">{{ solaranteil_verbrauch }} %</td>
+            </tr>
+          </table>
+
+          <h3 style="color:#444;margin-top:24px;">Kosten</h3>
+          <table style="width:100%;border-collapse:collapse;">
+            <tr style="background:#f5f5f5;">
+              <td style="padding:8px 12px;border:1px solid #ddd;">Arbeitspreis ({{ netzbezug_kwh }} kWh × {{ strompreis }} €)</td>
+              <td style="padding:8px 12px;border:1px solid #ddd;text-align:right;">{{ kosten_arbeitspreis }} €</td>
+            </tr>
+            <tr>
+              <td style="padding:8px 12px;border:1px solid #ddd;">Grundpreis</td>
+              <td style="padding:8px 12px;border:1px solid #ddd;text-align:right;">{{ grundpreis_monat }} €</td>
+            </tr>
+            <tr style="background:#e8f5e9;">
+              <td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold;">Gesamtkosten</td>
+              <td style="padding:8px 12px;border:1px solid #ddd;text-align:right;font-weight:bold;">{{ kosten_gesamt }} €</td>
+            </tr>
+            <tr>
+              <td style="padding:8px 12px;border:1px solid #ddd;color:#2e7d32;">Ersparnis durch Solar</td>
+              <td style="padding:8px 12px;border:1px solid #ddd;text-align:right;color:#2e7d32;">− {{ ersparnis_solar }} €</td>
+            </tr>
+            <tr style="background:#f5f5f5;">
+              <td style="padding:8px 12px;border:1px solid #ddd;color:#888;">Kosten ohne Solar (Vergleich)</td>
+              <td style="padding:8px 12px;border:1px solid #ddd;text-align:right;color:#888;">{{ kosten_ohne_solar }} €</td>
+            </tr>
+          </table>
+
+          <p style="margin-top:24px;font-size:12px;color:#999;">
+            Strompreis: {{ strompreis }} €/kWh · Grundpreis: {{ grundpreis_monat }} €/Monat ·
+            Generiert von Home Assistant am {{ now().strftime('%d.%m.%Y %H:%M') }}
+          </p>
+          </body></html>
   mode: single

@@ -1,0 +1,116 @@
+# Notifications - Energy Surplus
+# Benachrichtigt wenn Batterie voll und Strom ins Netz eingespeist wird
+
+- id: '1740000000001'
+  alias: Notification » Stromüberschuss — Geräte einschalten
+  description: >
+    Benachrichtigt Rafael und Alex wenn die EcoFlow-Batterie voll ist
+    und gleichzeitig Solarstrom ins Netz eingespeist wird, damit sie
+    Waschmaschine, Trockner oder Spülmaschine nutzen können.
+  triggers:
+    - trigger: numeric_state
+      entity_id: sensor.einspeisung
+      above: 200
+      for:
+        minutes: 5
+      id: einspeisung-hoch
+    - trigger: numeric_state
+      entity_id: sensor.stream_ac_pro_3683_power_battery_2
+      above: 94
+      for:
+        minutes: 2
+      id: batterie-voll
+  conditions:
+    - condition: numeric_state
+      entity_id: sensor.stream_ac_pro_3683_power_battery_2
+      above: 94
+    - condition: numeric_state
+      entity_id: sensor.einspeisung
+      above: 200
+    - condition: state
+      entity_id: input_boolean.alle_sind_weg
+      state: 'off'
+    - condition: state
+      entity_id: input_boolean.schlafenszeit
+      state: 'off'
+    - condition: time
+      after: '08:00:00'
+      before: '21:00:00'
+    - condition: template
+      value_template: >
+        {% set last = state_attr('automation.notification_stromueberschuss_gerate_einschalten', 'last_triggered') %}
+        {{ last is none or (now() - last).total_seconds() > 3 * 60 * 60 }}
+    - condition: template
+      value_template: >
+        {{
+          is_state('input_select.waschmaschine', 'Aus') or
+          is_state('input_select.waschmaschine', 'Fertig') or
+          is_state('input_select.trockner', 'Aus') or
+          is_state('input_select.trockner', 'Fertig')
+        }}
+  actions:
+    - variables:
+        einspeisung_w: "{{ states('sensor.einspeisung') | int(0) }}"
+        batterie_soc: "{{ states('sensor.stream_ac_pro_3683_power_battery_2') | int(0) }}"
+        waschmaschine_verfuegbar: >
+          {{ is_state('input_select.waschmaschine', 'Aus') or
+             is_state('input_select.waschmaschine', 'Fertig') }}
+        trockner_verfuegbar: >
+          {{ is_state('input_select.trockner', 'Aus') or
+             is_state('input_select.trockner', 'Fertig') }}
+        verfuegbare_geraete: >
+          {% set geraete = [] %}
+          {% if waschmaschine_verfuegbar %}
+            {% set geraete = geraete + ['Waschmaschine'] %}
+          {% endif %}
+          {% if trockner_verfuegbar %}
+            {% set geraete = geraete + ['Trockner'] %}
+          {% endif %}
+          {% set geraete = geraete + ['Spülmaschine'] %}
+          {{ geraete | join(', ') }}
+        push_message: >
+          Batterie {{ batterie_soc }}%, Einspeisung {{ einspeisung_w }} W.
+          Jetzt einschalten: {{ verfuegbare_geraete }}
+        persistent_message: >
+          Die EcoFlow-Batterie ist zu {{ batterie_soc }}% geladen und es werden
+          {{ einspeisung_w }} W ins Netz eingespeist. Nutze jetzt den Solarüberschuss:
+          {{ verfuegbare_geraete }}
+    - action: notify.family
+      data:
+        title: "Solar — Strom verschenken?"
+        message: "{{ push_message }}"
+        data:
+          push:
+            interruption-level: time-sensitive
+    - action: persistent_notification.create
+      data:
+        title: "Solar — Strom verschenken?"
+        message: "{{ persistent_message }}"
+        notification_id: stromueberschuss_geraete
+  mode: single
+  max_exceeded: silent
+
+- id: '1740000000002'
+  alias: Helper » Stromüberschuss Notification aufräumen
+  description: >
+    Entfernt die Stromüberschuss-Benachrichtigung wenn die Einspeisung
+    sinkt oder die Batterie sich entlädt (Hysterese-Logik).
+  triggers:
+    - trigger: numeric_state
+      entity_id: sensor.einspeisung
+      below: 100
+      for:
+        minutes: 5
+      id: einspeisung-niedrig
+    - trigger: numeric_state
+      entity_id: sensor.stream_ac_pro_3683_power_battery_2
+      below: 90
+      for:
+        minutes: 2
+      id: batterie-entladen
+  actions:
+    - action: persistent_notification.dismiss
+      data:
+        notification_id: stromueberschuss_geraete
+  mode: single
+  max_exceeded: silent

@@ -668,6 +668,20 @@ utility_meter:
     offset:
       days: 0
 
+  monatliche_einspeisung:
+    source: sensor.einspeisung_energie
+    name: "Monatliche Einspeisung"
+    cycle: monthly
+    offset:
+      days: 0
+
+  monatliche_solarproduktion:
+    source: sensor.dtu_ac_daily_energy
+    name: "Monatliche Solarproduktion"
+    cycle: monthly
+    offset:
+      days: 0
+
   # Utility Meter für Energy müssen Integration Sensoren verwenden
   # Diese werden automatisch durch Home Assistant Energy Dashboard erstellt
   # Falls sie nicht existieren, können sie über Settings > Energy konfiguriert werden
