@@ -334,6 +334,22 @@ views:
                   type: template
                   icon: mdi:tumble-dryer
                   content: Trockner fertig
+              - type: conditional
+                conditions:
+                  - entity: sensor.192_168_178_118_queue_count
+                    state_not: unavailable
+                  - entity: sensor.192_168_178_118_queue_count
+                    state_not: unknown
+                  - condition: numeric_state
+                    entity: sensor.192_168_178_118_queue_count
+                    above: 0
+                chip:
+                  type: template
+                  entity: sensor.192_168_178_118_speed
+                  icon: mdi:download
+                  icon_color: amber
+                  content: >-
+                    {{ states('sensor.192_168_178_118_speed') }}
       - type: custom:gap-card
         view_layout:
           grid:area: right
