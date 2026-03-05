@@ -350,6 +350,7 @@ views:
                   icon_color: amber
                   content: >-
                     {{ states('sensor.192_168_178_118_speed') }}
+                    ({{ states('sensor.192_168_178_118_left_to_download') }})
       - type: custom:gap-card
         view_layout:
           grid:area: right
