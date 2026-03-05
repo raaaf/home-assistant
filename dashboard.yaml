@@ -881,6 +881,97 @@ views:
                 show_empty: false
                 unique: true
         columns: 2
+  - title: Media
+    path: media
+    type: sections
+    max_columns: 4
+    icon: mdi:movie-play
+    sections:
+      - type: grid
+        title: SABnzbd
+        cards:
+          - type: tile
+            entity: sensor.192_168_178_118_status
+            name: Status
+          - type: tile
+            entity: sensor.192_168_178_118_speed
+            name: Geschwindigkeit
+          - type: tile
+            entity: sensor.192_168_178_118_queue_count
+            name: Queue
+          - type: tile
+            entity: sensor.192_168_178_118_left_to_download
+            name: Verbleibend
+          - type: tile
+            entity: sensor.192_168_178_118_free_disk_space
+            name: Freier Speicher
+          - type: tile
+            entity: number.192_168_178_118_speedlimit
+            name: Speed-Limit
+          - type: tile
+            entity: button.192_168_178_118_pause
+            name: Pause
+          - type: tile
+            entity: button.192_168_178_118_resume
+            name: Resume
+          - type: tile
+            entity: binary_sensor.192_168_178_118_warnings
+            name: Warnungen
+      - type: grid
+        title: Radarr
+        cards:
+          - type: tile
+            entity: binary_sensor.radarr_health
+            name: Status
+          - type: tile
+            entity: sensor.radarr_movies
+            name: Filme
+          - type: tile
+            entity: sensor.radarr_queue
+            name: Queue
+          - type: tile
+            entity: sensor.radarr_disk_space_movies
+            name: Speicherplatz
+          - type: calendar
+            entities:
+              - calendar.radarr
+            name: Kommende Filme
+      - type: grid
+        title: Sonarr
+        cards:
+          - type: tile
+            entity: sensor.sonarr_shows
+            name: Serien
+          - type: tile
+            entity: sensor.sonarr_upcoming
+            name: Kommende Episoden
+          - type: tile
+            entity: sensor.sonarr_wanted
+            name: Fehlende Episoden
+          - type: tile
+            entity: sensor.sonarr_queue
+            name: Queue
+          - type: tile
+            entity: sensor.sonarr_disk_space
+            name: Speicherplatz
+      - type: grid
+        title: Overseerr
+        cards:
+          - type: tile
+            entity: sensor.seerr_pending_requests
+            name: Offene Anfragen
+          - type: tile
+            entity: sensor.seerr_movie_requests
+            name: Film-Anfragen
+          - type: tile
+            entity: sensor.seerr_tv_requests
+            name: Serien-Anfragen
+          - type: tile
+            entity: sensor.seerr_total_requests
+            name: Gesamt
+          - type: tile
+            entity: sensor.seerr_open_issues
+            name: Offene Probleme
   - theme: Backend-selected
     title: Settings
     path: settings
