@@ -1,0 +1,109 @@
+# System - SABnzbd Nacht-Fullspeed
+# Schaltet SABnzbd auf volle Geschwindigkeit wenn alle schlafen und niemand aktiv ist.
+# Tagsüber wird das Tageslimit (33%) wiederhergestellt sobald eine Bedingung wegfällt.
+#
+# Entities (IP-basiert, SABnzbd auf 192.168.178.118):
+#   number.192_168_178_118_speedlimit  — Speedlimit in % (0=unlimitiert laut HA-Skala, 100=max)
+#   sensor.192_168_178_118_queue_count — Anzahl Einträge in der Queue
+
+- id: 'sabnzbd_nightmode'
+  alias: System » SABnzbd Nacht-Fullspeed
+  description: >
+    Schaltet SABnzbd auf volle Geschwindigkeit (100%) sobald Schlafenszeit aktiv ist
+    und kein PC oder TV in Betrieb ist. Setzt das Tageslimit (33%) zurück
+    sobald jemand aktiv wird oder die Schlafenszeit endet.
+  mode: single
+  max_exceeded: silent
+
+  triggers:
+    # --- Fullspeed aktivieren ---
+    - trigger: state
+      entity_id: input_boolean.schlafenszeit
+      to: 'on'
+      id: fullspeed
+
+    # --- Tageslimit wiederherstellen ---
+    - trigger: state
+      entity_id: binary_sensor.macbook_pro_rafael_active
+      to: 'on'
+      id: tageslimit
+    - trigger: state
+      entity_id: binary_sensor.macbook_pro_2_active
+      to: 'on'
+      id: tageslimit
+    - trigger: state
+      entity_id: media_player.denon_avr_x3200w
+      to: 'on'
+      id: tageslimit
+    - trigger: state
+      entity_id: media_player.appletv
+      to: 'playing'
+      id: tageslimit
+    - trigger: state
+      entity_id: input_boolean.schlafenszeit
+      to: 'off'
+      id: tageslimit
+
+  actions:
+    - choose:
+        - conditions:
+            - condition: trigger
+              id: fullspeed
+            - condition: state
+              entity_id: binary_sensor.macbook_pro_rafael_active
+              state: 'off'
+            - condition: state
+              entity_id: binary_sensor.macbook_pro_2_active
+              state: 'off'
+            - condition: state
+              entity_id: media_player.denon_avr_x3200w
+              state: 'off'
+            - condition: not
+              conditions:
+                - condition: state
+                  entity_id: media_player.appletv
+                  state: 'playing'
+            - condition: numeric_state
+              entity_id: sensor.192_168_178_118_queue_count
+              above: 0
+          sequence:
+            - action: number.set_value
+              target:
+                entity_id: number.192_168_178_118_speedlimit
+              data:
+                value: "100"
+            - if:
+                - condition: state
+                  entity_id: sensor.192_168_178_118_status
+                  state: 'Paused'
+              then:
+                - action: button.press
+                  target:
+                    entity_id: button.192_168_178_118_resume
+            - action: rest_command.sabnzbd_resume_all_jobs
+            - action: persistent_notification.create
+              data:
+                notification_id: sabnzbd_nightmode
+                title: SABnzbd Nacht-Fullspeed aktiv
+                message: >
+                  Downloads laufen mit voller Geschwindigkeit (100%).
+                  {{ states('sensor.192_168_178_118_queue_count') | int(0) }}
+                  {%- if states('sensor.192_168_178_118_queue_count') | int(0) == 1 %} Download
+                  {%- else %} Downloads
+                  {%- endif %} in der Queue.
+
+        - conditions:
+            - condition: trigger
+              id: tageslimit
+            - condition: numeric_state
+              entity_id: number.192_168_178_118_speedlimit
+              above: 33
+          sequence:
+            - action: number.set_value
+              target:
+                entity_id: number.192_168_178_118_speedlimit
+              data:
+                value: "33"
+            - action: persistent_notification.dismiss
+              data:
+                notification_id: sabnzbd_nightmode
