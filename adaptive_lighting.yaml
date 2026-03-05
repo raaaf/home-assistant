@@ -231,7 +231,7 @@
   take_over_control: true
   take_over_control_mode: pause_changed  # Only pause changed attributes (not entire room)
   detect_non_ha_changes: false  # Disabled - prevents random turn-ons with Z2M state updates
-  autoreset_control_seconds: 7200 # 2 hours for less frequently used rooms
+  autoreset_control_seconds: 900 # 15 min - reduced to recover quickly from Sleep-Mode false positives
   only_once: false
   adapt_only_on_bare_turn_on: false
   separate_turn_on_commands: false  # Disabled - reduces MQTT traffic (fewer messages per cycle)
@@ -392,7 +392,7 @@
   take_over_control: true
   take_over_control_mode: pause_changed  # Only pause changed attributes (not entire room)
   detect_non_ha_changes: false  # Disabled - prevents random turn-ons with Z2M state updates
-  autoreset_control_seconds: 7200
+  autoreset_control_seconds: 900 # 15 min - reduced to recover quickly from Sleep-Mode false positives
   only_once: false
   adapt_only_on_bare_turn_on: false
   separate_turn_on_commands: false  # Disabled - reduces MQTT traffic (fewer messages per cycle)
