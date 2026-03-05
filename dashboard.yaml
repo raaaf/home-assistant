@@ -348,11 +348,7 @@ views:
                   entity: sensor.192_168_178_118_speed
                   icon: mdi:download
                   icon_color: amber
-                  content: |
-                    {{- (states('sensor.192_168_178_118_speed') | float(0)) | round(1) -}}
-                    MB/s (
-                    {{- (states('sensor.192_168_178_118_left_to_download') | float(0) / 1024.0) | round(1) -}}
-                    GB)
+                  content: "{{ states('sensor.192_168_178_118_speed') }} MB/s"
       - type: custom:gap-card
         view_layout:
           grid:area: right
