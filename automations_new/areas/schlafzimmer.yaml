@@ -43,8 +43,6 @@
       - alias: Luftreiniger ist verfügbar
         condition: template
         value_template: '{{ has_value(''fan.zhimi_vb4_bce4_air_purifier'') }}'
-
-        
       sequence:
       - alias: Luftreiniger einschalten
         action: fan.turn_on
@@ -66,8 +64,6 @@
       - alias: Sensor ist verfügbar
         condition: template
         value_template: '{{ has_value(''sensor.zhimi_vb4_bce4_pm25_density'') }}'
-
-        
       - alias: Luft ist gut (<10)
         condition: numeric_state
         entity_id: sensor.zhimi_vb4_bce4_pm25_density
@@ -90,13 +86,9 @@
       - alias: Luftreiniger ist verfügbar
         condition: template
         value_template: '{{ has_value(''fan.zhimi_vb4_bce4_air_purifier'') }}'
-
-        
       - alias: Sensor ist verfügbar
         condition: template
-        value_template: '{{ has_value(''sensor.zhimi_vb4_bce4_pm25_density'') }}
-
-          '
+        value_template: '{{ has_value(''sensor.zhimi_vb4_bce4_pm25_density'') }}'
       - alias: Nicht ausschalten wenn Schlafenszeit aktiv und jemand zu Hause
         condition: or
         conditions:
@@ -125,13 +117,9 @@
       - alias: Luftreiniger ist verfügbar
         condition: template
         value_template: '{{ has_value(''fan.zhimi_vb4_bce4_air_purifier'') }}'
-
-        
       - alias: Sensor ist verfügbar
         condition: template
-        value_template: '{{ has_value(''sensor.zhimi_vb4_bce4_pm25_density'') }}
-
-          '
+        value_template: '{{ has_value(''sensor.zhimi_vb4_bce4_pm25_density'') }}'
       sequence:
       - alias: Luftreiniger einschalten
         action: fan.turn_on
@@ -188,8 +176,8 @@
       night_lights_entity_state:
       - input_boolean.schlafenszeit
       include_sun: sun_disabled
-      time_delay: 1
-      night_time_delay: 1
+      time_delay: 0
+      night_time_delay: 0
       include_night_light_control:
       - if_lights_are_on_adjust_when_crossing_over
       night_lights_after_time: '19:00:00'
@@ -229,83 +217,83 @@
   alias: 'Licht » Schlafzimmer TV Ambilight'
   description: Schaltet Ambilight ein wenn Apple TV abspielt, deaktiviert Motion-Automation
   triggers:
-    - trigger: state
-      entity_id: media_player.appletv
-      to: playing
-      id: playing
-    - trigger: state
-      entity_id: media_player.appletv
-      from: playing
-      id: stopped
-    - trigger: time_pattern
-      seconds: "/30"
-      id: poll-check
+  - trigger: state
+    entity_id: media_player.appletv
+    to: playing
+    id: playing
+  - trigger: state
+    entity_id: media_player.appletv
+    from: playing
+    id: stopped
+  - trigger: time_pattern
+    minutes: "/5"
+    id: poll-check
   conditions:
-    - condition: or
+  - condition: or
+    conditions:
+    - condition: and
       conditions:
-        - condition: and
-          conditions:
-            - condition: trigger
-              id:
-                - playing
-                - stopped
-            - condition: template
-              value_template: "{{ has_value('media_player.appletv') }}"
-        - condition: and
-          conditions:
-            - condition: template
-              value_template: "{{ is_state('media_player.appletv', 'playing') and has_value('media_player.appletv') }}"
-            - condition: state
-              entity_id: automation.motion_schlafzimmer
-              state: 'on'
+      - condition: trigger
+        id:
+        - playing
+        - stopped
+      - condition: template
+        value_template: "{{ has_value('media_player.appletv') }}"
+    - condition: and
+      conditions:
+      - condition: template
+        value_template: "{{ is_state('media_player.appletv', 'playing') and has_value('media_player.appletv') }}"
+      - condition: state
+        entity_id: automation.motion_schlafzimmer
+        state: 'on'
   actions:
-    - choose:
-        - conditions:
-            - condition: trigger
-              id:
-                - playing
-                - poll-check
-          sequence:
-            - action: automation.turn_off
-              target:
-                entity_id: automation.motion_schlafzimmer
-              data:
-                stop_actions: true
-            - action: switch.turn_off
-              target:
-                entity_id: switch.adaptive_lighting_adapt_brightness_schlafzimmer
-            - delay:
-                milliseconds: 300
-            - action: light.turn_off
-              target:
-                entity_id: light.alle_schlafzimmer_lichter
-            - delay:
-                milliseconds: 500
-            - action: light.turn_on
-              target:
-                entity_id: light.schlafzimmer_tv
-              data:
-                brightness_pct: 30
-            - delay:
-                milliseconds: 500
-            - action: adaptive_lighting.apply
-              data:
-                entity_id: switch.adaptive_lighting_schlafzimmer
-                lights:
-                  - light.schlafzimmer_tv
-                adapt_brightness: false
-                adapt_color: true
-        - conditions:
-            - condition: trigger
-              id: stopped
-          sequence:
-            - action: light.turn_off
-              target:
-                entity_id: light.schlafzimmer_tv
-            - action: switch.turn_on
-              target:
-                entity_id: switch.adaptive_lighting_adapt_brightness_schlafzimmer
-            - action: automation.turn_on
-              target:
-                entity_id: automation.motion_schlafzimmer
-  mode: single
+  - choose:
+    - conditions:
+      - condition: trigger
+        id:
+        - playing
+        - poll-check
+      sequence:
+      - action: automation.turn_off
+        target:
+          entity_id: automation.motion_schlafzimmer
+        data:
+          stop_actions: true
+      - action: switch.turn_off
+        target:
+          entity_id: switch.adaptive_lighting_adapt_brightness_schlafzimmer
+      - delay:
+          milliseconds: 300
+      - action: light.turn_off
+        target:
+          entity_id: light.alle_schlafzimmer_lichter
+      - delay:
+          milliseconds: 500
+      - action: light.turn_on
+        target:
+          entity_id: light.schlafzimmer_tv
+        data:
+          brightness_pct: 30
+      - delay:
+          milliseconds: 500
+      - action: adaptive_lighting.apply
+        data:
+          entity_id: switch.adaptive_lighting_schlafzimmer
+          lights:
+          - light.schlafzimmer_tv
+          adapt_brightness: false
+          adapt_color: true
+    - conditions:
+      - condition: trigger
+        id: stopped
+      sequence:
+      - action: light.turn_off
+        target:
+          entity_id: light.schlafzimmer_tv
+      - action: switch.turn_on
+        target:
+          entity_id: switch.adaptive_lighting_adapt_brightness_schlafzimmer
+      - action: automation.turn_on
+        target:
+          entity_id: automation.motion_schlafzimmer
+  mode: restart

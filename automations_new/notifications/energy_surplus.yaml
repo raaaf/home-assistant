@@ -81,7 +81,7 @@
         message: "{{ push_message }}"
         data:
           push:
-            interruption-level: time-sensitive
+            interruption-level: critical
     - action: persistent_notification.create
       data:
         title: "Solar — Strom verschenken?"

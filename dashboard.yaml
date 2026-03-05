@@ -348,7 +348,7 @@ views:
                   entity: sensor.192_168_178_118_speed
                   icon: mdi:download
                   icon_color: amber
-                  content: "{{ states('sensor.192_168_178_118_speed') }} MB/s"
+                  content: '{{ states(''sensor.192_168_178_118_speed'') }} MB/s'
       - type: custom:gap-card
         view_layout:
           grid:area: right
@@ -900,11 +900,12 @@ views:
     path: media
     type: sections
     max_columns: 4
-    icon: mdi:movie-play
+    icon: ''
     sections:
       - type: grid
-        title: SABnzbd
         cards:
+          - type: heading
+            heading: SABnzbd
           - type: tile
             entity: sensor.192_168_178_118_status
             name: Status
@@ -933,8 +934,9 @@ views:
             entity: binary_sensor.192_168_178_118_warnings
             name: Warnungen
       - type: grid
-        title: Radarr
         cards:
+          - type: heading
+            heading: Radarr
           - type: tile
             entity: binary_sensor.radarr_health
             name: Status
@@ -948,8 +950,9 @@ views:
             entity: sensor.radarr_disk_space_movies
             name: Speicherplatz
       - type: grid
-        title: Sonarr
         cards:
+          - type: heading
+            heading: Sonarr
           - type: tile
             entity: sensor.sonarr_shows
             name: Serien
@@ -966,8 +969,9 @@ views:
             entity: sensor.sonarr_disk_space
             name: Speicherplatz
       - type: grid
-        title: Overseerr
         cards:
+          - type: heading
+            heading: Overseerr
           - type: tile
             entity: sensor.seerr_pending_requests
             name: Offene Anfragen
@@ -983,6 +987,7 @@ views:
           - type: tile
             entity: sensor.seerr_open_issues
             name: Offene Probleme
+    cards: []
   - theme: Backend-selected
     title: Settings
     path: settings
@@ -990,7 +995,7 @@ views:
     layout:
       width: 400
       max_cols: 4
-    icon: mdi:cog
+    icon: ''
     badges: []
     cards:
       - type: entities
