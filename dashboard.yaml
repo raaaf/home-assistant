@@ -947,10 +947,10 @@ views:
           - type: tile
             entity: sensor.radarr_disk_space_movies
             name: Speicherplatz
-          - type: calendar
-            entities:
-              - calendar.radarr
-            name: Kommende Filme
+      - type: calendar
+        entities:
+          - calendar.radarr
+        title: Kommende Filme
       - type: grid
         title: Sonarr
         cards:
