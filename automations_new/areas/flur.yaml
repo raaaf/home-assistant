@@ -13,7 +13,7 @@
         entity_id:
           - light.flur_decke_2
           - light.flur_decke_6
-      time_delay: 1
+      time_delay: 0
 
 - id: '1672931147408'
   alias: Motion » Flur
@@ -32,8 +32,8 @@
           - light.stahltraeger
       night_lights_after_time: '22:00:00'
       night_lights_before_time: 06:00:00
-      night_time_delay: 1
-      time_delay: 1
+      night_time_delay: 0
+      time_delay: 0
       include_ambient: ambient_enabled
       ambient_light_sensor: sensor.balkon_motion_illuminance_safe
       night_lights_conditions:

@@ -446,8 +446,8 @@
       night_lights_entity_state:
       - input_boolean.schlafenszeit
       include_sun: sun_disabled
-      time_delay: 1
-      night_time_delay: 1
+      time_delay: 0
+      night_time_delay: 0
       include_night_light_control:
       - if_lights_are_on_adjust_when_crossing_over
       night_lights_after_time: '19:00:00'
