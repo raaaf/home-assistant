@@ -71,6 +71,9 @@
         - condition: state
           entity_id: sensor.macbook_pro_2_primary_display_name
           state: "Studio Display"
+        - condition: state
+          entity_id: sensor.macbook_pro_2_primary_display_name
+          state: "Studio Display (2)"
       sequence:
       - alias: "Arbeit aktivieren (falls noch nicht aktiv)"
         if:
@@ -125,7 +128,7 @@
         condition: state
         entity_id: input_boolean.gaming
         state: 'off'
-      - alias: Rafael arbeitet am Studio Display
+      - alias: Rafael arbeitet am Monitor
         condition: or
         conditions:
         - condition: numeric_state
@@ -133,7 +136,7 @@
           above: 1.5
         - condition: state
           entity_id: sensor.macbook_pro_rafael_primary_display_name
-          state: "Studio Display"
+          state: "XG27JCG"
       sequence:
       - alias: "Arbeit aktivieren (falls noch nicht aktiv)"
         if:
