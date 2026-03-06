@@ -890,16 +890,6 @@ input_select:
 # ============================================================================
 
 automation: !include_dir_merge_list automations_new/
-rest_command:
-  sabnzbd_resume_all_jobs:
-    url: !secret sabnzbd_url
-    params:
-      mode: queue
-      name: resume
-      apikey: !secret sabnzbd_api_key
-      output: json
-    method: GET
-
 script: !include scripts.yaml
 sensor: !include sensors.yaml
 binary_sensor: !include binary_sensors.yaml

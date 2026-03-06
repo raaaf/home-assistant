@@ -72,15 +72,9 @@
                 entity_id: number.192_168_178_118_speedlimit
               data:
                 value: "100"
-            - if:
-                - condition: state
-                  entity_id: sensor.192_168_178_118_status
-                  state: 'Paused'
-              then:
-                - action: button.press
-                  target:
-                    entity_id: button.192_168_178_118_resume
-            - action: rest_command.sabnzbd_resume_all_jobs
+            - action: button.press
+              target:
+                entity_id: button.192_168_178_118_resume
             - action: persistent_notification.create
               data:
                 notification_id: sabnzbd_nightmode
