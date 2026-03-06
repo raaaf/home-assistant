@@ -236,12 +236,12 @@ fade_volume:
           - bezier
           - linear
   variables:
-    min_step_size: 0.005
+    min_step_size: 0.01
     start_volume: "{% set current = state_attr(target_player, 'volume_level') | float(0)
       %} {% if current < 0.01 %}\n  0\n{% else %}\n  {{ current }}\n{% endif %}\n"
     volume_diff: '{{ (target_volume - start_volume) | float(0) }}'
     volume_based_steps: '{{ ((volume_diff | abs) / min_step_size) | int(1) }}'
-    time_based_steps: '{{ (2 * duration) | int(1) }}'
+    time_based_steps: '{{ [duration / 30, 10] | max | int }}'
     total_steps: '{{ [volume_based_steps, time_based_steps] | min }}'
   sequence:
   - if:
@@ -277,7 +277,7 @@ fade_volume:
             }}\n  {% else %}\n    {# Linear #}\n    {{ (start_volume + progress *
             volume_diff) | float(0) | round(3) }}\n  {% endif %}\n{% endif %}"
       - delay:
-          milliseconds: '{{ ((duration * 1000) / total_steps) | int(500) }}'
+          milliseconds: '{{ ((duration * 1000) / total_steps) | int }}'
   - action: media_player.volume_set
     continue_on_error: true
     target:
