@@ -93,6 +93,14 @@
           condition: template
           value_template: "{{ states('input_boolean.alle_sind_weg') == 'off' }}"
         then:
+        - alias: Motion-Automationen für Wake-Up Räume deaktivieren
+          action: automation.turn_off
+          target:
+            entity_id:
+            - automation.motion_schlafzimmer
+            - automation.kinderzimmer_motion
+          data:
+            stop_actions: true
         - alias: "Schlafzimmer und Kinderzimmer über 10 Minuten auf 100% hochfahren"
           action: light.turn_on
           target:
@@ -102,6 +110,34 @@
           data:
             brightness_pct: 100
             transition: 600
+        - alias: "Warten bis Aufwachlicht abgeschlossen (10 Minuten)"
+          delay: "00:10:00"
+        - alias: Motion-Automationen für Wake-Up Räume wieder aktivieren
+          action: automation.turn_on
+          target:
+            entity_id:
+            - automation.kinderzimmer_motion
+            - automation.motion_schlafzimmer
+        - alias: "Warte bis 08:00 Uhr"
+          delay:
+            seconds: >-
+              {% set target_time = today_at('08:00:00') %}
+              {% set now_time = now() %}
+              {% if now_time < target_time %}
+                {{ (target_time - now_time).total_seconds() | int }}
+              {% else %}
+                0
+              {% endif %}
+        - alias: "08:00 Uhr: Alle Lichter ausschalten"
+          action: light.turn_off
+          target:
+            entity_id:
+            - light.alle_schlafzimmer_lichter
+            - light.alle_kinderzimmer_lichter
+        - alias: "08:00 Uhr: Wohnungstür entsperren"
+          action: lock.unlock
+          target:
+            entity_id: lock.nuki_haustur_lock
     - alias: Sonnenaufgang - Schlafenszeit beenden (Fallback)
       conditions:
       - condition: trigger
@@ -114,6 +150,19 @@
         action: input_boolean.turn_off
         target:
           entity_id: input_boolean.schlafenszeit
+      - alias: Sleep Mode für alle Räume deaktivieren
+        action: switch.turn_off
+        target:
+          entity_id:
+          - switch.adaptive_lighting_sleep_mode_arbeitszimmer
+          - switch.adaptive_lighting_sleep_mode_badezimmer
+          - switch.adaptive_lighting_sleep_mode_balkon
+          - switch.adaptive_lighting_sleep_mode_flur
+          - switch.adaptive_lighting_sleep_mode_kinderzimmer
+          - switch.adaptive_lighting_sleep_mode_kueche
+          - switch.adaptive_lighting_sleep_mode_waschzimmer
+          - switch.adaptive_lighting_sleep_mode_wohnzimmer
+          - switch.adaptive_lighting_sleep_mode_schlafzimmer
     - alias: Einschlafzeit - Schlafmodus aktivieren
       conditions:
       - condition: trigger
