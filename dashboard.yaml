@@ -153,7 +153,7 @@ views:
                   type: template
                   icon: mdi:heating-coil
                   icon_color: red
-                  content: Arbeitszimmer
+                  content: Schlafzimmer
                   entity: switch.heizung_schlafzimmer
               - type: conditional
                 conditions:
@@ -187,6 +187,16 @@ views:
                   entity: switch.heizung_kinderzimmer
               - type: conditional
                 conditions:
+                  - entity: switch.heizung_badezimmer
+                    state: 'on'
+                chip:
+                  type: template
+                  icon: mdi:heating-coil
+                  icon_color: red
+                  content: Badezimmer
+                  entity: switch.heizung_badezimmer
+              - type: conditional
+                conditions:
                   - entity: fan.arbeitszimmer
                     state: 'on'
                   - entity: fan.arbeitszimmer
@@ -213,32 +223,32 @@ views:
                   entity: fan.schlafzimmer
               - type: conditional
                 conditions:
-                  - entity: fan.luefter
+                  - entity: switch.luefter_badezimmer
                     state: 'on'
                 chip:
                   type: template
                   icon: mdi:fan-auto
                   content: Badezimmer
-                  entity: fan.luefter
+                  entity: switch.luefter_badezimmer
               - type: conditional
                 conditions:
-                  - entity: fan.xiaomi_smart_air_purifier_4_pro
+                  - entity: fan.zhimi_vb4_bce4_air_purifier
                     state: 'on'
                 chip:
                   type: template
                   icon: mdi:fan-auto
                   content: Luftreiniger SZ
-                  entity: fan.xiaomi_smart_air_purifier_4_pro
+                  entity: fan.zhimi_vb4_bce4_air_purifier
               - type: conditional
                 conditions:
-                  - entity: lock.nuki_haustur_lock
+                  - entity: lock.smart_lock_pro
                     state: unlocked
                 chip:
                   type: template
                   icon: mdi:door-open
                   icon_color: yellow
                   content: Wohnungstür aufgeschlossen
-                  entity: lock.nuki_haustur_lock
+                  entity: lock.smart_lock_pro
               - type: conditional
                 conditions:
                   - entity: binary_sensor.schlafzimmer_kontaktsensor_contact
