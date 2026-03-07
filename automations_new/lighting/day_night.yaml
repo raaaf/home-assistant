@@ -27,9 +27,54 @@
   - trigger: time
     at: '22:00:00'
     id: schlafenszeit
+  - trigger: homeassistant
+    event: start
+    id: restart
   conditions: []
   actions:
   - choose:
+    - alias: Nach Neustart - Schlafenszeit-Zustand korrigieren
+      conditions:
+      - condition: trigger
+        id: restart
+      - condition: template
+        value_template: >-
+          {% set einschlafzeit = states('sensor.einschlafzeit_timestamp') %}
+          {% set wakeup = states('sensor.wakeup_light_timestamp') %}
+          {% if einschlafzeit in ['unknown', 'unavailable'] or wakeup in ['unknown', 'unavailable'] %}
+            false
+          {% else %}
+            {% set sleep_dt = as_datetime(einschlafzeit) %}
+            {% set wake_dt = as_datetime(wakeup) %}
+            {% set n = now() %}
+            {% if n >= wake_dt and n < sleep_dt %}
+              true
+            {% else %}
+              false
+            {% endif %}
+          {% endif %}
+      sequence:
+      - alias: Schlafenszeit deaktivieren (nach Neustart - es ist Tageszeit)
+        action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.schlafenszeit
+      - alias: Nachtlicht deaktivieren
+        action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.nachtlicht
+      - alias: Sleep Mode für alle Räume deaktivieren
+        action: switch.turn_off
+        target:
+          entity_id:
+          - switch.adaptive_lighting_sleep_mode_arbeitszimmer
+          - switch.adaptive_lighting_sleep_mode_badezimmer
+          - switch.adaptive_lighting_sleep_mode_balkon
+          - switch.adaptive_lighting_sleep_mode_flur
+          - switch.adaptive_lighting_sleep_mode_kinderzimmer
+          - switch.adaptive_lighting_sleep_mode_kueche
+          - switch.adaptive_lighting_sleep_mode_waschzimmer
+          - switch.adaptive_lighting_sleep_mode_wohnzimmer
+          - switch.adaptive_lighting_sleep_mode_schlafzimmer
     - alias: Aufwachen - Alarm deaktivieren und sanftes Licht
       conditions:
       - condition: trigger
@@ -39,6 +84,10 @@
         action: input_boolean.turn_off
         target:
           entity_id: input_boolean.schlafenszeit
+      - alias: Nachtlicht deaktivieren
+        action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.nachtlicht
       - alias: Sleep Mode für alle Räume deaktivieren
         action: switch.turn_off
         target:
@@ -134,10 +183,49 @@
             entity_id:
             - light.alle_schlafzimmer_lichter
             - light.alle_kinderzimmer_lichter
+        - alias: "08:00 Uhr: Musik auf 30% drosseln (alle HomePods)"
+          parallel:
+            - action: media_player.volume_set
+              target:
+                entity_id: media_player.homepod_wohnzimmer
+              data:
+                volume_level: 0.30
+            - action: media_player.volume_set
+              target:
+                entity_id: media_player.homepod_kueche
+              data:
+                volume_level: 0.30
+            - action: media_player.volume_set
+              target:
+                entity_id: media_player.homepod_badezimmer
+              data:
+                volume_level: 0.30
+            - action: media_player.volume_set
+              target:
+                entity_id: media_player.homepod_kinderzimmer
+              data:
+                volume_level: 0.30
+            - action: media_player.volume_set
+              target:
+                entity_id: media_player.arbeitszimmer
+              data:
+                volume_level: 0.30
+            - action: media_player.volume_set
+              target:
+                entity_id: media_player.schlafzimmer
+              data:
+                volume_level: 0.30
+        - alias: "08:00 Uhr: Musik in Schlafzimmer, Kinderzimmer und Bad stoppen"
+          action: media_player.media_stop
+          target:
+            entity_id:
+            - media_player.schlafzimmer
+            - media_player.homepod_kinderzimmer
+            - media_player.homepod_badezimmer
         - alias: "08:00 Uhr: Wohnungstür entsperren"
           action: lock.unlock
           target:
-            entity_id: lock.nuki_haustur_lock
+            entity_id: lock.smart_lock_pro
     - alias: Sonnenaufgang - Schlafenszeit beenden (Fallback)
       conditions:
       - condition: trigger
@@ -150,6 +238,10 @@
         action: input_boolean.turn_off
         target:
           entity_id: input_boolean.schlafenszeit
+      - alias: Nachtlicht deaktivieren
+        action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.nachtlicht
       - alias: Sleep Mode für alle Räume deaktivieren
         action: switch.turn_off
         target:

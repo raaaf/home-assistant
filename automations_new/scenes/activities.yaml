@@ -57,10 +57,10 @@
       - condition: trigger
         id: timer-abgelaufen
       - condition: state
-        entity_id: lock.nuki_haustur_lock
+        entity_id: lock.smart_lock_pro
         state: unlocked
       - condition: template
-        value_template: "{{ has_value('lock.nuki_haustur_lock') }}"
+        value_template: "{{ has_value('lock.smart_lock_pro') }}"
       - condition: state
         entity_id: input_boolean.alle_sind_weg
         state: 'on'
@@ -68,7 +68,7 @@
         value_template: "{{ has_value('input_boolean.alle_sind_weg') }}"
       sequence:
       - target:
-          entity_id: lock.nuki_haustur_lock
+          entity_id: lock.smart_lock_pro
         action: lock.lock
       - action: logbook.log
         data:
