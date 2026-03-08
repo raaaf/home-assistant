@@ -188,14 +188,21 @@
           entity_id: input_boolean.movie
         data: {}
         action: input_boolean.turn_off
-      - action: adaptive_lighting.change_switch_settings
-        target:
-          entity_id:
-          - switch.adaptive_lighting_wohnzimmer
-          - switch.adaptive_lighting_kueche
-        data:
-          max_brightness: 100
-          min_brightness: 10
+      - alias: "Brightness-Reset nur außerhalb Schlafenszeit"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.schlafenszeit
+            state: 'off'
+          sequence:
+          - action: adaptive_lighting.change_switch_settings
+            target:
+              entity_id:
+              - switch.adaptive_lighting_wohnzimmer
+              - switch.adaptive_lighting_kueche
+            data:
+              max_brightness: 100
+              min_brightness: 10
       - alias: "Re-enable Living Room Adaptive Lighting with conflict check"
         action: script.scene_enable_adaptive_lighting
         data:
@@ -216,10 +223,11 @@
         data:
           automations: "automation.motion_esstisch"
           exclude_scenes: "essen"
-      - alias: "Reaktiviere Spieletisch-Motion"
-        action: automation.turn_on
-        target:
-          entity_id: automation.motion_spieletisch
+      - alias: "Reaktiviere Spieletisch-Motion mit Konflikt-Prüfung"
+        action: script.scene_enable_motion_automations
+        data:
+          automations: "automation.motion_spieletisch"
+          exclude_scenes: ""
       - alias: "Reaktiviere Flur-Motion mit Konflikt-Prüfung"
         action: script.scene_enable_motion_automations
         data:
@@ -236,14 +244,21 @@
       - condition: trigger
         id: paused
       sequence:
-      - action: adaptive_lighting.change_switch_settings
-        target:
-          entity_id:
-          - switch.adaptive_lighting_wohnzimmer
-          - switch.adaptive_lighting_kueche
-        data:
-          max_brightness: 80
-          min_brightness: 10
+      - alias: "Brightness-Reset nur außerhalb Schlafenszeit"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.schlafenszeit
+            state: 'off'
+          sequence:
+          - action: adaptive_lighting.change_switch_settings
+            target:
+              entity_id:
+              - switch.adaptive_lighting_wohnzimmer
+              - switch.adaptive_lighting_kueche
+            data:
+              max_brightness: 80
+              min_brightness: 10
       - target:
           entity_id: light.hyperhdr
         data:
@@ -271,10 +286,11 @@
         data:
           automations: "automation.motion_esstisch"
           exclude_scenes: "essen"
-      - alias: "Reaktiviere Spieletisch-Motion"
-        action: automation.turn_on
-        target:
-          entity_id: automation.motion_spieletisch
+      - alias: "Reaktiviere Spieletisch-Motion mit Konflikt-Prüfung"
+        action: script.scene_enable_motion_automations
+        data:
+          automations: "automation.motion_spieletisch"
+          exclude_scenes: ""
   mode: restart
 - id: '1671133998236'
   alias: Wohnzimmer » Weihnachtsbaum

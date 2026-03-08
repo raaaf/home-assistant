@@ -124,6 +124,15 @@
       - media_player.denon_avr_x3200w
       - media_player.wohnzimmer
     data: {}
+  - alias: "Alle Lichter ausschalten"
+    action: light.turn_off
+    target:
+      entity_id:
+      - light.alle_wohnzimmer_lichter
+      - light.alle_kuche_lichter
+      - light.alle_flur_lichter
+      - light.hyperhdr
+    data: {}
   - target:
       entity_id:
       - input_boolean.tv_timer
