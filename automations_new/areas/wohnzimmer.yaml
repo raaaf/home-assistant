@@ -509,7 +509,10 @@
           entity_id:
           - light.alle_wohnzimmer_lichter
           - light.alle_kuche_lichter
-          - switch.steckdose_kuechengeraete
+      - alias: "Turn off kitchen appliances switch"
+        action: switch.turn_off
+        target:
+          entity_id: switch.steckdose_kuechengeraete
       - alias: "Leselicht wiederherstellen falls aktiv"
         choose:
         - conditions:
