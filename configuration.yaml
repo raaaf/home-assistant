@@ -58,6 +58,7 @@ logger:
     homeassistant.components.powercalc: info
     # Suppress noisy device connectivity errors
     homeassistant.components.media_player: error  # Suppress Denon AVR slow update warnings
+    pyatv: critical  # Suppress HomePod/AirPlay connection resets
     homeassistant.components.shelly: critical  # Suppress Shelly connection errors (show only critical)
     homeassistant.components.tplink: critical  # Suppress TP-Link timeout errors (show only critical)
     homeassistant.helpers.service: critical  # Suppress vacuum coroutine warnings

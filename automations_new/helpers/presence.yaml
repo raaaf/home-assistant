@@ -315,17 +315,56 @@
           target:
             entity_id: vacuum.s7_maxv
           data: {}
-      - alias: HomePods stoppen
-        action: media_player.media_stop
-        target:
-          entity_id:
-          - media_player.homepod_wohnzimmer
-          - media_player.homepod_kueche
-          - media_player.homepod_badezimmer
-          - media_player.homepod_kinderzimmer
-          - media_player.arbeitszimmer
-          - media_player.schlafzimmer
-        data: {}
+      - alias: HomePods stoppen (nur spielende)
+        parallel:
+          - if:
+              - condition: template
+                value_template: "{{ is_state('media_player.homepod_wohnzimmer', 'playing') }}"
+            then:
+              - action: media_player.media_stop
+                continue_on_error: true
+                target:
+                  entity_id: media_player.homepod_wohnzimmer
+          - if:
+              - condition: template
+                value_template: "{{ is_state('media_player.kuche', 'playing') }}"
+            then:
+              - action: media_player.media_stop
+                continue_on_error: true
+                target:
+                  entity_id: media_player.kuche
+          - if:
+              - condition: template
+                value_template: "{{ is_state('media_player.homepod_badezimmer', 'playing') }}"
+            then:
+              - action: media_player.media_stop
+                continue_on_error: true
+                target:
+                  entity_id: media_player.homepod_badezimmer
+          - if:
+              - condition: template
+                value_template: "{{ is_state('media_player.homepod_kinderzimmer', 'playing') }}"
+            then:
+              - action: media_player.media_stop
+                continue_on_error: true
+                target:
+                  entity_id: media_player.homepod_kinderzimmer
+          - if:
+              - condition: template
+                value_template: "{{ is_state('media_player.arbeitszimmer', 'playing') }}"
+            then:
+              - action: media_player.media_stop
+                continue_on_error: true
+                target:
+                  entity_id: media_player.arbeitszimmer
+          - if:
+              - condition: template
+                value_template: "{{ is_state('media_player.schlafzimmer', 'playing') }}"
+            then:
+              - action: media_player.media_stop
+                continue_on_error: true
+                target:
+                  entity_id: media_player.schlafzimmer
       - alias: Türe abschließen wenn offen
         if:
         - condition: state

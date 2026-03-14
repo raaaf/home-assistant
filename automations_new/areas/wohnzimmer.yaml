@@ -509,7 +509,7 @@
           entity_id:
           - light.alle_wohnzimmer_lichter
           - light.alle_kuche_lichter
-          - light.steckdose_kuechengeraete
+          - switch.steckdose_kuechengeraete
       - alias: "Leselicht wiederherstellen falls aktiv"
         choose:
         - conditions:

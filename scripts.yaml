@@ -557,7 +557,7 @@ reload_media_players:
       - media_player.homepod_badezimmer
       - media_player.homepod_kinderzimmer
       - media_player.homepod_wohnzimmer
-      - media_player.homepod_kueche
+      - media_player.kuche
 
 heizung_boost:
   alias: Heizung Boost

@@ -43,7 +43,7 @@
       - media_player.homepod_badezimmer
       - media_player.homepod_kinderzimmer
       - media_player.homepod_wohnzimmer
-      - media_player.homepod_kueche
+      - media_player.kuche
   - delay: 00:00:03
   - alias: "Entity-Status aktualisieren"
     action: homeassistant.update_entity
@@ -54,7 +54,7 @@
       - media_player.homepod_badezimmer
       - media_player.homepod_kinderzimmer
       - media_player.homepod_wohnzimmer
-      - media_player.homepod_kueche
+      - media_player.kuche
   - action: logbook.log
     data:
       name: HomePod Pre-Wake
@@ -65,7 +65,7 @@
 - id: '1696241451967'
   alias: Helper » Workday Musik
   description: 'Startet sanfte Musik zum Aufwachen an Werktagen. Nutzt alle HomePods
-    (6 Minis) in einer Gruppe.
+    (5 Minis + 1 großer) in einer Gruppe.
 
     '
   triggers:
@@ -92,10 +92,10 @@
     wait_template: >
       {{ ['media_player.arbeitszimmer', 'media_player.schlafzimmer',
           'media_player.homepod_badezimmer', 'media_player.homepod_kinderzimmer',
-          'media_player.homepod_wohnzimmer', 'media_player.homepod_kueche']
+          'media_player.homepod_wohnzimmer', 'media_player.kuche']
          | select('is_state', 'playing') | list | length > 0 }}
-    timeout: 00:00:20
-    continue_on_timeout: true
+    timeout: 00:01:00
+    continue_on_timeout: false
   - alias: "Kurz warten bis HomeKit Volume gesetzt hat"
     delay: 00:00:05
   - alias: "Fade volume up over 10 minutes (room-specific targets)"
@@ -103,13 +103,13 @@
       - action: script.fade_volume
         data:
           target_player: media_player.homepod_wohnzimmer
-          target_volume: 0.30
+          target_volume: 0.40
           duration: 600
           curve: linear
       - action: script.fade_volume
         data:
-          target_player: media_player.homepod_kueche
-          target_volume: 0.30
+          target_player: media_player.kuche
+          target_volume: 0.50
           duration: 600
           curve: linear
       - action: script.fade_volume
@@ -147,7 +147,7 @@
     data:
       name: Guten Morgen Musik
       message: 'Wakeup Musik gestartet um {{ as_timestamp(states(''sensor.wakeup_light_timestamp''))
-        | timestamp_custom(''%H:%M'') }} - WZ/KU 30%, Bad 50%, Rest 40% - Läuft: {{ state_attr(''media_player.homepod_wohnzimmer'',
+        | timestamp_custom(''%H:%M'') }} - WZ/AZ 30%, Bad/KU 50%, Rest 40% - Läuft: {{ state_attr(''media_player.homepod_wohnzimmer'',
         ''media_title'') | default(''Apple Home Musik'') }}'
       domain: automation
   mode: single

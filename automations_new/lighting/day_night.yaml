@@ -150,15 +150,65 @@
             - automation.kinderzimmer_motion
           data:
             stop_actions: true
-        - alias: "Schlafzimmer und Kinderzimmer über 10 Minuten auf 100% hochfahren"
-          action: light.turn_on
+        - alias: "Alle HomePods auf 0% setzen vor dem Aufwach-Fade"
+          action: media_player.volume_set
+          continue_on_error: true
           target:
             entity_id:
-            - light.alle_schlafzimmer_lichter
-            - light.alle_kinderzimmer_lichter
+            - media_player.homepod_wohnzimmer
+            - media_player.arbeitszimmer
+            - media_player.kuche
+            - media_player.homepod_badezimmer
+            - media_player.homepod_kinderzimmer
+            - media_player.schlafzimmer
           data:
-            brightness_pct: 100
-            transition: 600
+            volume_level: 0.0
+        - alias: "Schlafzimmer und Kinderzimmer über 10 Minuten auf 100% hochfahren + HomePods mitsynchronisieren"
+          parallel:
+            - action: light.turn_on
+              target:
+                entity_id:
+                - light.alle_schlafzimmer_lichter
+                - light.alle_kinderzimmer_lichter
+              data:
+                brightness_pct: 100
+                transition: 600
+            - action: script.fade_volume
+              data:
+                target_player: media_player.homepod_wohnzimmer
+                target_volume: 0.30
+                duration: 600
+                curve: linear
+            - action: script.fade_volume
+              data:
+                target_player: media_player.arbeitszimmer
+                target_volume: 0.30
+                duration: 600
+                curve: linear
+            - action: script.fade_volume
+              data:
+                target_player: media_player.kuche
+                target_volume: 0.40
+                duration: 600
+                curve: linear
+            - action: script.fade_volume
+              data:
+                target_player: media_player.homepod_badezimmer
+                target_volume: 0.40
+                duration: 600
+                curve: linear
+            - action: script.fade_volume
+              data:
+                target_player: media_player.homepod_kinderzimmer
+                target_volume: 0.40
+                duration: 600
+                curve: linear
+            - action: script.fade_volume
+              data:
+                target_player: media_player.schlafzimmer
+                target_volume: 0.40
+                duration: 600
+                curve: linear
         - alias: "Warten bis Aufwachlicht abgeschlossen (10 Minuten)"
           delay: "00:10:00"
         - alias: Motion-Automationen für Wake-Up Räume wieder aktivieren
@@ -183,45 +233,68 @@
             entity_id:
             - light.alle_schlafzimmer_lichter
             - light.alle_kinderzimmer_lichter
-        - alias: "08:00 Uhr: Musik auf 30% drosseln (alle HomePods)"
+        - alias: "08:00 Uhr: Musik auf 30% drosseln (nur spielende HomePods)"
           parallel:
-            - action: media_player.volume_set
-              target:
-                entity_id: media_player.homepod_wohnzimmer
-              data:
-                volume_level: 0.30
-            - action: media_player.volume_set
-              target:
-                entity_id: media_player.homepod_kueche
-              data:
-                volume_level: 0.30
-            - action: media_player.volume_set
-              target:
-                entity_id: media_player.homepod_badezimmer
-              data:
-                volume_level: 0.30
-            - action: media_player.volume_set
-              target:
-                entity_id: media_player.homepod_kinderzimmer
-              data:
-                volume_level: 0.30
-            - action: media_player.volume_set
-              target:
-                entity_id: media_player.arbeitszimmer
-              data:
-                volume_level: 0.30
-            - action: media_player.volume_set
-              target:
-                entity_id: media_player.schlafzimmer
-              data:
-                volume_level: 0.30
-        - alias: "08:00 Uhr: Musik in Schlafzimmer, Kinderzimmer und Bad stoppen"
-          action: media_player.media_stop
-          target:
-            entity_id:
-            - media_player.schlafzimmer
-            - media_player.homepod_kinderzimmer
-            - media_player.homepod_badezimmer
+            - if:
+                - condition: template
+                  value_template: "{{ is_state('media_player.homepod_wohnzimmer', 'playing') }}"
+              then:
+                - action: media_player.volume_set
+                  continue_on_error: true
+                  target:
+                    entity_id: media_player.homepod_wohnzimmer
+                  data:
+                    volume_level: 0.30
+            - if:
+                - condition: template
+                  value_template: "{{ is_state('media_player.kuche', 'playing') }}"
+              then:
+                - action: media_player.volume_set
+                  continue_on_error: true
+                  target:
+                    entity_id: media_player.kuche
+                  data:
+                    volume_level: 0.30
+            - if:
+                - condition: template
+                  value_template: "{{ is_state('media_player.homepod_badezimmer', 'playing') }}"
+              then:
+                - action: media_player.volume_set
+                  continue_on_error: true
+                  target:
+                    entity_id: media_player.homepod_badezimmer
+                  data:
+                    volume_level: 0.30
+            - if:
+                - condition: template
+                  value_template: "{{ is_state('media_player.homepod_kinderzimmer', 'playing') }}"
+              then:
+                - action: media_player.volume_set
+                  continue_on_error: true
+                  target:
+                    entity_id: media_player.homepod_kinderzimmer
+                  data:
+                    volume_level: 0.30
+            - if:
+                - condition: template
+                  value_template: "{{ is_state('media_player.arbeitszimmer', 'playing') }}"
+              then:
+                - action: media_player.volume_set
+                  continue_on_error: true
+                  target:
+                    entity_id: media_player.arbeitszimmer
+                  data:
+                    volume_level: 0.30
+            - if:
+                - condition: template
+                  value_template: "{{ is_state('media_player.schlafzimmer', 'playing') }}"
+              then:
+                - action: media_player.volume_set
+                  continue_on_error: true
+                  target:
+                    entity_id: media_player.schlafzimmer
+                  data:
+                    volume_level: 0.30
         - alias: "08:00 Uhr: Wohnungstür entsperren"
           action: lock.unlock
           target:

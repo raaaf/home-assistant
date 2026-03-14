@@ -21,7 +21,7 @@
       - media_player.homepod_badezimmer
       - media_player.homepod_kinderzimmer
       - media_player.homepod_wohnzimmer
-      - media_player.homepod_kueche
+      - media_player.kuche
       - media_player.smarttv_4k
     action: homeassistant.update_entity
   mode: single
@@ -49,7 +49,7 @@
       - media_player.homepod_badezimmer
       - media_player.homepod_kinderzimmer
       - media_player.homepod_wohnzimmer
-      - media_player.homepod_kueche
+      - media_player.kuche
       - media_player.smarttv_4k
     idle_players: >
       {{ media_players | select('has_value') | reject('is_state', 'playing') | list }}
@@ -69,13 +69,13 @@
   triggers:
   - trigger: state
     entity_id:
-    # HomePods (6)
+    # HomePods (5 Minis + 1 großer)
     - media_player.arbeitszimmer
     - media_player.schlafzimmer
     - media_player.homepod_badezimmer
     - media_player.homepod_kinderzimmer
     - media_player.homepod_wohnzimmer
-    - media_player.homepod_kueche
+    - media_player.kuche
     # Apple TVs (2)
     - media_player.appletv
     - media_player.wohnzimmer
@@ -92,7 +92,7 @@
       - media_player.homepod_badezimmer
       - media_player.homepod_kinderzimmer
       - media_player.homepod_wohnzimmer
-      - media_player.homepod_kueche
+      - media_player.kuche
       - media_player.appletv
       - media_player.wohnzimmer
   actions:
