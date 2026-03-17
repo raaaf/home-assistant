@@ -18,9 +18,17 @@
       include_night_lights: night_lights_enabled
       night_lights:
         entity_id: light.alle_kinderzimmer_nachtlichter
+      include_light_control:
+      - use_brightness
+      - use_transition
+      light_transition_on: 2
+      light_transition_off: 10
       include_night_light_control:
       - use_night_brightness
       - use_brightness
+      - use_transition
+      night_light_transition_on: 2
+      night_light_transition_off: 10
       night_lights_after_time: '19:00:00'
       night_lights_before_time: 05:30:00
       time_delay: 0
@@ -31,8 +39,8 @@
       - input_boolean.schlafenszeit
       include_sun: sun_disabled
       night_light_brightness: 5
-      ambient_light_value: 150
-      ambient_light_high_value: 200
+      ambient_light_value: 300
+      ambient_light_high_value: 400
       # Bypass motion turn-off when manual control is active
       include_bypass:
       - bypass_enabled_stop

@@ -12,7 +12,10 @@
       - binary_sensor.balkon_motion_occupancy
       light_switch:
         entity_id: light.alle_balkon_lichter
-      include_light_control: dont_use_brightness
+      include_light_control:
+      - use_transition
+      light_transition_on: 2
+      light_transition_off: 10
       include_sun: sun_enabled
       include_night_lights: night_lights_disabled
       time_delay: 0
@@ -29,11 +32,14 @@
       - sun_enabled
       include_night_light_control:
       - if_lights_are_on_adjust_when_crossing_over
+      - use_transition
+      night_light_transition_on: 2
+      night_light_transition_off: 10
       night_lights_sun_elevation: -4
       include_ambient: ambient_enabled
       ambient_light_sensor: sensor.balkon_motion_illuminance_safe
-      ambient_light_value: 150
-      ambient_light_high_value: 200
+      ambient_light_value: 300
+      ambient_light_high_value: 400
       # Bypass motion turn-off when manual control is active
       include_bypass:
       - bypass_enabled_stop

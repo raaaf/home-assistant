@@ -94,7 +94,7 @@
       include_ambient: ambient_enabled
       ambient_light_sensor: sensor.balkon_motion_illuminance_safe
       ambient_light_options: ambient_light_option_disabled
-      ambient_light_value: 150
+      ambient_light_value: 300
       include_time: time_disabled
       after_time: 06:00:00
       before_time: '22:00:00'
@@ -102,10 +102,18 @@
       - time_enabled
       night_lights_entity_state:
       - input_boolean.schlafenszeit
+      include_light_control:
+      - use_brightness
+      - use_transition
+      light_transition_on: 2
+      light_transition_off: 10
       include_sun: sun_disabled
       include_night_light_control:
       - use_brightness
-      ambient_light_high_value: 200
+      - use_transition
+      night_light_transition_on: 2
+      night_light_transition_off: 10
+      ambient_light_high_value: 400
       motion_bypass_lights_on:
       - input_boolean.kochen
       motion_bypass_lights_off:

@@ -202,21 +202,28 @@
       light_switch:
         entity_id: light.alle_badezimmer_lichter
       include_ambient: ambient_enabled
-      ambient_light_sensor: sensor.badezimmer_motion_illuminance
-      ambient_light_options: ambient_light_option_enabled
+      ambient_light_sensor: sensor.balkon_motion_illuminance_safe
+      ambient_light_options: ambient_light_option_disabled
+      ambient_light_value: 300
+      ambient_light_high_value: 400
       night_lights_conditions:
       - time_enabled
       night_lights_entity_state:
       - input_boolean.schlafenszeit
-      include_night_light_control: []
+      include_light_control:
+      - use_brightness
+      - use_transition
+      light_transition_on: 2
+      light_transition_off: 10
+      include_night_light_control:
+      - use_brightness
+      - use_transition
       night_light_brightness: 30
       night_light_transition_on: 3
       night_light_transition_off: 9
       boolean_scenes_scripts: input_boolean.musik_badezimmer
       time_delay: 0
       night_time_delay: 0
-      ambient_light_value: 150
-      ambient_light_high_value: 200
       # Bypass motion turn-off when manual control is active
       include_bypass:
       - bypass_enabled_stop
