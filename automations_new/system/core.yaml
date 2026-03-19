@@ -349,7 +349,9 @@
     Stellt optimierte AL-Einstellungen nach jedem HA-Neustart wieder her.
     Hintergrund: AL speichert Konfiguration in Config Entries (nicht YAML),
     daher müssen Änderungen via change_switch_settings nach Neustarts neu gesetzt werden.
-    Änderungen: separate_turn_on_commands=false (weniger MQTT-Traffic),
+    Änderungen: separate_turn_on_commands=true (IKEA fade-in: sendet ON, dann brightness separat),
+    send_split_delay=300 (300ms Pause zwischen ON und brightness für IKEA),
+    initial_transition=2 (2s fade beim Einschalten),
     take_over_control_mode=pause_changed (pausiert nur geänderte Attribute).
     adapt_only_on_bare_turn_on bleibt false - true verursacht 100% Helligkeit beim Einschalten
     via Automationen mit expliziten Werten (wird als manual_control fehlinterpretiert).
@@ -378,7 +380,9 @@
           - action: adaptive_lighting.change_switch_settings
             data:
               entity_id: "{{ repeat.item }}"
-              separate_turn_on_commands: false
+              separate_turn_on_commands: true
+              send_split_delay: 300
+              initial_transition: 2
               take_over_control_mode: pause_changed
               adapt_only_on_bare_turn_on: false
               use_defaults: current
@@ -386,4 +390,6 @@
       action: logbook.log
       data:
         name: Adaptive Lighting Setup
-        message: Optimierte AL-Einstellungen nach Neustart gesetzt (10 Räume)
+        message: >
+          AL-Einstellungen nach Neustart gesetzt (10 Räume):
+          separate_turn_on_commands=true, send_split_delay=300, initial_transition=2

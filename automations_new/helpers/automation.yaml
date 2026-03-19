@@ -103,7 +103,7 @@
       - action: script.fade_volume
         data:
           target_player: media_player.homepod_wohnzimmer
-          target_volume: 0.40
+          target_volume: 0.35
           duration: 600
           curve: linear
       - action: script.fade_volume
@@ -127,7 +127,7 @@
       - action: script.fade_volume
         data:
           target_player: media_player.arbeitszimmer
-          target_volume: 0.40
+          target_volume: 0.35
           duration: 600
           curve: linear
       - action: script.fade_volume

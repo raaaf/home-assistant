@@ -51,8 +51,24 @@ curl -s -X POST -H "Authorization: Bearer $HA_TOKEN" -H "Content-Type: applicati
   "$HA_URL/api/services/script/fade_volume" \
   -d '{"target_player":"media_player.homepod_kueche","target_volume":0.20,"duration":30,"curve":"linear"}'
 
-# View recent logs
-curl -s -H "Authorization: Bearer $HA_TOKEN" "$HA_URL/api/error_log" | tail -50
+# View recent logs (via WebSocket — /api/error_log returns 404 in HA 2026.3+)
+python3 << 'PYEOF'
+import asyncio, json, websockets, os
+async def get_logs():
+    token = os.environ["HA_TOKEN"]
+    url = os.environ["HA_URL"].replace("http://","ws://").replace("https://","wss://")
+    async with websockets.connect(f"{url}/api/websocket") as ws:
+        await ws.recv()
+        await ws.send(json.dumps({"type":"auth","access_token":token}))
+        msg = json.loads(await ws.recv())
+        if msg["type"] != "auth_ok": return print("Auth failed")
+        await ws.send(json.dumps({"id":1,"type":"system_log/list"}))
+        msg = json.loads(await ws.recv())
+        for e in msg.get("result",[])[:30]:
+            c = f" (x{e['count']})" if e.get("count",1) > 1 else ""
+            print(f"[{e['level'].upper()}] {e.get('name','')}: {e['message'][:150]}{c}\n")
+asyncio.run(get_logs())
+PYEOF
 ```
 
 ### Important Paths
@@ -516,10 +532,9 @@ The recorder is configured to:
 ### Before Committing Changes
 
 1. **Validate YAML syntax**: `yamllint file.yaml`
-2. **Check configuration**: `docker exec homeassistant ha core check`
-3. **Test templates**: Developer Tools > Template
-4. **Test automations**: Developer Tools > Services
-5. **Check logs**: `docker logs homeassistant`
+2. **Test templates**: Developer Tools > Template
+3. **Test automations**: Developer Tools > Services
+4. **Check logs**: Use the WebSocket `system_log/list` command (see Key Commands above)
 
 ### Health Check Locations
 
@@ -602,16 +617,29 @@ The Adaptive Lighting configuration is optimized for Zigbee2MQTT with mixed Phil
 
 **IKEA Bulb Handling**:
 - Short transitions (10s) prevent IKEA bulb lockups
-- `separate_turn_on_commands: false` reduces MQTT traffic
-- `send_split_delay: 50` (50ms between commands per docs)
+- `separate_turn_on_commands: true` enables IKEA fade-in (ON first, then brightness)
+- `send_split_delay: 300` (300ms delay for IKEA to process ON before brightness)
+- `current_level_startup: 1` set on all IKEA bulbs via Z2M (starts at min brightness)
+- IKEA ignores `transition` on turn_on from off — only works when already on (dimming)
+- 23 IKEA lights (GU10, E27, JETSTROM panels), 29 Philips Hue lights (full transition support)
 
 **Color Temperature Range**:
 - Min: 2200K (warmest IKEA/Hue compatible)
 - Max: 4000K (IKEA maximum cool white)
 - Sleep: 2200K at 10% brightness
 
+**IKEA Fade-In Solution**:
+IKEA TRADFRI/JETSTROM bulbs ignore the `transition` parameter when turning on from off.
+The workaround requires two settings working together:
+1. **Z2M**: `current_level_startup: 1` on all IKEA bulbs (starts at minimum brightness)
+2. **AL**: `separate_turn_on_commands: true` + `send_split_delay: 300` (sends ON first, then brightness+transition 300ms later)
+
+This is applied via `System » Adaptive Lighting Settings nach Neustart` automation in `system/core.yaml`.
+
+AL reads config from **Config Entries** (not YAML) after initial import. Changes to `adaptive_lighting.yaml` have no effect — use `adaptive_lighting.change_switch_settings` service or the startup automation.
+
 **Interval & Reset**:
-- 5-minute update interval (balances smoothness vs traffic)
+- 15-minute update interval (reduced Zigbee traffic)
 - 1-hour autoreset for main rooms
 - 2-hour autoreset for utility/transition areas
 
@@ -630,22 +658,21 @@ The Adaptive Lighting configuration is optimized for Zigbee2MQTT with mixed Phil
 **Automations not triggering**:
 1. Check if automation is enabled: `automation.{name}` state
 2. Verify entity availability in Developer Tools > States
-3. Check logs for errors: `docker logs homeassistant | grep -i error`
+3. Check logs for errors via WebSocket `system_log/list` (see Key Commands)
 
 **Scene conflicts**:
 1. Check `binary_sensor.scene_conflict_detected`
 2. Review `sensor.active_scenes` for incompatible combinations
 3. Only one major scene should be active at a time
 
-### Log Locations
+### Log Access
 
 ```bash
-# Main log
-/Volumes/config/home-assistant.log
+# Active log file lives inside Docker container — not directly accessible
+# Old rotated logs may be available on the mounted volume:
+/Volumes/config/home-assistant.log.1    # Previous rotation
+/Volumes/config/home-assistant.log.old  # Older rotation
 
-# Fault log (errors only)
-/Volumes/config/home-assistant.log.fault
-
-# Docker logs
-docker logs homeassistant --tail 100
+# Live logs: Use WebSocket system_log/list (see Key Commands above)
+# This is the only reliable way to access current HA logs from outside Docker
 ```

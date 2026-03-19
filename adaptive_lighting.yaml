@@ -50,7 +50,7 @@
     - light.wohnzimmer_spieletisch
   interval: 900  # 15 min - reduced Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
-  initial_transition: 1  # Prevents color flashing
+  initial_transition: 2  # Smooth fade-in on turn_on (intercepted by AL)
   min_brightness: 20
   max_brightness: 100
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
@@ -70,8 +70,8 @@
   autoreset_control_seconds: 3600
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: false  # Disabled - reduces MQTT traffic (fewer messages per cycle)
-  send_split_delay: 50  # 50ms between commands per official docs
+  separate_turn_on_commands: true  # Required for IKEA fade-in (sends ON, then brightness+transition separately)
+  send_split_delay: 300  # 300ms delay between ON and brightness commands (IKEA needs time to process)
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
   skip_redundant_commands: true
   intercept: true
@@ -92,7 +92,7 @@
     - light.kuche_schrank_2
   interval: 900  # 15 min - reduced Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
-  initial_transition: 1  # Prevents color flashing
+  initial_transition: 2  # Smooth fade-in on turn_on (intercepted by AL)
   min_brightness: 20
   max_brightness: 100
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
@@ -112,8 +112,8 @@
   autoreset_control_seconds: 3600
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: false  # Disabled - reduces MQTT traffic (fewer messages per cycle)
-  send_split_delay: 50  # 50ms between commands per official docs
+  separate_turn_on_commands: true  # Required for IKEA fade-in (sends ON, then brightness+transition separately)
+  send_split_delay: 300  # 300ms delay between ON and brightness commands (IKEA needs time to process)
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
   skip_redundant_commands: true
   intercept: true
@@ -133,9 +133,10 @@
     # Individual lights
     - light.schlafzimmer_bett
     - light.schlafzimmer_tv
+    - light.schlafzimmer_schrank          # Einzellicht (Akzentlicht, umgezogen aus Kinderzimmer)
   interval: 900  # 15 min - reduced Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
-  initial_transition: 1  # Prevents color flashing
+  initial_transition: 2  # Smooth fade-in on turn_on (intercepted by AL)
   min_brightness: 10
   max_brightness: 100
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
@@ -155,8 +156,8 @@
   autoreset_control_seconds: 3600
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: false  # Disabled - reduces MQTT traffic (fewer messages per cycle)
-  send_split_delay: 50  # 50ms between commands per official docs
+  separate_turn_on_commands: true  # Required for IKEA fade-in (sends ON, then brightness+transition separately)
+  send_split_delay: 300  # 300ms delay between ON and brightness commands (IKEA needs time to process)
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
   skip_redundant_commands: true
   intercept: true
@@ -168,10 +169,9 @@
   lights:
     - light.kinderzimmer_decke            # Einzellicht (Hauptlicht)
     - light.kinderzimmer_bucher           # Einzellicht (Leselicht)
-    - light.kinderzimmer_schrank          # Einzellicht (Akzentlicht)
   interval: 900  # 15 min - reduced Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
-  initial_transition: 1  # Prevents color flashing
+  initial_transition: 2  # Smooth fade-in on turn_on (intercepted by AL)
   min_brightness: 10
   max_brightness: 100
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
@@ -191,8 +191,8 @@
   autoreset_control_seconds: 3600
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: false  # Disabled - reduces MQTT traffic (fewer messages per cycle)
-  send_split_delay: 50  # 50ms between commands per official docs
+  separate_turn_on_commands: true  # Required for IKEA fade-in (sends ON, then brightness+transition separately)
+  send_split_delay: 300  # 300ms delay between ON and brightness commands (IKEA needs time to process)
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
   skip_redundant_commands: true
   intercept: true
@@ -214,7 +214,7 @@
     - light.badezimmer_fenster
   interval: 900  # 15 min - reduced Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
-  initial_transition: 1  # Prevents color flashing
+  initial_transition: 2  # Smooth fade-in on turn_on (intercepted by AL)
   min_brightness: 30
   max_brightness: 100
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
@@ -234,8 +234,8 @@
   autoreset_control_seconds: 900 # 15 min - reduced to recover quickly from Sleep-Mode false positives
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: false  # Disabled - reduces MQTT traffic (fewer messages per cycle)
-  send_split_delay: 50  # 50ms between commands per official docs
+  separate_turn_on_commands: true  # Required for IKEA fade-in (sends ON, then brightness+transition separately)
+  send_split_delay: 300  # 300ms delay between ON and brightness commands (IKEA needs time to process)
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
   skip_redundant_commands: true
   intercept: true
@@ -248,7 +248,7 @@
     - light.waschzimmer_decke
   interval: 900  # 15 min - reduced Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
-  initial_transition: 1  # Prevents color flashing
+  initial_transition: 2  # Smooth fade-in on turn_on (intercepted by AL)
   min_brightness: 30
   max_brightness: 100
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
@@ -268,8 +268,8 @@
   autoreset_control_seconds: 7200
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: false  # Disabled - reduces MQTT traffic (fewer messages per cycle)
-  send_split_delay: 50  # 50ms between commands per official docs
+  separate_turn_on_commands: true  # Required for IKEA fade-in (sends ON, then brightness+transition separately)
+  send_split_delay: 300  # 300ms delay between ON and brightness commands (IKEA needs time to process)
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
   skip_redundant_commands: true
   intercept: true
@@ -292,7 +292,7 @@
     - light.arbeitszimmer_stehlampe
   interval: 900  # 15 min - reduced Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
-  initial_transition: 1  # Prevents color flashing
+  initial_transition: 2  # Smooth fade-in on turn_on (intercepted by AL)
   min_brightness: 30
   max_brightness: 100
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
@@ -312,8 +312,8 @@
   autoreset_control_seconds: 3600
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: false  # Disabled - reduces MQTT traffic (fewer messages per cycle)
-  send_split_delay: 50  # 50ms between commands per official docs
+  separate_turn_on_commands: true  # Required for IKEA fade-in (sends ON, then brightness+transition separately)
+  send_split_delay: 300  # 300ms delay between ON and brightness commands (IKEA needs time to process)
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
   skip_redundant_commands: true
   intercept: true
@@ -328,7 +328,7 @@
     - light.ankleide_decke_2
   interval: 900  # 15 min - reduced Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
-  initial_transition: 1  # Prevents color flashing
+  initial_transition: 2  # Smooth fade-in on turn_on (intercepted by AL)
   min_brightness: 10
   max_brightness: 100
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
@@ -348,8 +348,8 @@
   autoreset_control_seconds: 7200
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: false  # Disabled - reduces MQTT traffic (fewer messages per cycle)
-  send_split_delay: 50  # 50ms between commands per official docs
+  separate_turn_on_commands: true  # Required for IKEA fade-in (sends ON, then brightness+transition separately)
+  send_split_delay: 300  # 300ms delay between ON and brightness commands (IKEA needs time to process)
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
   skip_redundant_commands: true
   intercept: true
@@ -375,7 +375,7 @@
     - light.flur_schrank_2
   interval: 900  # 15 min - reduced Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
-  initial_transition: 1  # Prevents color flashing
+  initial_transition: 2  # Smooth fade-in on turn_on (intercepted by AL)
   min_brightness: 20
   max_brightness: 100
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
@@ -395,8 +395,8 @@
   autoreset_control_seconds: 900 # 15 min - reduced to recover quickly from Sleep-Mode false positives
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: false  # Disabled - reduces MQTT traffic (fewer messages per cycle)
-  send_split_delay: 50  # 50ms between commands per official docs
+  separate_turn_on_commands: true  # Required for IKEA fade-in (sends ON, then brightness+transition separately)
+  send_split_delay: 300  # 300ms delay between ON and brightness commands (IKEA needs time to process)
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
   skip_redundant_commands: true
   intercept: true
@@ -417,7 +417,7 @@
     - light.balkon_blumen
   interval: 900  # 15 min - reduced Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
-  initial_transition: 1  # Prevents color flashing
+  initial_transition: 2  # Smooth fade-in on turn_on (intercepted by AL)
   min_brightness: 30
   max_brightness: 100
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
@@ -437,8 +437,8 @@
   autoreset_control_seconds: 7200 # Longer reset for outdoor
   only_once: false
   adapt_only_on_bare_turn_on: false
-  separate_turn_on_commands: false  # Disabled - reduces MQTT traffic (fewer messages per cycle)
-  send_split_delay: 50  # 50ms between commands per official docs
+  separate_turn_on_commands: true  # Required for IKEA fade-in (sends ON, then brightness+transition separately)
+  send_split_delay: 300  # 300ms delay between ON and brightness commands (IKEA needs time to process)
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
   skip_redundant_commands: true
   intercept: true

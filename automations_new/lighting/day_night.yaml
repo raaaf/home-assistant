@@ -163,47 +163,62 @@
             - media_player.schlafzimmer
           data:
             volume_level: 0.0
+        - alias: "Aufwachlichter auf 1% setzen als Startpunkt für den Fade"
+          action: light.turn_on
+          target:
+            entity_id:
+            - light.alle_schlafzimmer_aufwachlichter
+            - light.alle_kinderzimmer_lichter
+          data:
+            brightness_pct: 1
+            transition: 0
         - alias: "Schlafzimmer und Kinderzimmer über 10 Minuten auf 100% hochfahren + HomePods mitsynchronisieren"
           parallel:
             - action: light.turn_on
               target:
                 entity_id:
-                - light.alle_schlafzimmer_lichter
+                - light.alle_schlafzimmer_aufwachlichter
                 - light.alle_kinderzimmer_lichter
               data:
                 brightness_pct: 100
                 transition: 600
             - action: script.fade_volume
+              continue_on_error: true
               data:
                 target_player: media_player.homepod_wohnzimmer
                 target_volume: 0.30
                 duration: 600
                 curve: linear
             - action: script.fade_volume
+              continue_on_error: true
               data:
                 target_player: media_player.arbeitszimmer
                 target_volume: 0.30
                 duration: 600
                 curve: linear
             - action: script.fade_volume
+              continue_on_error: true
               data:
                 target_player: media_player.kuche
                 target_volume: 0.40
                 duration: 600
                 curve: linear
             - action: script.fade_volume
+              continue_on_error: true
               data:
                 target_player: media_player.homepod_badezimmer
                 target_volume: 0.40
                 duration: 600
                 curve: linear
             - action: script.fade_volume
+              continue_on_error: true
               data:
                 target_player: media_player.homepod_kinderzimmer
                 target_volume: 0.40
                 duration: 600
                 curve: linear
             - action: script.fade_volume
+              continue_on_error: true
               data:
                 target_player: media_player.schlafzimmer
                 target_volume: 0.40
@@ -297,6 +312,7 @@
                     volume_level: 0.30
         - alias: "08:00 Uhr: Wohnungstür entsperren"
           action: lock.unlock
+          continue_on_error: true
           target:
             entity_id: lock.smart_lock_pro
     - alias: Sonnenaufgang - Schlafenszeit beenden (Fallback)
@@ -405,7 +421,7 @@
           - light.alle_schlafzimmer_lichter
           - light.alle_arbeitszimmer_lichter
   mode: queued
-  max: 10
+  max: 3
 - id: es_ist_dunkel_toggle
   alias: Helper » Dunkel – an/aus je nach Sonnenstand
   description: Schaltet den Boolean ein bei Sonnenuntergang und aus bei Sonnenaufgang.

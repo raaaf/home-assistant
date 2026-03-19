@@ -51,15 +51,15 @@
         - light.kuche_insel_unten
         - light.kuche_schrank_1
         - light.kuche_schrank_2
-        # Schlafzimmer (4 lights)
+        # Schlafzimmer (5 lights)
         - light.schlafzimmer_decke_1
         - light.schlafzimmer_decke_2
         - light.schlafzimmer_bett
         - light.schlafzimmer_tv
-        # Kinderzimmer (3 lights)
+        - light.schlafzimmer_schrank
+        # Kinderzimmer (2 lights)
         - light.kinderzimmer_decke
         - light.kinderzimmer_bucher
-        - light.kinderzimmer_schrank
         # Badezimmer (4 lights)
         - light.badezimmer_decke_1
         - light.badezimmer_decke_2
@@ -148,9 +148,9 @@
       light.schlafzimmer_decke_2: schlafzimmer
       light.schlafzimmer_bett: schlafzimmer
       light.schlafzimmer_tv: schlafzimmer
+      light.schlafzimmer_schrank: schlafzimmer
       light.kinderzimmer_decke: kinderzimmer
       light.kinderzimmer_bucher: kinderzimmer
-      light.kinderzimmer_schrank: kinderzimmer
       light.badezimmer_decke_1: badezimmer
       light.badezimmer_decke_2: badezimmer
       light.badezimmer_schrank: badezimmer

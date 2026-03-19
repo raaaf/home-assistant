@@ -54,8 +54,8 @@
       night_lights_conditions:
       - time_enabled
       ambient_light_options: ambient_light_option_disabled
-      ambient_light_value: 300
-      ambient_light_high_value: 400
+      ambient_light_value: 800
+      ambient_light_high_value: 1000
       # Bypass motion turn-off when manual control is active
       include_bypass:
       - bypass_enabled_stop

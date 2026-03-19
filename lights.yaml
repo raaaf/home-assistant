@@ -86,6 +86,7 @@
     # Individual lights
     - light.schlafzimmer_bett
     - light.schlafzimmer_tv
+    - light.schlafzimmer_schrank
 
 - platform: group
   unique_id: alle_kinderzimmer_lichter
@@ -93,7 +94,6 @@
   entities:
     - light.kinderzimmer_decke
     - light.kinderzimmer_bucher
-    - light.kinderzimmer_schrank
 
 - platform: group
   unique_id: alle_badezimmer_lichter
@@ -181,6 +181,14 @@
     - light.kuche_insel_oben
 
 - platform: group
+  unique_id: alle_schlafzimmer_aufwachlichter
+  name: Alle Schlafzimmer Aufwachlichter
+  entities:
+    - light.schlafzimmer_bett
+    - light.schlafzimmer_tv
+    - light.schlafzimmer_schrank
+
+- platform: group
   unique_id: alle_schlafzimmer_nachtlichter
   name: Alle Schlafzimmer Nachtlichter
   entities:
@@ -191,7 +199,6 @@
   name: Alle Kinderzimmer Nachtlichter
   entities:
     - light.kinderzimmer_bucher
-    - light.kinderzimmer_schrank
 
 - platform: group
   unique_id: alle_badezimmer_nachtlichter
@@ -266,6 +273,7 @@
   entities:
     - light.schlafzimmer_bett
     - light.schlafzimmer_tv
+    - light.schlafzimmer_schrank
 
 - platform: group
   unique_id: alle_badezimmer_rgb_lichter
@@ -283,7 +291,6 @@
   name: Alle Kinderzimmer RGB Lichter
   entities:
     - light.kinderzimmer_bucher
-    - light.kinderzimmer_schrank
 
 - platform: group
   unique_id: alle_party_weiss_lichter
