@@ -550,6 +550,17 @@
             entity_id:
             - light.alle_wohnzimmer_rgb_lichter
             - light.alle_kuche_rgb_lichter
+      - alias: "Reset RGB lights to color_temp mode before turning off"
+        action: light.turn_on
+        data:
+          color_temp_kelvin: 2700
+          brightness_pct: 1
+        target:
+          entity_id:
+          - light.alle_wohnzimmer_rgb_lichter
+          - light.alle_kuche_rgb_lichter
+      - delay:
+          milliseconds: 500
       - action: light.turn_off
         data:
           transition: 5
