@@ -4,23 +4,52 @@
 
 - id: '1652698714339'
   alias: Schlafzimmer » Luftreiniger
-  description: 'Steuert den Luftreiniger basierend auf PM2.5-Werten (Aus < 10, Ein
-    > 20 für je 1 Minute). Verhindert unnötige Schaltzyklen durch Hysterese.
-
-    '
-  trigger:
-  - trigger: numeric_state
-    entity_id: sensor.zhimi_vb4_bce4_pm25_density
-    below: 10
-    for:
-      minutes: 1
-    id: excellent
+  description: >-
+    Steuert den Xiaomi Air Purifier 4 Pro basierend auf PM2.5-Werten und
+    Luftfeuchtigkeit mit Fenster-Guard, Away-Modus und Sleep/Auto-Preset.
+  triggers:
   - trigger: numeric_state
     entity_id: sensor.zhimi_vb4_bce4_pm25_density
     above: 20
     for:
       minutes: 1
-    id: poor
+    id: pm25-high
+  - trigger: numeric_state
+    entity_id: sensor.zhimi_vb4_bce4_pm25_density
+    below: 10
+    for:
+      minutes: 5
+    id: pm25-low
+  - trigger: numeric_state
+    entity_id: sensor.zhimi_vb4_bce4_relative_humidity
+    above: 65
+    for:
+      minutes: 5
+    id: humidity-high
+  - trigger: state
+    entity_id:
+    - binary_sensor.schlafzimmer_kontaktsensor_contact
+    - binary_sensor.arbeitszimmer_kontaktsensor_contact
+    to: 'on'
+    for:
+      minutes: 2
+    id: window-open
+  - trigger: state
+    entity_id:
+    - binary_sensor.schlafzimmer_kontaktsensor_contact
+    - binary_sensor.arbeitszimmer_kontaktsensor_contact
+    to: 'off'
+    for:
+      minutes: 2
+    id: window-closed
+  - trigger: state
+    entity_id: input_boolean.alle_sind_weg
+    to: 'on'
+    id: away
+  - trigger: state
+    entity_id: input_boolean.alle_sind_weg
+    to: 'off'
+    id: home
   - trigger: state
     entity_id: input_boolean.schlafenszeit
     to: 'on'
@@ -29,67 +58,111 @@
     entity_id: input_boolean.schlafenszeit
     to: 'off'
     id: sleep_end
-  condition: []
-  action:
+  conditions:
+  - alias: "Luftreiniger ist verfügbar"
+    condition: template
+    value_template: "{{ has_value('fan.zhimi_vb4_bce4_air_purifier') }}"
+  actions:
   - choose:
-    - alias: Schlafenszeit gestartet - Luftreiniger einschalten (Sleep)
+    - alias: "PM2.5 hoch — einschalten"
       conditions:
       - condition: trigger
-        id: sleep_start
-      - alias: Jemand ist zu Hause
+        id: pm25-high
+      - alias: "Luftreiniger läuft nicht"
+        condition: state
+        entity_id: fan.zhimi_vb4_bce4_air_purifier
+        state: 'off'
+      - alias: "Jemand ist zu Hause"
         condition: state
         entity_id: input_boolean.alle_sind_weg
         state: 'off'
-      - alias: Luftreiniger ist verfügbar
+      - alias: "Fenster geschlossen"
+        condition: state
+        entity_id: binary_sensor.schlafzimmer_kontaktsensor_contact
+        state: 'off'
+      - condition: state
+        entity_id: binary_sensor.arbeitszimmer_kontaktsensor_contact
+        state: 'off'
+      - alias: "Sensor verfügbar"
         condition: template
-        value_template: '{{ has_value(''fan.zhimi_vb4_bce4_air_purifier'') }}'
+        value_template: "{{ has_value('sensor.zhimi_vb4_bce4_pm25_density') }}"
       sequence:
-      - alias: Luftreiniger einschalten
-        action: fan.turn_on
+      - action: fan.turn_on
         target:
           entity_id: fan.zhimi_vb4_bce4_air_purifier
-      - alias: Schlaf-Modus setzen wenn nötig
-        condition: template
-        value_template: "{{ state_attr('fan.zhimi_vb4_bce4_air_purifier', 'preset_mode') != 'Sleep' }}"
-      - alias: Schlaf-Modus aktivieren
-        action: fan.set_preset_mode
-        target:
-          entity_id: fan.zhimi_vb4_bce4_air_purifier
-        data:
-          preset_mode: Sleep
-    - alias: Schlafenszeit beendet - Gute Luft -> ausschalten
+      - alias: "Passenden Modus setzen"
+        choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.schlafenszeit
+            state: 'on'
+          sequence:
+          - condition: template
+            value_template: "{{ state_attr('fan.zhimi_vb4_bce4_air_purifier', 'preset_mode') != 'Sleep' }}"
+          - action: fan.set_preset_mode
+            target:
+              entity_id: fan.zhimi_vb4_bce4_air_purifier
+            data:
+              preset_mode: Sleep
+        default:
+        - condition: template
+          value_template: "{{ state_attr('fan.zhimi_vb4_bce4_air_purifier', 'preset_mode') != 'Auto' }}"
+        - action: fan.set_preset_mode
+          target:
+            entity_id: fan.zhimi_vb4_bce4_air_purifier
+          data:
+            preset_mode: Auto
+
+    - alias: "Feuchtigkeit hoch — einschalten"
       conditions:
       - condition: trigger
-        id: sleep_end
-      - alias: Sensor ist verfügbar
-        condition: template
-        value_template: '{{ has_value(''sensor.zhimi_vb4_bce4_pm25_density'') }}'
-      - alias: Luft ist gut (<10)
-        condition: numeric_state
-        entity_id: sensor.zhimi_vb4_bce4_pm25_density
-        below: 10
-      - alias: Luftreiniger läuft gerade
-        condition: template
-        value_template: "{{ has_value('fan.zhimi_vb4_bce4_air_purifier') and is_state('fan.zhimi_vb4_bce4_air_purifier', 'on') }}"
+        id: humidity-high
+      - condition: state
+        entity_id: fan.zhimi_vb4_bce4_air_purifier
+        state: 'off'
+      - condition: state
+        entity_id: input_boolean.alle_sind_weg
+        state: 'off'
+      - condition: state
+        entity_id: binary_sensor.schlafzimmer_kontaktsensor_contact
+        state: 'off'
+      - condition: state
+        entity_id: binary_sensor.arbeitszimmer_kontaktsensor_contact
+        state: 'off'
       sequence:
-      - alias: Luftreiniger ausschalten
-        action: fan.turn_off
+      - action: fan.turn_on
         target:
           entity_id: fan.zhimi_vb4_bce4_air_purifier
-    - alias: Luftqualität exzellent - Luftreiniger ausschalten
+      - choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.schlafenszeit
+            state: 'on'
+          sequence:
+          - condition: template
+            value_template: "{{ state_attr('fan.zhimi_vb4_bce4_air_purifier', 'preset_mode') != 'Sleep' }}"
+          - action: fan.set_preset_mode
+            target:
+              entity_id: fan.zhimi_vb4_bce4_air_purifier
+            data:
+              preset_mode: Sleep
+        default:
+        - condition: template
+          value_template: "{{ state_attr('fan.zhimi_vb4_bce4_air_purifier', 'preset_mode') != 'Auto' }}"
+        - action: fan.set_preset_mode
+          target:
+            entity_id: fan.zhimi_vb4_bce4_air_purifier
+          data:
+            preset_mode: Auto
+
+    - alias: "PM2.5 gut — ausschalten"
       conditions:
       - condition: trigger
-        id: excellent
-      - alias: Luftreiniger läuft gerade
-        condition: template
-        value_template: "{{ has_value('fan.zhimi_vb4_bce4_air_purifier') and is_state('fan.zhimi_vb4_bce4_air_purifier', 'on') }}"
-      - alias: Luftreiniger ist verfügbar
-        condition: template
-        value_template: '{{ has_value(''fan.zhimi_vb4_bce4_air_purifier'') }}'
-      - alias: Sensor ist verfügbar
-        condition: template
-        value_template: '{{ has_value(''sensor.zhimi_vb4_bce4_pm25_density'') }}'
-      - alias: Nicht ausschalten wenn Schlafenszeit aktiv und jemand zu Hause
+        id: pm25-low
+      - condition: state
+        entity_id: fan.zhimi_vb4_bce4_air_purifier
+        state: 'on'
+      - alias: "Nicht ausschalten wenn Schlafenszeit aktiv und jemand zu Hause"
         condition: or
         conditions:
         - condition: state
@@ -98,65 +171,225 @@
         - condition: state
           entity_id: input_boolean.alle_sind_weg
           state: 'on'
+      - alias: "Feuchtigkeit auch OK"
+        condition: or
+        conditions:
+        - condition: numeric_state
+          entity_id: sensor.zhimi_vb4_bce4_relative_humidity
+          below: 65
+        - condition: template
+          value_template: "{{ not has_value('sensor.zhimi_vb4_bce4_relative_humidity') }}"
       sequence:
-      - alias: Luftreiniger ausschalten
-        action: fan.turn_off
+      - action: fan.turn_off
         target:
           entity_id: fan.zhimi_vb4_bce4_air_purifier
-    - alias: Luftqualität schlecht - Luftreiniger einschalten
+
+    - alias: "Fenster offen — ausschalten"
       conditions:
       - condition: trigger
-        id: poor
-      - alias: Luftreiniger läuft nicht
-        condition: template
-        value_template: "{{ has_value('fan.zhimi_vb4_bce4_air_purifier') and is_state('fan.zhimi_vb4_bce4_air_purifier', 'off') }}"
-      - alias: Jemand ist zu Hause
-        condition: state
-        entity_id: input_boolean.alle_sind_weg
-        state: 'off'
-      - alias: Luftreiniger ist verfügbar
-        condition: template
-        value_template: '{{ has_value(''fan.zhimi_vb4_bce4_air_purifier'') }}'
-      - alias: Sensor ist verfügbar
-        condition: template
-        value_template: '{{ has_value(''sensor.zhimi_vb4_bce4_pm25_density'') }}'
+        id: window-open
+      - condition: state
+        entity_id: fan.zhimi_vb4_bce4_air_purifier
+        state: 'on'
       sequence:
-      - alias: Luftreiniger einschalten
-        action: fan.turn_on
+      - action: fan.turn_off
         target:
           entity_id: fan.zhimi_vb4_bce4_air_purifier
-      - alias: Passenden Modus setzen (Schlaf/Auto)
-        choose:
+
+    - alias: "Fenster geschlossen — einschalten wenn PM2.5 hoch"
+      conditions:
+      - condition: trigger
+        id: window-closed
+      - alias: "Beide Fenster geschlossen"
+        condition: state
+        entity_id: binary_sensor.schlafzimmer_kontaktsensor_contact
+        state: 'off'
+      - condition: state
+        entity_id: binary_sensor.arbeitszimmer_kontaktsensor_contact
+        state: 'off'
+      - condition: state
+        entity_id: fan.zhimi_vb4_bce4_air_purifier
+        state: 'off'
+      - condition: state
+        entity_id: input_boolean.alle_sind_weg
+        state: 'off'
+      - alias: "PM2.5 oder Feuchtigkeit problematisch"
+        condition: or
+        conditions:
+        - condition: numeric_state
+          entity_id: sensor.zhimi_vb4_bce4_pm25_density
+          above: 20
+        - condition: numeric_state
+          entity_id: sensor.zhimi_vb4_bce4_relative_humidity
+          above: 65
+      sequence:
+      - action: fan.turn_on
+        target:
+          entity_id: fan.zhimi_vb4_bce4_air_purifier
+      - choose:
         - conditions:
-          - alias: Schlafenszeit ist aktiv
-            condition: state
+          - condition: state
             entity_id: input_boolean.schlafenszeit
             state: 'on'
-          - alias: Jemand ist zu Hause
-            condition: state
-            entity_id: input_boolean.alle_sind_weg
-            state: 'off'
           sequence:
-          - alias: Schlaf-Modus setzen wenn nötig
-            condition: template
+          - condition: template
             value_template: "{{ state_attr('fan.zhimi_vb4_bce4_air_purifier', 'preset_mode') != 'Sleep' }}"
-          - alias: Schlaf-Modus aktivieren
-            action: fan.set_preset_mode
+          - action: fan.set_preset_mode
             target:
               entity_id: fan.zhimi_vb4_bce4_air_purifier
             data:
               preset_mode: Sleep
         default:
-        - alias: Auto-Modus setzen wenn nötig
+        - condition: template
+          value_template: "{{ state_attr('fan.zhimi_vb4_bce4_air_purifier', 'preset_mode') != 'Auto' }}"
+        - action: fan.set_preset_mode
+          target:
+            entity_id: fan.zhimi_vb4_bce4_air_purifier
+          data:
+            preset_mode: Auto
+
+    - alias: "Alle weg — ausschalten"
+      conditions:
+      - condition: trigger
+        id: away
+      - condition: state
+        entity_id: fan.zhimi_vb4_bce4_air_purifier
+        state: 'on'
+      sequence:
+      - action: fan.turn_off
+        target:
+          entity_id: fan.zhimi_vb4_bce4_air_purifier
+
+    - alias: "Jemand kommt heim — einschalten wenn PM2.5 hoch"
+      conditions:
+      - condition: trigger
+        id: home
+      - condition: state
+        entity_id: fan.zhimi_vb4_bce4_air_purifier
+        state: 'off'
+      - condition: template
+        value_template: "{{ has_value('sensor.zhimi_vb4_bce4_pm25_density') }}"
+      - condition: numeric_state
+        entity_id: sensor.zhimi_vb4_bce4_pm25_density
+        above: 20
+      - condition: state
+        entity_id: binary_sensor.schlafzimmer_kontaktsensor_contact
+        state: 'off'
+      - condition: state
+        entity_id: binary_sensor.arbeitszimmer_kontaktsensor_contact
+        state: 'off'
+      sequence:
+      - action: fan.turn_on
+        target:
+          entity_id: fan.zhimi_vb4_bce4_air_purifier
+      - choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.schlafenszeit
+            state: 'on'
+          sequence:
+          - condition: template
+            value_template: "{{ state_attr('fan.zhimi_vb4_bce4_air_purifier', 'preset_mode') != 'Sleep' }}"
+          - action: fan.set_preset_mode
+            target:
+              entity_id: fan.zhimi_vb4_bce4_air_purifier
+            data:
+              preset_mode: Sleep
+        default:
+        - condition: template
+          value_template: "{{ state_attr('fan.zhimi_vb4_bce4_air_purifier', 'preset_mode') != 'Auto' }}"
+        - action: fan.set_preset_mode
+          target:
+            entity_id: fan.zhimi_vb4_bce4_air_purifier
+          data:
+            preset_mode: Auto
+
+    - alias: "Schlafenszeit — Sleep-Preset setzen"
+      conditions:
+      - condition: trigger
+        id: sleep_start
+      - condition: state
+        entity_id: input_boolean.alle_sind_weg
+        state: 'off'
+      sequence:
+      - alias: "Einschalten wenn aus"
+        action: fan.turn_on
+        target:
+          entity_id: fan.zhimi_vb4_bce4_air_purifier
+      - condition: template
+        value_template: "{{ state_attr('fan.zhimi_vb4_bce4_air_purifier', 'preset_mode') != 'Sleep' }}"
+      - action: fan.set_preset_mode
+        target:
+          entity_id: fan.zhimi_vb4_bce4_air_purifier
+        data:
+          preset_mode: Sleep
+
+    - alias: "Schlafenszeit beendet — ausschalten wenn Luft gut, sonst Auto"
+      conditions:
+      - condition: trigger
+        id: sleep_end
+      - condition: state
+        entity_id: fan.zhimi_vb4_bce4_air_purifier
+        state: 'on'
+      sequence:
+      - choose:
+        - alias: "Luft ist gut — ausschalten"
+          conditions:
+          - condition: template
+            value_template: "{{ has_value('sensor.zhimi_vb4_bce4_pm25_density') }}"
+          - condition: numeric_state
+            entity_id: sensor.zhimi_vb4_bce4_pm25_density
+            below: 10
+          sequence:
+          - action: fan.turn_off
+            target:
+              entity_id: fan.zhimi_vb4_bce4_air_purifier
+        default:
+        - alias: "Luft nicht perfekt — auf Auto umschalten"
           condition: template
           value_template: "{{ state_attr('fan.zhimi_vb4_bce4_air_purifier', 'preset_mode') != 'Auto' }}"
-        - alias: Auto-Modus aktivieren
-          action: fan.set_preset_mode
+        - action: fan.set_preset_mode
           target:
             entity_id: fan.zhimi_vb4_bce4_air_purifier
           data:
             preset_mode: Auto
   mode: single
+  max_exceeded: silent
+
+- id: 'luftreiniger_filter_warnung'
+  alias: "Benachrichtigung » Luftreiniger Filter"
+  description: "Warnt wenn der Filterstand des Xiaomi Air Purifier unter 15% fällt."
+  triggers:
+  - trigger: numeric_state
+    entity_id: sensor.zhimi_vb4_bce4_filter_life_level
+    below: 15
+    for:
+      hours: 1
+  conditions:
+  - alias: "Nicht Schlafenszeit"
+    condition: state
+    entity_id: input_boolean.schlafenszeit
+    state: 'off'
+  - condition: time
+    after: '08:00:00'
+    before: '22:00:00'
+  - alias: "Letzte Notification > 24h her"
+    condition: template
+    value_template: >-
+      {% set last = state_attr('automation.benachrichtigung_luftreiniger_filter', 'last_triggered') %}
+      {{ last is none or (now() - last).total_seconds() > 24 * 60 * 60 }}
+  actions:
+  - action: notify.rafael
+    data:
+      title: "Luftreiniger — Filter wechseln"
+      message: "Filterstand bei {{ states('sensor.zhimi_vb4_bce4_filter_life_level') }}%. Bitte Filter bestellen/wechseln."
+  - action: persistent_notification.create
+    data:
+      title: "Luftreiniger — Filter wechseln"
+      message: "Der Filter des Xiaomi Air Purifier im Schlafzimmer ist bei {{ states('sensor.zhimi_vb4_bce4_filter_life_level') }}%. Bitte zeitnah ersetzen."
+      notification_id: luftreiniger_filter
+  mode: single
+  max_exceeded: silent
 - id: '1678724233791'
   alias: Motion » Schlafzimmer
   description: Bewegungsgesteuerte Beleuchtung im Schlafzimmer mit Nachtlicht-Modus

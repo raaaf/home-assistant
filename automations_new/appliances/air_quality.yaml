@@ -1,0 +1,320 @@
+# Appliances - Air Quality
+# Luftwäscher, Luftbefeuchter und zugehörige Benachrichtigungen
+
+# ============================================================================
+# Venta Luftwäscher (Wohnzimmer) — via Smart Plug
+# ============================================================================
+
+- id: 'luftwascher_wohnzimmer'
+  alias: "Wohnzimmer » Luftwäscher"
+  description: >-
+    Steuert den Venta Luftwäscher über Smart Plug basierend auf Luftfeuchtigkeit
+    mit Hysterese und Fenster-Guard.
+  triggers:
+  - trigger: numeric_state
+    entity_id: sensor.wohnzimmer_luftfeuchtigkeit
+    below: input_number.luftwascher_ziel_einschalten
+    for:
+      minutes: 5
+    id: humidity-low
+  - trigger: numeric_state
+    entity_id: sensor.wohnzimmer_luftfeuchtigkeit
+    above: input_number.luftwascher_ziel_ausschalten
+    for:
+      minutes: 5
+    id: humidity-ok
+  - trigger: state
+    entity_id: binary_sensor.fenster_tueren
+    to: 'on'
+    for:
+      minutes: 2
+    id: window-open
+  - trigger: state
+    entity_id: binary_sensor.fenster_tueren
+    to: 'off'
+    for:
+      minutes: 2
+    id: window-closed
+  conditions:
+  - alias: "Smart Plug ist verfügbar"
+    condition: template
+    value_template: "{{ has_value('switch.steckdose_luftwascher') }}"
+  actions:
+  - choose:
+    - alias: "Feuchtigkeit zu niedrig — einschalten"
+      conditions:
+      - condition: trigger
+        id: humidity-low
+      - alias: "Fenster sind geschlossen"
+        condition: state
+        entity_id: binary_sensor.fenster_tueren
+        state: 'off'
+      sequence:
+      - action: switch.turn_on
+        target:
+          entity_id: switch.steckdose_luftwascher
+      - action: logbook.log
+        data:
+          name: Luftwäscher
+          message: "Eingeschaltet — Feuchtigkeit unter {{ states('input_number.luftwascher_ziel_einschalten') }}%"
+          entity_id: switch.steckdose_luftwascher
+
+    - alias: "Feuchtigkeit OK — ausschalten"
+      conditions:
+      - condition: trigger
+        id: humidity-ok
+      sequence:
+      - action: switch.turn_off
+        target:
+          entity_id: switch.steckdose_luftwascher
+      - action: logbook.log
+        data:
+          name: Luftwäscher
+          message: "Ausgeschaltet — Feuchtigkeit über {{ states('input_number.luftwascher_ziel_ausschalten') }}%"
+          entity_id: switch.steckdose_luftwascher
+
+    - alias: "Fenster offen — sofort ausschalten"
+      conditions:
+      - condition: trigger
+        id: window-open
+      - alias: "Luftwäscher läuft"
+        condition: state
+        entity_id: switch.steckdose_luftwascher
+        state: 'on'
+      sequence:
+      - action: switch.turn_off
+        target:
+          entity_id: switch.steckdose_luftwascher
+      - action: logbook.log
+        data:
+          name: Luftwäscher
+          message: "Ausgeschaltet — Fenster geöffnet"
+          entity_id: switch.steckdose_luftwascher
+
+    - alias: "Fenster geschlossen — einschalten wenn nötig"
+      conditions:
+      - condition: trigger
+        id: window-closed
+      - alias: "Feuchtigkeit noch zu niedrig"
+        condition: numeric_state
+        entity_id: sensor.wohnzimmer_luftfeuchtigkeit
+        below: input_number.luftwascher_ziel_einschalten
+      - alias: "Nicht manuell ausgeschaltet"
+        condition: state
+        entity_id: switch.steckdose_luftwascher
+        state: 'off'
+      sequence:
+      - action: switch.turn_on
+        target:
+          entity_id: switch.steckdose_luftwascher
+      - action: logbook.log
+        data:
+          name: Luftwäscher
+          message: "Eingeschaltet — Fenster geschlossen, Feuchtigkeit noch niedrig"
+          entity_id: switch.steckdose_luftwascher
+  mode: single
+  max_exceeded: silent
+
+# ============================================================================
+# Venta Wassertank-Erkennung via Leistungsmessung
+# ============================================================================
+
+- id: 'luftwascher_wasser_leer'
+  alias: "Benachrichtigung » Luftwäscher kein Wasser"
+  description: >-
+    Erkennt leeren Wassertank des Venta über niedrigen Stromverbrauch.
+    Power muss 10 Min unter Schwelle bleiben (verhindert Fehlalarm bei Stufenwechsel).
+  triggers:
+  - trigger: numeric_state
+    entity_id: sensor.steckdose_luftwascher_power
+    below: input_number.luftwascher_leer_schwelle
+    for:
+      minutes: 10
+  conditions:
+  - alias: "Gerät soll laufen (Steckdose ist an)"
+    condition: state
+    entity_id: switch.steckdose_luftwascher
+    state: 'on'
+  - alias: "Steckdose seit > 2 Min an (Anlaufzeit ignorieren)"
+    condition: template
+    value_template: >-
+      {{ as_timestamp(now()) - as_timestamp(states.switch.steckdose_luftwascher.last_changed) > 120 }}
+  - alias: "Letzte Notification > 12h her"
+    condition: template
+    value_template: >-
+      {% set last = state_attr('automation.benachrichtigung_luftwascher_kein_wasser', 'last_triggered') %}
+      {{ last is none or (now() - last).total_seconds() > 12 * 60 * 60 }}
+  actions:
+  - action: persistent_notification.create
+    data:
+      title: "Luftwäscher — Kein Wasser"
+      message: "Der Venta Luftwäscher im Wohnzimmer hat vermutlich kein Wasser mehr. Bitte Wassertank auffüllen."
+      notification_id: luftwascher_kein_wasser
+  - alias: "Push nur wenn nicht Schlafenszeit"
+    condition: and
+    conditions:
+    - condition: state
+      entity_id: input_boolean.schlafenszeit
+      state: 'off'
+    - condition: time
+      after: '08:00:00'
+      before: '22:00:00'
+  - action: notify.rafael
+    data:
+      title: "Luftwäscher — Kein Wasser"
+      message: "Venta im Wohnzimmer hat kein Wasser mehr. Bitte auffüllen."
+  - alias: "Gerät ausschalten (Trockenlauf vermeiden)"
+    action: switch.turn_off
+    target:
+      entity_id: switch.steckdose_luftwascher
+  mode: single
+  max_exceeded: silent
+
+# ============================================================================
+# Smartmi Rainforest Luftbefeuchter (Schlafzimmer)
+# ============================================================================
+
+- id: 'smartmi_rainforest_steuerung'
+  alias: "Schlafzimmer » Smartmi Luftbefeuchter"
+  description: >-
+    Steuert den Smartmi Rainforest basierend auf Schlafzimmer-Luftfeuchtigkeit
+    mit Hysterese und Fenster-Guard (Schlafzimmer + Arbeitszimmer).
+  triggers:
+  - trigger: numeric_state
+    entity_id: sensor.schlafzimmer_temperatur_und_luftfeuchtigkeit_humidity
+    below: 40
+    for:
+      minutes: 5
+    id: humidity-low
+  - trigger: numeric_state
+    entity_id: sensor.schlafzimmer_temperatur_und_luftfeuchtigkeit_humidity
+    above: 45
+    for:
+      minutes: 5
+    id: humidity-ok
+  - trigger: state
+    entity_id:
+    - binary_sensor.schlafzimmer_kontaktsensor_contact
+    - binary_sensor.arbeitszimmer_kontaktsensor_contact
+    to: 'on'
+    for:
+      minutes: 2
+    id: window-open
+  - trigger: state
+    entity_id:
+    - binary_sensor.schlafzimmer_kontaktsensor_contact
+    - binary_sensor.arbeitszimmer_kontaktsensor_contact
+    to: 'off'
+    for:
+      minutes: 2
+    id: window-closed
+  conditions:
+  - alias: "Smartmi ist verfügbar"
+    condition: template
+    value_template: "{{ has_value('humidifier.smartmi_humidifier_rainforest_hum_dehum') }}"
+  actions:
+  - choose:
+    - alias: "Feuchtigkeit zu niedrig — einschalten"
+      conditions:
+      - condition: trigger
+        id: humidity-low
+      - alias: "Alle Fenster geschlossen"
+        condition: state
+        entity_id: binary_sensor.schlafzimmer_kontaktsensor_contact
+        state: 'off'
+      - condition: state
+        entity_id: binary_sensor.arbeitszimmer_kontaktsensor_contact
+        state: 'off'
+      sequence:
+      - action: humidifier.turn_on
+        target:
+          entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
+
+    - alias: "Feuchtigkeit OK — ausschalten"
+      conditions:
+      - condition: trigger
+        id: humidity-ok
+      - alias: "Smartmi läuft"
+        condition: state
+        entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
+        state: 'on'
+      sequence:
+      - action: humidifier.turn_off
+        target:
+          entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
+
+    - alias: "Fenster offen — ausschalten"
+      conditions:
+      - condition: trigger
+        id: window-open
+      - alias: "Smartmi läuft"
+        condition: state
+        entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
+        state: 'on'
+      sequence:
+      - action: humidifier.turn_off
+        target:
+          entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
+
+    - alias: "Fenster geschlossen — einschalten wenn nötig"
+      conditions:
+      - condition: trigger
+        id: window-closed
+      - alias: "Beide Fenster geschlossen"
+        condition: state
+        entity_id: binary_sensor.schlafzimmer_kontaktsensor_contact
+        state: 'off'
+      - condition: state
+        entity_id: binary_sensor.arbeitszimmer_kontaktsensor_contact
+        state: 'off'
+      - alias: "Feuchtigkeit noch zu niedrig"
+        condition: numeric_state
+        entity_id: sensor.schlafzimmer_temperatur_und_luftfeuchtigkeit_humidity
+        below: 40
+      sequence:
+      - action: humidifier.turn_on
+        target:
+          entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
+  mode: single
+  max_exceeded: silent
+
+# ============================================================================
+# Smartmi Wassertank leer
+# ============================================================================
+
+- id: 'smartmi_rainforest_wasser_leer'
+  alias: "Benachrichtigung » Smartmi kein Wasser"
+  description: "Benachrichtigt wenn der Smartmi Rainforest Wassertank fast leer ist."
+  triggers:
+  - trigger: numeric_state
+    entity_id: sensor.smartmi_humidifier_rainforest_water_level
+    below: 16
+    for:
+      minutes: 2
+  conditions:
+  - alias: "Letzte Notification > 12h her"
+    condition: template
+    value_template: >-
+      {% set last = state_attr('automation.benachrichtigung_smartmi_kein_wasser', 'last_triggered') %}
+      {{ last is none or (now() - last).total_seconds() > 12 * 60 * 60 }}
+  actions:
+  - action: persistent_notification.create
+    data:
+      title: "Smartmi Rainforest — Kein Wasser"
+      message: "Der Smartmi Luftbefeuchter im Schlafzimmer hat kaum noch Wasser. Bitte Wassertank auffüllen."
+      notification_id: smartmi_kein_wasser
+  - alias: "Push nur wenn nicht Schlafenszeit"
+    condition: and
+    conditions:
+    - condition: state
+      entity_id: input_boolean.schlafenszeit
+      state: 'off'
+    - condition: time
+      after: '08:00:00'
+      before: '22:00:00'
+  - action: notify.rafael
+    data:
+      title: "Smartmi Rainforest — Kein Wasser"
+      message: "Smartmi im Schlafzimmer hat kaum noch Wasser. Bitte auffüllen."
+  mode: single
+  max_exceeded: silent

@@ -827,6 +827,32 @@ input_number:
     icon: mdi:fan
     initial: 100
   # Saved HomePod volumes for scene-based volume control
+  # Air quality thresholds
+  luftwascher_ziel_einschalten:
+    name: "Luftwäscher: Ziel-Feuchtigkeit Einschalten"
+    min: 20
+    max: 50
+    step: 1
+    unit_of_measurement: "%"
+    icon: mdi:water-percent
+    initial: 40
+  luftwascher_ziel_ausschalten:
+    name: "Luftwäscher: Ziel-Feuchtigkeit Ausschalten"
+    min: 25
+    max: 60
+    step: 1
+    unit_of_measurement: "%"
+    icon: mdi:water-percent
+    initial: 45
+  luftwascher_leer_schwelle:
+    name: "Luftwäscher: Watt-Schwelle kein Wasser"
+    min: 0.5
+    max: 5
+    step: 0.1
+    unit_of_measurement: "W"
+    icon: mdi:flash-alert
+    initial: 1.0
+  # Saved HomePod volumes for scene-based volume control
   saved_volume_wohnzimmer:
     name: "Gespeicherte Lautstärke Wohnzimmer"
     min: 0
