@@ -852,6 +852,30 @@ input_number:
     unit_of_measurement: "W"
     icon: mdi:flash-alert
     initial: 1.0
+  smartmi_ziel_einschalten:
+    name: "Smartmi: Ziel-Feuchtigkeit Einschalten"
+    min: 20
+    max: 50
+    step: 1
+    unit_of_measurement: "%"
+    icon: mdi:water-percent
+    initial: 40
+  smartmi_ziel_ausschalten:
+    name: "Smartmi: Ziel-Feuchtigkeit Ausschalten"
+    min: 25
+    max: 60
+    step: 1
+    unit_of_measurement: "%"
+    icon: mdi:water-percent
+    initial: 45
+  smartmi_wasser_schwelle:
+    name: "Smartmi: Wassertank-Schwelle"
+    min: 5
+    max: 30
+    step: 1
+    unit_of_measurement: "%"
+    icon: mdi:water-alert
+    initial: 16
   # Saved HomePod volumes for scene-based volume control
   saved_volume_wohnzimmer:
     name: "Gespeicherte Lautstärke Wohnzimmer"

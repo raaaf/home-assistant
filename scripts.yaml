@@ -587,22 +587,11 @@ heizung_boost:
     - action: timer.cancel
       target:
         entity_id: timer.heizung_boost
-    - action: switch.turn_off
-      target:
-        entity_id: "{{ heating_switches }}"
-    - delay: "00:00:03"
-    # Verify and retry once if needed
-    - variables:
-        still_on: >
-          {{ heating_switches | select('is_state', 'on') | list }}
-    - if:
-      - condition: template
-        value_template: "{{ still_on | length > 0 }}"
-      then:
-      - action: switch.turn_off
-        target:
-          entity_id: "{{ still_on }}"
-      - delay: "00:00:03"
+    - action: script.turn_off_with_retry
+      data:
+        target_entities: "{{ heating_switches }}"
+        retry_delay: 3
+        max_retries: 1
     - action: logbook.log
       data:
         name: Heizung Boost
@@ -620,3 +609,106 @@ heizung_boost:
         name: Heizung Boost
         message: "1,5h Boost gestartet"
         domain: climate
+
+turn_on_with_retry:
+  alias: "Gerät einschalten mit Retry"
+  description: >-
+    Schaltet ein Gerät ein und wiederholt den Versuch falls es nicht reagiert.
+    Funktioniert mit allen Domains (switch, humidifier, fan, etc.).
+  icon: mdi:replay
+  mode: parallel
+  max: 10
+  fields:
+    target_entity:
+      description: Entity ID des Geräts
+      example: switch.steckdose_luftwascher
+      required: true
+      selector:
+        entity:
+    retry_delay:
+      description: Wartezeit zwischen Versuchen in Sekunden
+      default: 5
+      selector:
+        number:
+          min: 1
+          max: 30
+          unit_of_measurement: s
+    max_retries:
+      description: Maximale Anzahl Wiederholungen
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 5
+  sequence:
+  - action: homeassistant.turn_on
+    target:
+      entity_id: "{{ target_entity }}"
+  - repeat:
+      count: "{{ max_retries | int(1) }}"
+      sequence:
+      - delay:
+          seconds: "{{ retry_delay | int(5) }}"
+      - condition: state
+        entity_id: "{{ target_entity }}"
+        state: 'off'
+      - action: homeassistant.turn_on
+        target:
+          entity_id: "{{ target_entity }}"
+
+turn_off_with_retry:
+  alias: "Gerät ausschalten mit Retry"
+  description: >-
+    Schaltet ein oder mehrere Geräte aus und wiederholt den Versuch für
+    Geräte die nicht reagiert haben. Akzeptiert eine einzelne Entity oder
+    eine Liste von Entities.
+  icon: mdi:replay
+  mode: parallel
+  max: 10
+  fields:
+    target_entities:
+      description: Entity ID(s) — einzelne Entity oder Liste
+      example: switch.heizung_wohnzimmer
+      required: true
+      selector:
+        entity:
+          multiple: true
+    retry_delay:
+      description: Wartezeit zwischen Versuchen in Sekunden
+      default: 3
+      selector:
+        number:
+          min: 1
+          max: 30
+          unit_of_measurement: s
+    max_retries:
+      description: Maximale Anzahl Wiederholungen
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 5
+  sequence:
+  - variables:
+      entities_list: >-
+        {% if target_entities is string %}
+          {{ [target_entities] }}
+        {% else %}
+          {{ target_entities }}
+        {% endif %}
+  - action: homeassistant.turn_off
+    target:
+      entity_id: "{{ entities_list }}"
+  - repeat:
+      count: "{{ max_retries | int(1) }}"
+      sequence:
+      - delay:
+          seconds: "{{ retry_delay | int(3) }}"
+      - variables:
+          still_on: >-
+            {{ entities_list | select('is_state', 'on') | list }}
+      - condition: template
+        value_template: "{{ still_on | length > 0 }}"
+      - action: homeassistant.turn_off
+        target:
+          entity_id: "{{ still_on }}"

@@ -70,20 +70,11 @@
         entity_id: input_boolean.alle_sind_weg
         state: 'off'
       sequence:
-      - action: switch.turn_on
-        target:
-          entity_id: switch.steckdose_luftwascher
-      - delay:
-          seconds: 5
-      - alias: "Retry wenn Smart Plug nicht reagiert hat"
-        if:
-        - condition: state
-          entity_id: switch.steckdose_luftwascher
-          state: 'off'
-        then:
-        - action: switch.turn_on
-          target:
-            entity_id: switch.steckdose_luftwascher
+      - action: script.turn_on_with_retry
+        data:
+          target_entity: switch.steckdose_luftwascher
+          retry_delay: 5
+          max_retries: 1
       - action: logbook.log
         data:
           name: Luftwäscher
@@ -145,19 +136,11 @@
         entity_id: sensor.wohnzimmer_luftfeuchtigkeit
         below: input_number.luftwascher_ziel_ausschalten
       sequence:
-      - action: switch.turn_on
-        target:
-          entity_id: switch.steckdose_luftwascher
-      - delay:
-          seconds: 5
-      - if:
-        - condition: state
-          entity_id: switch.steckdose_luftwascher
-          state: 'off'
-        then:
-        - action: switch.turn_on
-          target:
-            entity_id: switch.steckdose_luftwascher
+      - action: script.turn_on_with_retry
+        data:
+          target_entity: switch.steckdose_luftwascher
+          retry_delay: 5
+          max_retries: 1
       - action: logbook.log
         data:
           name: Luftwäscher
@@ -183,19 +166,11 @@
         entity_id: switch.steckdose_luftwascher
         state: 'off'
       sequence:
-      - action: switch.turn_on
-        target:
-          entity_id: switch.steckdose_luftwascher
-      - delay:
-          seconds: 5
-      - if:
-        - condition: state
-          entity_id: switch.steckdose_luftwascher
-          state: 'off'
-        then:
-        - action: switch.turn_on
-          target:
-            entity_id: switch.steckdose_luftwascher
+      - action: script.turn_on_with_retry
+        data:
+          target_entity: switch.steckdose_luftwascher
+          retry_delay: 5
+          max_retries: 1
       - action: logbook.log
         data:
           name: Luftwäscher
@@ -342,30 +317,16 @@
         entity_id: input_boolean.alle_sind_weg
         state: 'off'
       sequence:
-      - action: humidifier.turn_on
-        target:
+      - action: script.turn_on_with_retry
+        data:
+          target_entity: humidifier.smartmi_humidifier_rainforest_hum_dehum
+          retry_delay: 10
+          max_retries: 2
+      - action: logbook.log
+        data:
+          name: Smartmi
+          message: "Eingeschaltet — Feuchtigkeit unter {{ states('input_number.smartmi_ziel_einschalten') }}%"
           entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
-      - delay:
-          seconds: 10
-      - alias: "Retry wenn Smartmi nicht reagiert hat"
-        if:
-        - condition: state
-          entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
-          state: 'off'
-        then:
-        - action: humidifier.turn_on
-          target:
-            entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
-        - delay:
-            seconds: 10
-        - if:
-          - condition: state
-            entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
-            state: 'off'
-          then:
-          - action: humidifier.turn_on
-            target:
-              entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
 
     - alias: "Feuchtigkeit OK — ausschalten"
       conditions:
@@ -379,6 +340,11 @@
       - action: humidifier.turn_off
         target:
           entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
+      - action: logbook.log
+        data:
+          name: Smartmi
+          message: "Ausgeschaltet — Feuchtigkeit über {{ states('input_number.smartmi_ziel_ausschalten') }}%"
+          entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
 
     - alias: "Fenster offen — ausschalten"
       conditions:
@@ -391,6 +357,11 @@
       sequence:
       - action: humidifier.turn_off
         target:
+          entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
+      - action: logbook.log
+        data:
+          name: Smartmi
+          message: "Ausgeschaltet — Fenster geöffnet"
           entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
 
     - alias: "Fenster geschlossen — einschalten wenn nötig"
@@ -411,19 +382,16 @@
         entity_id: sensor.schlafzimmer_temperatur_und_luftfeuchtigkeit_humidity
         below: input_number.smartmi_ziel_ausschalten
       sequence:
-      - action: humidifier.turn_on
-        target:
+      - action: script.turn_on_with_retry
+        data:
+          target_entity: humidifier.smartmi_humidifier_rainforest_hum_dehum
+          retry_delay: 10
+          max_retries: 2
+      - action: logbook.log
+        data:
+          name: Smartmi
+          message: "Eingeschaltet — Fenster geschlossen, Feuchtigkeit noch unter Ausschaltschwelle"
           entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
-      - delay:
-          seconds: 10
-      - if:
-        - condition: state
-          entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
-          state: 'off'
-        then:
-        - action: humidifier.turn_on
-          target:
-            entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
 
     - alias: "Jemand kommt heim — einschalten wenn Feuchtigkeit niedrig"
       conditions:
@@ -443,31 +411,11 @@
         entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
         state: 'off'
       sequence:
-      - action: humidifier.turn_on
-        target:
-          entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
-      - delay:
-          seconds: 10
-      - alias: "Retry 1"
-        if:
-        - condition: state
-          entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
-          state: 'off'
-        then:
-        - action: humidifier.turn_on
-          target:
-            entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
-        - delay:
-            seconds: 10
-        - alias: "Retry 2"
-          if:
-          - condition: state
-            entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
-            state: 'off'
-          then:
-          - action: humidifier.turn_on
-            target:
-              entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
+      - action: script.turn_on_with_retry
+        data:
+          target_entity: humidifier.smartmi_humidifier_rainforest_hum_dehum
+          retry_delay: 10
+          max_retries: 2
       - action: logbook.log
         data:
           name: Smartmi
@@ -485,6 +433,11 @@
       - action: humidifier.turn_off
         target:
           entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
+      - action: logbook.log
+        data:
+          name: Smartmi
+          message: "Ausgeschaltet — Alle haben das Haus verlassen"
+          entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
   mode: single
   max_exceeded: silent
 
@@ -498,7 +451,7 @@
   triggers:
   - trigger: numeric_state
     entity_id: sensor.smartmi_humidifier_rainforest_water_level
-    below: 16
+    below: input_number.smartmi_wasser_schwelle
     for:
       minutes: 2
   conditions:

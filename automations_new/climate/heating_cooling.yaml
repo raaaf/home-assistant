@@ -737,10 +737,11 @@
       name: Heizung Safety Watchdog
       message: "WARNUNG: Schalter > 2h an ohne Timer: {{ switches_on_too_long | join(', ') }} - schalte aus"
       domain: climate
-  - action: switch.turn_off
-    target:
-      entity_id: "{{ switches_on_too_long }}"
-  - delay: "00:00:03"
+  - action: script.turn_off_with_retry
+    data:
+      target_entities: "{{ switches_on_too_long }}"
+      retry_delay: 3
+      max_retries: 1
   - variables:
       still_on_after: >
         {{ switches_on_too_long | select('is_state', 'on') | list }}
@@ -748,9 +749,6 @@
     - condition: template
       value_template: "{{ still_on_after | length > 0 }}"
     then:
-    - action: switch.turn_off
-      target:
-        entity_id: "{{ still_on_after }}"
     - action: persistent_notification.create
       data:
         title: "Heizung Safety Watchdog"
