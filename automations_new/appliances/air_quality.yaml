@@ -9,7 +9,7 @@
   alias: "Wohnzimmer » Luftwäscher"
   description: >-
     Steuert den Venta Luftwäscher über Smart Plug basierend auf Luftfeuchtigkeit
-    mit Hysterese und Fenster-Guard.
+    mit Hysterese, Fenster-Guard und Presence-Trigger mit Retry.
   triggers:
   - trigger: numeric_state
     entity_id: sensor.wohnzimmer_luftfeuchtigkeit
@@ -24,17 +24,31 @@
       minutes: 5
     id: humidity-ok
   - trigger: state
-    entity_id: binary_sensor.fenster_tueren
+    entity_id:
+    - binary_sensor.wohnzimmer_kontaktsensor_contact
+    - binary_sensor.balkon_kontaktsensor_contact
+    - binary_sensor.kuche_kontaktsensor_contact
     to: 'on'
     for:
       minutes: 2
     id: window-open
   - trigger: state
-    entity_id: binary_sensor.fenster_tueren
+    entity_id:
+    - binary_sensor.wohnzimmer_kontaktsensor_contact
+    - binary_sensor.balkon_kontaktsensor_contact
+    - binary_sensor.kuche_kontaktsensor_contact
     to: 'off'
     for:
       minutes: 2
     id: window-closed
+  - trigger: state
+    entity_id: input_boolean.alle_sind_weg
+    to: 'off'
+    id: home
+  - trigger: state
+    entity_id: input_boolean.alle_sind_weg
+    to: 'on'
+    id: away
   conditions:
   - alias: "Smart Plug ist verfügbar"
     condition: template
@@ -45,14 +59,31 @@
       conditions:
       - condition: trigger
         id: humidity-low
-      - alias: "Fenster sind geschlossen"
+      - alias: "Fenster geschlossen (WZ, Balkon, Küche)"
+        condition: template
+        value_template: >-
+          {{ not is_state('binary_sensor.wohnzimmer_kontaktsensor_contact', 'on')
+             and not is_state('binary_sensor.balkon_kontaktsensor_contact', 'on')
+             and not is_state('binary_sensor.kuche_kontaktsensor_contact', 'on') }}
+      - alias: "Jemand ist zu Hause"
         condition: state
-        entity_id: binary_sensor.fenster_tueren
+        entity_id: input_boolean.alle_sind_weg
         state: 'off'
       sequence:
       - action: switch.turn_on
         target:
           entity_id: switch.steckdose_luftwascher
+      - delay:
+          seconds: 5
+      - alias: "Retry wenn Smart Plug nicht reagiert hat"
+        if:
+        - condition: state
+          entity_id: switch.steckdose_luftwascher
+          state: 'off'
+        then:
+        - action: switch.turn_on
+          target:
+            entity_id: switch.steckdose_luftwascher
       - action: logbook.log
         data:
           name: Luftwäscher
@@ -63,6 +94,10 @@
       conditions:
       - condition: trigger
         id: humidity-ok
+      - alias: "Luftwäscher läuft"
+        condition: state
+        entity_id: switch.steckdose_luftwascher
+        state: 'on'
       sequence:
       - action: switch.turn_off
         target:
@@ -95,11 +130,55 @@
       conditions:
       - condition: trigger
         id: window-closed
-      - alias: "Feuchtigkeit noch zu niedrig"
+      - alias: "Alle relevanten Fenster geschlossen"
+        condition: template
+        value_template: >-
+          {{ not is_state('binary_sensor.wohnzimmer_kontaktsensor_contact', 'on')
+             and not is_state('binary_sensor.balkon_kontaktsensor_contact', 'on')
+             and not is_state('binary_sensor.kuche_kontaktsensor_contact', 'on') }}
+      - alias: "Jemand ist zu Hause"
+        condition: state
+        entity_id: input_boolean.alle_sind_weg
+        state: 'off'
+      - alias: "Feuchtigkeit noch unter Ausschaltschwelle"
         condition: numeric_state
         entity_id: sensor.wohnzimmer_luftfeuchtigkeit
-        below: input_number.luftwascher_ziel_einschalten
-      - alias: "Nicht manuell ausgeschaltet"
+        below: input_number.luftwascher_ziel_ausschalten
+      sequence:
+      - action: switch.turn_on
+        target:
+          entity_id: switch.steckdose_luftwascher
+      - delay:
+          seconds: 5
+      - if:
+        - condition: state
+          entity_id: switch.steckdose_luftwascher
+          state: 'off'
+        then:
+        - action: switch.turn_on
+          target:
+            entity_id: switch.steckdose_luftwascher
+      - action: logbook.log
+        data:
+          name: Luftwäscher
+          message: "Eingeschaltet — Fenster geschlossen, Feuchtigkeit noch niedrig"
+          entity_id: switch.steckdose_luftwascher
+
+    - alias: "Jemand kommt heim — einschalten wenn Feuchtigkeit unter Ausschaltschwelle"
+      conditions:
+      - condition: trigger
+        id: home
+      - alias: "Fenster geschlossen"
+        condition: template
+        value_template: >-
+          {{ not is_state('binary_sensor.wohnzimmer_kontaktsensor_contact', 'on')
+             and not is_state('binary_sensor.balkon_kontaktsensor_contact', 'on')
+             and not is_state('binary_sensor.kuche_kontaktsensor_contact', 'on') }}
+      - alias: "Feuchtigkeit unter Ausschaltschwelle (Hysterese-Zone eingeschlossen)"
+        condition: numeric_state
+        entity_id: sensor.wohnzimmer_luftfeuchtigkeit
+        below: input_number.luftwascher_ziel_ausschalten
+      - alias: "Luftwäscher ist aus"
         condition: state
         entity_id: switch.steckdose_luftwascher
         state: 'off'
@@ -107,10 +186,37 @@
       - action: switch.turn_on
         target:
           entity_id: switch.steckdose_luftwascher
+      - delay:
+          seconds: 5
+      - if:
+        - condition: state
+          entity_id: switch.steckdose_luftwascher
+          state: 'off'
+        then:
+        - action: switch.turn_on
+          target:
+            entity_id: switch.steckdose_luftwascher
       - action: logbook.log
         data:
           name: Luftwäscher
-          message: "Eingeschaltet — Fenster geschlossen, Feuchtigkeit noch niedrig"
+          message: "Eingeschaltet — Jemand kam nachhause, Feuchtigkeit niedrig"
+          entity_id: switch.steckdose_luftwascher
+
+    - alias: "Alle weg — ausschalten"
+      conditions:
+      - condition: trigger
+        id: away
+      - condition: state
+        entity_id: switch.steckdose_luftwascher
+        state: 'on'
+      sequence:
+      - action: switch.turn_off
+        target:
+          entity_id: switch.steckdose_luftwascher
+      - action: logbook.log
+        data:
+          name: Luftwäscher
+          message: "Ausgeschaltet — Alle haben das Haus verlassen"
           entity_id: switch.steckdose_luftwascher
   mode: single
   max_exceeded: silent
@@ -178,17 +284,17 @@
   alias: "Schlafzimmer » Smartmi Luftbefeuchter"
   description: >-
     Steuert den Smartmi Rainforest basierend auf Schlafzimmer-Luftfeuchtigkeit
-    mit Hysterese und Fenster-Guard (Schlafzimmer + Arbeitszimmer).
+    mit Hysterese, Fenster-Guard und Presence-Trigger mit Retry.
   triggers:
   - trigger: numeric_state
     entity_id: sensor.schlafzimmer_temperatur_und_luftfeuchtigkeit_humidity
-    below: 40
+    below: input_number.smartmi_ziel_einschalten
     for:
       minutes: 5
     id: humidity-low
   - trigger: numeric_state
     entity_id: sensor.schlafzimmer_temperatur_und_luftfeuchtigkeit_humidity
-    above: 45
+    above: input_number.smartmi_ziel_ausschalten
     for:
       minutes: 5
     id: humidity-ok
@@ -208,6 +314,14 @@
     for:
       minutes: 2
     id: window-closed
+  - trigger: state
+    entity_id: input_boolean.alle_sind_weg
+    to: 'off'
+    id: home
+  - trigger: state
+    entity_id: input_boolean.alle_sind_weg
+    to: 'on'
+    id: away
   conditions:
   - alias: "Smartmi ist verfügbar"
     condition: template
@@ -218,17 +332,40 @@
       conditions:
       - condition: trigger
         id: humidity-low
-      - alias: "Alle Fenster geschlossen"
+      - alias: "Alle Fenster geschlossen (unknown = geschlossen nach Neustart)"
+        condition: template
+        value_template: >-
+          {{ not is_state('binary_sensor.schlafzimmer_kontaktsensor_contact', 'on')
+             and not is_state('binary_sensor.arbeitszimmer_kontaktsensor_contact', 'on') }}
+      - alias: "Jemand ist zu Hause"
         condition: state
-        entity_id: binary_sensor.schlafzimmer_kontaktsensor_contact
-        state: 'off'
-      - condition: state
-        entity_id: binary_sensor.arbeitszimmer_kontaktsensor_contact
+        entity_id: input_boolean.alle_sind_weg
         state: 'off'
       sequence:
       - action: humidifier.turn_on
         target:
           entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
+      - delay:
+          seconds: 10
+      - alias: "Retry wenn Smartmi nicht reagiert hat"
+        if:
+        - condition: state
+          entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
+          state: 'off'
+        then:
+        - action: humidifier.turn_on
+          target:
+            entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
+        - delay:
+            seconds: 10
+        - if:
+          - condition: state
+            entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
+            state: 'off'
+          then:
+          - action: humidifier.turn_on
+            target:
+              entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
 
     - alias: "Feuchtigkeit OK — ausschalten"
       conditions:
@@ -260,19 +397,92 @@
       conditions:
       - condition: trigger
         id: window-closed
-      - alias: "Beide Fenster geschlossen"
+      - alias: "Beide Fenster geschlossen (unknown = geschlossen nach Neustart)"
+        condition: template
+        value_template: >-
+          {{ not is_state('binary_sensor.schlafzimmer_kontaktsensor_contact', 'on')
+             and not is_state('binary_sensor.arbeitszimmer_kontaktsensor_contact', 'on') }}
+      - alias: "Jemand ist zu Hause"
         condition: state
-        entity_id: binary_sensor.schlafzimmer_kontaktsensor_contact
+        entity_id: input_boolean.alle_sind_weg
         state: 'off'
-      - condition: state
-        entity_id: binary_sensor.arbeitszimmer_kontaktsensor_contact
-        state: 'off'
-      - alias: "Feuchtigkeit noch zu niedrig"
+      - alias: "Feuchtigkeit noch unter Ausschaltschwelle"
         condition: numeric_state
         entity_id: sensor.schlafzimmer_temperatur_und_luftfeuchtigkeit_humidity
-        below: 40
+        below: input_number.smartmi_ziel_ausschalten
       sequence:
       - action: humidifier.turn_on
+        target:
+          entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
+      - delay:
+          seconds: 10
+      - if:
+        - condition: state
+          entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
+          state: 'off'
+        then:
+        - action: humidifier.turn_on
+          target:
+            entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
+
+    - alias: "Jemand kommt heim — einschalten wenn Feuchtigkeit niedrig"
+      conditions:
+      - condition: trigger
+        id: home
+      - alias: "Fenster geschlossen (unknown = geschlossen nach Neustart)"
+        condition: template
+        value_template: >-
+          {{ not is_state('binary_sensor.schlafzimmer_kontaktsensor_contact', 'on')
+             and not is_state('binary_sensor.arbeitszimmer_kontaktsensor_contact', 'on') }}
+      - alias: "Feuchtigkeit unter Ausschaltschwelle (Hysterese-Zone eingeschlossen)"
+        condition: numeric_state
+        entity_id: sensor.schlafzimmer_temperatur_und_luftfeuchtigkeit_humidity
+        below: input_number.smartmi_ziel_ausschalten
+      - alias: "Smartmi ist aus"
+        condition: state
+        entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
+        state: 'off'
+      sequence:
+      - action: humidifier.turn_on
+        target:
+          entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
+      - delay:
+          seconds: 10
+      - alias: "Retry 1"
+        if:
+        - condition: state
+          entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
+          state: 'off'
+        then:
+        - action: humidifier.turn_on
+          target:
+            entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
+        - delay:
+            seconds: 10
+        - alias: "Retry 2"
+          if:
+          - condition: state
+            entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
+            state: 'off'
+          then:
+          - action: humidifier.turn_on
+            target:
+              entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
+      - action: logbook.log
+        data:
+          name: Smartmi
+          message: "Eingeschaltet — Jemand kam nachhause, Feuchtigkeit niedrig"
+          entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
+
+    - alias: "Alle weg — ausschalten"
+      conditions:
+      - condition: trigger
+        id: away
+      - condition: state
+        entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
+        state: 'on'
+      sequence:
+      - action: humidifier.turn_off
         target:
           entity_id: humidifier.smartmi_humidifier_rainforest_hum_dehum
   mode: single
