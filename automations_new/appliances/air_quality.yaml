@@ -161,7 +161,7 @@
       - action: logbook.log
         data:
           name: Luftwäscher
-          message: "Eingeschaltet — Fenster geschlossen, Feuchtigkeit noch niedrig"
+          message: "Eingeschaltet — Fenster geschlossen, Feuchtigkeit noch unter Ausschaltschwelle"
           entity_id: switch.steckdose_luftwascher
 
     - alias: "Jemand kommt heim — einschalten wenn Feuchtigkeit unter Ausschaltschwelle"
