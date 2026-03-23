@@ -26,7 +26,7 @@
   - alias: "Nicht öfter als alle 12 Stunden triggern"
     condition: template
     value_template: >-
-      {% set last = state_attr('automation.benachrichtigung_robbi_wartung', 'last_triggered') %}
+      {% set last = state_attr('automation.notifications_robbi', 'last_triggered') %}
       {{ last is none or (now() - last).total_seconds() > 43200 }}
   - alias: "Robbi ist verfügbar (nicht unbekannt/unavailable)"
     condition: template
