@@ -455,15 +455,15 @@
     wenn sie wieder verfügbar ist – aber nur wenn jemand zu Hause ist.
 
     '
-  trigger:
+  triggers:
   - entity_id: switch.arbeitszimmer_steckdose
     from: unavailable
     trigger: state
-  condition:
+  conditions:
   - condition: state
     entity_id: input_boolean.alle_sind_weg
     state: 'off'
-  action:
+  actions:
   - condition: state
     entity_id: switch.arbeitszimmer_steckdose
     state: 'off'

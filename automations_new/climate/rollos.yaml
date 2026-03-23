@@ -6,7 +6,7 @@
   alias: Rollos » All in one (Optimiert)
   description: 'Intelligente Rollosteuerung basierend auf: - Sonnenelevation (Tageslicht)
     - Sonnenstand (Azimuth & Elevation) - Temperaturvorhersage - Anwesenheit'
-  trigger:
+  triggers:
   - id: morgens
     platform: numeric_state
     entity_id: sun.sun
@@ -36,8 +36,8 @@
     to: 'on'
     id: schlafenszeit
     trigger: state
-  condition: []
-  action:
+  conditions: []
+  actions:
   - variables:
       wird_sehr_heiss: '{{ has_value(''input_boolean.heute_wird_es_sehr_heiss_werden'') and is_state(''input_boolean.heute_wird_es_sehr_heiss_werden'',
         ''on'') }}'

@@ -8,11 +8,11 @@
     (>24°C und >29°C)
 
     '
-  trigger:
+  triggers:
   - at: 03:00:00
     trigger: time
-  condition: []
-  action:
+  conditions: []
+  actions:
   - if:
     - condition: template
       value_template: '{{ states(''sensor.fuerth_daily'') not in [''unknown'', ''unavailable''] and state_attr(''sensor.fuerth_daily'', ''forecast'') is not none and state_attr(''sensor.fuerth_daily'', ''forecast'') | length > 0 and state_attr(''sensor.fuerth_daily'', ''forecast'')[0].temperature > 29 }}
@@ -46,7 +46,7 @@
     Cool-Modus (aktive Kühlung)  23-25°C: Fan-Modus (nur Luftzirkulation)  < 23°C:
     Aus  MODUS: Cool/Fan Mode mit Silent Fan NEU: AC geht nur an wenn Außentemperatur
     > 24°C'
-  trigger:
+  triggers:
   - entity_id:
     - input_boolean.arbeit
     - input_boolean.gaming
@@ -87,7 +87,7 @@
     trigger: state
     for: 00:02:00
     id: temp-check
-  condition:
+  conditions:
   - condition: state
     entity_id: input_boolean.alle_sind_weg
     state: 'off'
@@ -95,7 +95,7 @@
     condition: state
     entity_id: binary_sensor.fenster_tueren
     state: 'off'
-  action:
+  actions:
   - variables:
       arbeit_aktiv: '{{ has_value(''input_boolean.arbeit'') and is_state(''input_boolean.arbeit'', ''on'') }}'
       gaming_aktiv: '{{ has_value(''input_boolean.gaming'') and is_state(''input_boolean.gaming'', ''on'') }}'
@@ -316,16 +316,16 @@
     Frost geben soll (nur einmal pro Frostperiode)
 
     '
-  trigger:
+  triggers:
   - at: '10:00:00'
     trigger: time
-  condition:
+  conditions:
   - condition: template
     value_template: "{% if states('sensor.fuerth_daily') not in ['unknown', 'unavailable'] and state_attr('sensor.fuerth_daily', 'forecast') is not none %}\n  {% set forecast = state_attr('sensor.fuerth_daily', 'forecast') %}\n  {% if forecast and forecast | length > 0 %}\n    {{ forecast[0].templow < 0 }}\n  {% else %}\n    false\n  {% endif %}\n{% else %}\n  false\n{% endif %}\n"
   - condition: state
     entity_id: input_boolean.frost_warning_sent
     state: 'off'
-  action:
+  actions:
   - action: notify.alex
     data:
       title: "Frostwarnung für die Blumen"
@@ -345,7 +345,7 @@
     Schlafenszeit automatisch, sonst manuell
 
     '
-  trigger:
+  triggers:
   - entity_id: sensor.arbeitszimmer_temperatur
     above: 22
     for: 00:02:00
@@ -381,8 +381,8 @@
   - entity_id: climate.ac
     trigger: state
     id: ac-status-change
-  condition: []
-  action:
+  conditions: []
+  actions:
   - variables:
       arbeit_fan: fan.zhimi_za4_2dca_fan
       kinder_fan: fan.zhimi_za4_fb1b_fan
@@ -532,15 +532,15 @@
 - id: '1749999999998'
   alias: Heizung » Smart Floor Control (Predictive)
   description: 'Predictive floor heating control for slow-response system (1-2h warmup). Morning boost based on current outdoor temp, afternoon boost based on daily high forecast. Only controls Kinderzimmer, Schlafzimmer, Wohnzimmer.'
-  trigger:
+  triggers:
   - at: "06:30:00"
     id: morning-boost
     trigger: time
   - at: "14:30:00"
     id: afternoon-boost
     trigger: time
-  condition: []
-  action:
+  conditions: []
+  actions:
   - variables:
       heating_switches:
       - switch.heizung_kinderzimmer
@@ -639,12 +639,12 @@
 - id: '1749999999999'
   alias: Heizung » Boost Timer Finished
   description: 'Turns off heating when boost timer expires with verification and retry'
-  trigger:
+  triggers:
   - platform: event
     event_type: timer.finished
     event_data:
       entity_id: timer.heizung_boost
-  action:
+  actions:
   - variables:
       heating_switches:
       - switch.heizung_kinderzimmer
@@ -705,14 +705,14 @@
 - id: '1750000000001'
   alias: Heizung » Safety Watchdog (2h Limit)
   description: 'Safety backup: Turns off heating if on > 2 hours without active timer'
-  trigger:
+  triggers:
   - trigger: time_pattern
     minutes: "/15"
-  condition:
+  conditions:
   - condition: state
     entity_id: timer.heizung_boost
     state: idle
-  action:
+  actions:
   - variables:
       heating_switches:
       - switch.heizung_kinderzimmer
@@ -758,10 +758,10 @@
 - id: '1750000000002'
   alias: Heizung » Restart Recovery Check
   description: 'After HA restart: Verify heating state matches timer state'
-  trigger:
+  triggers:
   - trigger: homeassistant
     event: start
-  action:
+  actions:
   - delay: "00:00:30"
   - variables:
       heating_switches:
@@ -789,13 +789,13 @@
 - id: '1743835898092'
   alias: Helper » Frostwarnung zurücksetzen (jährlich im Mai)
   description: 'Setzt den Frostwarnung-Status am 1. Mai zurück für die neue Saison'
-  trigger:
+  triggers:
   - platform: time
     at: '08:00:00'
-  condition:
+  conditions:
   - condition: template
     value_template: "{{ now().month == 5 and now().day == 1 }}"
-  action:
+  actions:
   - action: input_boolean.turn_off
     target:
       entity_id: input_boolean.frost_warning_sent

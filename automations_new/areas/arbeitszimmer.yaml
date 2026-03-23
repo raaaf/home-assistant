@@ -50,8 +50,8 @@
     to: 'closed'
     id: getting-dark
 
-  condition: []
-  action:
+  conditions: []
+  actions:
   - choose:
     # ==================== ALEX ARBEIT EINSCHALTEN ====================
     - alias: Alex Arbeit einschalten (Decke + Stehlampe)

@@ -86,7 +86,7 @@
         level: warning
     - action: zha.permit
       data:
-        duration: 60
+        duration: 10
     - delay: 00:00:02
     - action: homeassistant.update_entity
       target:

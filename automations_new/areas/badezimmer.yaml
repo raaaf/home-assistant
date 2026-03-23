@@ -8,7 +8,7 @@
     an, <59 % aus)
 
     '
-  trigger:
+  triggers:
   - entity_id: sensor.badezimmer_temperatur_und_luftfeuchtigkeit_humidity
     above: 65
     id: above
@@ -41,7 +41,7 @@
 - id: '1647715674725'
   alias: Scenen » Sauna
   description: Aktiviert Sauna-Modus mit spezieller Beleuchtung, Lüftung und Rollosteuerung
-  trigger:
+  triggers:
   - entity_id:
     - input_boolean.sauna
     to: 'on'
@@ -133,7 +133,7 @@
 - id: '1662822489094'
   alias: Scenen » Baden
   description: Aktiviert Bade-Modus mit spezieller Beleuchtung und deaktiviert Bewegungsmelder
-  trigger:
+  triggers:
   - entity_id:
     - input_boolean.baden
     to: 'on'

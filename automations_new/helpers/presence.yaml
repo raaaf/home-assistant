@@ -470,7 +470,7 @@
           entity_id:
           - switch.wohnzimmer_steckdose
           - switch.arbeitszimmer_steckdose
-          - switch.kuchengerate
+          - switch.steckdose_kuechengeraete
           - switch.steckdose_kinderzimmer
           - switch.schlafzimmer_tv_steckdose
           - switch.steckdose_arbeitszimmer
@@ -526,7 +526,7 @@
           - switch.steckdose_kuechengeraete
           - switch.steckdose_waschmaschine
           - switch.trockner
-          - switch.kuchengerate
+          - switch.steckdose_kuechengeraete
           - switch.steckdose_kinderzimmer
           - switch.schlafzimmer_tv_steckdose
           - switch.steckdose_arbeitszimmer
@@ -604,10 +604,6 @@
                   critical: 1
   mode: single
   max_exceeded: silent
-  variables:
-    lock_timeout: 01:00:00
-    guest_mode_timeout: '12:00:00'
-    timestamp: '{{ now() }}'
 - id: '1736456789001'
   alias: Helper » Alex PC Steckdose aus wenn weg
   description: Schaltet die PC-Steckdose von Alex aus wenn sie das Gebäude verlässt

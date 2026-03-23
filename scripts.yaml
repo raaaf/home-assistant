@@ -649,9 +649,8 @@ turn_on_with_retry:
       sequence:
       - delay:
           seconds: "{{ retry_delay | int(5) }}"
-      - condition: state
-        entity_id: "{{ target_entity }}"
-        state: 'off'
+      - condition: template
+        value_template: "{{ is_state(target_entity, 'off') }}"
       - action: homeassistant.turn_on
         target:
           entity_id: "{{ target_entity }}"

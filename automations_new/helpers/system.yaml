@@ -54,14 +54,11 @@
     idle_players: >
       {{ media_players | select('has_value') | reject('is_state', 'playing') | list }}
   actions:
-  - repeat:
-      count: "{{ idle_players | length }}"
-      sequence:
-      - condition: template
-        value_template: "{{ repeat.index <= (idle_players | length) }}"
-      - action: homeassistant.update_entity
-        target:
-          entity_id: "{{ idle_players[repeat.index - 1] }}"
+  - condition: template
+    value_template: "{{ idle_players | length > 0 }}"
+  - action: homeassistant.update_entity
+    target:
+      entity_id: "{{ idle_players }}"
   mode: single
 - id: '1737546250999'
   alias: Helper » HomeKit Controller Reload bei Verbindungsverlust

@@ -52,7 +52,7 @@
     - Jahreszeit und Monat - Sonnenuntergang - Wetter und Helligkeit - Temperatur
 
     '
-  trigger:
+  triggers:
   - at: 00:10:00
     trigger: time
   conditions: []
@@ -71,19 +71,43 @@
       sonnenuntergang_zeit: "{% set su = state_attr('sun.sun', 'next_setting') %}\
         \ {% if su %}\n  {{ (su | as_datetime | as_local).strftime('%H:%M') }}\n{%\
         \ else %}\n  20:00\n{% endif %}\n"
-      helligkeit_offset: "{{ 0 }}"
-      saison_offset_einschlaf: "{{ 0 }}"
-      saison_offset_aufwach: "{{ 0 }}"
-      sonnenuntergang_offset: "{{ 0 }}"
-      wetter_offset: "{{ 0 }}"
-      temp_offset: "{{ 0 }}"
-      gesamt_offset_einschlaf_schultag: '{{ 0 }}'
-      gesamt_offset_einschlaf_wochenende: '{{ 0 }}'
-      gesamt_offset_aufwach: '{{ 0 }}'
-      einschlaf_schultag_final: '{{ basis_einschlaf_schultag }}'
-      einschlaf_wochenende_final: '{{ basis_einschlaf_wochenende }}'
-      aufwach_schultag_final: '{{ basis_aufwach_schultag }}'
-      aufwach_wochenende_final: '{{ basis_aufwach_wochenende }}'
+      # Saison-Offset: Im Sommer (Jun-Aug) 30min spaeter einschlafen, im Winter (Nov-Feb) 15min frueher aufwachen
+      saison_offset_einschlaf: >-
+        {% if aktueller_monat | int in [6, 7, 8] %}30
+        {% elif aktueller_monat | int in [11, 12, 1, 2] %}-15
+        {% else %}0{% endif %}
+      saison_offset_aufwach: >-
+        {% if aktueller_monat | int in [11, 12, 1, 2] %}-15
+        {% else %}0{% endif %}
+      # Sonnenuntergang-Offset: Wenn Sonnenuntergang nach 20:30, 15min spaeter einschlafen
+      sonnenuntergang_offset: >-
+        {% set su = state_attr('sun.sun', 'next_setting') %}
+        {% if su %}
+          {% set su_hour = (su | as_datetime | as_local).hour %}
+          {% set su_min = (su | as_datetime | as_local).minute %}
+          {{ 15 if (su_hour > 20 or (su_hour == 20 and su_min >= 30)) else 0 }}
+        {% else %}0{% endif %}
+      # Temperatur-Offset: Bei Hitze (>28°C) 15min spaeter einschlafen (Kinder schlafen schwerer ein)
+      temp_offset: >-
+        {{ 15 if aussentemperatur | float(20) > 28 else 0 }}
+      # Gesamt-Offsets berechnen (in Minuten)
+      gesamt_offset_einschlaf: >-
+        {{ (saison_offset_einschlaf | int(0)) + (sonnenuntergang_offset | int(0)) + (temp_offset | int(0)) }}
+      gesamt_offset_aufwach: >-
+        {{ saison_offset_aufwach | int(0) }}
+      # Finale Zeiten berechnen
+      einschlaf_schultag_final: >-
+        {% set base = today_at(basis_einschlaf_schultag) %}
+        {{ (base + timedelta(minutes=gesamt_offset_einschlaf | int(0))).strftime('%H:%M:%S') }}
+      einschlaf_wochenende_final: >-
+        {% set base = today_at(basis_einschlaf_wochenende) %}
+        {{ (base + timedelta(minutes=gesamt_offset_einschlaf | int(0))).strftime('%H:%M:%S') }}
+      aufwach_schultag_final: >-
+        {% set base = today_at(basis_aufwach_schultag) %}
+        {{ (base + timedelta(minutes=gesamt_offset_aufwach | int(0))).strftime('%H:%M:%S') }}
+      aufwach_wochenende_final: >-
+        {% set base = today_at(basis_aufwach_wochenende) %}
+        {{ (base + timedelta(minutes=gesamt_offset_aufwach | int(0))).strftime('%H:%M:%S') }}
   - action: input_datetime.set_datetime
     target:
       entity_id: input_datetime.einschlafzeit_arbeitstag

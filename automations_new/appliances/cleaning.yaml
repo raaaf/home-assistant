@@ -26,7 +26,7 @@
   - alias: "Nicht öfter als alle 12 Stunden triggern"
     condition: template
     value_template: >-
-      {% set last = state_attr('automation.notifications_robbi', 'last_triggered') %}
+      {% set last = state_attr('automation.benachrichtigung_robbi_wartung', 'last_triggered') %}
       {{ last is none or (now() - last).total_seconds() > 43200 }}
   - alias: "Robbi ist verfügbar (nicht unbekannt/unavailable)"
     condition: template
@@ -100,35 +100,6 @@
         name: "Robbi Automation Fehler"
         message: "Unbekannter Wartungstrigger wurde ausgelöst"
         domain: automation
-  mode: single
-- id: '1692862723924'
-  alias: "Benachrichtigung » Luftreiniger Filter"
-  description: "Erstellt Wartungsaufgabe wenn Luftreiniger-Filter unter 10% Lebensdauer mit TTS-Ansage bei kritischen Werten"
-  triggers:
-  - trigger: numeric_state
-    entity_id: sensor.zhimi_vb4_bce4_filter_life_level
-    below: 10
-    id: filter_wartung
-  conditions:
-  - alias: "Nicht öfter als alle 12 Stunden triggern"
-    condition: template
-    value_template: >-
-      {% set last = state_attr('automation.notification_luftreiniger', 'last_triggered') %}
-      {{ last is none or (now() - last).total_seconds() > 43200 }}
-  - alias: "Luftreiniger ist verfügbar"
-    condition: template
-    value_template: >-
-      {{ states('sensor.zhimi_vb4_bce4_filter_life_level') not in ['unknown', 'unavailable'] }}
-  actions:
-  - action: notify.rafael
-    data:
-      title: "Luftreiniger — Filter wechseln"
-      message: "Verbleibende Lebensdauer: {{ states('sensor.zhimi_vb4_bce4_filter_life_level') | int(0) }}%"
-  - action: persistent_notification.create
-    data:
-      title: "Luftreiniger — Filter wechseln"
-      message: "Verbleibende Lebensdauer: {{ states('sensor.zhimi_vb4_bce4_filter_life_level') | int(0) }}%. Bitte den Filter des Luftreinigers wechseln."
-      notification_id: luftreiniger_filter
   mode: single
 - id: '1736000000001'
   alias: "Benachrichtigung » Robbi Fehler"
