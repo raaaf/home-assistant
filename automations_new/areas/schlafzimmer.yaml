@@ -77,12 +77,10 @@
         entity_id: input_boolean.alle_sind_weg
         state: 'off'
       - alias: "Fenster geschlossen"
-        condition: state
-        entity_id: binary_sensor.schlafzimmer_kontaktsensor_contact
-        state: 'off'
-      - condition: state
-        entity_id: binary_sensor.arbeitszimmer_kontaktsensor_contact
-        state: 'off'
+        condition: template
+        value_template: >-
+          {{ not is_state('binary_sensor.schlafzimmer_kontaktsensor_contact', 'on')
+             and not is_state('binary_sensor.arbeitszimmer_kontaktsensor_contact', 'on') }}
       - alias: "Sensor verfügbar"
         condition: template
         value_template: "{{ has_value('sensor.zhimi_vb4_bce4_pm25_density') }}"
@@ -123,12 +121,10 @@
       - condition: state
         entity_id: input_boolean.alle_sind_weg
         state: 'off'
-      - condition: state
-        entity_id: binary_sensor.schlafzimmer_kontaktsensor_contact
-        state: 'off'
-      - condition: state
-        entity_id: binary_sensor.arbeitszimmer_kontaktsensor_contact
-        state: 'off'
+      - condition: template
+        value_template: >-
+          {{ not is_state('binary_sensor.schlafzimmer_kontaktsensor_contact', 'on')
+             and not is_state('binary_sensor.arbeitszimmer_kontaktsensor_contact', 'on') }}
       sequence:
       - action: fan.turn_on
         target:
@@ -196,24 +192,22 @@
         target:
           entity_id: fan.zhimi_vb4_bce4_air_purifier
 
-    - alias: "Fenster geschlossen — einschalten wenn PM2.5 hoch"
+    - alias: "Fenster geschlossen — einschalten wenn PM2.5 hoch oder Schlafenszeit"
       conditions:
       - condition: trigger
         id: window-closed
       - alias: "Beide Fenster geschlossen"
-        condition: state
-        entity_id: binary_sensor.schlafzimmer_kontaktsensor_contact
-        state: 'off'
-      - condition: state
-        entity_id: binary_sensor.arbeitszimmer_kontaktsensor_contact
-        state: 'off'
+        condition: template
+        value_template: >-
+          {{ not is_state('binary_sensor.schlafzimmer_kontaktsensor_contact', 'on')
+             and not is_state('binary_sensor.arbeitszimmer_kontaktsensor_contact', 'on') }}
       - condition: state
         entity_id: fan.zhimi_vb4_bce4_air_purifier
         state: 'off'
       - condition: state
         entity_id: input_boolean.alle_sind_weg
         state: 'off'
-      - alias: "PM2.5 oder Feuchtigkeit problematisch"
+      - alias: "PM2.5/Feuchtigkeit problematisch ODER Schlafenszeit aktiv"
         condition: or
         conditions:
         - condition: numeric_state
@@ -222,6 +216,9 @@
         - condition: numeric_state
           entity_id: sensor.zhimi_vb4_bce4_relative_humidity
           above: 65
+        - condition: state
+          entity_id: input_boolean.schlafenszeit
+          state: 'on'
       sequence:
       - action: fan.turn_on
         target:
@@ -272,16 +269,35 @@
       - condition: numeric_state
         entity_id: sensor.zhimi_vb4_bce4_pm25_density
         above: 20
-      - condition: state
-        entity_id: binary_sensor.schlafzimmer_kontaktsensor_contact
-        state: 'off'
-      - condition: state
-        entity_id: binary_sensor.arbeitszimmer_kontaktsensor_contact
-        state: 'off'
+      - condition: template
+        value_template: >-
+          {{ not is_state('binary_sensor.schlafzimmer_kontaktsensor_contact', 'on')
+             and not is_state('binary_sensor.arbeitszimmer_kontaktsensor_contact', 'on') }}
       sequence:
       - action: fan.turn_on
         target:
           entity_id: fan.zhimi_vb4_bce4_air_purifier
+      - delay:
+          seconds: 10
+      - alias: "Retry wenn Air Purifier nicht reagiert hat"
+        if:
+        - condition: state
+          entity_id: fan.zhimi_vb4_bce4_air_purifier
+          state: 'off'
+        then:
+        - action: fan.turn_on
+          target:
+            entity_id: fan.zhimi_vb4_bce4_air_purifier
+        - delay:
+            seconds: 10
+        - if:
+          - condition: state
+            entity_id: fan.zhimi_vb4_bce4_air_purifier
+            state: 'off'
+          then:
+          - action: fan.turn_on
+            target:
+              entity_id: fan.zhimi_vb4_bce4_air_purifier
       - choose:
         - conditions:
           - condition: state

@@ -245,6 +245,10 @@ fade_volume:
     time_based_steps: '{{ [duration / 30, 10] | max | int }}'
     total_steps: '{{ [[volume_based_steps, time_based_steps] | min, 1] | max }}'
   sequence:
+  - alias: "Prüfe ob Player verfügbar ist"
+    condition: template
+    value_template: >-
+      {{ states(target_player) not in ['unavailable', 'unknown'] }}
   - if:
     - condition: template
       value_template: '{{ (start_volume | float(0)) < 0.01 and (volume_diff | float(0)) > 0 }}'
