@@ -373,6 +373,8 @@
     # Flur Schrank (2 lights)
     - light.flur_schrank_1
     - light.flur_schrank_2
+    # Stahlträger
+    - light.stahltraeger
   interval: 900  # 15 min - reduced Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 2  # Smooth fade-in on turn_on (intercepted by AL)

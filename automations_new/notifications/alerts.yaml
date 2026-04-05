@@ -235,35 +235,53 @@
   max_exceeded: silent
 - id: '1714059235372'
   alias: Notification » CO2 zu hoch
-  description: Benachrichtigt wenn CO2-Wert über 1800 ppm steigt
+  description: "Benachrichtigt bei hohem CO2. Tagsüber ab 1800 ppm, nachts ab 2000 ppm (Ventilator reicht nicht)."
   triggers:
   - entity_id:
     - sensor.qingping_air_monitor_lite_co2_carbon_dioxide
     above: 1800
     for:
-      hours: 0
       minutes: 5
-      seconds: 0
     trigger: numeric_state
+    id: 'co2-high'
+  - entity_id:
+    - sensor.qingping_air_monitor_lite_co2_carbon_dioxide
+    above: 2000
+    for:
+      minutes: 10
+    trigger: numeric_state
+    id: 'co2-critical'
   conditions:
   - condition: template
     value_template: "{{ states('sensor.qingping_air_monitor_lite_co2_carbon_dioxide') not in ['unknown', 'unavailable'] }}"
   - condition: template
-    value_template: " {% set last = state_attr('automation.notification_co2_zu_hoch',\
-      \ 'last_triggered') %}\n    {{ last is none or (now() - last).total_seconds()\
-      \ > 30 * 60 }}"
-  - condition: state
-    entity_id: input_boolean.schlafenszeit
-    state: 'off'
+    value_template: >-
+      {% set last = state_attr('automation.notification_co2_zu_hoch', 'last_triggered') %}
+      {{ last is none or (now() - last).total_seconds() > 30 * 60 }}
+  - condition: or
+    conditions:
+    # Tagsüber: ab 1800 ppm (wie bisher)
+    - condition: and
+      conditions:
+      - condition: trigger
+        id: 'co2-high'
+      - condition: state
+        entity_id: input_boolean.schlafenszeit
+        state: 'off'
+    # Nachts: erst ab 2000 ppm (Ventilator sollte helfen, aber reicht nicht)
+    - condition: trigger
+      id: 'co2-critical'
   actions:
-  - data:
-      message: Der Wert liegt aktuell bei {{ states('sensor.qingping_air_monitor_lite_co2_carbon_dioxide') | int(0)
-        }} ppm!
-      title: CO2 zu hoch - Fenster auf im Arbeitszimmer
+  - action: notify.family
+    data:
+      title: >-
+        CO2 zu hoch — {{ 'Fenster öffnen!' if is_state('input_boolean.schlafenszeit', 'on') else 'Fenster auf im Arbeitszimmer' }}
+      message: >-
+        Der Wert liegt aktuell bei {{ states('sensor.qingping_air_monitor_lite_co2_carbon_dioxide') | int(0) }} ppm!
+        {{ ' Ventilator läuft bereits auf ' ~ states('sensor.fan_speed_schlafzimmer_co2_calculated') ~ '%.' if is_state('fan.schlafzimmer', 'on') else '' }}
       data:
         push:
           interruption-level: critical
-    action: notify.family
   mode: single
 - id: '1715850119149'
   alias: Notifications » Temperatur Aussen

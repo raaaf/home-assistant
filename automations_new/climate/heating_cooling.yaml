@@ -800,3 +800,116 @@
     target:
       entity_id: input_boolean.frost_warning_sent
   mode: single
+
+# --- CO2-basierte Ventilator-Steuerung Schlafzimmer ---
+
+- id: 'co2_ventilator_schlafzimmer'
+  alias: "Ventilator » Schlafzimmer CO2-Steuerung"
+  description: "Steuert fan.schlafzimmer basierend auf CO2-Werten nachts"
+  mode: single
+  triggers:
+    - trigger: state
+      entity_id: sensor.fan_speed_schlafzimmer_co2_calculated
+      id: 'co2-changed'
+    - trigger: state
+      entity_id: input_boolean.schlafenszeit
+      id: 'schlafenszeit-changed'
+    - trigger: state
+      entity_id: sensor.qingping_air_monitor_lite_co2_carbon_dioxide
+      to: 'unavailable'
+      for: "00:05:00"
+      id: 'sensor-unavailable'
+  conditions:
+    - condition: state
+      entity_id: input_boolean.alle_sind_weg
+      state: 'off'
+    - condition: state
+      entity_id: input_boolean.ventilator_schlafzimmer_override
+      state: 'off'
+  actions:
+    - choose:
+        # Sensor ausgefallen: Ventilator sicher ausschalten
+        - conditions:
+            - condition: trigger
+              id: 'sensor-unavailable'
+          sequence:
+            - action: fan.turn_off
+              target:
+                entity_id: fan.schlafzimmer
+            - action: logbook.log
+              data:
+                name: "CO2 Ventilator"
+                message: "Ventilator aus — CO2-Sensor unavailable"
+
+        # Schlafenszeit aktiv + CO2 erfordert Ventilator
+        - conditions:
+            - condition: state
+              entity_id: input_boolean.schlafenszeit
+              state: 'on'
+            - condition: numeric_state
+              entity_id: sensor.fan_speed_schlafzimmer_co2_calculated
+              above: 0
+          sequence:
+            - action: fan.turn_on
+              target:
+                entity_id: fan.schlafzimmer
+              data:
+                percentage: >-
+                  {{ states('sensor.fan_speed_schlafzimmer_co2_calculated') | int }}
+                preset_mode: nature
+
+      # Sonst: Ventilator aus (CO2 niedrig genug oder nicht Schlafenszeit)
+      default:
+        - condition: state
+          entity_id: fan.schlafzimmer
+          state: 'on'
+        - action: fan.turn_off
+          target:
+            entity_id: fan.schlafzimmer
+
+- id: 'co2_ventilator_override_detection'
+  alias: "Ventilator » Schlafzimmer Override-Erkennung"
+  description: "Erkennt manuelle Ventilator-Steuerung und aktiviert Override"
+  mode: single
+  triggers:
+    - trigger: state
+      entity_id: fan.schlafzimmer
+      to: 'off'
+  conditions:
+    - condition: template
+      value_template: >-
+        {{ trigger.to_state.context.user_id is not none }}
+    - condition: state
+      entity_id: input_boolean.schlafenszeit
+      state: 'on'
+  actions:
+    - action: input_boolean.turn_on
+      target:
+        entity_id: input_boolean.ventilator_schlafzimmer_override
+    - action: timer.start
+      target:
+        entity_id: timer.ventilator_override
+    - action: logbook.log
+      data:
+        name: "CO2 Ventilator"
+        message: "Manueller Override aktiviert (2h)"
+
+- id: 'co2_ventilator_override_reset'
+  alias: "Ventilator » Schlafzimmer Override zurücksetzen"
+  description: "Setzt Override zurück nach Timer-Ablauf oder Schlafenszeit-Ende"
+  mode: single
+  triggers:
+    - trigger: event
+      event_type: timer.finished
+      event_data:
+        entity_id: timer.ventilator_override
+    - trigger: state
+      entity_id: input_boolean.schlafenszeit
+      to: 'off'
+  actions:
+    - action: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.ventilator_schlafzimmer_override
+    - action: timer.cancel
+      target:
+        entity_id: timer.ventilator_override

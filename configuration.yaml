@@ -529,6 +529,28 @@ template:
         attributes:
           temperature: "{{ states('sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature') if has_value('sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature') else 'N/A' }}"
 
+      - name: "Fan Speed Schlafzimmer CO2 Calculated"
+        unique_id: fan_speed_schlafzimmer_co2_calculated
+        icon: mdi:fan
+        unit_of_measurement: "%"
+        state: >-
+          {% set co2 = states('sensor.qingping_air_monitor_lite_co2_carbon_dioxide') | float(0) %}
+          {% set current = this.state | int(0) %}
+          {% if co2 >= 2000 %} 75
+          {% elif co2 >= 1500 %}
+            {% if current >= 75 and co2 >= 1900 %} 75
+            {% else %} 50
+            {% endif %}
+          {% elif co2 >= 800 %}
+            {% if current >= 50 and co2 >= 1400 %} 50
+            {% else %} 25
+            {% endif %}
+          {% elif co2 < 700 %} 0
+          {% else %} {{ current }}
+          {% endif %}
+        availability: >-
+          {{ states('sensor.qingping_air_monitor_lite_co2_carbon_dioxide') not in ['unknown', 'unavailable'] }}
+
       - name: "Room Temperature Average"
         unique_id: room_temperature_average
         unit_of_measurement: "°C"
@@ -711,6 +733,10 @@ input_boolean:
     name: "Leselicht"
     icon: mdi:book-open-page-variant
     initial: false
+  ventilator_schlafzimmer_override:
+    name: "Ventilator Schlafzimmer Override"
+    icon: mdi:fan-off
+    initial: false
 
 input_datetime:
   haustur_eingang_zeit:
@@ -843,7 +869,7 @@ input_number:
     step: 1
     unit_of_measurement: "%"
     icon: mdi:water-percent
-    initial: 45
+    initial: 55
   luftwascher_leer_schwelle:
     name: "Luftwäscher: Watt-Schwelle kein Wasser"
     min: 0.5
