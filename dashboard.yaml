@@ -574,10 +574,6 @@ views:
                     name: Thermomix
                     layout: horizontal
                   - type: custom:mushroom-entity-card
-                    entity: switch.steckdose_pc_alex
-                    name: PC Alex
-                    layout: horizontal
-                  - type: custom:mushroom-entity-card
                     entity: switch.steckdose_arbeitszimmer
                     name: Drucker
                     layout: horizontal
@@ -587,7 +583,7 @@ views:
                     layout: horizontal
                   - type: custom:mushroom-entity-card
                     entity: switch.arbeitszimmer_steckdose
-                    name: PC Rafael
+                    name: PCs Arbeitszimmer
                     layout: horizontal
                   - type: custom:mushroom-entity-card
                     entity: switch.schlafzimmer_tv_steckdose
