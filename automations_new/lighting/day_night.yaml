@@ -553,26 +553,45 @@
     id: sunrise
   conditions: []
   actions:
-  - alias: Reset all adaptive lighting switches to default settings
+  # Split into three calls to preserve room-specific min_brightness values
+  - alias: "Reset Schlafzimmer, Kinderzimmer, Ankleide (min_brightness 10)"
     action: adaptive_lighting.change_switch_settings
     target:
       entity_id:
-      - switch.adaptive_lighting_arbeitszimmer
-      - switch.adaptive_lighting_ankleide
-      - switch.adaptive_lighting_badezimmer
-      - switch.adaptive_lighting_balkon
-      - switch.adaptive_lighting_flur
-      - switch.adaptive_lighting_kinderzimmer
-      - switch.adaptive_lighting_kueche
       - switch.adaptive_lighting_schlafzimmer
-      - switch.adaptive_lighting_waschzimmer
-      - switch.adaptive_lighting_wohnzimmer
+      - switch.adaptive_lighting_kinderzimmer
+      - switch.adaptive_lighting_ankleide
     data:
-      # Reset to defaults (will be overridden in evening)
       min_sunset_time: "20:00:00"
       max_sunset_time: "20:30:00"
       min_brightness: 10
       max_brightness: 100
-      # Reset color temp to allow full range (neutral white during day)
+      max_color_temp: 4000
+  - alias: "Reset Wohnzimmer, Küche, Flur (min_brightness 20)"
+    action: adaptive_lighting.change_switch_settings
+    target:
+      entity_id:
+      - switch.adaptive_lighting_wohnzimmer
+      - switch.adaptive_lighting_kueche
+      - switch.adaptive_lighting_flur
+    data:
+      min_sunset_time: "20:00:00"
+      max_sunset_time: "20:30:00"
+      min_brightness: 20
+      max_brightness: 100
+      max_color_temp: 4000
+  - alias: "Reset Badezimmer, Waschzimmer, Arbeitszimmer, Balkon (min_brightness 30)"
+    action: adaptive_lighting.change_switch_settings
+    target:
+      entity_id:
+      - switch.adaptive_lighting_badezimmer
+      - switch.adaptive_lighting_waschzimmer
+      - switch.adaptive_lighting_arbeitszimmer
+      - switch.adaptive_lighting_balkon
+    data:
+      min_sunset_time: "20:00:00"
+      max_sunset_time: "20:30:00"
+      min_brightness: 30
+      max_brightness: 100
       max_color_temp: 4000
   mode: single

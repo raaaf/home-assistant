@@ -256,16 +256,16 @@ The system uses the **Adaptive Lighting** custom component for circadian rhythm 
 **Room Configuration**:
 | Room | Lights | Reset Time | Notes |
 |------|--------|------------|-------|
-| Wohnzimmer | 5 groups/lights | 1 hour | Living spaces |
-| Küche | 3 groups | 1 hour | Kitchen |
-| Schlafzimmer | 3 groups/lights | 1 hour | Bedroom |
-| Kinderzimmer | 3 lights | 1 hour | Kids' room |
-| Badezimmer | 3 groups/lights | 2 hours | Bathroom |
+| Wohnzimmer | 17 lights | 1 hour | Living spaces |
+| Küche | 6 lights | 1 hour | Kitchen |
+| Schlafzimmer | 4 lights | 1 hour | Bedroom |
+| Kinderzimmer | 2 lights | 1 hour | Kids' room |
+| Badezimmer | 4 lights | 15 min | Bathroom |
 | Waschzimmer | 1 light | 2 hours | Laundry |
-| Arbeitszimmer | 3 groups/lights | 1 hour | Office |
-| Ankleide | 1 group | 2 hours | Dressing room |
-| Flur | 2 groups | 2 hours | Hallway |
-| Balkon | 2 groups/lights | 2 hours | Balcony |
+| Arbeitszimmer | 4 lights | 1 hour | Office |
+| Ankleide | 2 lights | 2 hours | Dressing room |
+| Flur | 9 lights | 15 min | Hallway |
+| Balkon | 3 lights | 2 hours | Balcony |
 
 **Key Settings** (consistent across rooms):
 ```yaml
@@ -276,7 +276,9 @@ max_color_temp: 4000       # Cool white maximum
 sleep_brightness: 10       # Night mode brightness
 sleep_color_temp: 2200     # Warmest for sleep
 take_over_control: true    # Manual control detection
-detect_non_ha_changes: true  # Critical for Zigbee2MQTT
+detect_non_ha_changes: false  # Disabled — prevents random turn-ons with Z2M
+skip_redundant_commands: false  # Disabled — prevents state desync with Z2M
+include_config_in_attributes: false  # Disabled — reduces HA state overhead
 intercept: true            # Intercept light.turn_on calls
 brightness_mode: "tanh"    # Smooth brightness curve
 ```
@@ -639,7 +641,7 @@ This is applied via `System » Adaptive Lighting Settings nach Neustart` automat
 AL reads config from **Config Entries** (not YAML) after initial import. Changes to `adaptive_lighting.yaml` have no effect — use `adaptive_lighting.change_switch_settings` service or the startup automation.
 
 **Interval & Reset**:
-- 15-minute update interval (reduced Zigbee traffic)
+- 5-minute update interval (smooth sunrise/sunset transitions)
 - 1-hour autoreset for main rooms
 - 2-hour autoreset for utility/transition areas
 

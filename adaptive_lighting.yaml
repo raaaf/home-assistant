@@ -7,12 +7,12 @@
 # UPDATED: Optimized for Zigbee2MQTT with mixed Philips Hue & IKEA lights
 # FIXED: Disabled detect_non_ha_changes to prevent random light turn-ons (2025-12-05)
 # UPDATED 2026-02-26: Reduced Zigbee traffic & false manual_control triggers:
-#   - separate_turn_on_commands: false  (weniger MQTT-Messages pro Zyklus)
+#   - separate_turn_on_commands: true   (nötig für IKEA fade-in)
 #   - take_over_control_mode: pause_changed  (pausiert nur geänderte Attribute)
 #   - adapt_only_on_bare_turn_on: false  (reverted - caused 100% brightness on motion trigger)
 #
 # Key principles:
-# - Sleep color temps at 1800K for optimal circadian rhythm support
+# - Sleep color temps at 2200K (warmest supported by IKEA + Hue)
 # - Room-specific timing based on usage patterns
 # - IKEA-compatible transitions (10-15s max) to prevent bulb lockups
 # - Higher brightness for safety areas (bathrooms, hallways)
@@ -48,7 +48,7 @@
     - light.wohnzimmer_schrank_3
     # Individual light
     - light.wohnzimmer_spieletisch
-  interval: 900  # 15 min - reduced Zigbee traffic
+  interval: 300  # 5 min - smooth sunrise/sunset transitions without excessive Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 2  # Smooth fade-in on turn_on (intercepted by AL)
   min_brightness: 20
@@ -73,10 +73,10 @@
   separate_turn_on_commands: true  # Required for IKEA fade-in (sends ON, then brightness+transition separately)
   send_split_delay: 300  # 300ms delay between ON and brightness commands (IKEA needs time to process)
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
-  skip_redundant_commands: true
+  skip_redundant_commands: false  # Disabled - prevents state desync with Z2M (detect_non_ha_changes is off)
   intercept: true
   multi_light_intercept: true
-  include_config_in_attributes: true
+  include_config_in_attributes: false
   brightness_mode: "tanh"
 
 - name: "Küche"
@@ -90,7 +90,7 @@
     # Küche Schrank (2 lights)
     - light.kuche_schrank_1
     - light.kuche_schrank_2
-  interval: 900  # 15 min - reduced Zigbee traffic
+  interval: 300  # 5 min - smooth sunrise/sunset transitions without excessive Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 2  # Smooth fade-in on turn_on (intercepted by AL)
   min_brightness: 20
@@ -100,7 +100,7 @@
   prefer_rgb_color: false
   sleep_brightness: 10 # Consistent across all rooms
   sleep_color_temp: 2200  # Warmest supported by all bulbs
-  sleep_transition: 45  # Optimized for IKEA compatibility
+  sleep_transition: 10  # Short transitions prevent IKEA lockups
   transition_until_sleep: true
   min_sunrise_time: "05:00:00" # Aligned with wake time
   max_sunrise_time: "07:00:00" # Peak brightness/coolness at wake time
@@ -115,10 +115,10 @@
   separate_turn_on_commands: true  # Required for IKEA fade-in (sends ON, then brightness+transition separately)
   send_split_delay: 300  # 300ms delay between ON and brightness commands (IKEA needs time to process)
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
-  skip_redundant_commands: true
+  skip_redundant_commands: false  # Disabled - prevents state desync with Z2M (detect_non_ha_changes is off)
   intercept: true
   multi_light_intercept: true
-  include_config_in_attributes: true
+  include_config_in_attributes: false
   brightness_mode: "tanh"
 
 # =============================================================================
@@ -133,8 +133,7 @@
     # Individual lights
     - light.schlafzimmer_bett
     - light.schlafzimmer_tv
-    - light.schlafzimmer_schrank          # Einzellicht (Akzentlicht, umgezogen aus Kinderzimmer)
-  interval: 900  # 15 min - reduced Zigbee traffic
+  interval: 300  # 5 min - smooth sunrise/sunset transitions without excessive Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 2  # Smooth fade-in on turn_on (intercepted by AL)
   min_brightness: 10
@@ -159,17 +158,17 @@
   separate_turn_on_commands: true  # Required for IKEA fade-in (sends ON, then brightness+transition separately)
   send_split_delay: 300  # 300ms delay between ON and brightness commands (IKEA needs time to process)
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
-  skip_redundant_commands: true
+  skip_redundant_commands: false  # Disabled - prevents state desync with Z2M (detect_non_ha_changes is off)
   intercept: true
   multi_light_intercept: true
-  include_config_in_attributes: true
+  include_config_in_attributes: false
   brightness_mode: "tanh"
 
 - name: "Kinderzimmer"
   lights:
     - light.kinderzimmer_decke            # Einzellicht (Hauptlicht)
     - light.kinderzimmer_bucher           # Einzellicht (Leselicht)
-  interval: 900  # 15 min - reduced Zigbee traffic
+  interval: 300  # 5 min - smooth sunrise/sunset transitions without excessive Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 2  # Smooth fade-in on turn_on (intercepted by AL)
   min_brightness: 10
@@ -194,10 +193,10 @@
   separate_turn_on_commands: true  # Required for IKEA fade-in (sends ON, then brightness+transition separately)
   send_split_delay: 300  # 300ms delay between ON and brightness commands (IKEA needs time to process)
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
-  skip_redundant_commands: true
+  skip_redundant_commands: false  # Disabled - prevents state desync with Z2M (detect_non_ha_changes is off)
   intercept: true
   multi_light_intercept: true
-  include_config_in_attributes: true
+  include_config_in_attributes: false
   brightness_mode: "tanh"
 
 # =============================================================================
@@ -212,7 +211,7 @@
     # Individual lights
     - light.badezimmer_schrank
     - light.badezimmer_fenster
-  interval: 900  # 15 min - reduced Zigbee traffic
+  interval: 300  # 5 min - smooth sunrise/sunset transitions without excessive Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 2  # Smooth fade-in on turn_on (intercepted by AL)
   min_brightness: 30
@@ -222,7 +221,7 @@
   prefer_rgb_color: false
   sleep_brightness: 10 # Consistent across all rooms
   sleep_color_temp: 2200  # Warmest supported by all bulbs
-  sleep_transition: 45  # Optimized for IKEA compatibility
+  sleep_transition: 10  # Short transitions prevent IKEA lockups
   transition_until_sleep: true
   min_sunrise_time: "05:00:00" # Aligned with wake time
   max_sunrise_time: "07:00:00" # Peak brightness/coolness at wake time
@@ -237,16 +236,16 @@
   separate_turn_on_commands: true  # Required for IKEA fade-in (sends ON, then brightness+transition separately)
   send_split_delay: 300  # 300ms delay between ON and brightness commands (IKEA needs time to process)
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
-  skip_redundant_commands: true
+  skip_redundant_commands: false  # Disabled - prevents state desync with Z2M (detect_non_ha_changes is off)
   intercept: true
   multi_light_intercept: true
-  include_config_in_attributes: true
+  include_config_in_attributes: false
   brightness_mode: "tanh"
 
 - name: "Waschzimmer"
   lights:
     - light.waschzimmer_decke
-  interval: 900  # 15 min - reduced Zigbee traffic
+  interval: 300  # 5 min - smooth sunrise/sunset transitions without excessive Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 2  # Smooth fade-in on turn_on (intercepted by AL)
   min_brightness: 30
@@ -271,10 +270,10 @@
   separate_turn_on_commands: true  # Required for IKEA fade-in (sends ON, then brightness+transition separately)
   send_split_delay: 300  # 300ms delay between ON and brightness commands (IKEA needs time to process)
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
-  skip_redundant_commands: true
+  skip_redundant_commands: false  # Disabled - prevents state desync with Z2M (detect_non_ha_changes is off)
   intercept: true
   multi_light_intercept: true
-  include_config_in_attributes: true
+  include_config_in_attributes: false
   brightness_mode: "tanh"
 
 # =============================================================================
@@ -290,7 +289,7 @@
     - light.arbeitszimmer_pc_2
     # Individual light
     - light.arbeitszimmer_stehlampe
-  interval: 900  # 15 min - reduced Zigbee traffic
+  interval: 300  # 5 min - smooth sunrise/sunset transitions without excessive Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 2  # Smooth fade-in on turn_on (intercepted by AL)
   min_brightness: 30
@@ -315,10 +314,10 @@
   separate_turn_on_commands: true  # Required for IKEA fade-in (sends ON, then brightness+transition separately)
   send_split_delay: 300  # 300ms delay between ON and brightness commands (IKEA needs time to process)
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
-  skip_redundant_commands: true
+  skip_redundant_commands: false  # Disabled - prevents state desync with Z2M (detect_non_ha_changes is off)
   intercept: true
   multi_light_intercept: true
-  include_config_in_attributes: true
+  include_config_in_attributes: false
   brightness_mode: "tanh"
 
 - name: "Ankleide"
@@ -326,7 +325,7 @@
     # Ankleide Decke (2 lights)
     - light.ankleide_decke_1
     - light.ankleide_decke_2
-  interval: 900  # 15 min - reduced Zigbee traffic
+  interval: 300  # 5 min - smooth sunrise/sunset transitions without excessive Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 2  # Smooth fade-in on turn_on (intercepted by AL)
   min_brightness: 10
@@ -336,7 +335,7 @@
   prefer_rgb_color: false
   sleep_brightness: 10 # Consistent across all rooms
   sleep_color_temp: 2200  # Warmest supported by all bulbs
-  sleep_transition: 45  # Optimized for IKEA compatibility
+  sleep_transition: 10  # Short transitions prevent IKEA lockups
   transition_until_sleep: true
   min_sunrise_time: "05:00:00" # Aligned with wake time
   max_sunrise_time: "07:00:00" # Peak brightness/coolness at wake time
@@ -351,10 +350,10 @@
   separate_turn_on_commands: true  # Required for IKEA fade-in (sends ON, then brightness+transition separately)
   send_split_delay: 300  # 300ms delay between ON and brightness commands (IKEA needs time to process)
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
-  skip_redundant_commands: true
+  skip_redundant_commands: false  # Disabled - prevents state desync with Z2M (detect_non_ha_changes is off)
   intercept: true
   multi_light_intercept: true
-  include_config_in_attributes: true
+  include_config_in_attributes: false
   brightness_mode: "tanh"
 
 # =============================================================================
@@ -375,7 +374,7 @@
     - light.flur_schrank_2
     # Stahlträger
     - light.stahltraeger
-  interval: 900  # 15 min - reduced Zigbee traffic
+  interval: 300  # 5 min - smooth sunrise/sunset transitions without excessive Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 2  # Smooth fade-in on turn_on (intercepted by AL)
   min_brightness: 20
@@ -400,10 +399,10 @@
   separate_turn_on_commands: true  # Required for IKEA fade-in (sends ON, then brightness+transition separately)
   send_split_delay: 300  # 300ms delay between ON and brightness commands (IKEA needs time to process)
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
-  skip_redundant_commands: true
+  skip_redundant_commands: false  # Disabled - prevents state desync with Z2M (detect_non_ha_changes is off)
   intercept: true
   multi_light_intercept: true
-  include_config_in_attributes: true
+  include_config_in_attributes: false
   brightness_mode: "tanh"
 
 # =============================================================================
@@ -417,7 +416,7 @@
     - light.balkon_wand_2
     # Individual light
     - light.balkon_blumen
-  interval: 900  # 15 min - reduced Zigbee traffic
+  interval: 300  # 5 min - smooth sunrise/sunset transitions without excessive Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 2  # Smooth fade-in on turn_on (intercepted by AL)
   min_brightness: 30
@@ -442,8 +441,8 @@
   separate_turn_on_commands: true  # Required for IKEA fade-in (sends ON, then brightness+transition separately)
   send_split_delay: 300  # 300ms delay between ON and brightness commands (IKEA needs time to process)
   adapt_delay: 1  # Small delay lets Zigbee network settle before adaptation
-  skip_redundant_commands: true
+  skip_redundant_commands: false  # Disabled - prevents state desync with Z2M (detect_non_ha_changes is off)
   intercept: true
   multi_light_intercept: true
-  include_config_in_attributes: true
+  include_config_in_attributes: false
   brightness_mode: "tanh" # Smooth transitions for outdoor
