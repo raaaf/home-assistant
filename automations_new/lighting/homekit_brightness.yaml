@@ -56,7 +56,6 @@
         - light.schlafzimmer_decke_2
         - light.schlafzimmer_bett
         - light.schlafzimmer_tv
-        - light.schlafzimmer_schrank
         # Kinderzimmer (2 lights)
         - light.kinderzimmer_decke
         - light.kinderzimmer_bucher
@@ -148,7 +147,6 @@
       light.schlafzimmer_decke_2: schlafzimmer
       light.schlafzimmer_bett: schlafzimmer
       light.schlafzimmer_tv: schlafzimmer
-      light.schlafzimmer_schrank: schlafzimmer
       light.kinderzimmer_decke: kinderzimmer
       light.kinderzimmer_bucher: kinderzimmer
       light.badezimmer_decke_1: badezimmer

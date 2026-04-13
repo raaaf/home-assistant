@@ -86,7 +86,6 @@
     # Individual lights
     - light.schlafzimmer_bett
     - light.schlafzimmer_tv
-    - light.schlafzimmer_schrank
 
 - platform: group
   unique_id: alle_kinderzimmer_lichter
@@ -188,7 +187,6 @@
   entities:
     - light.schlafzimmer_bett
     - light.schlafzimmer_tv
-    - light.schlafzimmer_schrank
 
 - platform: group
   unique_id: alle_schlafzimmer_nachtlichter
@@ -275,7 +273,6 @@
   entities:
     - light.schlafzimmer_bett
     - light.schlafzimmer_tv
-    - light.schlafzimmer_schrank
 
 - platform: group
   unique_id: alle_badezimmer_rgb_lichter
