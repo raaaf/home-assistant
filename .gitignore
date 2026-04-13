@@ -49,3 +49,4 @@ home-assistant.*
 .ring_cache.pickle
 abodepy_cache.pickle
 .pc-session
+.claude/audits/cache.json

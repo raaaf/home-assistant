@@ -51,7 +51,7 @@
         - light.kuche_insel_unten
         - light.kuche_schrank_1
         - light.kuche_schrank_2
-        # Schlafzimmer (5 lights)
+        # Schlafzimmer (4 lights)
         - light.schlafzimmer_decke_1
         - light.schlafzimmer_decke_2
         - light.schlafzimmer_bett

@@ -387,6 +387,7 @@
               adapt_only_on_bare_turn_on: false
               interval: 300
               skip_redundant_commands: false
+              include_config_in_attributes: false
               use_defaults: current
     - alias: Abschluss loggen
       action: logbook.log
@@ -395,4 +396,5 @@
         message: >
           AL-Einstellungen nach Neustart gesetzt (10 Räume):
           separate_turn_on_commands=true, send_split_delay=300, initial_transition=2,
-          interval=300, skip_redundant_commands=false
+          take_over_control_mode=pause_changed, adapt_only_on_bare_turn_on=false,
+          interval=300, skip_redundant_commands=false, include_config_in_attributes=false
