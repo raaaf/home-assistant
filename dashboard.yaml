@@ -27,7 +27,7 @@ views:
             alignment: center
             title: |-
               {% set time = now().hour %}
-              {% if (time >= 18) %} 
+              {% if (time >= 18) %}
                Guten Abend, {{user}}!
               {% elif (time >= 12) %}
                Guten Nachmittag, {{user}}!
@@ -67,26 +67,42 @@ views:
                 entity: sensor.count_lights_on
               - type: conditional
                 conditions:
-                  - entity: sensor.hausverbrauch_gesamt
+                  - entity: sensor.stromzahler_saldiert
                     state_not: unavailable
-                  - entity: sensor.hausverbrauch_gesamt
+                  - entity: sensor.stromzahler_saldiert
                     state_not: unknown
                 chip:
                   type: template
-                  entity: sensor.hausverbrauch_gesamt
-                  icon: mdi:flash
+                  entity: sensor.stromzahler_saldiert
+                  icon: >-
+                    {% set s = states('sensor.stromzahler_saldiert') | float(0) %}
+                    {% if s < -50 %}
+                      mdi:transmission-tower-export
+                    {% elif s > 50 %}
+                      mdi:transmission-tower-import
+                    {% else %}
+                      mdi:transmission-tower
+                    {% endif %}
                   icon_color: >-
-                    {% set power = states('sensor.hausverbrauch_gesamt') |
-                    float(0) %} {% if power < 500 %}
+                    {% set s = states('sensor.stromzahler_saldiert') | float(0) %}
+                    {% if s < -50 %}
                       green
-                    {% elif power < 2000 %}
+                    {% elif s > 2000 %}
+                      red
+                    {% elif s > 500 %}
                       amber
                     {% else %}
-                      red
+                      grey
                     {% endif %}
                   content: >-
-                    {{ states('sensor.hausverbrauch_gesamt') | float(0) |
-                    round(0) }} W
+                    {% set s = states('sensor.stromzahler_saldiert') | float(0) %}
+                    {% if s < -50 %}
+                      ↑ {{ (s | abs) | round(0) }} W
+                    {% elif s > 50 %}
+                      ↓ {{ s | round(0) }} W
+                    {% else %}
+                      {{ s | round(0) }} W
+                    {% endif %}
               - type: conditional
                 conditions:
                   - entity: sensor.steckdose_bkk_power
@@ -197,17 +213,17 @@ views:
                   entity: switch.heizung_badezimmer
               - type: conditional
                 conditions:
-                  - entity: fan.arbeitszimmer
+                  - entity: fan.kinderzimmer
                     state: 'on'
-                  - entity: fan.arbeitszimmer
+                  - entity: fan.kinderzimmer
                     state_not: unavailable
-                  - entity: fan.arbeitszimmer
+                  - entity: fan.kinderzimmer
                     state_not: unknown
                 chip:
                   type: template
                   icon: mdi:fan-auto
-                  content: Fan AZ
-                  entity: fan.arbeitszimmer
+                  content: Fan KZ
+                  entity: fan.kinderzimmer
               - type: conditional
                 conditions:
                   - entity: fan.schlafzimmer
@@ -444,81 +460,45 @@ views:
                 square: false
                 columns: 2
                 cards:
-                  - type: conditional
-                    conditions:
-                      - entity: climate.ac
-                        state_not: unavailable
-                      - entity: climate.ac
-                        state_not: unknown
-                    card:
-                      type: custom:mushroom-climate-card
-                      entity: climate.ac
-                      show_temperature_control: true
-                      layout: horizontal
-                      collapsible_controls: false
-                      hvac_modes:
-                        - auto
-                        - heat
-                        - cool
-                        - dry
-                        - fan_only
-                        - 'off'
                   - type: custom:mushroom-template-card
                     primary: Heizung Boost
-                    secondary: |
-                      {% if is_state("timer.heizung_boost", "active") %}
-                        {% set finish = state_attr("timer.heizung_boost", "finishes_at") %}
-                        {% if finish %}
-                          {% set remaining = as_datetime(finish) - now() %}
-                          {% set hours = remaining.seconds // 3600 %}
-                          {% set minutes = (remaining.seconds % 3600) // 60 %}
-                          {{ hours }}:{{ '%02d' % minutes }} verbleibend
-                        {% endif %}
-                      {% else %}
-                        1,5h Boost starten
-                      {% endif %}
+                    secondary: >-
+                      {{ 'Aktiv' if is_state('timer.heizung_boost', 'active') else '1,5h Boost starten' }}
                     icon: mdi:radiator
-                    icon_color: >-
-                      {{ "red" if is_state("timer.heizung_boost", "active") else
-                      "grey" }}
+                    icon_color: "{{ 'red' if is_state('timer.heizung_boost', 'active') else 'grey' }}"
                     tap_action:
-                      action: call-service
-                      service: script.heizung_boost
+                      action: perform-action
+                      perform_action: script.heizung_boost
                     layout: horizontal
                   - type: custom:mushroom-entity-card
                     entity: switch.heizung_kinderzimmer
                     name: Kinderzimmer
                     layout: horizontal
                     icon: mdi:heating-coil
-                    secondary_info: last-updated
                     icon_color: red
                   - type: custom:mushroom-entity-card
                     entity: switch.heizung_schlafzimmer
                     name: Schlafzimmer
                     layout: horizontal
                     icon: mdi:heating-coil
-                    secondary_info: last-updated
                     icon_color: red
                   - type: custom:mushroom-entity-card
                     entity: switch.heizung_wohnzimmer
                     name: Wohnzimmer
                     layout: horizontal
                     icon: mdi:heating-coil
-                    secondary_info: last-updated
                     icon_color: red
                   - type: custom:mushroom-entity-card
                     entity: switch.heizung_flur
                     name: Flur
                     layout: horizontal
                     icon: mdi:heating-coil
-                    secondary_info: last-updated
                     icon_color: red
                   - type: custom:mushroom-entity-card
                     entity: switch.heizung_badezimmer
                     name: Badezimmer
                     layout: horizontal
                     icon: mdi:heating-coil
-                    secondary_info: last-updated
                     icon_color: red
               - type: grid
                 title: Fenster / Türen

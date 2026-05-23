@@ -358,26 +358,11 @@
       entity_id: input_boolean.frost_warning_sent
   mode: single
 - id: '1749643406352'
-  alias: Ventilator » Individuelle Raumsteuerung (Optimiert)
-  description: 'Arbeitszimmer: Ventilator mit AC-Integration  Kinderzimmer: Nur während
-    Schlafenszeit automatisch, sonst manuell
-
-    '
+  alias: Ventilator » Kinderzimmer
+  # Arbeitszimmer hat keinen eigenen Fan - dort uebernimmt climate.ac
+  # (gesteuert via "Helper » AC manual").
+  description: 'Kinderzimmer-Fan: nur waehrend Schlafenszeit automatisch, sonst manuell.'
   triggers:
-  - entity_id: sensor.arbeitszimmer_temperatur
-    above: 22
-    for: 00:02:00
-    id: arbeit-warm
-    trigger: numeric_state
-  - entity_id: sensor.arbeitszimmer_temperatur
-    below: 21
-    for: 00:05:00
-    id: arbeit-kalt
-    trigger: numeric_state
-  - entity_id: sensor.arbeitszimmer_temperatur
-    trigger: state
-    for: 00:03:00
-    id: arbeit-speed-adjust
   - entity_id: sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature
     above: 23
     for: 00:03:00
@@ -396,78 +381,20 @@
     to: 'off'
     id: schlafenszeit-ende
     trigger: state
-  - entity_id: climate.ac
-    trigger: state
-    id: ac-status-change
   conditions: []
   actions:
   - variables:
-      arbeit_fan: fan.zhimi_za4_2dca_fan
-      kinder_fan: fan.zhimi_za4_fb1b_fan
+      kinder_fan: fan.kinderzimmer
       niemand_zuhause: '{{ has_value(''input_boolean.alle_sind_weg'') and is_state(''input_boolean.alle_sind_weg'', ''on'') }}'
       schlafenszeit_aktiv: '{{ has_value(''input_boolean.schlafenszeit'') and is_state(''input_boolean.schlafenszeit'', ''on'') }}'
-      ac_laeuft: '{{ has_value(''climate.ac'') and states(''climate.ac'') in [''cool'',
-        ''heat'', ''dry'', ''fan_only''] }}'
-      ac_temperatur: '{{ state_attr(''climate.ac'', ''current_temperature'') | float(25) if has_value(''climate.ac'') else 25
-        }}'
   - choose:
-    - conditions:
-      - condition: trigger
-        id: arbeit-warm
-      - condition: template
-        value_template: '{{ not niemand_zuhause }}'
-      - condition: template
-        value_template: '{{ not has_value(''fan.zhimi_za4_2dca_fan'') or is_state(''fan.zhimi_za4_2dca_fan'', ''off'') }}'
-      sequence:
-      - condition: or
-        conditions:
-        - condition: template
-          value_template: '{{ not ac_laeuft }}'
-        - condition: template
-          value_template: '{{ ac_laeuft and has_value(''sensor.arbeitszimmer_temperatur'') and states(''sensor.arbeitszimmer_temperatur'')|float(22)
-            > 24 }}'
-      - action: fan.turn_on
-        target:
-          entity_id: '{{ arbeit_fan }}'
-        data: {}
-      - action: fan.set_percentage
-        data:
-          percentage: "{% if has_value('sensor.arbeitszimmer_temperatur') %}\n  {% set temp = states('sensor.arbeitszimmer_temperatur')|float(22) %}\n  {% if ac_laeuft %}\n    {# Mit AC: Niedrigere Stufen für Luftzirkulation #}\n    {% if temp > 28 %} 75\n    {% elif temp > 26 %} 50\n    {% elif temp > 24 %} 25\n    {% else %} 25\n    {% endif %}\n  {% else %}\n    {# Ohne AC: Normale Stufen #}\n    {% if temp > 28 %} 100\n    {% elif temp > 26 %} 75\n    {% elif temp > 24 %} 50\n    {% else %} 25\n    {% endif %}\n  {% endif %}\n{% else %}\n  25\n{% endif %}\n"
-        target:
-          entity_id: '{{ arbeit_fan }}'
-      - action: logbook.log
-        data:
-          name: Ventilator Arbeitszimmer
-          message: 'Temp: {{ states(''sensor.arbeitszimmer_temperatur'') if has_value(''sensor.arbeitszimmer_temperatur'') else ''N/A'' }}°C {{ ''Mit AC'' if ac_laeuft else ''Standalone'' }}'
-          domain: climate
-    - conditions:
-      - condition: trigger
-        id: arbeit-kalt
-      - condition: template
-        value_template: '{{ has_value(''fan.zhimi_za4_2dca_fan'') and is_state(''fan.zhimi_za4_2dca_fan'', ''on'') }}'
-      sequence:
-      - action: fan.turn_off
-        target:
-          entity_id: '{{ arbeit_fan }}'
-        data: {}
-    - conditions:
-      - condition: trigger
-        id: arbeit-speed-adjust
-      - condition: template
-        value_template: '{{ has_value(''fan.zhimi_za4_2dca_fan'') and is_state(''fan.zhimi_za4_2dca_fan'', ''on'') }}'
-      sequence:
-      - action: fan.set_percentage
-        data:
-          percentage: "{% if has_value('sensor.arbeitszimmer_temperatur') %}\n  {% set temp = states('sensor.arbeitszimmer_temperatur')|float(22) %}\n  {% if ac_laeuft %}\n    {% if temp > 28 %} 75\n    {% elif temp > 26 %} 50\n    {% elif temp > 24 %} 25\n    {% elif temp > 22 %} 25\n    {% else %} 25\n    {% endif %}\n  {% else %}\n    {% if temp > 28 %} 100\n    {% elif temp > 26 %} 75\n    {% elif temp > 24 %} 50\n    {% elif temp > 22 %} 25\n    {% else %} 25\n    {% endif %}\n  {% endif %}\n{% else %}\n  25\n{% endif %}\n"
-        target:
-          entity_id: '{{ arbeit_fan }}'
     - conditions:
       - condition: trigger
         id: kinder-warm
       - condition: template
         value_template: '{{ schlafenszeit_aktiv and not niemand_zuhause }}'
       - condition: template
-        value_template: '{{ not has_value(''fan.zhimi_za4_fb1b_fan'') or is_state(''fan.zhimi_za4_fb1b_fan'', ''off'') }}'
+        value_template: '{{ not has_value(''fan.kinderzimmer'') or is_state(''fan.kinderzimmer'', ''off'') }}'
       sequence:
       - action: fan.turn_on
         target:
@@ -475,13 +402,11 @@
         data: {}
       - action: fan.set_percentage
         data:
-          percentage: '{% if has_value(''sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature'') %}
-            {% set temp = states(''sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature'')|float(22) %}
-            {# Sanfte Stufen für Kinder #}
-            {% if temp > 28 %} 50 {% elif temp > 26 %} 35 {% elif temp > 24 %} 25 {% else %} 20 {% endif %}
+          percentage: >-
+            {% if has_value('sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature') %}
+              {% set temp = states('sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature')|float(22) %}
+              {% if temp > 28 %} 50 {% elif temp > 26 %} 35 {% elif temp > 24 %} 25 {% else %} 20 {% endif %}
             {% else %} 20 {% endif %}
-
-            '
         target:
           entity_id: '{{ kinder_fan }}'
     - conditions:
@@ -490,7 +415,7 @@
       - condition: template
         value_template: '{{ schlafenszeit_aktiv }}'
       - condition: template
-        value_template: '{{ has_value(''fan.zhimi_za4_fb1b_fan'') and is_state(''fan.zhimi_za4_fb1b_fan'', ''on'') }}'
+        value_template: '{{ has_value(''fan.kinderzimmer'') and is_state(''fan.kinderzimmer'', ''on'') }}'
       sequence:
       - action: fan.turn_off
         target:
@@ -502,48 +427,34 @@
       - condition: template
         value_template: '{{ schlafenszeit_aktiv }}'
       - condition: template
-        value_template: '{{ has_value(''fan.zhimi_za4_fb1b_fan'') and is_state(''fan.zhimi_za4_fb1b_fan'', ''on'') }}'
+        value_template: '{{ has_value(''fan.kinderzimmer'') and is_state(''fan.kinderzimmer'', ''on'') }}'
       sequence:
       - action: fan.set_percentage
         data:
-          percentage: '{% if has_value(''sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature'') %}
-            {% set temp = states(''sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature'')|float(22) %}
-            {% if temp > 28 %} 50 {% elif temp > 26 %} 35 {% elif temp > 24 %} 25 {% elif temp > 22 %} 20 {% else %} 20 {% endif %}
+          percentage: >-
+            {% if has_value('sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature') %}
+              {% set temp = states('sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature')|float(22) %}
+              {% if temp > 28 %} 50 {% elif temp > 26 %} 35 {% elif temp > 24 %} 25 {% else %} 20 {% endif %}
             {% else %} 20 {% endif %}
-
-            '
         target:
           entity_id: '{{ kinder_fan }}'
     - conditions:
       - condition: trigger
         id: schlafenszeit-ende
       - condition: template
-        value_template: '{{ has_value(''fan.zhimi_za4_fb1b_fan'') and is_state(''fan.zhimi_za4_fb1b_fan'', ''on'') }}'
+        value_template: '{{ has_value(''fan.kinderzimmer'') and is_state(''fan.kinderzimmer'', ''on'') }}'
       sequence:
       - action: fan.turn_off
         target:
           entity_id: '{{ kinder_fan }}'
         data: {}
     - conditions:
-      - condition: trigger
-        id: ac-status-change
-      - condition: template
-        value_template: '{{ has_value(''fan.zhimi_za4_2dca_fan'') and is_state(''fan.zhimi_za4_2dca_fan'', ''on'') }}'
-      sequence:
-      - action: fan.set_percentage
-        data:
-          percentage: "{% if has_value('sensor.arbeitszimmer_temperatur') %}\n  {% set temp = states('sensor.arbeitszimmer_temperatur')|float(22) %}\n  {% if ac_laeuft %}\n    {% if temp > 28 %} 75\n    {% elif temp > 26 %} 50\n    {% elif temp > 24 %} 25\n    {% else %} 25\n    {% endif %}\n  {% else %}\n    {% if temp > 28 %} 100\n    {% elif temp > 26 %} 75\n    {% elif temp > 24 %} 50\n    {% else %} 25\n    {% endif %}\n  {% endif %}\n{% else %}\n  25\n{% endif %}\n"
-        target:
-          entity_id: '{{ arbeit_fan }}'
-    - conditions:
       - condition: template
         value_template: '{{ niemand_zuhause }}'
       sequence:
       - action: fan.turn_off
         target:
-          entity_id:
-          - '{{ arbeit_fan }}'
-          - '{{ kinder_fan }}'
+          entity_id: '{{ kinder_fan }}'
         data: {}
   mode: parallel
   max: 4
@@ -730,6 +641,11 @@
   - condition: state
     entity_id: timer.heizung_boost
     state: idle
+  - alias: "Race-Guard: HA laeuft seit mindestens 3 Minuten"
+    condition: template
+    value_template: >
+      {% set last = state_attr('automation.heizung_restart_recovery_check', 'last_triggered') %}
+      {{ last is none or (now() - last).total_seconds() > 180 }}
   actions:
   - variables:
       heating_switches:
@@ -894,9 +810,10 @@
       entity_id: fan.schlafzimmer
       to: 'off'
   conditions:
-    - condition: template
+    - alias: "Nicht von einer Automation ausgeloest (manuell per UI, Voice, HomeKit)"
+      condition: template
       value_template: >-
-        {{ trigger.to_state.context.user_id is not none }}
+        {{ trigger.to_state.context.parent_id is none }}
     - condition: state
       entity_id: input_boolean.schlafenszeit
       state: 'on'
@@ -931,3 +848,29 @@
     - action: timer.cancel
       target:
         entity_id: timer.ventilator_override
+
+
+- id: climate_fenster_stop_ac
+  alias: "Klima » AC stop bei Fenster offen"
+  description: >
+    Schaltet die AC aus wenn Fenster oder Tueren waehrend des Betriebs geoeffnet
+    werden. Greift erst im Sommer wenn climate.ac wieder erreichbar ist.
+  mode: single
+  triggers:
+  - trigger: state
+    entity_id: binary_sensor.fenster_tueren
+    to: 'on'
+    for: "00:00:30"
+  conditions:
+  - condition: template
+    value_template: "{{ has_value('climate.ac') and not is_state('climate.ac', 'off') }}"
+  actions:
+  - action: climate.turn_off
+    target:
+      entity_id: climate.ac
+    continue_on_error: true
+  - action: persistent_notification.create
+    data:
+      notification_id: ac_fenster_stop
+      title: "Klimaanlage aus"
+      message: "Fenster oder Tuer wurde geoeffnet, AC wurde deaktiviert."
