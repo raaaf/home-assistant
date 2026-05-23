@@ -64,6 +64,10 @@ logger:
     homeassistant.helpers.service: critical  # Suppress vacuum coroutine warnings
     # Suppress powercalc startup errors (lights off = no brightness)
     custom_components.powercalc.strategy.lut: critical
+    # Suppress transient device connectivity errors
+    custom_components.xiaomi_miot: critical  # AC offline in Off-Season floods logs
+    custom_components.nuki_ng: critical  # Nuki cloud 500s transient
+    homeassistant.components.ipp: critical  # Printer offline floods logs
 
 # Database optimization
 recorder:
@@ -478,57 +482,6 @@ template:
 
   # Fan speed calculation sensors
   - sensor:
-      - name: "Fan Speed Office Calculated"
-        unique_id: fan_speed_office_calculated
-        unit_of_measurement: "%"
-        state: >
-          {% set ac_running = is_state('climate.ac', 'on') if has_value('climate.ac') else false %}
-          {% if has_value('sensor.arbeitszimmer_temperatur') %}
-            {% set temp = states('sensor.arbeitszimmer_temperatur')|float(22) %}
-            {% if ac_running %}
-              {# With AC: Lower speeds for air circulation #}
-              {% if temp > 28 %} 75
-              {% elif temp > 26 %} 50
-              {% elif temp > 24 %} 25
-              {% else %} 25
-              {% endif %}
-            {% else %}
-              {# Without AC: Normal speeds #}
-              {% if temp > 28 %} 100
-              {% elif temp > 26 %} 75
-              {% elif temp > 24 %} 50
-              {% else %} 25
-              {% endif %}
-            {% endif %}
-          {% else %}
-            25
-          {% endif %}
-        availability: >
-          {{ has_value('sensor.arbeitszimmer_temperatur') }}
-        attributes:
-          temperature: "{{ states('sensor.arbeitszimmer_temperatur') if has_value('sensor.arbeitszimmer_temperatur') else 'N/A' }}"
-          ac_running: "{{ ac_running }}"
-
-      - name: "Fan Speed Kids Room Calculated"
-        unique_id: fan_speed_kids_calculated
-        unit_of_measurement: "%"
-        state: >
-          {% if has_value('sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature') %}
-            {% set temp = states('sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature')|float(22) %}
-            {# Gentle speeds for kids #}
-            {% if temp > 28 %} 50
-            {% elif temp > 26 %} 35
-            {% elif temp > 24 %} 25
-            {% else %} 20
-            {% endif %}
-          {% else %}
-            20
-          {% endif %}
-        availability: >
-          {{ has_value('sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature') }}
-        attributes:
-          temperature: "{{ states('sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature') if has_value('sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature') else 'N/A' }}"
-
       - name: "Fan Speed Schlafzimmer CO2 Calculated"
         unique_id: fan_speed_schlafzimmer_co2_calculated
         icon: mdi:fan
@@ -736,6 +689,10 @@ input_boolean:
   ventilator_schlafzimmer_override:
     name: "Ventilator Schlafzimmer Override"
     icon: mdi:fan-off
+    initial: false
+  bedtime_reminder_active:
+    name: "Bedtime Reminder aktiv"
+    icon: mdi:bed-clock
     initial: false
 
 input_datetime:

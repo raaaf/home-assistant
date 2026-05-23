@@ -42,10 +42,13 @@
   mode: single
 - id: '1721922920220'
   alias: Helper » AC manual
-  description: 'Intelligente Klimaanlagen-Steuerung mit Temperatur-Bereichen:  > 25°C:
-    Cool-Modus (aktive Kühlung)  23-25°C: Fan-Modus (nur Luftzirkulation)  < 23°C:
-    Aus  MODUS: Cool/Fan Mode mit Silent Fan NEU: AC geht nur an wenn Außentemperatur
-    > 24°C'
+  description: >
+    Intelligente Klimaanlagen-Steuerung mit Temperatur-Bereichen:
+    >25°C Cool, 23-25°C Fan-Only, <23°C Aus.
+    Hybrid-Sensor: Arbeitszimmer-Temp bei Arbeit/Gaming (AC steht im Arbeitszimmer),
+    Qingping (Schlafzimmer) bei Schlafenszeit.
+    Gate: AC nur bei Außentemperatur > 24°C, Fenster/Tueren zu, niemand abwesend.
+    Setpoint: 24°C bei Schlafenszeit, 23°C bei Arbeit/Gaming. Preset ieco bei Arbeit/Gaming.
   triggers:
   - entity_id:
     - input_boolean.arbeit
@@ -72,18 +75,21 @@
     trigger: state
   - entity_id:
     - sensor.qingping_air_monitor_lite_temperature
+    - sensor.arbeitszimmer_temperatur
     below: 23
     for: 00:03:00
     trigger: numeric_state
     id: temp-unter-23
   - entity_id:
     - sensor.qingping_air_monitor_lite_temperature
+    - sensor.arbeitszimmer_temperatur
     above: 25
     for: 00:03:00
     trigger: numeric_state
     id: temp-ueber-25
   - entity_id:
     - sensor.qingping_air_monitor_lite_temperature
+    - sensor.arbeitszimmer_temperatur
     trigger: state
     for: 00:02:00
     id: temp-check
@@ -102,16 +108,28 @@
       schlafenszeit_aktiv: '{{ has_value(''input_boolean.schlafenszeit'') and is_state(''input_boolean.schlafenszeit'', ''on'') }}'
       irgendein_modus_aktiv: '{{ arbeit_aktiv or gaming_aktiv or schlafenszeit_aktiv
         }}'
-      raum_temp: "{% set qingping = states('sensor.qingping_air_monitor_lite_temperature')\
-        \ %} {% if has_value('sensor.qingping_air_monitor_lite_temperature') %}\n  {{ qingping\
-        \ | float(25) }}\n{% else %}\n  {{ states('sensor.ac_indoor_temperature')\
-        \ | float(25) if has_value('sensor.ac_indoor_temperature') else 25 }}\n{% endif %}\n"
+      # Hybrid-Sensor: Arbeit/Gaming nutzt Arbeitszimmer-Temp (AC blaest direkt rein),
+      # Schlafenszeit nutzt Qingping (Schlafzimmer). Fallback: jeweils anderer Sensor, dann AC indoor.
+      raum_temp: >-
+        {% set arbeit = states('sensor.arbeitszimmer_temperatur') %}
+        {% set qingping = states('sensor.qingping_air_monitor_lite_temperature') %}
+        {% set ac_indoor = states('sensor.ac_indoor_temperature') %}
+        {% if (arbeit_aktiv or gaming_aktiv) and has_value('sensor.arbeitszimmer_temperatur') %}
+          {{ arbeit | float(25) }}
+        {% elif schlafenszeit_aktiv and has_value('sensor.qingping_air_monitor_lite_temperature') %}
+          {{ qingping | float(25) }}
+        {% elif has_value('sensor.arbeitszimmer_temperatur') %}
+          {{ arbeit | float(25) }}
+        {% elif has_value('sensor.qingping_air_monitor_lite_temperature') %}
+          {{ qingping | float(25) }}
+        {% elif has_value('sensor.ac_indoor_temperature') %}
+          {{ ac_indoor | float(25) }}
+        {% else %}
+          25
+        {% endif %}
       außen_temp: '{{ state_attr(''weather.fuerth_bayern'', ''temperature'') | float(20) if has_value(''weather.fuerth_bayern'') else 20
         }}'
       außen_warm_genug: '{{ außen_temp > 24 }}'
-      verwendeter_sensor: "{% set qingping = states('sensor.qingping_air_monitor_lite_temperature')\
-        \ %} {% if has_value('sensor.qingping_air_monitor_lite_temperature') %}\n  Qingping\n\
-        {% else %}\n  AC Indoor (Fallback)\n{% endif %}\n"
       ac_laeuft: '{{ has_value(''climate.ac'') and states(''climate.ac'') not in [''off'', ''unknown'', ''unavailable'']
         }}'
       aktueller_modus: '{{ states(''climate.ac'') if has_value(''climate.ac'') else ''off'' }}'
@@ -189,7 +207,7 @@
       - condition: trigger
         id: temp-unter-23
       - condition: template
-        value_template: '{{ ac_laeuft and irgendein_modus_aktiv }}'
+        value_template: '{{ ac_laeuft and irgendein_modus_aktiv and raum_temp < 23 }}'
       sequence:
       - action: climate.turn_off
         target:
@@ -199,8 +217,8 @@
       - condition: trigger
         id: temp-ueber-25
       - condition: template
-        value_template: '{{ irgendein_modus_aktiv and außen_warm_genug and (not ac_laeuft
-          or aktueller_modus == ''fan_only'') }}'
+        value_template: '{{ irgendein_modus_aktiv and außen_warm_genug and raum_temp > 25
+          and (not ac_laeuft or aktueller_modus == ''fan_only'') }}'
       sequence:
       - action: climate.set_hvac_mode
         data:
