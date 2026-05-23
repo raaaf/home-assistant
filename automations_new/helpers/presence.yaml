@@ -197,12 +197,12 @@
     to: 'off'
     id: alle-da
   - trigger: state
-    entity_id: lock.smart_lock_pro
+    entity_id: lock.nuki_wohnungstur_lock
     to: locked
     for: 00:15:00
     id: locked
   - trigger: state
-    entity_id: lock.smart_lock_pro
+    entity_id: lock.nuki_wohnungstur_lock
     to: unlocked
     id: unlocked
   - trigger: time
@@ -367,7 +367,7 @@
       - alias: Türe abschließen wenn offen
         if:
         - condition: state
-          entity_id: lock.smart_lock_pro
+          entity_id: lock.nuki_wohnungstur_lock
           state: unlocked
         - alias: Verifikation - Alle sind wirklich weg
           condition: and
@@ -380,7 +380,7 @@
         - alias: Benachrichtigung mit Abbruchmöglichkeit
           action: notify.family
           data:
-            title: "🔐 Automatische Türverriegelung"
+            title: "Automatische Türverriegelung"
             message: "Die Haustür wird in 30 Sekunden automatisch verriegelt, da alle das Haus verlassen haben."
             data:
               push:
@@ -389,44 +389,17 @@
           delay: 00:00:30
         - alias: Finale Prüfung vor dem Abschließen
           if:
-          - condition: state
-            entity_id: lock.smart_lock_pro
-            state: unlocked
           - condition: template
             value_template: "{{ has_value('person.rafael') and is_state('person.rafael', 'not_home') }}"
           - condition: template
             value_template: "{{ has_value('person.alex') and is_state('person.alex', 'not_home') }}"
+          - condition: template
+            value_template: "{{ states('lock.nuki_wohnungstur_lock') in ['unlocked', 'unavailable', 'unknown'] }}"
           then:
-          - action: lock.lock
-            target:
-              entity_id: lock.smart_lock_pro
-            data: {}
-          - alias: Warte auf Verriegelungsbestätigung (max 30 Sek)
-            wait_template: "{{ is_state('lock.smart_lock_pro', 'locked') }}"
-            timeout: "00:00:30"
-            continue_on_timeout: true
-          - alias: Prüfe ob Verriegelung erfolgreich war
-            if:
-            - condition: template
-              value_template: "{{ not is_state('lock.smart_lock_pro', 'locked') }}"
-            then:
-            - action: notify.family
-              data:
-                title: "⚠️ Türverriegelung fehlgeschlagen"
-                message: "Die Haustür konnte nicht automatisch verriegelt werden! Bitte manuell prüfen."
-                data:
-                  push:
-                    sound:
-                      name: default
-                      critical: 1
-                    interruption-level: critical
-            else:
-            - alias: Log-Eintrag für erfolgreiche Verriegelung
-              action: logbook.log
-              data:
-                name: "🔐 Automatische Türverriegelung"
-                message: "Haustür wurde automatisch verriegelt (alle Personen nicht zuhause)"
-                domain: lock
+          - alias: Sichere Verriegelung mit Retries und Open-Check
+            action: script.lock_wohnungstuer_safe
+            data:
+              context_message: "alle Personen nicht zuhause"
       - alias: Klimaanlage ausschalten wenn an
         if:
         - condition: template
@@ -436,6 +409,13 @@
           target:
             entity_id: climate.ac
           data: {}
+      - alias: Ventilatoren ausschalten wenn an
+        action: fan.turn_off
+        target:
+          entity_id:
+          - fan.schlafzimmer
+          - fan.kinderzimmer
+        continue_on_error: true
     - alias: Alle da - Willkommensmodus
       conditions:
       - condition: trigger
@@ -444,12 +424,12 @@
       - alias: Türe aufschließen wenn abgeschlossen
         if:
         - condition: state
-          entity_id: lock.smart_lock_pro
+          entity_id: lock.nuki_wohnungstur_lock
           state: locked
         then:
         - action: lock.unlock
           target:
-            entity_id: lock.smart_lock_pro
+            entity_id: lock.nuki_wohnungstur_lock
           data: {}
       - alias: Werktag-Musik kurz aktivieren (Trigger für andere Automationen)
         action: input_boolean.turn_on
@@ -522,7 +502,6 @@
           entity_id:
           - switch.wohnzimmer_steckdose
           - switch.arbeitszimmer_steckdose
-          - switch.steckdose_kuechengeraete
           - switch.steckdose_kinderzimmer
           - switch.schlafzimmer_tv_steckdose
           - switch.steckdose_arbeitszimmer
@@ -578,39 +557,14 @@
           - switch.steckdose_kuechengeraete
           - switch.steckdose_waschmaschine
           - switch.trockner
-          - switch.steckdose_kuechengeraete
           - switch.steckdose_kinderzimmer
           - switch.schlafzimmer_tv_steckdose
           - switch.steckdose_arbeitszimmer
         data: {}
-      - alias: Türe abschließen wenn offen
-        if:
-        - condition: state
-          entity_id: lock.smart_lock_pro
-          state: unlocked
-        then:
-        - action: lock.lock
-          target:
-            entity_id: lock.smart_lock_pro
-          data: {}
-        - alias: Warte auf Verriegelungsbestätigung (max 30 Sek)
-          wait_template: "{{ is_state('lock.smart_lock_pro', 'locked') }}"
-          timeout: "00:00:30"
-          continue_on_timeout: true
-        - alias: Benachrichtigung bei Fehler
-          if:
-          - condition: template
-            value_template: "{{ not is_state('lock.smart_lock_pro', 'locked') }}"
-          then:
-          - action: notify.family
-            data:
-              title: "⚠️ Türverriegelung fehlgeschlagen"
-              message: "Die Haustür konnte nicht automatisch verriegelt werden (lange Abwesenheit)!"
-              data:
-                push:
-                  sound:
-                    name: default
-                    critical: 1
+      - alias: Sichere Verriegelung mit Retries und Open-Check
+        action: script.lock_wohnungstuer_safe
+        data:
+          context_message: "lange Abwesenheit"
       - alias: Klimaanlage ausschalten wenn an
         if:
         - condition: template
@@ -630,28 +584,9 @@
         target:
           entity_id: input_boolean.guest_or_away
         data: {}
-      - alias: Türe automatisch abschließen
-        action: lock.lock
-        target:
-          entity_id: lock.smart_lock_pro
-        data: {}
-      - alias: Warte auf Verriegelungsbestätigung (max 30 Sek)
-        wait_template: "{{ is_state('lock.smart_lock_pro', 'locked') }}"
-        timeout: "00:00:30"
-        continue_on_timeout: true
-      - alias: Benachrichtigung bei Fehler
-        if:
-        - condition: template
-          value_template: "{{ not is_state('lock.smart_lock_pro', 'locked') }}"
-        then:
-        - action: notify.family
-          data:
-            title: "⚠️ Türverriegelung fehlgeschlagen"
-            message: "Die Haustür konnte nicht automatisch verriegelt werden (nach Gast-Modus)!"
-            data:
-              push:
-                sound:
-                  name: default
-                  critical: 1
+      - alias: Sichere Verriegelung mit Retries und Open-Check
+        action: script.lock_wohnungstuer_safe
+        data:
+          context_message: "nach Gast-Modus"
   mode: single
   max_exceeded: silent
