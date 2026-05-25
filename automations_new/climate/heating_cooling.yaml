@@ -93,13 +93,14 @@
     trigger: state
     for: 00:02:00
     id: temp-check
+  # Fenster zu/auf: Zielmodus neu bewerten (zu -> evtl. cool, auf -> Umluft)
+  - entity_id: binary_sensor.fenster_tueren_ohne_arbeitszimmer
+    trigger: state
+    for: 00:00:15
+    id: fenster-check
   conditions:
   - condition: state
     entity_id: input_boolean.alle_sind_weg
-    state: 'off'
-  - alias: Fenster/Türen müssen geschlossen sein für AC
-    condition: state
-    entity_id: binary_sensor.fenster_tueren
     state: 'off'
   actions:
   - variables:
@@ -130,202 +131,103 @@
       außen_temp: '{{ state_attr(''weather.fuerth_bayern'', ''temperature'') | float(20) if has_value(''weather.fuerth_bayern'') else 20
         }}'
       außen_warm_genug: '{{ außen_temp > 24 }}'
-      ac_laeuft: '{{ has_value(''climate.ac'') and states(''climate.ac'') not in [''off'', ''unknown'', ''unavailable'']
-        }}'
+      # Fenster zu (ausser AZ, dort haengt der AC-Schlauch). Kuehlen nur bei zu, Umluft immer erlaubt.
+      fenster_zu: "{{ is_state('binary_sensor.fenster_tueren_ohne_arbeitszimmer', 'off') }}"
       aktueller_modus: '{{ states(''climate.ac'') if has_value(''climate.ac'') else ''off'' }}'
-      aktueller_preset: '{{ state_attr(''climate.ac'', ''preset_mode'') if has_value(''climate.ac'') else ''none'' }}'
+      ac_laeuft: '{{ aktueller_modus not in [''off'', ''unknown'', ''unavailable''] }}'
+      ziel_setpoint: '{{ 24 if schlafenszeit_aktiv else 23 }}'
+      # Zielmodus: aus wenn kein Modus / Raum < 23 / draussen zu kuehl.
+      # Cool nur bei Hitze (> 25) UND Fenster zu. Sonst Umluft (23-25, oder > 25 bei offenem Fenster).
+      ziel_modus: >-
+        {% if not irgendein_modus_aktiv or raum_temp < 23 or not außen_warm_genug %}
+          off
+        {% elif raum_temp > 25 and fenster_zu %}
+          cool
+        {% else %}
+          fan_only
+        {% endif %}
   - choose:
-    - conditions:
-      - condition: trigger
-        id:
-        - aktivität-an
-        - schlafenszeit-an
-      - condition: template
-        value_template: '{{ irgendein_modus_aktiv }}'
-      sequence:
-      - choose:
-        - conditions:
-          - condition: template
-            value_template: '{{ raum_temp > 25 and außen_warm_genug }}'
-          sequence:
-          - action: climate.set_hvac_mode
-            data:
-              hvac_mode: cool
-            target:
-              entity_id: climate.ac
-          - delay: 00:00:02
-          - if:
-            - condition: template
-              value_template: '{{ arbeit_aktiv or gaming_aktiv }}'
-            then:
-            - action: climate.set_preset_mode
-              data:
-                preset_mode: ieco
-              target:
-                entity_id: climate.ac
-          - action: climate.set_fan_mode
-            data:
-              fan_mode: silent
-            target:
-              entity_id: climate.ac
-          - action: climate.set_temperature
-            data:
-              temperature: '{{ 24 if schlafenszeit_aktiv else 23 }}'
-            target:
-              entity_id: climate.ac
-        - conditions:
-          - condition: template
-            value_template: '{{ raum_temp >= 23 and raum_temp <= 25 and außen_warm_genug
-              }}'
-          sequence:
-          - action: climate.set_hvac_mode
-            data:
-              hvac_mode: fan_only
-            target:
-              entity_id: climate.ac
-          - delay: 00:00:02
-          - action: climate.set_fan_mode
-            data:
-              fan_mode: silent
-            target:
-              entity_id: climate.ac
-        - conditions:
-          - condition: template
-            value_template: '{{ raum_temp < 23 or not außen_warm_genug }}'
-          sequence: null
+    # Alle Modi aus -> AC aus
     - conditions:
       - condition: trigger
         id: modus-aus
       - condition: template
         value_template: '{{ not irgendein_modus_aktiv }}'
       sequence:
-      - action: climate.turn_off
-        target:
-          entity_id: climate.ac
-        data: {}
-    - conditions:
-      - condition: trigger
-        id: temp-unter-23
-      - condition: template
-        value_template: '{{ ac_laeuft and irgendein_modus_aktiv and raum_temp < 23 }}'
-      sequence:
-      - action: climate.turn_off
-        target:
-          entity_id: climate.ac
-        data: {}
-    - conditions:
-      - condition: trigger
-        id: temp-ueber-25
-      - condition: template
-        value_template: '{{ irgendein_modus_aktiv and außen_warm_genug and raum_temp > 25
-          and (not ac_laeuft or aktueller_modus == ''fan_only'') }}'
-      sequence:
-      - action: climate.set_hvac_mode
-        data:
-          hvac_mode: cool
-        target:
-          entity_id: climate.ac
-      - delay: 00:00:02
       - if:
         - condition: template
-          value_template: '{{ arbeit_aktiv or gaming_aktiv }}'
+          value_template: '{{ ac_laeuft }}'
         then:
-        - action: climate.set_preset_mode
-          data:
-            preset_mode: ieco
+        - action: climate.turn_off
           target:
             entity_id: climate.ac
-      - action: climate.set_fan_mode
-        data:
-          fan_mode: silent
-        target:
-          entity_id: climate.ac
-      - action: climate.set_temperature
-        data:
-          temperature: '{{ 24 if schlafenszeit_aktiv else 23 }}'
-        target:
-          entity_id: climate.ac
-    - conditions:
-      - condition: trigger
-        id: temp-check
-      - condition: template
-        value_template: '{{ irgendein_modus_aktiv }}'
-      sequence:
-      - choose:
-        - conditions:
+          data: {}
+    # Sonst: berechneten Zielmodus anwenden
+    default:
+    - choose:
+      # Aus
+      - conditions:
+        - condition: template
+          value_template: '{{ ziel_modus == ''off'' and ac_laeuft }}'
+        sequence:
+        - action: climate.turn_off
+          target:
+            entity_id: climate.ac
+          data: {}
+      # Kuehlen
+      - conditions:
+        - condition: template
+          value_template: '{{ ziel_modus == ''cool'' }}'
+        sequence:
+        - if:
           - condition: template
-            value_template: '{{ ac_laeuft and not außen_warm_genug }}'
-          sequence:
-          - action: climate.turn_off
+            value_template: '{{ aktueller_modus != ''cool'' }}'
+          then:
+          - action: climate.set_hvac_mode
+            data:
+              hvac_mode: cool
             target:
               entity_id: climate.ac
-            data: {}
-        - conditions:
+          - delay: 00:00:02
+        - if:
           - condition: template
-            value_template: "{{ raum_temp >= 23 and raum_temp <= 25 and ac_laeuft\
-              \ and \n   aktueller_modus == 'cool' and außen_warm_genug }}"
-          sequence:
+            value_template: '{{ arbeit_aktiv or gaming_aktiv }}'
+          then:
+          - action: climate.set_preset_mode
+            data:
+              preset_mode: ieco
+            target:
+              entity_id: climate.ac
+        - action: climate.set_fan_mode
+          data:
+            fan_mode: silent
+          target:
+            entity_id: climate.ac
+        - action: climate.set_temperature
+          data:
+            temperature: '{{ ziel_setpoint }}'
+          target:
+            entity_id: climate.ac
+      # Umluft (auch bei offenem Fenster erlaubt)
+      - conditions:
+        - condition: template
+          value_template: '{{ ziel_modus == ''fan_only'' }}'
+        sequence:
+        - if:
+          - condition: template
+            value_template: '{{ aktueller_modus != ''fan_only'' }}'
+          then:
           - action: climate.set_hvac_mode
             data:
               hvac_mode: fan_only
             target:
               entity_id: climate.ac
           - delay: 00:00:02
-          - action: climate.set_fan_mode
-            data:
-              fan_mode: silent
-            target:
-              entity_id: climate.ac
-        - conditions:
-          - condition: template
-            value_template: '{{ raum_temp > 23 and not ac_laeuft and außen_warm_genug
-              }}'
-          sequence:
-          - choose:
-            - conditions:
-              - condition: template
-                value_template: '{{ raum_temp > 25 }}'
-              sequence:
-              - action: climate.set_hvac_mode
-                data:
-                  hvac_mode: cool
-                target:
-                  entity_id: climate.ac
-              - delay: 00:00:02
-              - if:
-                - condition: template
-                  value_template: '{{ arbeit_aktiv or gaming_aktiv }}'
-                then:
-                - action: climate.set_preset_mode
-                  data:
-                    preset_mode: ieco
-                  target:
-                    entity_id: climate.ac
-              - action: climate.set_fan_mode
-                data:
-                  fan_mode: silent
-                target:
-                  entity_id: climate.ac
-              - action: climate.set_temperature
-                data:
-                  temperature: '{{ 24 if schlafenszeit_aktiv else 23 }}'
-                target:
-                  entity_id: climate.ac
-            - conditions:
-              - condition: template
-                value_template: '{{ raum_temp >= 23 and raum_temp <= 25 }}'
-              sequence:
-              - action: climate.set_hvac_mode
-                data:
-                  hvac_mode: fan_only
-                target:
-                  entity_id: climate.ac
-              - delay: 00:00:02
-              - action: climate.set_fan_mode
-                data:
-                  fan_mode: silent
-                target:
-                  entity_id: climate.ac
+        - action: climate.set_fan_mode
+          data:
+            fan_mode: silent
+          target:
+            entity_id: climate.ac
   mode: single
   max_exceeded: silent
 - id: '1743835898091'
@@ -851,26 +753,37 @@
 
 
 - id: climate_fenster_stop_ac
-  alias: "Klima » AC stop bei Fenster offen"
+  alias: "Klima » AC auf Umluft bei Fenster offen"
   description: >
-    Schaltet die AC aus wenn Fenster oder Tueren waehrend des Betriebs geoeffnet
-    werden. Greift erst im Sommer wenn climate.ac wieder erreichbar ist.
+    Schaltet die AC vom Kuehlen auf Umluft (fan_only) wenn Fenster oder Tueren
+    waehrend des Betriebs geoeffnet werden. Umluft darf weiterlaufen, nur das
+    Kuehlen bei offenem Fenster wird gestoppt. Greift erst im Sommer wenn
+    climate.ac wieder erreichbar ist.
   mode: single
   triggers:
   - trigger: state
-    entity_id: binary_sensor.fenster_tueren
+    entity_id: binary_sensor.fenster_tueren_ohne_arbeitszimmer
     to: 'on'
     for: "00:00:30"
   conditions:
   - condition: template
-    value_template: "{{ has_value('climate.ac') and not is_state('climate.ac', 'off') }}"
+    value_template: "{{ has_value('climate.ac') and is_state('climate.ac', 'cool') }}"
   actions:
-  - action: climate.turn_off
+  - action: climate.set_hvac_mode
+    data:
+      hvac_mode: fan_only
+    target:
+      entity_id: climate.ac
+    continue_on_error: true
+  - delay: 00:00:02
+  - action: climate.set_fan_mode
+    data:
+      fan_mode: silent
     target:
       entity_id: climate.ac
     continue_on_error: true
   - action: persistent_notification.create
     data:
       notification_id: ac_fenster_stop
-      title: "Klimaanlage aus"
-      message: "Fenster oder Tuer wurde geoeffnet, AC wurde deaktiviert."
+      title: "Klimaanlage auf Umluft"
+      message: "Fenster oder Tuer wurde geoeffnet, AC kuehlt nicht mehr und laeuft nur als Ventilator."
