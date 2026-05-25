@@ -403,7 +403,7 @@
       - alias: Klimaanlage ausschalten wenn an
         if:
         - condition: template
-          value_template: "{{ has_value('climate.ac') and is_state('climate.ac', 'on') }}"
+          value_template: "{{ has_value('climate.ac') and not is_state('climate.ac', 'off') }}"
         then:
         - action: climate.turn_off
           target:
@@ -500,6 +500,7 @@
         action: switch.turn_on
         target:
           entity_id:
+          - switch.steckdose_avr
           - switch.wohnzimmer_steckdose
           - switch.arbeitszimmer_steckdose
           - switch.steckdose_kinderzimmer
@@ -568,7 +569,7 @@
       - alias: Klimaanlage ausschalten wenn an
         if:
         - condition: template
-          value_template: "{{ has_value('climate.ac') and is_state('climate.ac', 'on') }}"
+          value_template: "{{ has_value('climate.ac') and not is_state('climate.ac', 'off') }}"
         then:
         - action: climate.turn_off
           target:
