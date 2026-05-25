@@ -12,9 +12,6 @@
     entity_id: sun.sun
     attribute: elevation
     above: 0
-  - id: vormittag
-    platform: time
-    at: "09:00:00"
   - entity_id: sensor.sun_azimuth
     above: 135
     id: sonne-suedost
@@ -44,7 +41,6 @@
       wird_heiss: '{{ has_value(''input_boolean.heute_wird_es_heiss_werden'') and is_state(''input_boolean.heute_wird_es_heiss_werden'', ''on'')
         }}'
       ist_arbeitstag: '{{ has_value(''binary_sensor.workday_sensor'') and is_state(''binary_sensor.workday_sensor'', ''on'') }}'
-      position_schlaf_kinder: "{% if wird_sehr_heiss %}5{% elif wird_heiss %}25{% else %}100{% endif %}"
       position_arbeit: 1
       position_west: "{% if wird_sehr_heiss %}0{% elif wird_heiss %}10{% else %}100{% endif %}"
   - choose:
@@ -54,9 +50,7 @@
       - condition: template
         value_template: '{{ ist_arbeitstag }}'
       sequence:
-      - action: cover.set_cover_position
-        data:
-          position: '{{ position_schlaf_kinder }}'
+      - action: cover.open_cover
         target:
           entity_id:
           - cover.kinderzimmer_rollo
@@ -72,7 +66,7 @@
       - action: logbook.log
         data:
           name: Rollos Morgen (Arbeitstag)
-          message: 'Modus: {{ ''Sehr heiß'' if wird_sehr_heiss else ''Heiß'' if wird_heiss else ''Normal'' }} Schlaf/Kinder: {{ position_schlaf_kinder }}%, Arbeit: {{ position_arbeit }}%'
+          message: 'KZ+AZ Dunkelrollos offen (Tageslicht), Hitzeschutz ueber Fensterjalousie. SZ teiloffen.'
           domain: cover
     - conditions:
       - condition: trigger
@@ -98,27 +92,9 @@
           domain: cover
     - conditions:
       - condition: trigger
-        id: vormittag
-      - condition: template
-        value_template: '{{ wird_sehr_heiss or wird_heiss }}'
-      sequence:
-      - action: cover.set_cover_position
-        data:
-          position: '{{ 0 if wird_sehr_heiss else 10 }}'
-        target:
-          entity_id: cover.rollos_sonnenaufgang
-      - action: logbook.log
-        data:
-          name: Rollos 9 Uhr Hitzeschutz
-          message: 'Ost-Rollos auf {{ 0 if wird_sehr_heiss else 10 }}%'
-          domain: cover
-    - conditions:
-      - condition: trigger
         id: sonne-sued
       sequence:
-      - action: cover.set_cover_position
-        data:
-          position: '{{ 100 if not wird_sehr_heiss else 50 }}'
+      - action: cover.open_cover
         target:
           entity_id: cover.rollos_sonnenaufgang
       - if:
