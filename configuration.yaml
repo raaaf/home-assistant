@@ -446,6 +446,22 @@ template:
           {{ (state_attr('switch.adaptive_lighting_balkon', 'manual_control') or []) | length > 0 }}
         icon: mdi:hand-back-right
 
+      # Fenster/Tueren ohne Arbeitszimmer: dort haengt dauerhaft der AC-Abluftschlauch
+      # im offenen Fenster. Gate fuer die AC-Steuerung, damit AZ-Fenster die AC nicht blockt.
+      - name: "Fenster Tueren ohne Arbeitszimmer"
+        unique_id: fenster_tueren_ohne_az
+        device_class: opening
+        state: >-
+          {{ expand([
+               'binary_sensor.balkon_kontaktsensor_contact',
+               'binary_sensor.haustur_kontaktsensor_contact',
+               'binary_sensor.kinderzimmer_kontaktsensor_contact',
+               'binary_sensor.kuche_kontaktsensor_contact',
+               'binary_sensor.schlafzimmer_kontaktsensor_contact',
+               'binary_sensor.wohnzimmer_kontaktsensor_contact'
+             ]) | selectattr('state', 'eq', 'on') | list | length > 0 }}
+        icon: mdi:window-open-variant
+
       - name: "Motion Automations Disabled"
         unique_id: motion_automations_disabled
         device_class: problem
