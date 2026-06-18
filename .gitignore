@@ -5,6 +5,7 @@
 !*.yaml
 !*.yml
 !CLAUDE.md
+!README.md
 !.gitignore
 
 # Allow automations directory and all its contents

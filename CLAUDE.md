@@ -349,6 +349,42 @@ script.scene_check_conflicts            # Validate scene combinations
 
 ---
 
+## Climate Control
+
+Defined in `automations_new/climate/heating_cooling.yaml`.
+
+### Air Conditioning (`climate.ac`, Midea via `midea_ac`)
+
+The AC sits in the Arbeitszimmer (office) and is steered by **"Helper » AC manual"**:
+
+- **Hysteresis**: on at >= 25.5 C, off below 24.5 C (no flapping, no dead zone).
+- **Window decides the mode**, not temperature: windows closed -> `cool`, windows open -> `fan_only` (cooling with open windows is pointless). Outdoor temperature is irrelevant.
+- **Presence gate** (`zone_anwesend`): active mode (Arbeit/Gaming/Schlafenszeit), an active MacBook, or AppleTV playing. No one home -> off.
+- **Hybrid temperature source**: Arbeitszimmer sensor during Arbeit/Gaming (AC blows into the office), `sensor.temperatur_schlafzimmer` during Schlafenszeit/AppleTV.
+- **Setpoint** 24 C, fan `silent`, preset **`ieco`** whenever cooling (energy saving + quiet).
+
+> **iECO vs gear**: `preset ieco` and `select.ac_rate_select` (gear_50/75 power limit) are **mutually exclusive** on this Midea (setting one clears the other). Control runs via `ieco`; gear is only useful as a hard wattage cap (e.g. PV coupling).
+
+### Override detection
+
+`climate.ac` and `fan.schlafzimmer` have manual-override detection that pauses the automatic control for 2h (`input_boolean.ac_override`, `input_boolean.ventilator_schlafzimmer_override`). Both guards **ignore reconnects from `unavailable`** and the AC guard uses a **180s echo window** (Midea reports its state ~2 min late; without this the device echo is mistaken for a manual change).
+
+### Fans (Smartmi za4 via `xiaomi_miot`, Cloud mode)
+
+- `fan.schlafzimmer`: controlled by CO2 (`sensor.qingping_air_monitor_lite_co2_carbon_dioxide`) **and** temperature, speed = max of both demands.
+- `fan.kinderzimmer`: temperature + radar presence, hysteresis.
+- za4 preset is **`Natural Wind`** (not the old miio name `nature`). The za4 need **Cloud** connection mode in xiaomi_miot, the motor power command does not work in local mode.
+
+### Known sensor defect
+
+`sensor.qingping_air_monitor_lite_temperature` reads 4-8 C too low (variable, not a fixed offset). All temperature logic uses `sensor.temperatur_schlafzimmer` instead; the Qingping is used for CO2 only.
+
+### Heating
+
+`switch.heizung_*` floor heating is predictive (morning/afternoon boost from forecast) with a boost timer, a 2h safety watchdog, and restart recovery. Heating uses forecast (`weather.fuerth_bayern` / `sensor.fuerth_daily`), not room temperature.
+
+---
+
 ## Energy Monitoring
 
 ### Multi-Source Architecture
@@ -555,11 +591,12 @@ The recorder is configured to:
 | `notify.family` | Rafael + Alex (mobile) |
 | `notify.rafael` | Rafael (MacBook + iPhone) |
 | `notify.alex` | Alex (MacBook + iPhone) |
-| `notify.critical_alerts` | Both (mobile + email) |
+| `notify.critical_alerts` | Both (mobile push) |
+| `notify.admin_only` | Rafael (mobile push) |
 
 ### Notification Strategy
 
-E-Mail-Notifications (`notify.rafael_mail`, `notify.alex_mail`) wurden vollstaendig ersetzt durch:
+E-Mail-Notifications (SMTP) wurden vollstaendig entfernt und ersetzt durch:
 - **Push** (`notify.rafael` / `notify.alex`) fuer sofortige Aufmerksamkeit
 - **Persistent Notification** (`persistent_notification.create`) als Erinnerung in der HA-Oberflaeche
 
@@ -583,7 +620,7 @@ Uses `chime_tts` custom component for audio announcements with notification chim
 | `sensors.yaml` | 360 | Template/platform sensors |
 | `lights.yaml` | 139 | Light groups |
 | `binary_sensors.yaml` | 78 | Binary sensors |
-| `notifies.yaml` | 63 | Notification services |
+| `notifies.yaml` | 36 | Notification services |
 | `climates.yaml` | 137 | Climate config |
 | `dashboard.yaml` | 1,097 | Lovelace UI |
 

@@ -48,7 +48,7 @@
     Hybrid-Sensor: Arbeitszimmer-Temp bei Arbeit/Gaming (AC steht im Arbeitszimmer),
     Schlafzimmer-Temp bei Schlafenszeit/AppleTV.
     Gate: nur bei Anwesenheit, niemand abwesend. Aussentemperatur egal.
-    Setpoint: 24°C. Preset ieco bei Arbeit/Gaming.
+    Setpoint: 24°C. Preset ieco immer beim Kuehlen (sparsam und leise).
   triggers:
   - entity_id:
     - input_boolean.arbeit
@@ -190,11 +190,11 @@
           target:
             entity_id: climate.ac
         - delay: 00:00:02
-      # ieco (intelligent eco) bei Arbeit/Gaming: drosselt den Kompressor sparsam.
-      # Hinweis: ieco und gear (rate_select) schliessen sich aus, daher kein gear.
+      # ieco (intelligent eco): immer beim Kuehlen, drosselt den Kompressor sparsam
+      # und laeuft leise (auch nachts). Hinweis: ieco und gear schliessen sich aus.
       - if:
         - condition: template
-          value_template: '{{ (arbeit_aktiv or gaming_aktiv) and state_attr(''climate.ac'', ''preset_mode'') != ''ieco'' }}'
+          value_template: '{{ state_attr(''climate.ac'', ''preset_mode'') != ''ieco'' }}'
         then:
         - action: climate.set_preset_mode
           data:
@@ -732,12 +732,14 @@
 
 - id: 'co2_ventilator_override_detection'
   alias: "Ventilator » Schlafzimmer Override-Erkennung"
-  description: "Erkennt manuelle Ventilator-Steuerung und aktiviert Override"
+  description: "Erkennt manuelle Ventilator-Steuerung (Ein und Aus) und aktiviert Override"
   mode: single
   triggers:
     - trigger: state
       entity_id: fan.schlafzimmer
-      to: 'off'
+      to:
+        - 'on'
+        - 'off'
   conditions:
     - alias: "Manuell (parent_id none), kein Reconnect aus unavailable"
       condition: template
