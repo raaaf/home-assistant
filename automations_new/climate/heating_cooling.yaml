@@ -43,12 +43,12 @@
 - id: '1721922920220'
   alias: Helper » AC manual
   description: >
-    Intelligente Klimaanlagen-Steuerung mit Temperatur-Bereichen:
-    >25°C Cool, 23-25°C Fan-Only, <23°C Aus.
+    Intelligente Klimaanlagen-Steuerung mit Hysterese: an ab 25.5°C, aus unter 24.5°C.
+    Das Fenster entscheidet den Modus: Fenster zu -> Cool, Fenster auf -> nur Umluft (Fan).
     Hybrid-Sensor: Arbeitszimmer-Temp bei Arbeit/Gaming (AC steht im Arbeitszimmer),
-    Qingping (Schlafzimmer) bei Schlafenszeit.
-    Gate: AC nur bei Außentemperatur > 24°C, Fenster/Tueren zu, niemand abwesend.
-    Setpoint: 24°C bei Schlafenszeit, 23°C bei Arbeit/Gaming. Preset ieco bei Arbeit/Gaming.
+    Schlafzimmer-Temp bei Schlafenszeit/AppleTV.
+    Gate: nur bei Anwesenheit, niemand abwesend. Aussentemperatur egal.
+    Setpoint: 24°C. Preset ieco bei Arbeit/Gaming.
   triggers:
   - entity_id:
     - input_boolean.arbeit
@@ -74,21 +74,21 @@
     for: 00:00:10
     trigger: state
   - entity_id:
-    - sensor.qingping_air_monitor_lite_temperature
+    - sensor.temperatur_schlafzimmer
     - sensor.arbeitszimmer_temperatur
-    below: 23
+    below: 24.5
     for: 00:03:00
     trigger: numeric_state
-    id: temp-unter-23
+    id: temp-kalt
   - entity_id:
-    - sensor.qingping_air_monitor_lite_temperature
+    - sensor.temperatur_schlafzimmer
     - sensor.arbeitszimmer_temperatur
-    above: 25
+    above: 25.4
     for: 00:03:00
     trigger: numeric_state
-    id: temp-ueber-25
+    id: temp-warm
   - entity_id:
-    - sensor.qingping_air_monitor_lite_temperature
+    - sensor.temperatur_schlafzimmer
     - sensor.arbeitszimmer_temperatur
     trigger: state
     for: 00:02:00
@@ -98,9 +98,22 @@
     trigger: state
     for: 00:00:15
     id: fenster-check
+  # Anwesenheit Zone AZ+SZ: MacBooks und AppleTV Schlafzimmer
+  - entity_id:
+    - binary_sensor.macbook_pro_rafael_active_2
+    - binary_sensor.macbook_pro_2_active
+    trigger: state
+    id: praesenz-mac
+  - entity_id: media_player.appletv
+    trigger: state
+    id: praesenz-tv
   conditions:
   - condition: state
     entity_id: input_boolean.alle_sind_weg
+    state: 'off'
+  # Manueller Override aktiv: Automatik pausiert, bis Timer ablaeuft (2h).
+  - condition: state
+    entity_id: input_boolean.ac_override
     state: 'off'
   actions:
   - variables:
@@ -109,120 +122,122 @@
       schlafenszeit_aktiv: '{{ has_value(''input_boolean.schlafenszeit'') and is_state(''input_boolean.schlafenszeit'', ''on'') }}'
       irgendein_modus_aktiv: '{{ arbeit_aktiv or gaming_aktiv or schlafenszeit_aktiv
         }}'
+      macbook_aktiv: '{{ is_state(''binary_sensor.macbook_pro_rafael_active_2'', ''on'') or is_state(''binary_sensor.macbook_pro_2_active'', ''on'') }}'
+      appletv_an: "{{ is_state('media_player.appletv', 'playing') }}"
+      # Anwesenheit in der Zone AZ+SZ: aktiver Modus, ein aktives MacBook oder laufender
+      # AppleTV im Schlafzimmer. Gate fuer Kuehlen und Umluft.
+      zone_anwesend: '{{ irgendein_modus_aktiv or macbook_aktiv or appletv_an }}'
       # Hybrid-Sensor: Arbeit/Gaming nutzt Arbeitszimmer-Temp (AC blaest direkt rein),
-      # Schlafenszeit nutzt Qingping (Schlafzimmer). Fallback: jeweils anderer Sensor, dann AC indoor.
+      # Schlafenszeit/AppleTV nutzt Schlafzimmer-Temp. Fallback: AZ, dann Schlafzimmer, dann AC indoor.
+      # Qingping-Temp wird NICHT genutzt (defekt, liest 4-8 Grad zu niedrig).
       raum_temp: >-
         {% set arbeit = states('sensor.arbeitszimmer_temperatur') %}
-        {% set qingping = states('sensor.qingping_air_monitor_lite_temperature') %}
+        {% set schlafzimmer = states('sensor.temperatur_schlafzimmer') %}
         {% set ac_indoor = states('sensor.ac_indoor_temperature') %}
         {% if (arbeit_aktiv or gaming_aktiv) and has_value('sensor.arbeitszimmer_temperatur') %}
           {{ arbeit | float(25) }}
-        {% elif schlafenszeit_aktiv and has_value('sensor.qingping_air_monitor_lite_temperature') %}
-          {{ qingping | float(25) }}
+        {% elif (schlafenszeit_aktiv or appletv_an) and has_value('sensor.temperatur_schlafzimmer') %}
+          {{ schlafzimmer | float(25) }}
         {% elif has_value('sensor.arbeitszimmer_temperatur') %}
           {{ arbeit | float(25) }}
-        {% elif has_value('sensor.qingping_air_monitor_lite_temperature') %}
-          {{ qingping | float(25) }}
+        {% elif has_value('sensor.temperatur_schlafzimmer') %}
+          {{ schlafzimmer | float(25) }}
         {% elif has_value('sensor.ac_indoor_temperature') %}
           {{ ac_indoor | float(25) }}
         {% else %}
           25
         {% endif %}
-      außen_temp: '{{ state_attr(''weather.fuerth_bayern'', ''temperature'') | float(20) if has_value(''weather.fuerth_bayern'') else 20
-        }}'
-      außen_warm_genug: '{{ außen_temp > 24 }}'
       # Fenster zu (ausser AZ, dort haengt der AC-Schlauch). Kuehlen nur bei zu, Umluft immer erlaubt.
       fenster_zu: "{{ is_state('binary_sensor.fenster_tueren_ohne_arbeitszimmer', 'off') }}"
       aktueller_modus: '{{ states(''climate.ac'') if has_value(''climate.ac'') else ''off'' }}'
       ac_laeuft: '{{ aktueller_modus not in [''off'', ''unknown'', ''unavailable''] }}'
-      ziel_setpoint: '{{ 24 if schlafenszeit_aktiv else 23 }}'
-      # Zielmodus: aus wenn kein Modus / Raum < 23 / draussen zu kuehl.
-      # Cool nur bei Hitze (> 25) UND Fenster zu. Sonst Umluft (23-25, oder > 25 bei offenem Fenster).
+      ziel_setpoint: 24
+      # Warm genug fuer AC-Aktion. Hysterese: an ab 25.5, aus erst unter 24.5.
+      warm: '{{ (raum_temp >= 24.5) if ac_laeuft else (raum_temp >= 25.5) }}'
+      # Aktiv nur bei Anwesenheit. Das Fenster entscheidet cool vs. Umluft:
+      # Fenster zu -> kuehlen, Fenster auf -> nur Umluft (kuehlen waere sinnlos).
+      # Aussentemperatur egal.
       ziel_modus: >-
-        {% if not irgendein_modus_aktiv or raum_temp < 23 or not außen_warm_genug %}
-          off
-        {% elif raum_temp > 25 and fenster_zu %}
+        {% if zone_anwesend and warm and fenster_zu %}
           cool
-        {% else %}
+        {% elif zone_anwesend and warm %}
           fan_only
+        {% else %}
+          off
         {% endif %}
   - choose:
-    # Alle Modi aus -> AC aus
+    # Aus
     - conditions:
-      - condition: trigger
-        id: modus-aus
       - condition: template
-        value_template: '{{ not irgendein_modus_aktiv }}'
+        value_template: '{{ ziel_modus == ''off'' and ac_laeuft }}'
+      sequence:
+      - action: climate.turn_off
+        target:
+          entity_id: climate.ac
+        data: {}
+    # Kuehlen
+    - conditions:
+      - condition: template
+        value_template: '{{ ziel_modus == ''cool'' }}'
       sequence:
       - if:
         - condition: template
-          value_template: '{{ ac_laeuft }}'
+          value_template: '{{ aktueller_modus != ''cool'' }}'
         then:
-        - action: climate.turn_off
+        - action: climate.set_hvac_mode
+          data:
+            hvac_mode: cool
           target:
             entity_id: climate.ac
-          data: {}
-    # Sonst: berechneten Zielmodus anwenden
-    default:
-    - choose:
-      # Aus
-      - conditions:
+        - delay: 00:00:02
+      # ieco (intelligent eco) bei Arbeit/Gaming: drosselt den Kompressor sparsam.
+      # Hinweis: ieco und gear (rate_select) schliessen sich aus, daher kein gear.
+      - if:
         - condition: template
-          value_template: '{{ ziel_modus == ''off'' and ac_laeuft }}'
-        sequence:
-        - action: climate.turn_off
+          value_template: '{{ (arbeit_aktiv or gaming_aktiv) and state_attr(''climate.ac'', ''preset_mode'') != ''ieco'' }}'
+        then:
+        - action: climate.set_preset_mode
+          data:
+            preset_mode: ieco
           target:
             entity_id: climate.ac
-          data: {}
-      # Kuehlen
-      - conditions:
+      - if:
         - condition: template
-          value_template: '{{ ziel_modus == ''cool'' }}'
-        sequence:
-        - if:
-          - condition: template
-            value_template: '{{ aktueller_modus != ''cool'' }}'
-          then:
-          - action: climate.set_hvac_mode
-            data:
-              hvac_mode: cool
-            target:
-              entity_id: climate.ac
-          - delay: 00:00:02
-        - if:
-          - condition: template
-            value_template: '{{ arbeit_aktiv or gaming_aktiv }}'
-          then:
-          - action: climate.set_preset_mode
-            data:
-              preset_mode: ieco
-            target:
-              entity_id: climate.ac
+          value_template: '{{ state_attr(''climate.ac'', ''fan_mode'') != ''silent'' }}'
+        then:
         - action: climate.set_fan_mode
           data:
             fan_mode: silent
           target:
             entity_id: climate.ac
+      - if:
+        - condition: template
+          value_template: '{{ state_attr(''climate.ac'', ''temperature'') | float(0) != ziel_setpoint }}'
+        then:
         - action: climate.set_temperature
           data:
             temperature: '{{ ziel_setpoint }}'
           target:
             entity_id: climate.ac
-      # Umluft (auch bei offenem Fenster erlaubt)
-      - conditions:
+    # Umluft (auch ohne Modus und bei offenem Fenster)
+    - conditions:
+      - condition: template
+        value_template: '{{ ziel_modus == ''fan_only'' }}'
+      sequence:
+      - if:
         - condition: template
-          value_template: '{{ ziel_modus == ''fan_only'' }}'
-        sequence:
-        - if:
-          - condition: template
-            value_template: '{{ aktueller_modus != ''fan_only'' }}'
-          then:
-          - action: climate.set_hvac_mode
-            data:
-              hvac_mode: fan_only
-            target:
-              entity_id: climate.ac
-          - delay: 00:00:02
+          value_template: '{{ aktueller_modus != ''fan_only'' }}'
+        then:
+        - action: climate.set_hvac_mode
+          data:
+            hvac_mode: fan_only
+          target:
+            entity_id: climate.ac
+        - delay: 00:00:02
+      - if:
+        - condition: template
+          value_template: '{{ state_attr(''climate.ac'', ''fan_mode'') != ''silent'' }}'
+        then:
         - action: climate.set_fan_mode
           data:
             fan_mode: silent
@@ -263,40 +278,56 @@
   alias: Ventilator » Kinderzimmer
   # Arbeitszimmer hat keinen eigenen Fan - dort uebernimmt climate.ac
   # (gesteuert via "Helper » AC manual").
-  description: 'Kinderzimmer-Fan: nur waehrend Schlafenszeit automatisch, sonst manuell.'
+  description: 'Kinderzimmer-Fan: temperaturgesteuert. Tagsueber zusaetzlich Belegung
+    (Radar) noetig, in der Schlafenszeit nur Temperatur. Schwelle 23 Grad (Schlaf) bzw.
+    25 Grad (sonst). Unabhaengig von der Aussentemperatur.'
   triggers:
   - entity_id: sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature
-    above: 23
-    for: 00:03:00
-    id: kinder-warm
-    trigger: numeric_state
-  - entity_id: sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature
-    below: 22
-    for: 00:05:00
-    id: kinder-kalt
-    trigger: numeric_state
-  - entity_id: sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature
     trigger: state
-    for: 00:03:00
-    id: kinder-speed-adjust
+    for: 00:02:00
+    id: temp-check
   - entity_id: input_boolean.schlafenszeit
-    to: 'off'
-    id: schlafenszeit-ende
     trigger: state
+    id: modus-change
+  - entity_id: input_boolean.alle_sind_weg
+    trigger: state
+    id: presence-change
+  - entity_id: binary_sensor.kinderzimmer_motion_presence
+    to: 'on'
+    trigger: state
+    id: belegt-an
+  - entity_id: binary_sensor.kinderzimmer_motion_presence
+    to: 'off'
+    for: 00:10:00
+    trigger: state
+    id: belegt-aus
   conditions: []
   actions:
   - variables:
       kinder_fan: fan.kinderzimmer
       niemand_zuhause: '{{ has_value(''input_boolean.alle_sind_weg'') and is_state(''input_boolean.alle_sind_weg'', ''on'') }}'
       schlafenszeit_aktiv: '{{ has_value(''input_boolean.schlafenszeit'') and is_state(''input_boolean.schlafenszeit'', ''on'') }}'
+      temp: "{{ states('sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature') | float(22) }}"
+      fan_an: '{{ has_value(''fan.kinderzimmer'') and is_state(''fan.kinderzimmer'', ''on'') }}'
+      # Belegung per Radar (erkennt auch stille Personen). 10-Min-Nachlauf, damit der
+      # Fan bei kurzen Abwesenheiten nicht flattert.
+      belegt: >-
+        {% set p = states.binary_sensor.kinderzimmer_motion_presence %}
+        {{ is_state('binary_sensor.kinderzimmer_motion_presence', 'on')
+           or (p is not none and (now() - p.last_changed).total_seconds() < 600) }}
+      # An ab 23 Grad (Schlafenszeit) bzw. 25 Grad (sonst). Hysterese: bleibt an bis
+      # 1 Grad unter der Einschaltschwelle.
+      temp_warm: >-
+        {% set floor = 23 if schlafenszeit_aktiv else 25 %}
+        {{ (not fan_an and temp > floor) or (fan_an and temp > floor - 1) }}
+      # Tagsueber zusaetzlich Belegung noetig, in der Schlafenszeit nur Temperatur.
+      soll_an: '{{ not niemand_zuhause and temp_warm and (schlafenszeit_aktiv or belegt) }}'
+      ziel_speed: "{% if temp > 28 %}50{% elif temp > 26 %}35{% elif temp > 24 %}25{% else %}20{% endif %}"
   - choose:
+    # Einschalten + Speed setzen
     - conditions:
-      - condition: trigger
-        id: kinder-warm
       - condition: template
-        value_template: '{{ schlafenszeit_aktiv and not niemand_zuhause }}'
-      - condition: template
-        value_template: '{{ not has_value(''fan.kinderzimmer'') or is_state(''fan.kinderzimmer'', ''off'') }}'
+        value_template: '{{ soll_an and not fan_an }}'
       sequence:
       - action: fan.turn_on
         target:
@@ -304,62 +335,29 @@
         data: {}
       - action: fan.set_percentage
         data:
-          percentage: >-
-            {% if has_value('sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature') %}
-              {% set temp = states('sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature')|float(22) %}
-              {% if temp > 28 %} 50 {% elif temp > 26 %} 35 {% elif temp > 24 %} 25 {% else %} 20 {% endif %}
-            {% else %} 20 {% endif %}
+          percentage: '{{ ziel_speed }}'
         target:
           entity_id: '{{ kinder_fan }}'
+    # Laeuft: Speed an Temperatur anpassen
     - conditions:
-      - condition: trigger
-        id: kinder-kalt
       - condition: template
-        value_template: '{{ schlafenszeit_aktiv }}'
-      - condition: template
-        value_template: '{{ has_value(''fan.kinderzimmer'') and is_state(''fan.kinderzimmer'', ''on'') }}'
-      sequence:
-      - action: fan.turn_off
-        target:
-          entity_id: '{{ kinder_fan }}'
-        data: {}
-    - conditions:
-      - condition: trigger
-        id: kinder-speed-adjust
-      - condition: template
-        value_template: '{{ schlafenszeit_aktiv }}'
-      - condition: template
-        value_template: '{{ has_value(''fan.kinderzimmer'') and is_state(''fan.kinderzimmer'', ''on'') }}'
+        value_template: '{{ soll_an and fan_an }}'
       sequence:
       - action: fan.set_percentage
         data:
-          percentage: >-
-            {% if has_value('sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature') %}
-              {% set temp = states('sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature')|float(22) %}
-              {% if temp > 28 %} 50 {% elif temp > 26 %} 35 {% elif temp > 24 %} 25 {% else %} 20 {% endif %}
-            {% else %} 20 {% endif %}
+          percentage: '{{ ziel_speed }}'
         target:
           entity_id: '{{ kinder_fan }}'
+    # Ausschalten
     - conditions:
-      - condition: trigger
-        id: schlafenszeit-ende
       - condition: template
-        value_template: '{{ has_value(''fan.kinderzimmer'') and is_state(''fan.kinderzimmer'', ''on'') }}'
+        value_template: '{{ not soll_an and fan_an }}'
       sequence:
       - action: fan.turn_off
         target:
           entity_id: '{{ kinder_fan }}'
         data: {}
-    - conditions:
-      - condition: template
-        value_template: '{{ niemand_zuhause }}'
-      sequence:
-      - action: fan.turn_off
-        target:
-          entity_id: '{{ kinder_fan }}'
-        data: {}
-  mode: parallel
-  max: 4
+  mode: single
 - id: '1749999999998'
   alias: Heizung » Smart Floor Control (Predictive)
   description: 'Predictive floor heating control for slow-response system (1-2h warmup). Morning boost based on current outdoor temp, afternoon boost based on daily high forecast. Only controls Kinderzimmer, Schlafzimmer, Wohnzimmer.'
@@ -471,7 +469,7 @@
   alias: Heizung » Boost Timer Finished
   description: 'Turns off heating when boost timer expires with verification and retry'
   triggers:
-  - platform: event
+  - trigger: event
     event_type: timer.finished
     event_data:
       entity_id: timer.heizung_boost
@@ -626,7 +624,7 @@
   alias: Helper » Frostwarnung zurücksetzen (jährlich im Mai)
   description: 'Setzt den Frostwarnung-Status am 1. Mai zurück für die neue Saison'
   triggers:
-  - platform: time
+  - trigger: time
     at: '08:00:00'
   conditions:
   - condition: template
@@ -641,15 +639,27 @@
 
 - id: 'co2_ventilator_schlafzimmer'
   alias: "Ventilator » Schlafzimmer CO2-Steuerung"
-  description: "Steuert fan.schlafzimmer basierend auf CO2-Werten nachts"
-  mode: single
+  description: "Steuert fan.schlafzimmer nach CO2 UND Temperatur, unabhaengig von der Schlafenszeit. Speed = Maximum aus CO2- und Temperatur-Bedarf."
+  mode: restart
   triggers:
     - trigger: state
       entity_id: sensor.fan_speed_schlafzimmer_co2_calculated
       id: 'co2-changed'
     - trigger: state
+      entity_id: sensor.temperatur_schlafzimmer
+      for: "00:02:00"
+      id: 'temp-check'
+    - trigger: state
       entity_id: input_boolean.schlafenszeit
       id: 'schlafenszeit-changed'
+    - trigger: state
+      entity_id:
+        - binary_sensor.macbook_pro_rafael_active_2
+        - binary_sensor.macbook_pro_2_active
+      id: 'praesenz-mac'
+    - trigger: state
+      entity_id: media_player.appletv
+      id: 'praesenz-tv'
     - trigger: state
       entity_id: sensor.qingping_air_monitor_lite_co2_carbon_dioxide
       to: 'unavailable'
@@ -663,38 +673,55 @@
       entity_id: input_boolean.ventilator_schlafzimmer_override
       state: 'off'
   actions:
+    - variables:
+        temp: "{{ states('sensor.temperatur_schlafzimmer') | float(22) }}"
+        co2_speed: "{{ states('sensor.fan_speed_schlafzimmer_co2_calculated') | int(0) }}"
+        fan_an: "{{ has_value('fan.schlafzimmer') and is_state('fan.schlafzimmer', 'on') }}"
+        # Anwesenheit Zone AZ+SZ: aktiver Modus, aktives MacBook oder laufender AppleTV.
+        zone_anwesend: >-
+          {{ is_state('input_boolean.arbeit', 'on') or is_state('input_boolean.gaming', 'on')
+             or is_state('input_boolean.schlafenszeit', 'on')
+             or is_state('binary_sensor.macbook_pro_rafael_active_2', 'on')
+             or is_state('binary_sensor.macbook_pro_2_active', 'on')
+             or is_state('media_player.appletv', 'playing') }}
+        # Temperatur-Bedarf ab 23 Grad (Hysterese 1 Grad), nur bei Anwesenheit.
+        temp_warm: >-
+          {{ ((not fan_an and temp > 23) or (fan_an and temp > 22)) and zone_anwesend }}
+        temp_speed: "{% if temp > 28 %}50{% elif temp > 26 %}35{% elif temp > 24 %}25{% else %}20{% endif %}"
+        # Zielspeed = Maximum aus CO2- und Temperatur-Bedarf. CO2 ist nie an Anwesenheit
+        # gekoppelt (CO2 steigt nur, wenn jemand da ist).
+        ziel_speed: "{{ [co2_speed, (temp_speed | int if temp_warm else 0)] | max }}"
+        soll_an: "{{ ziel_speed > 0 }}"
     - choose:
-        # Sensor ausgefallen: Ventilator sicher ausschalten
+        # CO2-Sensor ausgefallen: Ventilator ausschalten, ABER nur wenn nicht
+        # temperaturbedingt gebraucht (sonst faellt es durch zur soll_an-Logik).
         - conditions:
             - condition: trigger
               id: 'sensor-unavailable'
+            - condition: template
+              value_template: '{{ not temp_warm }}'
           sequence:
             - action: fan.turn_off
               target:
                 entity_id: fan.schlafzimmer
             - action: logbook.log
               data:
-                name: "CO2 Ventilator"
+                name: "Schlafzimmer Ventilator"
                 message: "Ventilator aus — CO2-Sensor unavailable"
 
-        # Schlafenszeit aktiv + CO2 erfordert Ventilator
+        # CO2 oder Temperatur erfordert Ventilator
         - conditions:
-            - condition: state
-              entity_id: input_boolean.schlafenszeit
-              state: 'on'
-            - condition: numeric_state
-              entity_id: sensor.fan_speed_schlafzimmer_co2_calculated
-              above: 0
+            - condition: template
+              value_template: '{{ soll_an }}'
           sequence:
             - action: fan.turn_on
               target:
                 entity_id: fan.schlafzimmer
               data:
-                percentage: >-
-                  {{ states('sensor.fan_speed_schlafzimmer_co2_calculated') | int }}
-                preset_mode: nature
+                percentage: '{{ ziel_speed }}'
+                preset_mode: "Natural Wind"
 
-      # Sonst: Ventilator aus (CO2 niedrig genug oder nicht Schlafenszeit)
+      # Sonst: Ventilator aus (CO2 niedrig genug und nicht warm)
       default:
         - condition: state
           entity_id: fan.schlafzimmer
@@ -712,13 +739,12 @@
       entity_id: fan.schlafzimmer
       to: 'off'
   conditions:
-    - alias: "Nicht von einer Automation ausgeloest (manuell per UI, Voice, HomeKit)"
+    - alias: "Manuell (parent_id none), kein Reconnect aus unavailable"
       condition: template
       value_template: >-
-        {{ trigger.to_state.context.parent_id is none }}
-    - condition: state
-      entity_id: input_boolean.schlafenszeit
-      state: 'on'
+        {{ trigger.from_state is not none
+           and trigger.from_state.state not in ['unavailable', 'unknown']
+           and trigger.to_state.context.parent_id is none }}
   actions:
     - action: input_boolean.turn_on
       target:
@@ -787,3 +813,76 @@
       notification_id: ac_fenster_stop
       title: "Klimaanlage auf Umluft"
       message: "Fenster oder Tuer wurde geoeffnet, AC kuehlt nicht mehr und laeuft nur als Ventilator."
+
+- id: ac_override_detection
+  alias: "Klima » AC Override-Erkennung"
+  description: >
+    Erkennt manuelle AC-Aenderungen (HA-UI, HomeKit, IR-Fernbedienung) und
+    aktiviert den Override fuer 2h, damit "Helper » AC manual" die Einstellung
+    nicht ueberschreibt. Geraete-Echo nach einem Automations-Befehl wird per
+    Zeitfenster (30s) gegen last_triggered der schreibenden Automationen
+    gefiltert. current_temperature-Updates loesen nichts aus.
+  mode: single
+  triggers:
+  - trigger: state
+    entity_id: climate.ac
+  conditions:
+  # Steuer-Attribut hat sich geaendert (nicht nur current_temperature), und die
+  # Aenderung kam nicht direkt aus einer Automation (parent_id gesetzt).
+  - condition: template
+    value_template: >-
+      {{ trigger.from_state is not none
+         and trigger.to_state is not none
+         and trigger.from_state.state not in ['unavailable', 'unknown']
+         and trigger.to_state.state not in ['unavailable', 'unknown']
+         and trigger.to_state.context.parent_id is none
+         and (
+           trigger.from_state.state != trigger.to_state.state
+           or trigger.from_state.attributes.get('temperature')
+              != trigger.to_state.attributes.get('temperature')
+           or trigger.from_state.attributes.get('fan_mode')
+              != trigger.to_state.attributes.get('fan_mode')
+           or trigger.from_state.attributes.get('preset_mode')
+              != trigger.to_state.attributes.get('preset_mode')
+         ) }}
+  # Echo-Guard: keine AC-schreibende Automation lief in den letzten 180s.
+  # Midea meldet den Zustand verzoegert (~2min) zurueck, sonst gilt das
+  # Geraete-Echo faelschlich als manuelle Aenderung.
+  - condition: template
+    value_template: >-
+      {% set t1 = state_attr('automation.helper_ac_manual', 'last_triggered') %}
+      {% set t2 = state_attr('automation.klima_ac_stop_bei_fenster_offen', 'last_triggered') %}
+      {{ (t1 is none or (now() - t1).total_seconds() > 180)
+         and (t2 is none or (now() - t2).total_seconds() > 180) }}
+  actions:
+  - action: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.ac_override
+  - action: timer.start
+    target:
+      entity_id: timer.ac_override
+  - action: logbook.log
+    data:
+      name: "AC Override"
+      message: "Manuelle AC-Aenderung erkannt - Automatik pausiert (2h)"
+      domain: climate
+
+- id: ac_override_reset
+  alias: "Klima » AC Override zurücksetzen"
+  description: "Setzt den AC-Override zurueck nach Timer-Ablauf oder wenn alle weg sind."
+  mode: single
+  triggers:
+  - trigger: event
+    event_type: timer.finished
+    event_data:
+      entity_id: timer.ac_override
+  - trigger: state
+    entity_id: input_boolean.alle_sind_weg
+    to: 'on'
+  actions:
+  - action: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.ac_override
+  - action: timer.cancel
+    target:
+      entity_id: timer.ac_override
