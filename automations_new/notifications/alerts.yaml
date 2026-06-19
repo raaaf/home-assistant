@@ -146,6 +146,37 @@
           entity_id: scene.klingel_snapshot
         data:
           transition: 1
+      - alias: "Adaptive Lighting Manual-Control vom Blinken zuruecknehmen"
+        parallel:
+        - action: adaptive_lighting.set_manual_control
+          data:
+            entity_id: switch.adaptive_lighting_arbeitszimmer
+            manual_control: false
+            lights:
+            - light.arbeitszimmer_pc_1
+            - light.arbeitszimmer_pc_2
+            - light.arbeitszimmer_stehlampe
+        - action: adaptive_lighting.set_manual_control
+          data:
+            entity_id: switch.adaptive_lighting_schlafzimmer
+            manual_control: false
+            lights:
+            - light.schlafzimmer_bett
+            - light.schlafzimmer_tv
+        - action: adaptive_lighting.set_manual_control
+          data:
+            entity_id: switch.adaptive_lighting_wohnzimmer
+            manual_control: false
+            lights:
+            - light.wohnzimmer_schrank_1
+            - light.wohnzimmer_schrank_2
+            - light.wohnzimmer_schrank_3
+        - action: adaptive_lighting.set_manual_control
+          data:
+            entity_id: switch.adaptive_lighting_badezimmer
+            manual_control: false
+            lights:
+            - light.badezimmer_fenster
   mode: single
   max_exceeded: silent
 - id: '1692865362999'
