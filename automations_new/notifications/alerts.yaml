@@ -87,22 +87,40 @@
           data:
             push:
               interruption-level: critical
-  - alias: "Lichter blinken lassen (nur tagsüber)"
+  - alias: "Akzentlichter blinken lassen (nur tagsüber)"
     choose:
     - conditions:
       - condition: template
         value_template: "{{ not ist_dunkel }}"
       sequence:
-      - variables:
-          urspruenglicher_lichtzustand: "{{ states('light.alle_arbeitszimmer_lichter') }}"
-          urspruengliche_helligkeit: "{{ state_attr('light.alle_arbeitszimmer_lichter', 'brightness') | int(0) }}"
+      - alias: "Aktuellen Zustand der Akzentlichter sichern"
+        action: scene.create
+        data:
+          scene_id: klingel_snapshot
+          snapshot_entities:
+          - light.arbeitszimmer_pc_1
+          - light.arbeitszimmer_pc_2
+          - light.arbeitszimmer_stehlampe
+          - light.schlafzimmer_bett
+          - light.schlafzimmer_tv
+          - light.wohnzimmer_schrank_1
+          - light.wohnzimmer_schrank_2
+          - light.wohnzimmer_schrank_3
+          - light.badezimmer_fenster
       - alias: "3x blinken"
         repeat:
           count: 3
           sequence:
           - action: light.turn_on
             target:
-              entity_id: light.alle_arbeitszimmer_lichter
+              entity_id:
+              - light.alle_arbeitszimmer_nachtlichter
+              - light.schlafzimmer_bett
+              - light.schlafzimmer_tv
+              - light.wohnzimmer_schrank_1
+              - light.wohnzimmer_schrank_2
+              - light.wohnzimmer_schrank_3
+              - light.badezimmer_fenster
             data:
               brightness_pct: 100
               transition: 0
@@ -110,29 +128,24 @@
               milliseconds: 500
           - action: light.turn_off
             target:
-              entity_id: light.alle_arbeitszimmer_lichter
+              entity_id:
+              - light.alle_arbeitszimmer_nachtlichter
+              - light.schlafzimmer_bett
+              - light.schlafzimmer_tv
+              - light.wohnzimmer_schrank_1
+              - light.wohnzimmer_schrank_2
+              - light.wohnzimmer_schrank_3
+              - light.badezimmer_fenster
             data:
               transition: 0
           - delay:
               milliseconds: 500
-      - alias: "Ursprünglichen Lichtzustand wiederherstellen"
-        choose:
-        - conditions:
-          - condition: template
-            value_template: "{{ urspruenglicher_lichtzustand == 'on' }}"
-          sequence:
-          - action: light.turn_on
-            target:
-              entity_id: light.alle_arbeitszimmer_lichter
-            data:
-              brightness: "{{ urspruengliche_helligkeit }}"
-              transition: 1
-        default:
-        - action: light.turn_off
-          target:
-            entity_id: light.alle_arbeitszimmer_lichter
-          data:
-            transition: 1
+      - alias: "Ursprünglichen Zustand wiederherstellen"
+        action: scene.turn_on
+        target:
+          entity_id: scene.klingel_snapshot
+        data:
+          transition: 1
   mode: single
   max_exceeded: silent
 - id: '1692865362999'
@@ -272,16 +285,14 @@
     - condition: trigger
       id: 'co2-critical'
   actions:
-  - action: notify.family
+  - action: script.notify_critical
     data:
+      tag: co2_critical
       title: >-
-        CO2 zu hoch — {{ 'Fenster öffnen!' if is_state('input_boolean.schlafenszeit', 'on') else 'Fenster auf im Arbeitszimmer' }}
+        CO2 zu hoch, {{ 'Fenster öffnen' if is_state('input_boolean.schlafenszeit', 'on') else 'Fenster auf im Arbeitszimmer' }}
       message: >-
         Der Wert liegt aktuell bei {{ states('sensor.qingping_air_monitor_lite_co2_carbon_dioxide') | int(0) }} ppm!
         {{ ' Ventilator läuft bereits auf ' ~ states('sensor.fan_speed_schlafzimmer_co2_calculated') ~ '%.' if is_state('fan.schlafzimmer', 'on') else '' }}
-      data:
-        push:
-          interruption-level: critical
   mode: single
 - id: '1715850119149'
   alias: Notifications » Temperatur Aussen
@@ -308,3 +319,157 @@
       message: 'Sonnenaufgang {{ states(''sensor.temperatur_aussen_sonnenaufgang_temperature'') | float(0) | round(1) }}°C, Sonnenuntergang {{ states(''sensor.temperatur_aussen_sonnenuntergang_temperature'') | float(0) | round(1) }}°C'
       domain: automation
   mode: single
+
+- id: 'notify_bedtime_kinder'
+  alias: Notification » Bedtime Reminder Kinder
+  description: 19 Uhr Critical Push wenn Apple TV läuft und morgen Arbeitstag ist
+  mode: single
+  triggers:
+  - trigger: time
+    at: "19:00:00"
+  conditions:
+  - condition: state
+    entity_id: binary_sensor.tomorrow_workday_sensor
+    state: 'on'
+  - condition: or
+    conditions:
+    - condition: state
+      entity_id: person.rafael
+      state: 'home'
+    - condition: state
+      entity_id: person.alex
+      state: 'home'
+  - condition: or
+    conditions:
+    - condition: state
+      entity_id: media_player.appletv
+      state: 'playing'
+    - condition: state
+      entity_id: media_player.wohnzimmer
+      state: 'playing'
+  actions:
+  - alias: "Reminder-Flag setzen"
+    action: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.bedtime_reminder_active
+  - variables:
+      notify_title: "Kinder ins Bett"
+      notify_message: "Bett fertig machen, morgen ist Arbeitstag"
+      notify_data:
+        push:
+          interruption-level: critical
+          sound:
+            name: default
+            critical: 1
+            volume: 1.0
+        tag: "bedtime_kinder"
+        actions:
+        - action: "BEDTIME_DONE"
+          title: "Schon im Bett"
+          destructive: false
+        - action: "BEDTIME_SNOOZE"
+          title: "Noch 15 Min"
+  - parallel:
+    - if:
+      - condition: state
+        entity_id: person.rafael
+        state: 'home'
+      then:
+      - action: notify.mobile_app_iphone_rafael
+        data:
+          title: "{{ notify_title }}"
+          message: "{{ notify_message }}"
+          data: "{{ notify_data }}"
+    - if:
+      - condition: state
+        entity_id: person.alex
+        state: 'home'
+      then:
+      - action: notify.mobile_app_alex_iphone
+        data:
+          title: "{{ notify_title }}"
+          message: "{{ notify_message }}"
+          data: "{{ notify_data }}"
+  - delay: "00:15:00"
+  - alias: "Nur Reminder wenn Flag noch aktiv (Button hat nicht abgeschaltet)"
+    condition: state
+    entity_id: input_boolean.bedtime_reminder_active
+    state: 'on'
+  - condition: or
+    conditions:
+    - condition: state
+      entity_id: media_player.appletv
+      state: 'playing'
+    - condition: state
+      entity_id: media_player.wohnzimmer
+      state: 'playing'
+  - variables:
+      reminder_message: "Immer noch TV an, Kinder jetzt ins Bett"
+  - parallel:
+    - if:
+      - condition: state
+        entity_id: person.rafael
+        state: 'home'
+      then:
+      - action: notify.mobile_app_iphone_rafael
+        data:
+          title: "{{ notify_title }}"
+          message: "{{ reminder_message }}"
+          data: "{{ notify_data }}"
+    - if:
+      - condition: state
+        entity_id: person.alex
+        state: 'home'
+      then:
+      - action: notify.mobile_app_alex_iphone
+        data:
+          title: "{{ notify_title }}"
+          message: "{{ reminder_message }}"
+          data: "{{ notify_data }}"
+  - alias: "Reminder-Flag zuruecksetzen"
+    action: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.bedtime_reminder_active
+
+- id: 'notify_bedtime_action_handler'
+  alias: Notification » Bedtime Action Handler
+  description: Verarbeitet iOS-Action-Buttons der Bedtime-Reminder-Notification
+  mode: parallel
+  max: 5
+  triggers:
+  - trigger: event
+    event_type: mobile_app_notification_action
+    event_data:
+      action: BEDTIME_DONE
+    id: done
+  - trigger: event
+    event_type: mobile_app_notification_action
+    event_data:
+      action: BEDTIME_SNOOZE
+    id: snooze
+  conditions: []
+  actions:
+  - choose:
+    - alias: "User bestaetigt: Kinder sind im Bett"
+      conditions:
+      - condition: trigger
+        id: done
+      sequence:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.bedtime_reminder_active
+      - action: logbook.log
+        data:
+          name: "Bedtime Reminder"
+          message: "Bestaetigt per Notification-Button"
+          domain: automation
+    - alias: "User will 15 Min Aufschub (Flag bleibt on, Delay laeuft)"
+      conditions:
+      - condition: trigger
+        id: snooze
+      sequence:
+      - action: logbook.log
+        data:
+          name: "Bedtime Reminder"
+          message: "Snooze per Notification-Button"
+          domain: automation
