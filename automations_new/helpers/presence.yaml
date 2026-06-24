@@ -273,11 +273,10 @@
           - switch.steckdose_avr
           - switch.wohnzimmer_steckdose
           - switch.flur_licht
-          - switch.arbeitszimmer_steckdose
           - switch.steckdose_kuechengeraete
-          - switch.steckdose_kinderzimmer
-          - switch.schlafzimmer_tv_steckdose
-          - switch.steckdose_arbeitszimmer
+          - switch.neo_plug_02
+          - switch.neo_plug_01
+          - switch.aqara_plug_01
         data: {}
       - alias: Trockner ausschalten wenn im Aus-Zustand
         if:
@@ -316,54 +315,54 @@
           data: {}
       - alias: HomePods stoppen (nur spielende)
         parallel:
-          - if:
-              - condition: template
-                value_template: "{{ is_state('media_player.homepod_wohnzimmer', 'playing') }}"
-            then:
-              - action: media_player.media_stop
-                continue_on_error: true
-                target:
-                  entity_id: media_player.homepod_wohnzimmer
-          - if:
-              - condition: template
-                value_template: "{{ is_state('media_player.kuche', 'playing') }}"
-            then:
-              - action: media_player.media_stop
-                continue_on_error: true
-                target:
-                  entity_id: media_player.kuche
-          - if:
-              - condition: template
-                value_template: "{{ is_state('media_player.homepod_badezimmer', 'playing') }}"
-            then:
-              - action: media_player.media_stop
-                continue_on_error: true
-                target:
-                  entity_id: media_player.homepod_badezimmer
-          - if:
-              - condition: template
-                value_template: "{{ is_state('media_player.homepod_kinderzimmer', 'playing') }}"
-            then:
-              - action: media_player.media_stop
-                continue_on_error: true
-                target:
-                  entity_id: media_player.homepod_kinderzimmer
-          - if:
-              - condition: template
-                value_template: "{{ is_state('media_player.arbeitszimmer', 'playing') }}"
-            then:
-              - action: media_player.media_stop
-                continue_on_error: true
-                target:
-                  entity_id: media_player.arbeitszimmer
-          - if:
-              - condition: template
-                value_template: "{{ is_state('media_player.schlafzimmer', 'playing') }}"
-            then:
-              - action: media_player.media_stop
-                continue_on_error: true
-                target:
-                  entity_id: media_player.schlafzimmer
+        - if:
+          - condition: template
+            value_template: "{{ is_state('media_player.homepod_wohnzimmer', 'playing') }}"
+          then:
+          - action: media_player.media_stop
+            continue_on_error: true
+            target:
+              entity_id: media_player.homepod_wohnzimmer
+        - if:
+          - condition: template
+            value_template: "{{ is_state('media_player.kuche', 'playing') }}"
+          then:
+          - action: media_player.media_stop
+            continue_on_error: true
+            target:
+              entity_id: media_player.kuche
+        - if:
+          - condition: template
+            value_template: "{{ is_state('media_player.homepod_badezimmer', 'playing') }}"
+          then:
+          - action: media_player.media_stop
+            continue_on_error: true
+            target:
+              entity_id: media_player.homepod_badezimmer
+        - if:
+          - condition: template
+            value_template: "{{ is_state('media_player.homepod_kinderzimmer', 'playing') }}"
+          then:
+          - action: media_player.media_stop
+            continue_on_error: true
+            target:
+              entity_id: media_player.homepod_kinderzimmer
+        - if:
+          - condition: template
+            value_template: "{{ is_state('media_player.arbeitszimmer', 'playing') }}"
+          then:
+          - action: media_player.media_stop
+            continue_on_error: true
+            target:
+              entity_id: media_player.arbeitszimmer
+        - if:
+          - condition: template
+            value_template: "{{ is_state('media_player.schlafzimmer', 'playing') }}"
+          then:
+          - action: media_player.media_stop
+            continue_on_error: true
+            target:
+              entity_id: media_player.schlafzimmer
       - alias: Türe abschließen wenn offen
         if:
         - condition: state
@@ -420,6 +419,12 @@
       conditions:
       - condition: trigger
         id: alle-da
+      - alias: Kein Gast-Modus aktiv
+        condition: state
+        entity_id: input_boolean.guest_or_away
+        state: 'off'
+      - condition: template
+        value_template: "{{ has_value('input_boolean.guest_or_away') }}"
       sequence:
       - alias: Türe aufschließen wenn abgeschlossen
         if:
@@ -449,63 +454,64 @@
               'media_player.arbeitszimmer', 'media_player.schlafzimmer']
              | select('is_state', 'playing') | list | length > 0 }}
         timeout: 00:00:30
-        continue_on_timeout: false
+        continue_on_timeout: true
       - delay: 00:00:03
       - alias: "Lautstärke auf Normalniveau hochfahren (30 Sek.)"
         parallel:
-          - action: script.fade_volume
-            continue_on_error: true
-            data:
-              target_player: media_player.homepod_wohnzimmer
-              target_volume: 0.30
-              duration: 30
-              curve: linear
-          - action: script.fade_volume
-            continue_on_error: true
-            data:
-              target_player: media_player.kuche
-              target_volume: 0.50
-              duration: 30
-              curve: linear
-          - action: script.fade_volume
-            continue_on_error: true
-            data:
-              target_player: media_player.homepod_badezimmer
-              target_volume: 0.50
-              duration: 30
-              curve: linear
-          - action: script.fade_volume
-            continue_on_error: true
-            data:
-              target_player: media_player.homepod_kinderzimmer
-              target_volume: 0.50
-              duration: 30
-              curve: linear
-          - action: script.fade_volume
-            continue_on_error: true
-            data:
-              target_player: media_player.arbeitszimmer
-              target_volume: 0.30
-              duration: 30
-              curve: linear
-          - action: script.fade_volume
-            continue_on_error: true
-            data:
-              target_player: media_player.schlafzimmer
-              target_volume: 0.40
-              duration: 30
-              curve: linear
+        - action: script.fade_volume
+          continue_on_error: true
+          data:
+            target_player: media_player.homepod_wohnzimmer
+            target_volume: 0.30
+            duration: 30
+            curve: linear
+        - action: script.fade_volume
+          continue_on_error: true
+          data:
+            target_player: media_player.kuche
+            target_volume: 0.50
+            duration: 30
+            curve: linear
+        - action: script.fade_volume
+          continue_on_error: true
+          data:
+            target_player: media_player.homepod_badezimmer
+            target_volume: 0.50
+            duration: 30
+            curve: linear
+        - action: script.fade_volume
+          continue_on_error: true
+          data:
+            target_player: media_player.homepod_kinderzimmer
+            target_volume: 0.50
+            duration: 30
+            curve: linear
+        - action: script.fade_volume
+          continue_on_error: true
+          data:
+            target_player: media_player.arbeitszimmer
+            target_volume: 0.30
+            duration: 30
+            curve: linear
+        - action: script.fade_volume
+          continue_on_error: true
+          data:
+            target_player: media_player.schlafzimmer
+            target_volume: 0.40
+            duration: 30
+            curve: linear
       - delay: 00:01:00
       - alias: Wichtige Steckdosen wieder einschalten
+        # Bodenspots (switch.flur_licht) und Thermomix (switch.steckdose_kuechengeraete)
+        # bewusst NICHT wieder einschalten - nur manuell aktivieren.
         action: switch.turn_on
         target:
           entity_id:
           - switch.steckdose_avr
           - switch.wohnzimmer_steckdose
-          - switch.arbeitszimmer_steckdose
-          - switch.steckdose_kinderzimmer
-          - switch.schlafzimmer_tv_steckdose
-          - switch.steckdose_arbeitszimmer
+          - switch.neo_plug_02
+          - switch.neo_plug_01
+          - switch.aqara_plug_01
         data: {}
       - alias: Schlafenszeit aktivieren wenn bereits Schlafenszeit
         if:
@@ -554,13 +560,12 @@
           - switch.steckdose_avr
           - switch.wohnzimmer_steckdose
           - switch.flur_licht
-          - switch.arbeitszimmer_steckdose
           - switch.steckdose_kuechengeraete
           - switch.steckdose_waschmaschine
           - switch.trockner
-          - switch.steckdose_kinderzimmer
-          - switch.schlafzimmer_tv_steckdose
-          - switch.steckdose_arbeitszimmer
+          - switch.neo_plug_02
+          - switch.neo_plug_01
+          - switch.aqara_plug_01
         data: {}
       - alias: Sichere Verriegelung mit Retries und Open-Check
         action: script.lock_wohnungstuer_safe

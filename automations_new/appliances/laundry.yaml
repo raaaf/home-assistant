@@ -163,14 +163,14 @@
         # Mobile Benachrichtigungen (kritisch - funktioniert überall)
         - action: notify.rafael
           data:
-            title: "🧺 Trockner ist fertig"
+            title: "Trockner ist fertig"
             message: "Der Trockner ist fertig! ({{ now().strftime('%H:%M Uhr') }})"
             data:
               push:
                 interruption-level: critical
         - action: notify.alex
           data:
-            title: "🧺 Trockner ist fertig"
+            title: "Trockner ist fertig"
             message: "Der Trockner ist fertig! ({{ now().strftime('%H:%M Uhr') }})"
             data:
               push:

@@ -9,11 +9,11 @@
 
     '
   triggers:
-  - entity_id: sensor.badezimmer_temperatur_und_luftfeuchtigkeit_humidity
+  - entity_id: sensor.aqara_climate_02_humidity
     above: 65
     id: above
     trigger: numeric_state
-  - entity_id: sensor.badezimmer_temperatur_und_luftfeuchtigkeit_humidity
+  - entity_id: sensor.aqara_climate_02_humidity
     below: 60
     id: below
     trigger: numeric_state
@@ -69,30 +69,35 @@
           automations: "automation.motion_badezimmer_gross"
       - action: cover.set_cover_position
         target:
-          entity_id: cover.badezimmer_rollo
+          entity_id: cover.ikea_cover_01
         data:
           position: 0
       - data: {}
         target:
           entity_id: switch.luefter_badezimmer
         action: switch.turn_on
-      - action: scene_presets.start_dynamic_scene
+      - alias: "Start Hue effect: fireplace (Sauna)"
+        action: light.turn_on
+        target:
+          entity_id:
+          - light.alle_badezimmer_lichter
+          - light.alle_badezimmer_nachtlichter
         data:
-          preset_id: 2233f218-fd5b-4fa7-a7fd-cbe81eea8e15  # Forest adventure (Wald für Sauna)
-          targets:
-            entity_id:
-            - light.alle_badezimmer_lichter
-            - light.alle_badezimmer_nachtlichter
-          brightness: 70
-          transition: 90
-          interval: 120
+          effect: fireplace
+          brightness_pct: 70
+          transition: 10
     - conditions:
       - condition: trigger
         id: 'off'
       sequence:
-      - action: scene_presets.stop_dynamic_scene
+      - alias: "Stop Hue effect"
+        action: light.turn_on
+        target:
+          entity_id:
+          - light.alle_badezimmer_lichter
+          - light.alle_badezimmer_nachtlichter
         data:
-          id: 2233f218-fd5b-4fa7-a7fd-cbe81eea8e15  # Forest adventure
+          effect: stop_effect
       - alias: "Reset RGB lights to color_temp mode before turning off"
         action: light.turn_on
         data:
@@ -113,7 +118,7 @@
           - light.alle_badezimmer_nachtlichter
       - action: cover.set_cover_position
         target:
-          entity_id: cover.badezimmer_rollo
+          entity_id: cover.ikea_cover_01
         data:
           position: 100
       - delay:
@@ -159,23 +164,28 @@
         action: script.scene_disable_motion_automations
         data:
           automations: "automation.motion_badezimmer_gross"
-      - action: scene_presets.start_dynamic_scene
+      - alias: "Start Hue effect: sunset (Baden)"
+        action: light.turn_on
+        target:
+          entity_id:
+          - light.alle_badezimmer_lichter
+          - light.alle_badezimmer_nachtlichter
         data:
-          preset_id: ffbf7ff8-dc4a-4c56-b157-7a59113be7b7  # Tropical twilight (warm für Baden)
-          targets:
-            entity_id:
-            - light.alle_badezimmer_lichter
-            - light.alle_badezimmer_nachtlichter
-          brightness: 100
-          transition: 60
-          interval: 90
+          effect: sunset
+          brightness_pct: 100
+          transition: 10
     - conditions:
       - condition: trigger
         id: 'off'
       sequence:
-      - action: scene_presets.stop_dynamic_scene
+      - alias: "Stop Hue effect"
+        action: light.turn_on
+        target:
+          entity_id:
+          - light.alle_badezimmer_lichter
+          - light.alle_badezimmer_nachtlichter
         data:
-          id: ffbf7ff8-dc4a-4c56-b157-7a59113be7b7  # Tropical twilight
+          effect: stop_effect
       - alias: "Reset RGB lights to color_temp mode before turning off"
         action: light.turn_on
         data:
@@ -225,7 +235,7 @@
         entity_id: light.alle_badezimmer_lichter
       include_ambient: ambient_enabled
       ambient_light_sensor: sensor.balkon_motion_illuminance_safe
-      ambient_light_options: ambient_light_option_disabled
+      ambient_light_options: ambient_light_option_enabled
       ambient_light_value: 800
       ambient_light_high_value: 1000
       night_lights_conditions:

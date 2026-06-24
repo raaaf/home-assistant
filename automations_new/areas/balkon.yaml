@@ -9,7 +9,7 @@
     path: Blackshome/sensor-light.yaml
     input:
       motion_trigger:
-      - binary_sensor.balkon_motion_occupancy
+      - binary_sensor.ikea_motion_03_occupancy
       light_switch:
         entity_id: light.alle_balkon_lichter
       include_light_control:

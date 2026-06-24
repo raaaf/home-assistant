@@ -48,9 +48,9 @@
         '
       is_bad_weather: "{{ states('weather.fuerth_bayern') in ['rainy', 'snowy', 'windy']\
         \ or \n   states('sensor.luftfeuchtigkeit_aussen') | float(50) > 85 }}\n"
-      heating_active: '{{ (has_value(''climate.schlafzimmer'') and is_state(''climate.schlafzimmer'',
-        ''on'')) or (has_value(''climate.ac'') and is_state(''climate.ac'', ''heat''))
-        }}
+      heating_active: '{{ (has_value(''climate.ac'') and is_state(''climate.ac'', ''heat''))
+        or (states.switch | selectattr(''entity_id'', ''match'', ''switch.heizung_'')
+        | selectattr(''state'', ''eq'', ''on'') | list | count > 0) }}
 
         '
       is_night_quiet_hours: '{{ now().hour >= 22 or now().hour < 6 }}
@@ -80,7 +80,7 @@
         then:
         - action: notify.family
           data:
-            title: 🏠 Fenster/Türen noch offen!
+            title: "Fenster oder Türen noch offen"
             message: 'Beim Verlassen des Hauses: {{ open_elements }} {% if is_cold_outside
               %}(Außentemperatur: {{ states(''sensor.temperatur_aussen'') }}°C){% endif
               %}{% if is_bad_weather %} - Schlechtes Wetter!{% endif %}'
@@ -263,7 +263,7 @@
             sequence:
             - action: notify.admin_only
               data:
-                title: ⚠️ KRITISCHER FEHLER ⚠️
+                title: "Kritischer Fehler"
                 message: '{{ error_message }}'
                 data:
                   push:
@@ -274,7 +274,7 @@
             sequence:
             - action: notify.admin_only
               data:
-                title: ⚠️ System-Warnung
+                title: "System-Warnung"
                 message: '{{ error_message }}'
                 data:
                   push:
@@ -385,7 +385,6 @@
               initial_transition: 2
               take_over_control_mode: pause_changed
               adapt_only_on_bare_turn_on: false
-              interval: 300
               skip_redundant_commands: false
               include_config_in_attributes: false
               use_defaults: current
@@ -397,4 +396,5 @@
           AL-Einstellungen nach Neustart gesetzt (10 Räume):
           separate_turn_on_commands=true, send_split_delay=300, initial_transition=2,
           take_over_control_mode=pause_changed, adapt_only_on_bare_turn_on=false,
-          interval=300, skip_redundant_commands=false, include_config_in_attributes=false
+          skip_redundant_commands=false, include_config_in_attributes=false
+          (interval=300 liegt im YAML, nicht ueber change_switch_settings setzbar)

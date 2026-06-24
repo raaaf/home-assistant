@@ -75,16 +75,14 @@
           Die EcoFlow-Batterie ist zu {{ batterie_soc }}% geladen und es werden
           {{ einspeisung_w }} W ins Netz eingespeist. Nutze jetzt den Solarüberschuss:
           {{ verfuegbare_geraete }}
-    - action: notify.family
+    - action: script.notify_critical
       data:
-        title: "Solar — Strom verschenken?"
+        tag: solar_surplus
+        title: "Solar, Strom verschenken?"
         message: "{{ push_message }}"
-        data:
-          push:
-            interruption-level: critical
     - action: persistent_notification.create
       data:
-        title: "Solar — Strom verschenken?"
+        title: "Solar, Strom verschenken?"
         message: "{{ persistent_message }}"
         notification_id: stromueberschuss_geraete
   mode: single

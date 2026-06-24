@@ -176,7 +176,7 @@
               milliseconds: 500
           - action: light.turn_on
             target:
-              entity_id: light.wohnzimmer_wand_2
+              entity_id: light.ikea_light_19_wand_2
             data:
               brightness_pct: 100
               color_temp_kelvin: 4000
@@ -240,6 +240,22 @@
           - light.alle_wohnzimmer_nachtlichter
         data: {}
         action: light.turn_off
+      - alias: "Wohnzimmer Lichter nach Film"
+        choose:
+        - conditions:
+          - condition: sun
+            after: sunset
+            before: sunrise
+          sequence:
+          - delay:
+              minutes: 5
+          - action: light.turn_off
+            target:
+              entity_id: light.alle_wohnzimmer_lichter
+        default:
+        - action: light.turn_off
+          target:
+            entity_id: light.alle_wohnzimmer_lichter
     - conditions:
       - condition: trigger
         id: paused
@@ -264,6 +280,18 @@
         data:
           effect: Cinema dim lights
         action: light.turn_on
+      - alias: "Wohnzimmer Wand 1-6 einschalten (AL regelt Helligkeit/Farbe)"
+        action: light.turn_on
+        target:
+          entity_id:
+          - light.ikea_light_18_wand_1
+          - light.ikea_light_19_wand_2
+          - light.ikea_light_20_wand_3
+          - light.ikea_light_21_wand_4
+          - light.ikea_light_22_wand_5
+          - light.ikea_light_23_wand_6
+        data:
+          transition: 2
       - if:
         - condition: sun
           after: sunset
@@ -474,22 +502,22 @@
         data:
           entity_id: switch.adaptive_lighting_wohnzimmer
           lights:
-          - light.wohnzimmer_wand_1
-          - light.wohnzimmer_wand_2
-          - light.wohnzimmer_wand_3
-          - light.wohnzimmer_wand_4
-          - light.wohnzimmer_wand_5
-          - light.wohnzimmer_wand_6
-          - light.wohnzimmer_esstisch_2
-          - light.wohnzimmer_esstisch_3
+          - light.ikea_light_18_wand_1
+          - light.ikea_light_19_wand_2
+          - light.ikea_light_20_wand_3
+          - light.ikea_light_21_wand_4
+          - light.ikea_light_22_wand_5
+          - light.ikea_light_23_wand_6
+          - light.philips_light_19_2
+          - light.philips_light_20_3
           manual_control: true
       - alias: "Mark Küche white lights as manual"
         action: adaptive_lighting.set_manual_control
         data:
           entity_id: switch.adaptive_lighting_kueche
           lights:
-          - light.kuche_decke_1
-          - light.kuche_decke_2
+          - light.ikea_light_14_decke_1
+          - light.ikea_light_15_decke_2
           manual_control: true
       # 3. Disable AL switches (prevents any adaptation)
       - alias: "Disable adaptive lighting"
@@ -524,32 +552,33 @@
               milliseconds: 500
           - action: light.turn_on
             target:
-              entity_id: light.wohnzimmer_wand_2
+              entity_id: light.ikea_light_19_wand_2
             data:
               brightness_pct: 100
               color_temp_kelvin: 4000
-      # 6. Start dynamic scene on RGB lights ONLY
-      - alias: "Start dynamic scene on RGB lights only"
-        action: scene_presets.start_dynamic_scene
+      # 6. Start Hue effect on RGB lights ONLY
+      - alias: "Start Hue effect: colorloop (Party Wohnzimmer)"
+        action: light.turn_on
+        target:
+          entity_id:
+          - light.alle_wohnzimmer_rgb_lichter
+          - light.alle_kuche_rgb_lichter
         data:
-          preset_id: de7eda64-84bf-4ed6-a4fa-76e0ebdd1968
-          targets:
-            entity_id:
-            - light.alle_wohnzimmer_rgb_lichter
-            - light.alle_kuche_rgb_lichter
-          transition: 45
-          interval: 60
+          effect: colorloop
+          brightness_pct: 100
+          transition: 10
     - conditions:
       - condition: trigger
         id: 'off'
       sequence:
-      - alias: "Stop dynamic scene for party lights"
-        action: scene_presets.stop_dynamic_scenes_for_targets
+      - alias: "Stop Hue effect on party lights"
+        action: light.turn_on
+        target:
+          entity_id:
+          - light.alle_wohnzimmer_rgb_lichter
+          - light.alle_kuche_rgb_lichter
         data:
-          targets:
-            entity_id:
-            - light.alle_wohnzimmer_rgb_lichter
-            - light.alle_kuche_rgb_lichter
+          effect: stop_effect
       - alias: "Reset RGB lights to color_temp mode before turning off"
         action: light.turn_on
         data:
@@ -577,22 +606,22 @@
         data:
           entity_id: switch.adaptive_lighting_wohnzimmer
           lights:
-          - light.wohnzimmer_wand_1
-          - light.wohnzimmer_wand_2
-          - light.wohnzimmer_wand_3
-          - light.wohnzimmer_wand_4
-          - light.wohnzimmer_wand_5
-          - light.wohnzimmer_wand_6
-          - light.wohnzimmer_esstisch_2
-          - light.wohnzimmer_esstisch_3
+          - light.ikea_light_18_wand_1
+          - light.ikea_light_19_wand_2
+          - light.ikea_light_20_wand_3
+          - light.ikea_light_21_wand_4
+          - light.ikea_light_22_wand_5
+          - light.ikea_light_23_wand_6
+          - light.philips_light_19_2
+          - light.philips_light_20_3
           manual_control: false
       - alias: "Clear Küche manual control"
         action: adaptive_lighting.set_manual_control
         data:
           entity_id: switch.adaptive_lighting_kueche
           lights:
-          - light.kuche_decke_1
-          - light.kuche_decke_2
+          - light.ikea_light_14_decke_1
+          - light.ikea_light_15_decke_2
           manual_control: false
       - alias: "Re-enable living room adaptive lighting if movie/party off"
         choose:
@@ -737,12 +766,12 @@
     path: Blackshome/sensor-light.yaml
     input:
       motion_trigger:
-      - binary_sensor.wohnzimmer_vibration_2_vibration
+      - binary_sensor.aqara_vibration_02_vibration
       light_switch:
         entity_id:
-        - light.wohnzimmer_esstisch_1
-        - light.wohnzimmer_esstisch_2
-        - light.wohnzimmer_esstisch_3
+        - light.philips_light_18_1
+        - light.philips_light_19_2
+        - light.philips_light_20_3
       include_light_control:
       - use_brightness
       - use_transition
@@ -757,7 +786,7 @@
       time_delay: 0
       include_ambient: ambient_enabled
       ambient_light_sensor: sensor.balkon_motion_illuminance_safe
-      ambient_light_options: ambient_light_option_disabled
+      ambient_light_options: ambient_light_option_enabled
       ambient_light_value: 300
       include_time: time_disabled
       after_time: 06:00:00
@@ -784,10 +813,10 @@
     path: Blackshome/sensor-light.yaml
     input:
       motion_trigger:
-      - binary_sensor.wohnzimmer_vibration_vibration
+      - binary_sensor.aqara_vibration_01_vibration
       light_switch:
         entity_id:
-        - light.wohnzimmer_spieletisch
+        - light.philips_light_28_spieletisch
       include_light_control:
       - use_brightness
       - use_transition
@@ -797,7 +826,7 @@
       time_delay: 0
       include_ambient: ambient_enabled
       ambient_light_sensor: sensor.balkon_motion_illuminance_safe
-      ambient_light_options: ambient_light_option_disabled
+      ambient_light_options: ambient_light_option_enabled
       ambient_light_value: 300
       ambient_light_high_value: 400
       include_time: time_disabled
@@ -830,17 +859,17 @@
         data:
           entity_id: switch.adaptive_lighting_wohnzimmer
           lights:
-          - light.wohnzimmer_wand_2
+          - light.ikea_light_19_wand_2
           manual_control: false
       - action: light.turn_on
         target:
-          entity_id: light.wohnzimmer_wand_2
+          entity_id: light.ikea_light_19_wand_2
       - alias: "Adaptive Lighting Werte anwenden"
         action: adaptive_lighting.apply
         data:
           entity_id: switch.adaptive_lighting_wohnzimmer
           lights:
-          - light.wohnzimmer_wand_2
+          - light.ikea_light_19_wand_2
           turn_on_lights: true
     - conditions:
       - condition: trigger
@@ -848,7 +877,7 @@
       sequence:
       - action: light.turn_off
         target:
-          entity_id: light.wohnzimmer_wand_2
+          entity_id: light.ikea_light_19_wand_2
         data:
           transition: 2
       - delay:
@@ -858,6 +887,297 @@
         data:
           entity_id: switch.adaptive_lighting_wohnzimmer
           lights:
-          - light.wohnzimmer_wand_2
+          - light.ikea_light_19_wand_2
           manual_control: false
   mode: restart
+
+- id: '1652698714339'
+  alias: Wohnzimmer » Luftreiniger
+  description: >-
+    Steuert den Xiaomi Air Purifier 4 Pro im Wohnzimmer rein luftqualitaetsgesteuert
+    (PM2.5/Feuchtigkeit) mit Fenster-Guard (Wohnzimmer + Balkontuer), Anwesenheit
+    und Auto-Preset.
+  triggers:
+  - trigger: numeric_state
+    entity_id: sensor.zhimi_vb4_bce4_pm25_density
+    above: 20
+    for:
+      minutes: 1
+    id: pm25-high
+  - trigger: numeric_state
+    entity_id: sensor.zhimi_vb4_bce4_pm25_density
+    below: 10
+    for:
+      minutes: 5
+    id: pm25-low
+  - trigger: numeric_state
+    entity_id: sensor.zhimi_vb4_bce4_relative_humidity
+    above: 65
+    for:
+      minutes: 5
+    id: humidity-high
+  - trigger: state
+    entity_id:
+    - binary_sensor.aqara_contact_08
+    - binary_sensor.aqara_contact_02
+    to: 'on'
+    for:
+      minutes: 2
+    id: window-open
+  - trigger: state
+    entity_id:
+    - binary_sensor.aqara_contact_08
+    - binary_sensor.aqara_contact_02
+    to: 'off'
+    for:
+      minutes: 2
+    id: window-closed
+  - trigger: state
+    entity_id: input_boolean.alle_sind_weg
+    to: 'on'
+    id: away
+  - trigger: state
+    entity_id: input_boolean.alle_sind_weg
+    to: 'off'
+    id: home
+  conditions:
+  - alias: "Luftreiniger ist verfügbar"
+    condition: template
+    value_template: "{{ has_value('fan.zhimi_vb4_bce4_air_purifier') }}"
+  actions:
+  - choose:
+    - alias: "PM2.5 hoch — einschalten"
+      conditions:
+      - condition: trigger
+        id: pm25-high
+      - alias: "Luftreiniger läuft nicht"
+        condition: state
+        entity_id: fan.zhimi_vb4_bce4_air_purifier
+        state: 'off'
+      - alias: "Jemand ist zu Hause"
+        condition: state
+        entity_id: input_boolean.alle_sind_weg
+        state: 'off'
+      - alias: "Fenster geschlossen"
+        condition: template
+        value_template: >-
+          {{ not is_state('binary_sensor.aqara_contact_08', 'on')
+             and not is_state('binary_sensor.aqara_contact_02', 'on') }}
+      - alias: "Sensor verfügbar"
+        condition: template
+        value_template: "{{ has_value('sensor.zhimi_vb4_bce4_pm25_density') }}"
+      sequence:
+      - action: fan.turn_on
+        target:
+          entity_id: fan.zhimi_vb4_bce4_air_purifier
+      - alias: "Auto-Modus setzen wenn noetig"
+        if:
+        - condition: template
+          value_template: "{{ state_attr('fan.zhimi_vb4_bce4_air_purifier', 'preset_mode') != 'Auto' }}"
+        then:
+        - action: fan.set_preset_mode
+          target:
+            entity_id: fan.zhimi_vb4_bce4_air_purifier
+          data:
+            preset_mode: Auto
+
+    - alias: "Feuchtigkeit hoch — einschalten"
+      conditions:
+      - condition: trigger
+        id: humidity-high
+      - condition: state
+        entity_id: fan.zhimi_vb4_bce4_air_purifier
+        state: 'off'
+      - condition: state
+        entity_id: input_boolean.alle_sind_weg
+        state: 'off'
+      - condition: template
+        value_template: >-
+          {{ not is_state('binary_sensor.aqara_contact_08', 'on')
+             and not is_state('binary_sensor.aqara_contact_02', 'on') }}
+      sequence:
+      - action: fan.turn_on
+        target:
+          entity_id: fan.zhimi_vb4_bce4_air_purifier
+      - alias: "Auto-Modus setzen wenn noetig"
+        if:
+        - condition: template
+          value_template: "{{ state_attr('fan.zhimi_vb4_bce4_air_purifier', 'preset_mode') != 'Auto' }}"
+        then:
+        - action: fan.set_preset_mode
+          target:
+            entity_id: fan.zhimi_vb4_bce4_air_purifier
+          data:
+            preset_mode: Auto
+
+    - alias: "PM2.5 gut — ausschalten"
+      conditions:
+      - condition: trigger
+        id: pm25-low
+      - condition: state
+        entity_id: fan.zhimi_vb4_bce4_air_purifier
+        state: 'on'
+      - alias: "Feuchtigkeit auch OK"
+        condition: or
+        conditions:
+        - condition: numeric_state
+          entity_id: sensor.zhimi_vb4_bce4_relative_humidity
+          below: 65
+        - condition: template
+          value_template: "{{ not has_value('sensor.zhimi_vb4_bce4_relative_humidity') }}"
+      sequence:
+      - action: fan.turn_off
+        target:
+          entity_id: fan.zhimi_vb4_bce4_air_purifier
+
+    - alias: "Fenster offen — ausschalten"
+      conditions:
+      - condition: trigger
+        id: window-open
+      - condition: state
+        entity_id: fan.zhimi_vb4_bce4_air_purifier
+        state: 'on'
+      sequence:
+      - action: fan.turn_off
+        target:
+          entity_id: fan.zhimi_vb4_bce4_air_purifier
+
+    - alias: "Fenster geschlossen — einschalten wenn PM2.5 oder Feuchte hoch"
+      conditions:
+      - condition: trigger
+        id: window-closed
+      - alias: "Beide Fenster geschlossen"
+        condition: template
+        value_template: >-
+          {{ not is_state('binary_sensor.aqara_contact_08', 'on')
+             and not is_state('binary_sensor.aqara_contact_02', 'on') }}
+      - condition: state
+        entity_id: fan.zhimi_vb4_bce4_air_purifier
+        state: 'off'
+      - condition: state
+        entity_id: input_boolean.alle_sind_weg
+        state: 'off'
+      - alias: "PM2.5 oder Feuchtigkeit problematisch"
+        condition: or
+        conditions:
+        - condition: numeric_state
+          entity_id: sensor.zhimi_vb4_bce4_pm25_density
+          above: 20
+        - condition: numeric_state
+          entity_id: sensor.zhimi_vb4_bce4_relative_humidity
+          above: 65
+      sequence:
+      - action: fan.turn_on
+        target:
+          entity_id: fan.zhimi_vb4_bce4_air_purifier
+      - alias: "Auto-Modus setzen wenn noetig"
+        if:
+        - condition: template
+          value_template: "{{ state_attr('fan.zhimi_vb4_bce4_air_purifier', 'preset_mode') != 'Auto' }}"
+        then:
+        - action: fan.set_preset_mode
+          target:
+            entity_id: fan.zhimi_vb4_bce4_air_purifier
+          data:
+            preset_mode: Auto
+
+    - alias: "Alle weg — ausschalten"
+      conditions:
+      - condition: trigger
+        id: away
+      - condition: state
+        entity_id: fan.zhimi_vb4_bce4_air_purifier
+        state: 'on'
+      sequence:
+      - action: fan.turn_off
+        target:
+          entity_id: fan.zhimi_vb4_bce4_air_purifier
+
+    - alias: "Jemand kommt heim — einschalten wenn PM2.5 hoch"
+      conditions:
+      - condition: trigger
+        id: home
+      - condition: state
+        entity_id: fan.zhimi_vb4_bce4_air_purifier
+        state: 'off'
+      - condition: template
+        value_template: "{{ has_value('sensor.zhimi_vb4_bce4_pm25_density') }}"
+      - condition: numeric_state
+        entity_id: sensor.zhimi_vb4_bce4_pm25_density
+        above: 20
+      - condition: template
+        value_template: >-
+          {{ not is_state('binary_sensor.aqara_contact_08', 'on')
+             and not is_state('binary_sensor.aqara_contact_02', 'on') }}
+      sequence:
+      - action: fan.turn_on
+        target:
+          entity_id: fan.zhimi_vb4_bce4_air_purifier
+      - delay:
+          seconds: 10
+      - alias: "Retry wenn Air Purifier nicht reagiert hat"
+        if:
+        - condition: state
+          entity_id: fan.zhimi_vb4_bce4_air_purifier
+          state: 'off'
+        then:
+        - action: fan.turn_on
+          target:
+            entity_id: fan.zhimi_vb4_bce4_air_purifier
+        - delay:
+            seconds: 10
+        - if:
+          - condition: state
+            entity_id: fan.zhimi_vb4_bce4_air_purifier
+            state: 'off'
+          then:
+          - action: fan.turn_on
+            target:
+              entity_id: fan.zhimi_vb4_bce4_air_purifier
+      - alias: "Auto-Modus setzen wenn noetig"
+        if:
+        - condition: template
+          value_template: "{{ state_attr('fan.zhimi_vb4_bce4_air_purifier', 'preset_mode') != 'Auto' }}"
+        then:
+        - action: fan.set_preset_mode
+          target:
+            entity_id: fan.zhimi_vb4_bce4_air_purifier
+          data:
+            preset_mode: Auto
+  mode: single
+  max_exceeded: silent
+
+- id: 'luftreiniger_filter_warnung'
+  alias: "Benachrichtigung » Luftreiniger Filter"
+  description: "Warnt wenn der Filterstand des Xiaomi Air Purifier unter 15% fällt."
+  triggers:
+  - trigger: numeric_state
+    entity_id: sensor.zhimi_vb4_bce4_filter_life_level
+    below: 15
+    for:
+      hours: 1
+  conditions:
+  - alias: "Nicht Schlafenszeit"
+    condition: state
+    entity_id: input_boolean.schlafenszeit
+    state: 'off'
+  - condition: time
+    after: '08:00:00'
+    before: '22:00:00'
+  - alias: "Letzte Notification > 24h her"
+    condition: template
+    value_template: >-
+      {% set last = state_attr('automation.benachrichtigung_luftreiniger_filter', 'last_triggered') %}
+      {{ last is none or (now() - last).total_seconds() > 24 * 60 * 60 }}
+  actions:
+  - action: notify.rafael
+    data:
+      title: "Luftreiniger — Filter wechseln"
+      message: "Filterstand bei {{ states('sensor.zhimi_vb4_bce4_filter_life_level') }}%. Bitte Filter bestellen/wechseln."
+  - action: persistent_notification.create
+    data:
+      title: "Luftreiniger — Filter wechseln"
+      message: "Der Filter des Xiaomi Air Purifier im Wohnzimmer ist bei {{ states('sensor.zhimi_vb4_bce4_filter_life_level') }}%. Bitte zeitnah ersetzen."
+      notification_id: luftreiniger_filter
+  mode: single
+  max_exceeded: silent

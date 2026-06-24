@@ -10,7 +10,7 @@
 # - platform: dual_smart_thermostat
 #   name: "Schlafzimmer"
 #   unique_id: thermostat_schlafzimmer
-#   heater: switch.heizung_schlafzimmer
+#   heater: switch.sonoff_switch_04
 #   target_sensor: sensor.arbeitszimmer_temperatur
 #   target_temp: 20
 #   precision: 0.5
@@ -31,15 +31,15 @@
 #   home:
 #     temperature: 20
 #   openings:
-#     - entity_id: binary_sensor.schlafzimmer_kontaktsensor_contact
+#     - entity_id: binary_sensor.aqara_contact_07
 #       timeout: 00:30:00
 
 # # Kinderzimmer - Smart thermostat with window sensor (optimized for thermal mass)
 # - platform: dual_smart_thermostat
 #   name: "Kinderzimmer"
 #   unique_id: thermostat_kinderzimmer
-#   heater: switch.heizung_kinderzimmer
-#   target_sensor: sensor.kinderzimmer_temperatur_und_luftfeuchtigkeit_temperature
+#   heater: switch.sonoff_switch_03
+#   target_sensor: sensor.aqara_climate_03_temperature
 #   target_temp: 21
 #   precision: 0.5
 #   min_temp: 12
@@ -59,14 +59,14 @@
 #   home:
 #     temperature: 21
 #   openings:
-#     - entity_id: binary_sensor.kinderzimmer_kontaktsensor_contact
+#     - entity_id: binary_sensor.aqara_contact_05
 #       timeout: 00:30:00
 
 # # Wohnzimmer - Smart thermostat with window sensor (optimized for thermal mass)
 # - platform: dual_smart_thermostat
 #   name: "Wohnzimmer"
 #   unique_id: thermostat_wohnzimmer
-#   heater: switch.heizung_wohnzimmer
+#   heater: switch.sonoff_switch_05
 #   target_sensor: sensor.wohnzimmer_temperatur
 #   target_temp: 21
 #   precision: 0.5
@@ -87,15 +87,15 @@
 #   home:
 #     temperature: 21
 #   openings:
-#     - entity_id: binary_sensor.wohnzimmer_kontaktsensor_contact
+#     - entity_id: binary_sensor.aqara_contact_08
 #       timeout: 00:30:00
 
 # # Badezimmer - Smart thermostat without window sensor
 # - platform: dual_smart_thermostat
 #   name: "Badezimmer"
 #   unique_id: thermostat_badezimmer
-#   heater: switch.heizung_badezimmer
-#   target_sensor: sensor.badezimmer_temperatur_und_luftfeuchtigkeit_temperature
+#   heater: switch.sonoff_switch_01
+#   target_sensor: sensor.aqara_climate_02_temperature
 #   target_temp: 24 # Higher for bathroom
 #   precision: 0.5
 #   min_temp: 12
@@ -117,7 +117,7 @@
 # - platform: dual_smart_thermostat
 #   name: "Flur"
 #   unique_id: thermostat_flur
-#   heater: switch.heizung_flur
+#   heater: switch.sonoff_switch_02
 #   target_sensor: sensor.flur_motion_2_temperature
 #   target_temp: 20 # Lower for hallway
 #   precision: 0.5

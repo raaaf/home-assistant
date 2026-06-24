@@ -41,8 +41,8 @@
           message: '{{sensors}}'
       exclude:
         entity_id:
-        - sensor.temperatur_aussen_sonnenaufgang_humidity
-        - sensor.temperatur_aussen_sonnenuntergang_humidity
+        - sensor.aqara_climate_05_humidity
+        - sensor.tuya_climate_01_humidity
 - id: '1726065861905'
   alias: Notifications » Niedriger Batteriestand
   description: Benachrichtigt bei niedrigem Batteriestand (unter 10%) von Geräten
@@ -157,12 +157,12 @@
   alias: Security » Haustür Überwachung
   description: Überwacht Haustür bei Abwesenheit und trackt Besuchsdauer
   triggers:
-    - entity_id: binary_sensor.haustur_kontaktsensor_contact
+    - entity_id: binary_sensor.aqara_contact_04
       from: 'off'
       to: 'on'
       id: door_opened
       trigger: state
-    - entity_id: binary_sensor.haustur_kontaktsensor_contact
+    - entity_id: binary_sensor.aqara_contact_04
       from: 'on'
       to: 'off'
       id: door_closed
@@ -199,17 +199,14 @@
                     entity_id: input_datetime.haustur_letzter_eingang
                   data:
                     datetime: "{{ aktueller_zeitstempel }}"
-                - action: notify.family
+                - action: script.notify_critical
                   data:
-                    title: "SICHERHEITSALARM - Haustür geöffnet"
+                    tag: door_security
+                    group: security_alerts
+                    title: "SICHERHEITSALARM, Haustür geöffnet"
                     message: >
                       Die Haustür wurde um {{ formatierte_zeit }} geöffnet,
                       obwohl niemand zuhause ist!
-                    data:
-                      tag: door_security
-                      group: security_alerts
-                      push:
-                        interruption-level: critical
                 - action: system_log.write
                   data:
                     message: >
@@ -271,38 +268,40 @@
   description: Benachrichtigt wenn kritische Bewegungsmelder länger als 30 Minuten nicht verfügbar sind
   triggers:
   - entity_id:
-    - binary_sensor.schlafzimmer_motion_occupancy
-    - binary_sensor.balkon_motion_occupancy
-    - binary_sensor.kuche_motion_occupancy
-    - binary_sensor.haustur_motion_occupancy
-    - binary_sensor.waschzimmer_motion_occupancy
-    - binary_sensor.kinderzimmer_motion_presence
-    - binary_sensor.arbeitszimmer_motion_occupancy
+    - binary_sensor.ikea_motion_09
+    - binary_sensor.ikea_motion_03_occupancy
+    - binary_sensor.ikea_motion_07
+    - binary_sensor.ikea_motion_06
+    - binary_sensor.tuya_motion_03_motion_presence
+    - binary_sensor.tuya_motion_02_presence
+    - binary_sensor.tuya_motion_01_presence
+    - binary_sensor.ikea_motion_02
     to:
     - unavailable
     - unknown
     for:
       minutes: 30
     trigger: state
-  conditions: []
+  conditions:
+  - condition: template
+    value_template: >
+      {% set last = state_attr('automation.notification_bewegungsmelder_ausgefallen', 'last_triggered') %}
+      {{ last is none or (now() - last).total_seconds() > 3600 }}
   actions:
   - variables:
       sensor_name: '{{ trigger.to_state.name }}'
       sensor_id: '{{ trigger.entity_id }}'
       duration: '{{ relative_time(trigger.from_state.last_changed) }}'
   - parallel:
-    - action: notify.family
+    - action: script.notify_critical
       data:
-        title: "WARNUNG - Bewegungsmelder ausgefallen"
+        tag: motion_sensor_failure
+        group: system_alerts
+        title: "Bewegungsmelder ausgefallen"
         message: "{{ sensor_name }} ist seit {{ duration }} nicht verfügbar ({{ sensor_id }})"
-        data:
-          tag: motion_sensor_failure
-          group: system_alerts
-          push:
-            interruption-level: critical
     - action: persistent_notification.create
       data:
-        title: "Bewegungsmelder ausgefallen — {{ sensor_name }}"
+        title: "Bewegungsmelder ausgefallen, {{ sensor_name }}"
         message: >
           Sensor: {{ sensor_name }} ({{ sensor_id }})
           Status: {{ trigger.to_state.state }}

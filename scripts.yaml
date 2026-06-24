@@ -263,7 +263,9 @@ fade_volume:
   - repeat:
       while:
       - condition: template
-        value_template: '{{ repeat.index <= total_steps }}'
+        value_template: >-
+          {{ repeat.index <= total_steps and
+             states(target_player) not in ['unavailable', 'unknown'] }}
       sequence:
       - action: media_player.volume_set
         continue_on_error: true
@@ -576,9 +578,9 @@ heizung_boost:
   sequence:
   - variables:
       heating_switches:
-      - switch.heizung_kinderzimmer
-      - switch.heizung_schlafzimmer
-      - switch.heizung_wohnzimmer
+      - switch.sonoff_switch_03
+      - switch.sonoff_switch_04
+      - switch.sonoff_switch_05
   - if:
     - condition: state
       entity_id: timer.heizung_boost
@@ -667,7 +669,7 @@ turn_off_with_retry:
   fields:
     target_entities:
       description: Entity ID(s) — einzelne Entity oder Liste
-      example: switch.heizung_wohnzimmer
+      example: switch.sonoff_switch_05
       required: true
       selector:
         entity:
@@ -711,3 +713,194 @@ turn_off_with_retry:
       - action: homeassistant.turn_off
         target:
           entity_id: "{{ still_on }}"
+
+reset_sleep_modes:
+  alias: "AL Sleep Modes zurücksetzen"
+  description: Deaktiviert Sleep-Mode für alle 9 Adaptive-Lighting-Räume
+  icon: mdi:weather-sunny
+  mode: single
+  sequence:
+  - action: switch.turn_off
+    target:
+      entity_id:
+      - switch.adaptive_lighting_sleep_mode_arbeitszimmer
+      - switch.adaptive_lighting_sleep_mode_badezimmer
+      - switch.adaptive_lighting_sleep_mode_balkon
+      - switch.adaptive_lighting_sleep_mode_flur
+      - switch.adaptive_lighting_sleep_mode_kinderzimmer
+      - switch.adaptive_lighting_sleep_mode_kueche
+      - switch.adaptive_lighting_sleep_mode_waschzimmer
+      - switch.adaptive_lighting_sleep_mode_wohnzimmer
+      - switch.adaptive_lighting_sleep_mode_schlafzimmer
+
+notify_critical:
+  alias: "Critical Notification senden"
+  description: >
+    Helper fuer einheitliche Critical Alerts an beide iPhones via notify.family.
+    Parameter: title (required), message (required), tag (optional),
+    group (optional fuer iOS Notification-Gruppierung).
+  icon: mdi:alert
+  mode: parallel
+  max: 10
+  fields:
+    title:
+      description: "Titel der Notification"
+      required: true
+    message:
+      description: "Text der Notification"
+      required: true
+    tag:
+      description: "Tag fuer Replace statt Stapeln auf dem iPhone"
+      required: false
+      default: "critical_alert"
+    group:
+      description: "iOS Notification-Gruppe (optional)"
+      required: false
+  sequence:
+  - action: notify.family
+    data:
+      title: "{{ title }}"
+      message: "{{ message }}"
+      data: >
+        {%- set payload = {
+          'tag': tag | default('critical_alert'),
+          'push': {
+            'interruption-level': 'critical',
+            'sound': {'name': 'default', 'critical': 1, 'volume': 1.0}
+          }
+        } -%}
+        {%- if group is defined and group -%}
+          {{- dict(payload, group=group) -}}
+        {%- else -%}
+          {{- payload -}}
+        {%- endif -%}
+
+lock_wohnungstuer_safe:
+  alias: "Wohnungstür sicher verriegeln"
+  description: >
+    Robuste Verriegelung mit bis zu 3 Retries und Handling für
+    unavailable/unknown sowie physisch offene Tür. Sendet nur dann
+    eine Critical Notification, wenn der Lock nach 3 Versuchen nicht
+    schließt (kein False Positive bei offener Tür).
+  icon: mdi:lock-check
+  mode: queued
+  max: 3
+  fields:
+    context_message:
+      description: "Kurzer Kontext für Logbook und Notification"
+      required: false
+      default: "automatische Verriegelung"
+  sequence:
+  - choose:
+    - alias: "Bereits verriegelt, nichts zu tun"
+      conditions:
+      - condition: state
+        entity_id: lock.nuki_wohnungstur_lock
+        state: locked
+      sequence:
+      - action: logbook.log
+        data:
+          name: "Wohnungstür"
+          message: "Bereits verriegelt ({{ context_message }})"
+          domain: lock
+    - alias: "Tür physisch offen, kein Lock möglich"
+      conditions:
+      - condition: state
+        entity_id: lock.nuki_wohnungstur_lock
+        state: open
+      sequence:
+      - action: logbook.log
+        data:
+          name: "Wohnungstür"
+          message: "Tür physisch offen, Verriegelung übersprungen ({{ context_message }})"
+          domain: lock
+    default:
+    - alias: "Warte bis Lock erreichbar (max 30 Sek)"
+      if:
+      - condition: template
+        value_template: "{{ states('lock.nuki_wohnungstur_lock') in ['unavailable', 'unknown'] }}"
+      then:
+      - wait_template: "{{ states('lock.nuki_wohnungstur_lock') not in ['unavailable', 'unknown'] }}"
+        timeout: "00:00:30"
+        continue_on_timeout: true
+    - alias: "Erneuter Open-Check nach Reconnect"
+      if:
+      - condition: state
+        entity_id: lock.nuki_wohnungstur_lock
+        state: open
+      then:
+      - action: logbook.log
+        data:
+          name: "Wohnungstür"
+          message: "Tür physisch offen nach Reconnect, Verriegelung übersprungen ({{ context_message }})"
+          domain: lock
+      - stop: "Tür offen, kein Lock-Versuch"
+    - alias: "Lock-Versuch mit bis zu 3 Retries"
+      repeat:
+        sequence:
+        - if:
+          - condition: state
+            entity_id: lock.nuki_wohnungstur_lock
+            state: unlocked
+          then:
+          - action: lock.lock
+            target:
+              entity_id: lock.nuki_wohnungstur_lock
+            continue_on_error: true
+            data: {}
+          - alias: "Warte auf Verriegelung (max 20 Sek)"
+            wait_template: "{{ is_state('lock.nuki_wohnungstur_lock', 'locked') }}"
+            timeout: "00:00:20"
+            continue_on_timeout: true
+        - alias: "Bei unavailable kurz warten, dann neuer Versuch"
+          if:
+          - condition: template
+            value_template: "{{ states('lock.nuki_wohnungstur_lock') in ['unavailable', 'unknown'] }}"
+          then:
+          - wait_template: "{{ states('lock.nuki_wohnungstur_lock') not in ['unavailable', 'unknown'] }}"
+            timeout: "00:00:15"
+            continue_on_timeout: true
+        until:
+        - condition: or
+          conditions:
+          - condition: state
+            entity_id: lock.nuki_wohnungstur_lock
+            state: locked
+          - condition: state
+            entity_id: lock.nuki_wohnungstur_lock
+            state: open
+          - condition: template
+            value_template: "{{ repeat.index >= 3 }}"
+    - alias: "Ergebnis bewerten"
+      choose:
+      - alias: "Erfolg"
+        conditions:
+        - condition: state
+          entity_id: lock.nuki_wohnungstur_lock
+          state: locked
+        sequence:
+        - action: logbook.log
+          data:
+            name: "Wohnungstür"
+            message: "Erfolgreich verriegelt ({{ context_message }})"
+            domain: lock
+      - alias: "Tür wurde während Versuch geöffnet"
+        conditions:
+        - condition: state
+          entity_id: lock.nuki_wohnungstur_lock
+          state: open
+        sequence:
+        - action: logbook.log
+          data:
+            name: "Wohnungstür"
+            message: "Tür während Verriegelung geöffnet, abgebrochen ({{ context_message }})"
+            domain: lock
+      default:
+      - action: script.notify_critical
+        data:
+          tag: door_lock_fail
+          title: "Türverriegelung fehlgeschlagen"
+          message: >-
+            Die Wohnungstür konnte nach 3 Versuchen nicht verriegelt werden
+            (Status: {{ states('lock.nuki_wohnungstur_lock') }}, {{ context_message }}).
+            Bitte manuell prüfen.

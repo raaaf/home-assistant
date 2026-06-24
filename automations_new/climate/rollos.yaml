@@ -24,7 +24,7 @@
     above: 225
     id: sonne-suedwest
     trigger: numeric_state
-  - platform: numeric_state
+  - trigger: numeric_state
     entity_id: sun.sun
     attribute: elevation
     below: -4
@@ -40,55 +40,25 @@
         ''on'') }}'
       wird_heiss: '{{ has_value(''input_boolean.heute_wird_es_heiss_werden'') and is_state(''input_boolean.heute_wird_es_heiss_werden'', ''on'')
         }}'
-      ist_arbeitstag: '{{ has_value(''binary_sensor.workday_sensor'') and is_state(''binary_sensor.workday_sensor'', ''on'') }}'
       position_arbeit: 1
       position_west: "{% if wird_sehr_heiss %}0{% elif wird_heiss %}10{% else %}100{% endif %}"
   - choose:
+    # Morgens: Kinderzimmer + Schlafzimmer (= cover.aqara_cover_01, Bett-Raum)
+    # voll auf. Das Buero (Alex, = cover.aqara_cover_03) bleibt zu und wird nur
+    # noch manuell geoeffnet.
     - conditions:
       - condition: trigger
         id: morgens
-      - condition: template
-        value_template: '{{ ist_arbeitstag }}'
       sequence:
       - action: cover.open_cover
         target:
           entity_id:
-          - cover.kinderzimmer_rollo
-          - cover.arbeitszimmer_rollo
-      - action: cover.open_cover
-        target:
-          entity_id: cover.schlafzimmer_rollo
-      - delay:
-          milliseconds: 3500
-      - action: cover.stop_cover
-        target:
-          entity_id: cover.schlafzimmer_rollo
+          - cover.aqara_cover_02
+          - cover.aqara_cover_01
       - action: logbook.log
         data:
-          name: Rollos Morgen (Arbeitstag)
-          message: 'KZ+AZ Dunkelrollos offen (Tageslicht), Hitzeschutz ueber Fensterjalousie. SZ teiloffen.'
-          domain: cover
-    - conditions:
-      - condition: trigger
-        id: morgens
-      - condition: template
-        value_template: '{{ not ist_arbeitstag }}'
-      sequence:
-      - action: cover.open_cover
-        target:
-          entity_id: cover.rollos_sonnenaufgang
-      - action: cover.open_cover
-        target:
-          entity_id: cover.schlafzimmer_rollo
-      - delay:
-          milliseconds: 3500
-      - action: cover.stop_cover
-        target:
-          entity_id: cover.schlafzimmer_rollo
-      - action: logbook.log
-        data:
-          name: Rollos Morgen (Wochenende)
-          message: 'Ost-Rollos vollständig geöffnet, Arbeitszimmer: 4s'
+          name: Rollos Morgen
+          message: 'KZ + Schlafzimmer voll offen. Buero (Alex) bleibt zu, nur manuell.'
           domain: cover
     - conditions:
       - condition: trigger
@@ -101,34 +71,14 @@
         - condition: template
           value_template: '{{ wird_sehr_heiss or wird_heiss }}'
         then:
+        # Nur Wohnzimmer als West-Hitzeschutz. Balkon und Kueche bleiben offen (Tageslicht).
         - action: cover.set_cover_position
           data:
             position: '{{ position_west }}'
           target:
             entity_id:
-            - cover.wohnzimmer_rollo
+            - cover.aqara_cover_04
           continue_on_error: true
-        - choose:
-          - conditions:
-            - condition: template
-              value_template: '{{ position_west < 50 }}'
-            sequence:
-            - action: cover.close_cover
-              target:
-                entity_id:
-                - cover.rollo_kueche
-                - cover.rollo_balkon
-              data: {}
-          - conditions:
-            - condition: template
-              value_template: '{{ position_west >= 50 }}'
-            sequence:
-            - action: cover.open_cover
-              target:
-                entity_id:
-                - cover.rollo_kueche
-                - cover.rollo_balkon
-              data: {}
     - conditions:
       - condition: trigger
         id:
@@ -139,13 +89,13 @@
         target:
           entity_id:
           - cover.rollos_sonnenaufgang
-          - cover.schlafzimmer_rollo
+          - cover.aqara_cover_03
         data: {}
       - action: cover.open_cover
         target:
           entity_id:
           - cover.rollo_balkon
           - cover.rollo_kueche
-          - cover.wohnzimmer_rollo
+          - cover.aqara_cover_04
         data: {}
   mode: restart

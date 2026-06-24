@@ -63,18 +63,7 @@
         target:
           entity_id: input_boolean.nachtlicht
       - alias: Sleep Mode für alle Räume deaktivieren
-        action: switch.turn_off
-        target:
-          entity_id:
-          - switch.adaptive_lighting_sleep_mode_arbeitszimmer
-          - switch.adaptive_lighting_sleep_mode_badezimmer
-          - switch.adaptive_lighting_sleep_mode_balkon
-          - switch.adaptive_lighting_sleep_mode_flur
-          - switch.adaptive_lighting_sleep_mode_kinderzimmer
-          - switch.adaptive_lighting_sleep_mode_kueche
-          - switch.adaptive_lighting_sleep_mode_waschzimmer
-          - switch.adaptive_lighting_sleep_mode_wohnzimmer
-          - switch.adaptive_lighting_sleep_mode_schlafzimmer
+        action: script.reset_sleep_modes
     - alias: Aufwachen - Alarm deaktivieren und sanftes Licht
       conditions:
       - condition: trigger
@@ -89,18 +78,7 @@
         target:
           entity_id: input_boolean.nachtlicht
       - alias: Sleep Mode für alle Räume deaktivieren
-        action: switch.turn_off
-        target:
-          entity_id:
-          - switch.adaptive_lighting_sleep_mode_arbeitszimmer
-          - switch.adaptive_lighting_sleep_mode_badezimmer
-          - switch.adaptive_lighting_sleep_mode_balkon
-          - switch.adaptive_lighting_sleep_mode_flur
-          - switch.adaptive_lighting_sleep_mode_kinderzimmer
-          - switch.adaptive_lighting_sleep_mode_kueche
-          - switch.adaptive_lighting_sleep_mode_waschzimmer
-          - switch.adaptive_lighting_sleep_mode_wohnzimmer
-          - switch.adaptive_lighting_sleep_mode_schlafzimmer
+        action: script.reset_sleep_modes
       - alias: "Kurz warten bis AL neue Werte berechnet hat"
         delay:
           seconds: 3
@@ -135,7 +113,7 @@
         target:
           entity_id:
           - automation.motion_flur_wohnung
-          - automation.arbeitszimmer_motion
+          - automation.ikea_motion_02_update
       - alias: Sanftes Aufwachlicht wenn jemand da ist
         if:
         - alias: Jemand ist zu Hause
@@ -146,7 +124,7 @@
           action: automation.turn_off
           target:
             entity_id:
-            - automation.motion_schlafzimmer
+            - automation.ikea_motion_02_update
             - automation.kinderzimmer_motion
           data:
             stop_actions: true
@@ -231,7 +209,7 @@
           target:
             entity_id:
             - automation.kinderzimmer_motion
-            - automation.motion_schlafzimmer
+            - automation.ikea_motion_02_update
         - alias: "Warte bis 08:00 Uhr"
           delay:
             seconds: >-
@@ -314,7 +292,7 @@
           action: lock.unlock
           continue_on_error: true
           target:
-            entity_id: lock.smart_lock_pro
+            entity_id: lock.nuki_wohnungstur_lock
     - alias: Sonnenaufgang - Schlafenszeit beenden (Fallback)
       conditions:
       - condition: trigger
@@ -322,6 +300,14 @@
       - condition: state
         entity_id: input_boolean.schlafenszeit
         state: 'on'
+      # Nur als Notnetz, wenn die Weckzeit schon erreicht ist. Verhindert, dass die
+      # fruehe Sommer-Daemmerung (~04:46) die Schlafenszeit vor der echten Weckzeit
+      # (06:30) beendet und damit AC/Ventilator-Praesenzgate wegreisst.
+      - alias: Weckzeit bereits erreicht (oder Weckzeit unbekannt)
+        condition: template
+        value_template: >-
+          {{ states('sensor.wakeup_light_timestamp') in ['unknown', 'unavailable']
+             or now() >= as_datetime(states('sensor.wakeup_light_timestamp')) }}
       sequence:
       - alias: Schlafenszeit automatisch beenden bei Sonnenaufgang
         action: input_boolean.turn_off
@@ -332,18 +318,7 @@
         target:
           entity_id: input_boolean.nachtlicht
       - alias: Sleep Mode für alle Räume deaktivieren
-        action: switch.turn_off
-        target:
-          entity_id:
-          - switch.adaptive_lighting_sleep_mode_arbeitszimmer
-          - switch.adaptive_lighting_sleep_mode_badezimmer
-          - switch.adaptive_lighting_sleep_mode_balkon
-          - switch.adaptive_lighting_sleep_mode_flur
-          - switch.adaptive_lighting_sleep_mode_kinderzimmer
-          - switch.adaptive_lighting_sleep_mode_kueche
-          - switch.adaptive_lighting_sleep_mode_waschzimmer
-          - switch.adaptive_lighting_sleep_mode_wohnzimmer
-          - switch.adaptive_lighting_sleep_mode_schlafzimmer
+        action: script.reset_sleep_modes
     - alias: Einschlafzeit - Schlafmodus aktivieren
       conditions:
       - condition: trigger
@@ -372,9 +347,9 @@
             }}'
       - alias: Klimaanlage auf Schlafmodus (wenn verfügbar)
         if:
-        - alias: Klimaanlage ist verfügbar
+        - alias: Klimaanlage ist verfügbar und unterstützt Sleep-Preset
           condition: template
-          value_template: '{{ has_value(''climate.ac'') and not is_state(''climate.ac'', ''unavailable'') }}'
+          value_template: '{{ has_value(''climate.ac'') and ''sleep'' in (state_attr(''climate.ac'', ''preset_modes'') or []) }}'
         then:
         - action: climate.set_preset_mode
           target:
@@ -391,7 +366,7 @@
         target:
           entity_id:
           - switch.adaptive_lighting_sleep_mode_kinderzimmer
-          - switch.adaptive_lighting_sleep_mode_schlafzimmer
+          - switch.adaptive_lighting_sleep_mode_arbeitszimmer
     - alias: 22:00 Uhr - Kompletter Nachtmodus
       conditions:
       - condition: trigger
@@ -453,54 +428,6 @@
         action: input_boolean.turn_off
         data: {}
   mode: single
-- id: adaptive_lighting_sunset_color_transition
-  alias: Adaptive Lighting » Gradual Warm Color at Sunset
-  description: Gradually warm color temperature over 90 minutes starting at sunset
-  triggers:
-  - trigger: sun
-    event: sunset
-    offset: "00:00:00"
-    id: sunset
-  # DEAKTIVIERT: AL's eingebauter Sunset-Übergang reicht aus
-  conditions:
-  - condition: template
-    value_template: "{{ false }}"
-  actions:
-  - alias: Gradually reduce color temp from 4000K to 2200K over 90 minutes (aborts if scene activates)
-    repeat:
-      while:
-      - alias: Keine Szene aktiv (Film, Party, etc.)
-        condition: state
-        entity_id: binary_sensor.any_scene_active
-        state: 'off'
-      - alias: Max 18 Iterationen (90 Minuten)
-        condition: template
-        value_template: "{{ repeat.index <= 18 }}"
-      sequence:
-      - alias: "Step {{ repeat.index }}/18: Set color temp to {{ 4000 - (repeat.index * 100) }}K"
-        action: adaptive_lighting.change_switch_settings
-        target:
-          entity_id:
-          - switch.adaptive_lighting_arbeitszimmer
-          - switch.adaptive_lighting_ankleide
-          - switch.adaptive_lighting_badezimmer
-          - switch.adaptive_lighting_balkon
-          - switch.adaptive_lighting_flur
-          - switch.adaptive_lighting_kinderzimmer
-          - switch.adaptive_lighting_kueche
-          - switch.adaptive_lighting_schlafzimmer
-          - switch.adaptive_lighting_waschzimmer
-          - switch.adaptive_lighting_wohnzimmer
-        data:
-          # Gradually reduce max_color_temp: 3900K → 3800K → ... → 2200K
-          max_color_temp: >-
-            {{ 4000 - (repeat.index * 100) }}
-          # Keep brightness high during color transition
-          min_brightness: 80
-          max_brightness: 100
-      - alias: Wait 5 minutes before next step
-        delay: "00:05:00"
-  mode: restart
 - id: adaptive_lighting_dynamic_sunset
   alias: Adaptive Lighting » Fade Over 30 Minutes When Schlafenszeit Starts
   description: When schlafenszeit activates, fade lights over 30 minutes
@@ -554,11 +481,11 @@
   conditions: []
   actions:
   # Split into three calls to preserve room-specific min_brightness values
-  - alias: "Reset Schlafzimmer, Kinderzimmer, Ankleide (min_brightness 10)"
+  - alias: "Reset Arbeitszimmer (Schlafraum), Kinderzimmer, Ankleide (min_brightness 10)"
     action: adaptive_lighting.change_switch_settings
     target:
       entity_id:
-      - switch.adaptive_lighting_schlafzimmer
+      - switch.adaptive_lighting_arbeitszimmer
       - switch.adaptive_lighting_kinderzimmer
       - switch.adaptive_lighting_ankleide
     data:
@@ -580,13 +507,13 @@
       min_brightness: 20
       max_brightness: 100
       max_color_temp: 4000
-  - alias: "Reset Badezimmer, Waschzimmer, Arbeitszimmer, Balkon (min_brightness 30)"
+  - alias: "Reset Badezimmer, Waschzimmer, Schlafzimmer (Buero), Balkon (min_brightness 30)"
     action: adaptive_lighting.change_switch_settings
     target:
       entity_id:
       - switch.adaptive_lighting_badezimmer
       - switch.adaptive_lighting_waschzimmer
-      - switch.adaptive_lighting_arbeitszimmer
+      - switch.adaptive_lighting_schlafzimmer
       - switch.adaptive_lighting_balkon
     data:
       min_sunset_time: "20:00:00"

@@ -27,27 +27,27 @@
 - name: "Wohnzimmer"
   lights:
     # Wohnzimmer Wand (6 lights)
-    - light.wohnzimmer_wand_1
-    - light.wohnzimmer_wand_2
-    - light.wohnzimmer_wand_3
-    - light.wohnzimmer_wand_4
-    - light.wohnzimmer_wand_5
-    - light.wohnzimmer_wand_6
+    - light.ikea_light_18_wand_1
+    - light.ikea_light_19_wand_2
+    - light.ikea_light_20_wand_3
+    - light.ikea_light_21_wand_4
+    - light.ikea_light_22_wand_5
+    - light.ikea_light_23_wand_6
     # Wohnzimmer Esstisch (3 lights)
-    - light.wohnzimmer_esstisch_1
-    - light.wohnzimmer_esstisch_2
-    - light.wohnzimmer_esstisch_3
+    - light.philips_light_18_1
+    - light.philips_light_19_2
+    - light.philips_light_20_3
     # Wohnzimmer Spielematte (4 lights)
-    - light.wohnzimmer_spielematte_1
-    - light.wohnzimmer_spielematte_2
-    - light.wohnzimmer_spielematte_3
-    - light.wohnzimmer_spielematte_4
+    - light.philips_light_24
+    - light.philips_light_25_spielematte_2
+    - light.philips_light_26_spielematte_3
+    - light.philips_light_27_spielematte_4
     # Wohnzimmer Schrank (3 lights)
-    - light.wohnzimmer_schrank_1
-    - light.wohnzimmer_schrank_2
-    - light.wohnzimmer_schrank_3
+    - light.philips_light_21_schrank_1
+    - light.philips_light_22_schrank_2
+    - light.philips_light_23_schrank_3
     # Individual light
-    - light.wohnzimmer_spieletisch
+    - light.philips_light_28_spieletisch
   interval: 300  # 5 min - smooth sunrise/sunset transitions without excessive Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 2  # Smooth fade-in on turn_on (intercepted by AL)
@@ -82,14 +82,14 @@
 - name: "Küche"
   lights:
     # Küche Decke (2 lights)
-    - light.kuche_decke_1
-    - light.kuche_decke_2
+    - light.ikea_light_14_decke_1
+    - light.ikea_light_15_decke_2
     # Küche Insel (2 lights)
-    - light.kuche_insel_oben
-    - light.kuche_insel_unten
+    - light.philips_light_11_oben
+    - light.philips_light_12_unten
     # Küche Schrank (2 lights)
-    - light.kuche_schrank_1
-    - light.kuche_schrank_2
+    - light.philips_light_13_schrank_1
+    - light.philips_light_14_schrank_2
   interval: 300  # 5 min - smooth sunrise/sunset transitions without excessive Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 2  # Smooth fade-in on turn_on (intercepted by AL)
@@ -98,7 +98,7 @@
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
   max_color_temp: 4000 # IKEA maximum cool white
   prefer_rgb_color: false
-  sleep_brightness: 10 # Consistent across all rooms
+  sleep_brightness: 20 # Match evening min_brightness
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 10  # Short transitions prevent IKEA lockups
   transition_until_sleep: true
@@ -126,17 +126,15 @@
 # =============================================================================
 
 - name: "Schlafzimmer"
+  # Nach Umbau: Alex-Buero. Decke raumfest + Stehlampe zugewandert. min 30 (Arbeitslicht).
   lights:
-    # Schlafzimmer Decke (2 lights)
-    - light.schlafzimmer_decke_1
-    - light.schlafzimmer_decke_2
-    # Individual lights
-    - light.schlafzimmer_bett
-    - light.schlafzimmer_tv
+    - light.ikea_light_16_1
+    - light.ikea_light_17_2
+    - light.ikea_light_04
   interval: 300  # 5 min - smooth sunrise/sunset transitions without excessive Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 2  # Smooth fade-in on turn_on (intercepted by AL)
-  min_brightness: 10
+  min_brightness: 30
   max_brightness: 100
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
   max_color_temp: 4000 # IKEA maximum cool white
@@ -166,8 +164,8 @@
 
 - name: "Kinderzimmer"
   lights:
-    - light.kinderzimmer_decke            # Einzellicht (Hauptlicht)
-    - light.kinderzimmer_bucher           # Einzellicht (Leselicht)
+    - light.ikea_light_13            # Einzellicht (Hauptlicht)
+    - light.philips_light_10_bucher           # Einzellicht (Leselicht)
   interval: 300  # 5 min - smooth sunrise/sunset transitions without excessive Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 2  # Smooth fade-in on turn_on (intercepted by AL)
@@ -206,20 +204,20 @@
 - name: "Badezimmer"
   lights:
     # Badezimmer Decke (2 lights)
-    - light.badezimmer_decke_1
-    - light.badezimmer_decke_2
+    - light.philips_light_03
+    - light.philips_light_04_2
     # Individual lights
-    - light.badezimmer_schrank
-    - light.badezimmer_fenster
+    - light.philips_light_06_schrank
+    - light.philips_light_05_fenster
   interval: 300  # 5 min - smooth sunrise/sunset transitions without excessive Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 2  # Smooth fade-in on turn_on (intercepted by AL)
-  min_brightness: 30
+  min_brightness: 20
   max_brightness: 100
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
   max_color_temp: 4000 # IKEA maximum cool white
   prefer_rgb_color: false
-  sleep_brightness: 10 # Consistent across all rooms
+  sleep_brightness: 20 # Match evening min_brightness
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 10  # Short transitions prevent IKEA lockups
   transition_until_sleep: true
@@ -244,7 +242,7 @@
 
 - name: "Waschzimmer"
   lights:
-    - light.waschzimmer_decke
+    - light.philips_light_17
   interval: 300  # 5 min - smooth sunrise/sunset transitions without excessive Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 2  # Smooth fade-in on turn_on (intercepted by AL)
@@ -281,18 +279,17 @@
 # =============================================================================
 
 - name: "Arbeitszimmer"
+  # Nach Umbau: Schlafplatz + Rafael. Decke/PC raumfest + Bett/TV zugewandert. min 10 (Schlaf).
   lights:
-    # Individual light
-    - light.arbeitszimmer_decke
-    # Arbeitszimmer PC (2 lights)
-    - light.arbeitszimmer_pc_1
-    - light.arbeitszimmer_pc_2
-    # Individual light
-    - light.arbeitszimmer_stehlampe
+    - light.ikea_light_03
+    - light.philips_light_01_pc_1
+    - light.philips_light_02_pc_2
+    - light.philips_light_15_bett
+    - light.philips_light_16_tv
   interval: 300  # 5 min - smooth sunrise/sunset transitions without excessive Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 2  # Smooth fade-in on turn_on (intercepted by AL)
-  min_brightness: 30
+  min_brightness: 10
   max_brightness: 100
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
   max_color_temp: 4000 # IKEA maximum cool white
@@ -323,8 +320,8 @@
 - name: "Ankleide"
   lights:
     # Ankleide Decke (2 lights)
-    - light.ankleide_decke_1
-    - light.ankleide_decke_2
+    - light.ikea_light_01
+    - light.ikea_light_02
   interval: 300  # 5 min - smooth sunrise/sunset transitions without excessive Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 2  # Smooth fade-in on turn_on (intercepted by AL)
@@ -363,15 +360,15 @@
 - name: "Flur"
   lights:
     # Flur Decke (6 lights)
-    - light.flur_decke_1
-    - light.flur_decke_2
-    - light.flur_decke_3
-    - light.flur_decke_4
-    - light.flur_decke_5
-    - light.flur_decke_6
+    - light.ikea_light_07_decke_1
+    - light.ikea_light_08_decke_2
+    - light.ikea_light_09_decke_3
+    - light.ikea_light_10_decke_4
+    - light.ikea_light_11_decke_5
+    - light.ikea_light_12_decke_6
     # Flur Schrank (2 lights)
-    - light.flur_schrank_1
-    - light.flur_schrank_2
+    - light.philips_light_08_schrank_1
+    - light.philips_light_09_2
     # Stahlträger
     - light.stahltraeger
   interval: 300  # 5 min - smooth sunrise/sunset transitions without excessive Zigbee traffic
@@ -412,10 +409,10 @@
 - name: "Balkon"
   lights:
     # Balkon Wand (2 lights)
-    - light.balkon_wand_1
-    - light.balkon_wand_2
+    - light.ikea_light_05_wand_1
+    - light.ikea_light_06_wand_2
     # Individual light
-    - light.balkon_blumen
+    - light.philips_light_07_blumen
   interval: 300  # 5 min - smooth sunrise/sunset transitions without excessive Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 2  # Smooth fade-in on turn_on (intercepted by AL)
@@ -424,7 +421,7 @@
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
   max_color_temp: 4000 # IKEA maximum cool white
   prefer_rgb_color: false
-  sleep_brightness: 10 # Consistent across all rooms
+  sleep_brightness: 30 # Match evening min_brightness
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 10 # Short transitions prevent IKEA lockups
   transition_until_sleep: false # No sleep transition for outdoor

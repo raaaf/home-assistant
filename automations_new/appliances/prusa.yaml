@@ -1,0 +1,118 @@
+# Appliances - Prusa MK4S
+# Druckueberwachung und Steckdosen-Steuerung fuer den Prusa MK4S (Arbeitszimmer)
+#
+# Entitaeten:
+#   sensor.prusa_mk4                       - Druckerstatus (enum)
+#   sensor.prusa_mk4_progress              - Fortschritt %
+#   sensor.prusa_mk4_filename              - aktueller Dateiname
+#   sensor.prusa_mk4_print_finish          - geschaetztes Ende (timestamp)
+#   sensor.prusa_mk4_nozzle_temperature    - Duesentemperatur
+#   camera.prusa_mk4_preview               - Schichtvorschau
+#   switch.arbeitszimmer_prusa_mk4_pc_rafael - Steckdose
+
+# ============================================================================
+# Druck fehlgeschlagen / Eingriff noetig
+# ============================================================================
+
+- id: 'prusa_druck_fehlgeschlagen'
+  alias: "Prusa » Druck fehlgeschlagen"
+  description: >-
+    Push wenn der MK4S in error, stopped oder attention wechselt, mit Vorschaubild.
+  triggers:
+  - trigger: state
+    entity_id: sensor.prusa_mk4
+    to:
+    - error
+    - stopped
+    - attention
+    for:
+      seconds: 30
+  conditions: []
+  actions:
+  - action: notify.rafael
+    data:
+      title: "Prusa MK4S — Druck gestoppt"
+      message: >-
+        Status: {{ states('sensor.prusa_mk4') }}. Datei:
+        {{ states('sensor.prusa_mk4_filename') }} bei
+        {{ states('sensor.prusa_mk4_progress') }}%.
+      data:
+        entity_id: camera.prusa_mk4_preview
+  - action: persistent_notification.create
+    data:
+      title: "Prusa MK4S — Druck gestoppt"
+      message: >-
+        Status {{ states('sensor.prusa_mk4') }} bei
+        {{ states('sensor.prusa_mk4_progress') }}% ({{ states('sensor.prusa_mk4_filename') }}).
+      notification_id: prusa_druck_fehlgeschlagen
+  mode: single
+  max_exceeded: silent
+
+# ============================================================================
+# Langlaeufer-Warnung (Druck deutlich ueber geschaetztem Ende)
+# ============================================================================
+
+- id: 'prusa_langlaeufer'
+  alias: "Prusa » Langlaeufer-Warnung"
+  description: >-
+    Warnt wenn ein Druck mehr als 30 Min ueber dem geschaetzten Ende laeuft
+    (Heuristik ueber die Restzeit-Schaetzung, moeglicher Klog/Spaghetti).
+  triggers:
+  - trigger: template
+    value_template: >-
+      {{ is_state('sensor.prusa_mk4', 'printing')
+         and states('sensor.prusa_mk4_print_finish') not in ['unknown', 'unavailable']
+         and now().timestamp() > as_timestamp(states('sensor.prusa_mk4_print_finish')) + 1800 }}
+  conditions: []
+  actions:
+  - action: notify.rafael
+    data:
+      title: "Prusa MK4S — laeuft ueberfaellig"
+      message: >-
+        Druck laeuft ueber das geschaetzte Ende hinaus ({{ states('sensor.prusa_mk4_progress') }}%,
+        {{ states('sensor.prusa_mk4_filename') }}). Eventuell stecken geblieben.
+      data:
+        entity_id: camera.prusa_mk4_preview
+  mode: single
+  max_exceeded: silent
+
+# ============================================================================
+# Steckdose aus wenn Duese kuehl (Energiesparen nach Druckende)
+# ============================================================================
+
+- id: 'prusa_steckdose_aus_kuehl'
+  alias: "Prusa » Steckdose aus wenn kuehl"
+  description: >-
+    Schaltet die Drucker-Steckdose ab sobald nicht gedruckt wird und die Duese
+    unter 40 Grad abgekuehlt ist.
+  triggers:
+  - trigger: numeric_state
+    entity_id: sensor.prusa_mk4_nozzle_temperature
+    below: 40
+    for:
+      minutes: 5
+  conditions:
+  - alias: "Drucker druckt nicht"
+    condition: state
+    entity_id: sensor.prusa_mk4
+    state:
+    - idle
+    - finished
+    - stopped
+    - error
+    - ready
+  - alias: "Steckdose ist an"
+    condition: state
+    entity_id: switch.arbeitszimmer_prusa_mk4_pc_rafael
+    state: 'on'
+  actions:
+  - action: switch.turn_off
+    target:
+      entity_id: switch.arbeitszimmer_prusa_mk4_pc_rafael
+  - action: logbook.log
+    data:
+      name: Prusa
+      message: "Steckdose ausgeschaltet — Duese unter 40 Grad, kein Druck aktiv"
+      entity_id: switch.arbeitszimmer_prusa_mk4_pc_rafael
+  mode: single
+  max_exceeded: silent

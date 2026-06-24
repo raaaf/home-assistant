@@ -14,7 +14,7 @@
     to: 'on'
     id: work-alex-on
   - trigger: state
-    entity_id: binary_sensor.macbook_pro_rafael_active
+    entity_id: binary_sensor.macbook_pro_rafael_active_2
     to: 'on'
     id: work-rafael-on
   - trigger: state
@@ -22,7 +22,7 @@
     to: 'off'
     id: work-alex-off
   - trigger: state
-    entity_id: binary_sensor.macbook_pro_rafael_active
+    entity_id: binary_sensor.macbook_pro_rafael_active_2
     to: 'off'
     id: work-rafael-off
   - trigger: state
@@ -46,22 +46,19 @@
     below: 40
     id: getting-dark
   - trigger: state
-    entity_id: cover.arbeitszimmer_rollo
+    entity_id: cover.aqara_cover_01
     to: 'closed'
     id: getting-dark
 
   conditions: []
   actions:
   - choose:
-    # ==================== ALEX ARBEIT EINSCHALTEN ====================
-    - alias: Alex Arbeit einschalten (Decke + Stehlampe)
+    # ==================== ALEX ARBEIT EINSCHALTEN (Buero = schlafzimmer-Raum) ====================
+    # Nach Umbau sitzt Alex im schlafzimmer-Raum. Lichter: Stehlampe (mitgezogen) + Buero-Decke.
+    - alias: Alex Arbeit einschalten (Stehlampe + Buero-Decke)
       conditions:
       - condition: trigger
         id: work-alex-on
-      - alias: Gaming ist nicht aktiv
-        condition: state
-        entity_id: input_boolean.gaming
-        state: 'off'
       - alias: Alexandra arbeitet am Studio Display
         condition: or
         conditions:
@@ -87,26 +84,31 @@
       - alias: "Stehlampe einschalten (nur wenn aus)"
         if:
         - condition: state
-          entity_id: light.arbeitszimmer_stehlampe
+          entity_id: light.ikea_light_04
           state: 'off'
         then:
         - action: light.turn_on
           target:
-            entity_id: light.arbeitszimmer_stehlampe
+            entity_id: light.ikea_light_04
           data:
             transition: 2
-      - alias: "Decke nur bei Rollo zu oder dunkel einschalten (nur wenn aus)"
+      - alias: "Buero-Decke nur bei Rollo zu oder dunkel einschalten (nur wenn aus)"
         if:
         - condition: and
           conditions:
-          - condition: state
-            entity_id: light.arbeitszimmer_decke
-            state: 'off'
+          - condition: or
+            conditions:
+            - condition: state
+              entity_id: light.ikea_light_16_1
+              state: 'off'
+            - condition: state
+              entity_id: light.ikea_light_17_2
+              state: 'off'
           - condition: or
             conditions:
             - alias: Rollo ist geschlossen
               condition: state
-              entity_id: cover.arbeitszimmer_rollo
+              entity_id: cover.aqara_cover_03
               state: 'closed'
             - alias: Dunkel draußen
               condition: numeric_state
@@ -115,7 +117,9 @@
         then:
         - action: light.turn_on
           target:
-            entity_id: light.arbeitszimmer_decke
+            entity_id:
+            - light.ikea_light_16_1
+            - light.ikea_light_17_2
           data:
             transition: 2
 
@@ -132,10 +136,10 @@
         condition: or
         conditions:
         - condition: numeric_state
-          entity_id: sensor.macbook_pro_rafael_displays
+          entity_id: sensor.macbook_pro_rafael_displays_2
           above: 1.5
         - condition: state
-          entity_id: sensor.macbook_pro_rafael_primary_display_name
+          entity_id: sensor.macbook_pro_rafael_primary_display_name_2
           state: "XG27JCG"
       sequence:
       - alias: "Arbeit aktivieren (falls noch nicht aktiv)"
@@ -154,13 +158,13 @@
           - alias: Mindestens ein Licht ist aus
             condition: template
             value_template: >
-              {{ is_state('light.arbeitszimmer_pc_1', 'off') or
-                 is_state('light.arbeitszimmer_pc_2', 'off') }}
+              {{ is_state('light.philips_light_01_pc_1', 'off') or
+                 is_state('light.philips_light_02_pc_2', 'off') }}
           - condition: or
             conditions:
             - alias: Rollo ist geschlossen
               condition: state
-              entity_id: cover.arbeitszimmer_rollo
+              entity_id: cover.aqara_cover_01
               state: 'closed'
             - alias: Dunkel draußen
               condition: numeric_state
@@ -170,8 +174,8 @@
         - action: light.turn_on
           target:
             entity_id:
-            - light.arbeitszimmer_pc_1
-            - light.arbeitszimmer_pc_2
+            - light.philips_light_01_pc_1
+            - light.philips_light_02_pc_2
           data:
             transition: 2
 
@@ -189,60 +193,64 @@
         entity_id: input_boolean.gaming
         state: 'off'
       sequence:
-      - alias: "Alex Decke einschalten wenn sie arbeitet (nur wenn aus)"
+      - alias: "Alex Buero-Decke einschalten wenn sie arbeitet (nur wenn aus)"
         if:
         - condition: state
           entity_id: binary_sensor.macbook_pro_2_active
           state: 'on'
-        - condition: state
-          entity_id: light.arbeitszimmer_decke
-          state: 'off'
+        - condition: or
+          conditions:
+          - condition: state
+            entity_id: light.ikea_light_16_1
+            state: 'off'
+          - condition: state
+            entity_id: light.ikea_light_17_2
+            state: 'off'
         then:
         - action: light.turn_on
           target:
-            entity_id: light.arbeitszimmer_decke
+            entity_id:
+            - light.ikea_light_16_1
+            - light.ikea_light_17_2
           data:
             transition: 2
       - alias: "Rafael PC-Lichter einschalten wenn er arbeitet (nur wenn aus)"
         if:
         - condition: state
-          entity_id: binary_sensor.macbook_pro_rafael_active
+          entity_id: binary_sensor.macbook_pro_rafael_active_2
           state: 'on'
         - condition: template
           value_template: >
-            {{ is_state('light.arbeitszimmer_pc_1', 'off') or
-               is_state('light.arbeitszimmer_pc_2', 'off') }}
+            {{ is_state('light.philips_light_01_pc_1', 'off') or
+               is_state('light.philips_light_02_pc_2', 'off') }}
         then:
         - action: light.turn_on
           target:
             entity_id:
-            - light.arbeitszimmer_pc_1
-            - light.arbeitszimmer_pc_2
+            - light.philips_light_01_pc_1
+            - light.philips_light_02_pc_2
           data:
             transition: 2
 
-    # ==================== ALEX ARBEIT AUSSCHALTEN ====================
-    - alias: Alex Arbeit ausschalten (Decke + Stehlampe aus)
+    # ==================== ALEX ARBEIT AUSSCHALTEN (Buero = schlafzimmer-Raum) ====================
+    - alias: Alex Arbeit ausschalten (Buero-Decke + Stehlampe aus)
       conditions:
       - condition: trigger
         id: work-alex-off
-      - alias: Gaming ist nicht aktiv (Lichter werden dort evtl. benoetigt)
-        condition: state
-        entity_id: input_boolean.gaming
-        state: 'off'
       sequence:
       - alias: "Alex Lichter ausschalten"
         action: light.turn_off
         target:
           entity_id:
-          - light.arbeitszimmer_decke
-          - light.arbeitszimmer_stehlampe
+          - light.ikea_light_16_1
+          - light.ikea_light_17_2
+          - light.ikea_light_04
         data:
           transition: 2
       - alias: "Arbeit-Szene deaktivieren wenn Rafael auch aus"
         if:
         - condition: state
-          entity_id: binary_sensor.macbook_pro_rafael_active
+          entity_id: binary_sensor.macbook_pro_rafael_active_2
           state: 'off'
         then:
         - action: input_boolean.turn_off
@@ -252,11 +260,11 @@
             seconds: 3
         - action: script.scene_enable_adaptive_lighting
           data:
-            room: "arbeitszimmer"
+            room: "schlafzimmer"
             exclude_scenes: ""
         - action: script.scene_enable_motion_automations
           data:
-            automations: "automation.arbeitszimmer_motion"
+            automations: "automation.ikea_motion_02_update"
             exclude_scenes: "party"
 
     # ==================== RAFAEL ARBEIT AUSSCHALTEN ====================
@@ -273,8 +281,8 @@
         action: light.turn_off
         target:
           entity_id:
-          - light.arbeitszimmer_pc_1
-          - light.arbeitszimmer_pc_2
+          - light.philips_light_01_pc_1
+          - light.philips_light_02_pc_2
         data:
           transition: 2
       - alias: "Arbeit-Szene deaktivieren wenn Alex auch aus"
@@ -294,7 +302,7 @@
             exclude_scenes: ""
         - action: script.scene_enable_motion_automations
           data:
-            automations: "automation.arbeitszimmer_motion"
+            automations: "automation.motion_schlafzimmer"
             exclude_scenes: "party"
     - alias: Gaming einschalten
       conditions:
@@ -319,24 +327,31 @@
         - action: light.turn_off
           target:
             entity_id:
-            - light.arbeitszimmer_decke
-            - light.arbeitszimmer_stehlampe
+            - light.ikea_light_03
+            - light.ikea_light_04
           data:
             transition: 2
       - alias: "PC 1 Gaming-Farbe (Blau)"
         action: light.turn_on
         target:
-          entity_id: light.arbeitszimmer_pc_1
+          entity_id: light.philips_light_01_pc_1
         data:
           hs_color: [230, 100]
           brightness_pct: 50
       - alias: "PC 2 Gaming-Farbe (Magenta)"
         action: light.turn_on
         target:
-          entity_id: light.arbeitszimmer_pc_2
+          entity_id: light.philips_light_02_pc_2
         data:
           hs_color: [290, 85]
           brightness_pct: 50
+      - alias: "Bett Gaming-Farbe (Violett, ambient)"
+        action: light.turn_on
+        target:
+          entity_id: light.philips_light_15_bett
+        data:
+          hs_color: [275, 95]
+          brightness_pct: 30
     - alias: Gaming ausschalten
       conditions:
       - condition: trigger
@@ -350,10 +365,18 @@
         action: light.turn_off
         target:
           entity_id:
-          - light.arbeitszimmer_pc_1
-          - light.arbeitszimmer_pc_2
+          - light.philips_light_01_pc_1
+          - light.philips_light_02_pc_2
+          - light.philips_light_15_bett
         data:
           transition: 2
+      - alias: "Bett wieder von Adaptive Lighting steuern lassen"
+        action: adaptive_lighting.set_manual_control
+        data:
+          entity_id: switch.adaptive_lighting_schlafzimmer
+          lights:
+          - light.philips_light_15_bett
+          manual_control: false
       - alias: "Pruefen ob jemand arbeitet"
         choose:
         - alias: "Jemand arbeitet - Arbeit aktivieren"
@@ -361,7 +384,7 @@
           - condition: or
             conditions:
             - condition: state
-              entity_id: binary_sensor.macbook_pro_rafael_active
+              entity_id: binary_sensor.macbook_pro_rafael_active_2
               state: 'on'
             - condition: state
               entity_id: binary_sensor.macbook_pro_2_active
@@ -375,12 +398,12 @@
             - condition: and
               conditions:
               - condition: state
-                entity_id: binary_sensor.macbook_pro_rafael_active
+                entity_id: binary_sensor.macbook_pro_rafael_active_2
                 state: 'on'
               - condition: or
                 conditions:
                 - condition: state
-                  entity_id: cover.arbeitszimmer_rollo
+                  entity_id: cover.aqara_cover_01
                   state: 'closed'
                 - condition: numeric_state
                   entity_id: sensor.sunlight_pct
@@ -389,38 +412,15 @@
             - action: light.turn_on
               target:
                 entity_id:
-                - light.arbeitszimmer_pc_1
-                - light.arbeitszimmer_pc_2
-              data:
-                transition: 2
-          - alias: "Alex Lichter einschalten wenn aktiv und dunkel"
-            if:
-            - condition: and
-              conditions:
-              - condition: state
-                entity_id: binary_sensor.macbook_pro_2_active
-                state: 'on'
-              - condition: or
-                conditions:
-                - condition: state
-                  entity_id: cover.arbeitszimmer_rollo
-                  state: 'closed'
-                - condition: numeric_state
-                  entity_id: sensor.sunlight_pct
-                  below: 40
-            then:
-            - action: light.turn_on
-              target:
-                entity_id:
-                - light.arbeitszimmer_stehlampe
-                - light.arbeitszimmer_decke
+                - light.philips_light_01_pc_1
+                - light.philips_light_02_pc_2
               data:
                 transition: 2
         default:
         - alias: "Niemand arbeitet - Decke aus + AL reaktivieren"
           action: light.turn_off
           target:
-            entity_id: light.arbeitszimmer_decke
+            entity_id: light.ikea_light_03
           data:
             transition: 2
         - delay:
@@ -438,7 +438,7 @@
     path: Blackshome/sensor-light.yaml
     input:
       motion_trigger:
-      - binary_sensor.arbeitszimmer_motion_occupancy
+      - binary_sensor.ikea_motion_02
       light_switch:
         entity_id: light.alle_arbeitszimmer_lichter
       include_night_lights: night_lights_enabled

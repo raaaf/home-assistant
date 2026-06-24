@@ -8,17 +8,17 @@
     path: Blackshome/sensor-light.yaml
     input:
       motion_trigger:
-      - binary_sensor.haustur_motion_occupancy
+      - binary_sensor.ikea_motion_06
       light_switch:
         entity_id:
-          - light.flur_decke_2
-          - light.flur_decke_6
+          - light.ikea_light_08_decke_2
+          - light.ikea_light_12_decke_6
       include_light_control:
       - use_brightness
       - use_transition
       light_transition_on: 2
       light_transition_off: 10
-      time_delay: 0
+      time_delay: 0.5
 
 - id: '1672931147408'
   alias: Motion » Flur
@@ -53,7 +53,7 @@
       ambient_light_sensor: sensor.balkon_motion_illuminance_safe
       night_lights_conditions:
       - time_enabled
-      ambient_light_options: ambient_light_option_disabled
+      ambient_light_options: ambient_light_option_enabled
       ambient_light_value: 800
       ambient_light_high_value: 1000
       # Bypass motion turn-off when manual control is active

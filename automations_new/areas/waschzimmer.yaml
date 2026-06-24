@@ -9,12 +9,12 @@
     path: Blackshome/sensor-light.yaml
     input:
       motion_trigger:
-      - binary_sensor.waschzimmer_motion_presence
+      - binary_sensor.tuya_motion_03_motion_presence
       light_switch:
         entity_id: light.alle_waschzimmer_lichter
       include_night_lights: night_lights_enabled
       night_lights:
-        entity_id: switch.waschzimmer_indirekt
+        entity_id: light.philips_light_17
       night_lights_conditions:
       - time_enabled
       night_lights_entity_state:
@@ -25,7 +25,9 @@
       light_transition_on: 2
       light_transition_off: 10
       include_night_light_control:
+      - use_brightness
       - use_transition
+      night_light_brightness: 1
       night_light_transition_on: 2
       night_light_transition_off: 10
       time_delay: 0
@@ -43,7 +45,7 @@
     path: Blackshome/sensor-light.yaml
     input:
       motion_trigger:
-      - binary_sensor.ankleide_bewegungsmelder_occupancy
+      - binary_sensor.ikea_motion_01_occupancy
       light_switch:
         entity_id: light.alle_ankleide_lichter
       include_light_control:
@@ -52,25 +54,22 @@
       light_transition_on: 2
       light_transition_off: 10
       time_delay: 0
-      include_ambient: ambient_disabled
-      ambient_light_sensor: sensor.balkon_motion_illuminance_safe
       include_night_lights: night_lights_enabled
       night_lights_conditions:
       - time_enabled
       night_lights_entity_state:
       - input_boolean.schlafenszeit
       night_lights:
-        entity_id: switch.ankleide_indirekt
+        entity_id: light.alle_ankleide_lichter
       include_night_light_control:
+      - use_brightness
       - use_transition
+      night_light_brightness: 30
       night_light_transition_on: 2
       night_light_transition_off: 10
       night_time_delay: 0
       night_lights_after_time: '22:00:00'
       night_lights_before_time: 06:00:00
-      ambient_light_options: ambient_light_option_disabled
-      ambient_light_high_value: 200
-      ambient_light_value: 150
       # Bypass motion turn-off when manual control is active
       include_bypass:
       - bypass_enabled_stop

@@ -22,7 +22,7 @@
       to: 'on'
       id: fullspeed
     - trigger: state
-      entity_id: binary_sensor.macbook_pro_rafael_active
+      entity_id: binary_sensor.macbook_pro_rafael_active_2
       to: 'off'
       id: fullspeed
     - trigger: state
@@ -40,7 +40,7 @@
 
     # --- Tageslimit wiederherstellen ---
     - trigger: state
-      entity_id: binary_sensor.macbook_pro_rafael_active
+      entity_id: binary_sensor.macbook_pro_rafael_active_2
       to: 'on'
       id: tageslimit
     - trigger: state
@@ -69,7 +69,7 @@
               entity_id: input_boolean.schlafenszeit
               state: 'on'
             - condition: state
-              entity_id: binary_sensor.macbook_pro_rafael_active
+              entity_id: binary_sensor.macbook_pro_rafael_active_2
               state: 'off'
             - condition: state
               entity_id: binary_sensor.macbook_pro_2_active
@@ -91,9 +91,11 @@
                 entity_id: number.192_168_178_118_speedlimit
               data:
                 value: "100"
+              continue_on_error: true
             - action: button.press
               target:
                 entity_id: button.192_168_178_118_resume
+              continue_on_error: true
             - action: persistent_notification.create
               data:
                 notification_id: sabnzbd_nightmode
@@ -117,6 +119,7 @@
                 entity_id: number.192_168_178_118_speedlimit
               data:
                 value: "33"
+              continue_on_error: true
             - action: persistent_notification.dismiss
               data:
                 notification_id: sabnzbd_nightmode

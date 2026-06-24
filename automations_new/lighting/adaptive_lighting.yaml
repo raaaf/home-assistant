@@ -10,16 +10,15 @@
   - trigger: state
     entity_id:
     - binary_sensor.flur_motion
-    - binary_sensor.balkon_motion_occupancy
-    - binary_sensor.kuche_motion_occupancy
-    - binary_sensor.haustur_motion_occupancy
-    - binary_sensor.badezimmer_motion_presence
-    - binary_sensor.waschzimmer_motion_presence
-    - binary_sensor.kinderzimmer_motion_presence
-    - binary_sensor.arbeitszimmer_motion_occupancy
-    - binary_sensor.ankleide_bewegungsmelder_occupancy
-    - binary_sensor.schlafzimmer_motion_occupancy
-    - binary_sensor.wohnzimmer_motion_occupancy
+    - binary_sensor.ikea_motion_03_occupancy
+    - binary_sensor.ikea_motion_07
+    - binary_sensor.ikea_motion_06
+    - binary_sensor.tuya_motion_01_presence
+    - binary_sensor.tuya_motion_03_motion_presence
+    - binary_sensor.tuya_motion_02_presence
+    - binary_sensor.ikea_motion_02
+    - binary_sensor.ikea_motion_01_occupancy
+    - binary_sensor.ikea_motion_09
     to: 'off'
     for:
       hours: 0

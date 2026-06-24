@@ -57,10 +57,10 @@
       - condition: trigger
         id: timer-abgelaufen
       - condition: state
-        entity_id: lock.smart_lock_pro
+        entity_id: lock.nuki_wohnungstur_lock
         state: unlocked
       - condition: template
-        value_template: "{{ has_value('lock.smart_lock_pro') }}"
+        value_template: "{{ has_value('lock.nuki_wohnungstur_lock') }}"
       - condition: state
         entity_id: input_boolean.alle_sind_weg
         state: 'on'
@@ -68,7 +68,7 @@
         value_template: "{{ has_value('input_boolean.alle_sind_weg') }}"
       sequence:
       - target:
-          entity_id: lock.smart_lock_pro
+          entity_id: lock.nuki_wohnungstur_lock
         action: lock.lock
       - action: logbook.log
         data:
@@ -105,11 +105,11 @@
           entity_id:
           - automation.motion_kuche_2  # Kitchen motion
           - automation.motion_flur_wohnung  # Hallway motion
-          - automation.arbeitszimmer_motion  # Office motion
+          - automation.ikea_motion_02_update  # Office motion
           - automation.motion_schlafzimmer  # Bedroom motion
           - automation.motion_badezimmer_gross  # Bathroom motion
           - automation.kinderzimmer_motion  # Kids room motion
-          - automation.motion_haustur  # Front door motion
+          - automation.motion_haustur_flur  # Front door motion
           - automation.motion_spieletisch  # Game table motion
       - alias: "Deaktiviere Esstisch-Motion wenn nicht gegessen wird"
         choose:
@@ -128,58 +128,57 @@
         data:
           entity_id: switch.adaptive_lighting_wohnzimmer
           lights:
-          - light.wohnzimmer_wand_1
-          - light.wohnzimmer_wand_2
-          - light.wohnzimmer_wand_3
-          - light.wohnzimmer_wand_4
-          - light.wohnzimmer_wand_5
-          - light.wohnzimmer_wand_6
-          - light.wohnzimmer_esstisch_2
-          - light.wohnzimmer_esstisch_3
+          - light.ikea_light_18_wand_1
+          - light.ikea_light_19_wand_2
+          - light.ikea_light_20_wand_3
+          - light.ikea_light_21_wand_4
+          - light.ikea_light_22_wand_5
+          - light.ikea_light_23_wand_6
+          - light.philips_light_19_2
+          - light.philips_light_20_3
           manual_control: true
       - alias: "Mark Küche white lights as manual"
         action: adaptive_lighting.set_manual_control
         data:
           entity_id: switch.adaptive_lighting_kueche
           lights:
-          - light.kuche_decke_1
-          - light.kuche_decke_2
+          - light.ikea_light_14_decke_1
+          - light.ikea_light_15_decke_2
           manual_control: true
       - alias: "Mark Flur white lights as manual"
         action: adaptive_lighting.set_manual_control
         data:
           entity_id: switch.adaptive_lighting_flur
           lights:
-          - light.flur_decke_1
-          - light.flur_decke_2
-          - light.flur_decke_3
-          - light.flur_decke_4
-          - light.flur_decke_5
-          - light.flur_decke_6
+          - light.ikea_light_07_decke_1
+          - light.ikea_light_08_decke_2
+          - light.ikea_light_09_decke_3
+          - light.ikea_light_10_decke_4
+          - light.ikea_light_11_decke_5
+          - light.ikea_light_12_decke_6
           manual_control: true
       - alias: "Mark Schlafzimmer white lights as manual"
         action: adaptive_lighting.set_manual_control
         data:
           entity_id: switch.adaptive_lighting_schlafzimmer
           lights:
-          - light.schlafzimmer_decke_1
-          - light.schlafzimmer_decke_2
-          - light.schlafzimmer_tv
+          - light.ikea_light_16_1
+          - light.ikea_light_17_2
           manual_control: true
       - alias: "Mark Ankleide white lights as manual"
         action: adaptive_lighting.set_manual_control
         data:
           entity_id: switch.adaptive_lighting_ankleide
           lights:
-          - light.ankleide_decke_1
-          - light.ankleide_decke_2
+          - light.ikea_light_01
+          - light.ikea_light_02
           manual_control: true
       - alias: "Mark Kinderzimmer white lights as manual"
         action: adaptive_lighting.set_manual_control
         data:
           entity_id: switch.adaptive_lighting_kinderzimmer
           lights:
-          - light.kinderzimmer_decke
+          - light.ikea_light_13
           manual_control: true
       # 3. Disable AL switches (prevents any adaptation)
       - alias: "Disable adaptive lighting"
@@ -224,40 +223,41 @@
               milliseconds: 500
           - action: light.turn_on
             target:
-              entity_id: light.wohnzimmer_wand_2
+              entity_id: light.ikea_light_19_wand_2
             data:
               brightness_pct: 100
               color_temp_kelvin: 4000
-      # 6. Start dynamic scene on RGB lights ONLY
-      - alias: "Start dynamic scene on RGB lights only"
-        action: scene_presets.start_dynamic_scene
+      # 6. Start Hue effect on RGB lights ONLY
+      - alias: "Start Hue effect: colorloop (Party global)"
+        action: light.turn_on
+        target:
+          entity_id:
+          - light.alle_wohnzimmer_rgb_lichter
+          - light.alle_kuche_rgb_lichter
+          - light.alle_flur_rgb_lichter
+          - light.alle_schlafzimmer_rgb_lichter
+          - light.alle_badezimmer_rgb_lichter
+          - light.alle_kinderzimmer_rgb_lichter
         data:
-          preset_id: 9565033d-f2ea-4821-bfba-7dd9b35be20a
-          targets:
-            entity_id:
-            - light.alle_wohnzimmer_rgb_lichter
-            - light.alle_kuche_rgb_lichter
-            - light.alle_flur_rgb_lichter
-            - light.alle_schlafzimmer_rgb_lichter
-            - light.alle_badezimmer_rgb_lichter
-            - light.alle_kinderzimmer_rgb_lichter
-          transition: 45
-          interval: 60
+          effect: colorloop
+          brightness_pct: 100
+          transition: 10
     - conditions:
       - condition: trigger
         id: 'off'
       sequence:
-      - alias: "Stop dynamic scene for all party lights"
-        action: scene_presets.stop_dynamic_scenes_for_targets
+      - alias: "Stop Hue effect on all party lights"
+        action: light.turn_on
+        target:
+          entity_id:
+          - light.alle_wohnzimmer_rgb_lichter
+          - light.alle_kuche_rgb_lichter
+          - light.alle_flur_rgb_lichter
+          - light.alle_schlafzimmer_rgb_lichter
+          - light.alle_badezimmer_rgb_lichter
+          - light.alle_kinderzimmer_rgb_lichter
         data:
-          targets:
-            entity_id:
-            - light.alle_wohnzimmer_rgb_lichter
-            - light.alle_kuche_rgb_lichter
-            - light.alle_flur_rgb_lichter
-            - light.alle_schlafzimmer_rgb_lichter
-            - light.alle_badezimmer_rgb_lichter
-            - light.alle_kinderzimmer_rgb_lichter
+          effect: stop_effect
       - alias: "Reset RGB lights to color_temp mode before turning off"
         action: light.turn_on
         data:
@@ -295,58 +295,57 @@
         data:
           entity_id: switch.adaptive_lighting_wohnzimmer
           lights:
-          - light.wohnzimmer_wand_1
-          - light.wohnzimmer_wand_2
-          - light.wohnzimmer_wand_3
-          - light.wohnzimmer_wand_4
-          - light.wohnzimmer_wand_5
-          - light.wohnzimmer_wand_6
-          - light.wohnzimmer_esstisch_2
-          - light.wohnzimmer_esstisch_3
+          - light.ikea_light_18_wand_1
+          - light.ikea_light_19_wand_2
+          - light.ikea_light_20_wand_3
+          - light.ikea_light_21_wand_4
+          - light.ikea_light_22_wand_5
+          - light.ikea_light_23_wand_6
+          - light.philips_light_19_2
+          - light.philips_light_20_3
           manual_control: false
       - alias: "Clear Küche manual control"
         action: adaptive_lighting.set_manual_control
         data:
           entity_id: switch.adaptive_lighting_kueche
           lights:
-          - light.kuche_decke_1
-          - light.kuche_decke_2
+          - light.ikea_light_14_decke_1
+          - light.ikea_light_15_decke_2
           manual_control: false
       - alias: "Clear Flur manual control"
         action: adaptive_lighting.set_manual_control
         data:
           entity_id: switch.adaptive_lighting_flur
           lights:
-          - light.flur_decke_1
-          - light.flur_decke_2
-          - light.flur_decke_3
-          - light.flur_decke_4
-          - light.flur_decke_5
-          - light.flur_decke_6
+          - light.ikea_light_07_decke_1
+          - light.ikea_light_08_decke_2
+          - light.ikea_light_09_decke_3
+          - light.ikea_light_10_decke_4
+          - light.ikea_light_11_decke_5
+          - light.ikea_light_12_decke_6
           manual_control: false
       - alias: "Clear Schlafzimmer manual control"
         action: adaptive_lighting.set_manual_control
         data:
           entity_id: switch.adaptive_lighting_schlafzimmer
           lights:
-          - light.schlafzimmer_decke_1
-          - light.schlafzimmer_decke_2
-          - light.schlafzimmer_tv
+          - light.ikea_light_16_1
+          - light.ikea_light_17_2
           manual_control: false
       - alias: "Clear Ankleide manual control"
         action: adaptive_lighting.set_manual_control
         data:
           entity_id: switch.adaptive_lighting_ankleide
           lights:
-          - light.ankleide_decke_1
-          - light.ankleide_decke_2
+          - light.ikea_light_01
+          - light.ikea_light_02
           manual_control: false
       - alias: "Clear Kinderzimmer manual control"
         action: adaptive_lighting.set_manual_control
         data:
           entity_id: switch.adaptive_lighting_kinderzimmer
           lights:
-          - light.kinderzimmer_decke
+          - light.ikea_light_13
           manual_control: false
       - alias: "Re-enable living room adaptive lighting if party_wohnzimmer is off"
         choose:
@@ -444,7 +443,7 @@
           sequence:
           - action: automation.turn_on
             target:
-              entity_id: automation.arbeitszimmer_motion  # Office motion
+              entity_id: automation.ikea_motion_02_update  # Office motion
       - alias: "Re-enable dining table motion if eating/movie mode is off"
         choose:
         - conditions:
@@ -512,7 +511,7 @@
       - alias: "Re-enable front door motion"
         action: automation.turn_on
         target:
-          entity_id: automation.motion_haustur  # Front door motion
+          entity_id: automation.motion_haustur_flur  # Front door motion
     default: []
   mode: restart
 # "Szene » Arbeit" removed - now handled by arbeitszimmer.yaml with blueprint bypass
@@ -527,30 +526,30 @@
   - trigger: state
     entity_id:
     # Wohnzimmer
-    - light.wohnzimmer_wand_1
-    - light.wohnzimmer_wand_2
-    - light.wohnzimmer_wand_3
-    - light.wohnzimmer_wand_4
-    - light.wohnzimmer_wand_5
-    - light.wohnzimmer_wand_6
+    - light.ikea_light_18_wand_1
+    - light.ikea_light_19_wand_2
+    - light.ikea_light_20_wand_3
+    - light.ikea_light_21_wand_4
+    - light.ikea_light_22_wand_5
+    - light.ikea_light_23_wand_6
     # Küche
-    - light.kuche_decke_1
-    - light.kuche_decke_2
+    - light.ikea_light_14_decke_1
+    - light.ikea_light_15_decke_2
     # Flur
-    - light.flur_decke_1
-    - light.flur_decke_2
-    - light.flur_decke_3
-    - light.flur_decke_4
-    - light.flur_decke_5
-    - light.flur_decke_6
+    - light.ikea_light_07_decke_1
+    - light.ikea_light_08_decke_2
+    - light.ikea_light_09_decke_3
+    - light.ikea_light_10_decke_4
+    - light.ikea_light_11_decke_5
+    - light.ikea_light_12_decke_6
     # Schlafzimmer
-    - light.schlafzimmer_decke_1
-    - light.schlafzimmer_decke_2
+    - light.ikea_light_16_1
+    - light.ikea_light_17_2
     # Ankleide
-    - light.ankleide_decke_1
-    - light.ankleide_decke_2
+    - light.ikea_light_01
+    - light.ikea_light_02
     # Kinderzimmer
-    - light.kinderzimmer_decke
+    - light.ikea_light_13
     to: 'on'
   conditions:
   - condition: or
@@ -564,7 +563,7 @@
   - alias: "Leselicht nicht ausschalten"
     condition: template
     value_template: >
-      {{ trigger.entity_id != 'light.wohnzimmer_wand_2' or
+      {{ trigger.entity_id != 'light.ikea_light_19_wand_2' or
          is_state('input_boolean.leselicht', 'off') }}
   actions:
   - action: light.turn_off
@@ -572,3 +571,47 @@
       entity_id: "{{ trigger.entity_id }}"
     data:
       transition: 1
+
+- id: party_auto_timer
+  alias: Scenen » Party Auto-Timer
+  description: Warnung nach 3h, Auto-Aus nach 3h15min
+  mode: single
+  triggers:
+  - trigger: state
+    entity_id: input_boolean.party
+    to: 'on'
+    for: "03:00:00"
+    id: warn
+  - trigger: state
+    entity_id: input_boolean.party
+    to: 'on'
+    for: "03:15:00"
+    id: stop
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: warn
+      sequence:
+      - action: notify.family
+        data:
+          title: "Party-Modus"
+          message: "Party läuft seit 3 Stunden. In 15 Minuten wird automatisch deaktiviert."
+          data:
+            tag: party_timer
+            push:
+              interruption-level: time-sensitive
+    - conditions:
+      - condition: trigger
+        id: stop
+      sequence:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.party
+      - action: notify.family
+        data:
+          title: "Party-Modus beendet"
+          message: "Automatisch deaktiviert nach 3 Stunden 15 Minuten."
+          data:
+            tag: party_timer

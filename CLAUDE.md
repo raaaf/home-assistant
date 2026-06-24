@@ -358,7 +358,8 @@ Defined in `automations_new/climate/heating_cooling.yaml`.
 The AC sits in the Arbeitszimmer (office) and is steered by **"Helper » AC manual"**:
 
 - **Hysteresis**: on at >= 25.5 C, off below 24.5 C (no flapping, no dead zone).
-- **Window decides the mode**, not temperature: windows closed -> `cool`, windows open -> `fan_only` (cooling with open windows is pointless). Outdoor temperature is irrelevant.
+- **Window gates cooling**, not mode: windows closed -> `cool`, windows open -> `off` (cooling with open windows is pointless). Outdoor temperature is irrelevant. There is **no steady-state `fan_only`** anymore (the Midea fan mode is useless for cooling).
+- **Cleanup run**: whenever cooling stops after **>= 10 min** of `cool`, the AC runs `fan_only` (silent) for **30 min** to dry the evaporator (mold protection), then `timer.ac_cleanup` turns it off via "Klima » AC Reinigungslauf beendet". Resuming `cool` cancels the timer. This is the only situation `fan_only` is used.
 - **Presence gate** (`zone_anwesend`): active mode (Arbeit/Gaming/Schlafenszeit), an active MacBook, or AppleTV playing. No one home -> off.
 - **Hybrid temperature source**: Arbeitszimmer sensor during Arbeit/Gaming (AC blows into the office), `sensor.temperatur_schlafzimmer` during Schlafenszeit/AppleTV.
 - **Setpoint** 24 C, fan `silent`, preset **`ieco`** whenever cooling (energy saving + quiet).

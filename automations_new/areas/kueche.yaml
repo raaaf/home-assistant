@@ -81,7 +81,7 @@
     path: Blackshome/sensor-light.yaml
     input:
       motion_trigger:
-      - binary_sensor.kuche_motion_occupancy
+      - binary_sensor.ikea_motion_07
       light_switch:
         entity_id: light.alle_kuche_lichter
       include_night_lights: night_lights_enabled
@@ -93,7 +93,7 @@
       time_delay: 0
       include_ambient: ambient_enabled
       ambient_light_sensor: sensor.balkon_motion_illuminance_safe
-      ambient_light_options: ambient_light_option_disabled
+      ambient_light_options: ambient_light_option_enabled
       ambient_light_value: 800
       include_time: time_disabled
       after_time: 06:00:00
@@ -170,9 +170,9 @@
           transition: 2
         target:
           entity_id:
-          - light.wohnzimmer_esstisch_1
-          - light.wohnzimmer_esstisch_2
-          - light.wohnzimmer_esstisch_3
+          - light.philips_light_18_1
+          - light.philips_light_19_2
+          - light.philips_light_20_3
     - conditions:
       - condition: trigger
         id: 'off'
@@ -182,9 +182,9 @@
           transition: 5
         target:
           entity_id:
-          - light.wohnzimmer_esstisch_1
-          - light.wohnzimmer_esstisch_2
-          - light.wohnzimmer_esstisch_3
+          - light.philips_light_18_1
+          - light.philips_light_19_2
+          - light.philips_light_20_3
       - delay:
           seconds: 6
       - alias: "Reset living room adaptive lighting settings to default"
@@ -235,8 +235,8 @@
       - action: light.turn_on
         target:
           entity_id:
-          - light.kuche_decke_1
-          - light.kuche_decke_2
+          - light.ikea_light_14_decke_1
+          - light.ikea_light_15_decke_2
         data:
           brightness_pct: 100
           transition: 2
@@ -252,8 +252,8 @@
           transition: 5
         target:
           entity_id:
-          - light.kuche_decke_1
-          - light.kuche_decke_2
+          - light.ikea_light_14_decke_1
+          - light.ikea_light_15_decke_2
       - action: switch.turn_off
         target:
           entity_id: switch.steckdose_kuechengeraete

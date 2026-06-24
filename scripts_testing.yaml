@@ -70,7 +70,7 @@ validate_scene_infrastructure:
         {{ has_value('automation.motion_kuche_2') and
            has_value('automation.motion_esstisch') and
            has_value('automation.motion_badezimmer_gross') and
-           has_value('automation.arbeitszimmer_motion') }}
+           has_value('automation.ikea_motion_02_update') }}
     then:
     - action: system_log.write
       data:
@@ -126,7 +126,7 @@ health_check_automations:
       - automation.motion_kuche_2
       - automation.motion_esstisch
       - automation.motion_badezimmer_gross
-      - automation.arbeitszimmer_motion
+      - automation.ikea_motion_02_update
       disabled_automations: >
         {{ critical_automations | select('is_state', 'off') | list }}
       unavailable_automations: >
