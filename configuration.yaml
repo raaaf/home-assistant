@@ -595,7 +595,7 @@ template:
         unique_id: strompreis_aktuell
         unit_of_measurement: "€/kWh"
         state_class: measurement
-        state: "{{ 0.2876 }}"
+        state: "{{ states('input_number.strompreis_kwh') | float(0.2876) }}"
         icon: mdi:currency-eur
 
       - name: "Stromkosten heute"
@@ -604,7 +604,8 @@ template:
         device_class: monetary
         state_class: total
         state: >-
-          {{ (states('sensor.taglicher_netzbezug') | float(0) * 0.2876) | round(2) }}
+          {% set preis = states('input_number.strompreis_kwh') | float(0.2876) %}
+          {{ (states('sensor.taglicher_netzbezug') | float(0) * preis) | round(2) }}
         icon: mdi:cash
         availability: "{{ is_number(states('sensor.taglicher_netzbezug')) }}"
 
@@ -613,7 +614,8 @@ template:
         unit_of_measurement: "€"
         device_class: monetary
         state: >-
-          {{ (states('sensor.dtu_ac_daily_energy') | float(0) / 1000 * 0.2876) | round(2) }}
+          {% set preis = states('input_number.strompreis_kwh') | float(0.2876) %}
+          {{ (states('sensor.dtu_ac_daily_energy') | float(0) / 1000 * preis) | round(2) }}
         icon: mdi:piggy-bank
         availability: "{{ is_number(states('sensor.dtu_ac_daily_energy')) }}"
 
@@ -626,8 +628,8 @@ template:
           {% set tag_im_monat = now().day %}
           {% set tage_gesamt = ((now().replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)).day %}
           {% set durchschnitt = verbrauch_monat / tag_im_monat if tag_im_monat > 0 else 0 %}
-          {% set arbeitspreis = durchschnitt * tage_gesamt * 0.2876 %}
-          {% set grundpreis = 16.54 %}
+          {% set arbeitspreis = durchschnitt * tage_gesamt * (states('input_number.strompreis_kwh') | float(0.2876)) %}
+          {% set grundpreis = states('input_number.grundpreis_strom_monat') | float(16.54) %}
           {{ (arbeitspreis + grundpreis) | round(2) }}
         icon: mdi:calendar-month
         availability: "{{ is_number(states('sensor.monatlicher_netzbezug')) }}"

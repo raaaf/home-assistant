@@ -499,12 +499,7 @@
                   target:
                     entity_id: media_player.kuche
                   data:
-                    volume_level: >
-                      {% if is_state('input_boolean.kochen', 'on') %}
-                        0.50
-                      {% else %}
-                        0.50
-                      {% endif %}
+                    volume_level: 0.50
 
         # =======================================================
         # PARTY WZ AUS — Restore WZ + Küche
@@ -625,12 +620,7 @@
                   target:
                     entity_id: media_player.kuche
                   data:
-                    volume_level: >
-                      {% if is_state('input_boolean.kochen', 'on') %}
-                        0.50
-                      {% else %}
-                        0.50
-                      {% endif %}
+                    volume_level: 0.50
             # Badezimmer
             - if:
                 - condition: template

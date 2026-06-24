@@ -345,17 +345,6 @@
         data:
           timestamp: '{{ (state_attr(''sun.sun'', ''next_dawn'')|as_datetime).timestamp()
             }}'
-      - alias: Klimaanlage auf Schlafmodus (wenn verfügbar)
-        if:
-        - alias: Klimaanlage ist verfügbar und unterstützt Sleep-Preset
-          condition: template
-          value_template: '{{ has_value(''climate.ac'') and ''sleep'' in (state_attr(''climate.ac'', ''preset_modes'') or []) }}'
-        then:
-        - action: climate.set_preset_mode
-          target:
-            entity_id: climate.ac
-          data:
-            preset_mode: sleep
     - alias: Frühe Schlafenszeit - Sleep Mode für wichtige Räume
       conditions:
       - condition: trigger

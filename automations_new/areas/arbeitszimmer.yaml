@@ -264,7 +264,7 @@
             exclude_scenes: ""
         - action: script.scene_enable_motion_automations
           data:
-            automations: "automation.ikea_motion_02_update"
+            automations: "automation.arbeitszimmer_motion"
             exclude_scenes: "party"
 
     # ==================== RAFAEL ARBEIT AUSSCHALTEN ====================

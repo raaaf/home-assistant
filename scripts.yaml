@@ -716,13 +716,14 @@ turn_off_with_retry:
 
 reset_sleep_modes:
   alias: "AL Sleep Modes zurücksetzen"
-  description: Deaktiviert Sleep-Mode für alle 9 Adaptive-Lighting-Räume
+  description: Deaktiviert Sleep-Mode für alle 10 Adaptive-Lighting-Räume
   icon: mdi:weather-sunny
   mode: single
   sequence:
   - action: switch.turn_off
     target:
       entity_id:
+      - switch.adaptive_lighting_sleep_mode_ankleide
       - switch.adaptive_lighting_sleep_mode_arbeitszimmer
       - switch.adaptive_lighting_sleep_mode_badezimmer
       - switch.adaptive_lighting_sleep_mode_balkon
