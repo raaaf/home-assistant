@@ -781,6 +781,27 @@ template:
           {{ states('sensor.stromzahler_saldiert') not in ['unknown', 'unavailable']
              and states('sensor.aqara_plug_02_power') not in ['unknown', 'unavailable'] }}
 
+      # Echter Tagesverbrauch per Energiebilanz (identisch zur Rechnung des
+      # HA Energy Dashboards): Bezug - Einspeisung + Solar + Batterie-Entladung
+      # - Batterie-Ladung. Enthaelt damit ALLE Lasten (Klima, Trockner, Heizung
+      # etc.), nicht nur die Powercalc-Teilmenge.
+      - name: "Verbrauch heute"
+        unique_id: verbrauch_heute
+        unit_of_measurement: "kWh"
+        device_class: energy
+        icon: mdi:home-lightning-bolt
+        state: >
+          {% set imp = states('sensor.taglicher_netzbezug')|float(0) %}
+          {% set exp = states('sensor.tagliche_einspeisung')|float(0) %}
+          {% set pv  = states('sensor.dtu_ac_daily_energy')|float(0) / 1000 %}
+          {% set bd  = states('sensor.tagliche_batterieentladung')|float(0) %}
+          {% set bc  = states('sensor.tagliche_batterieladung')|float(0) %}
+          {{ [(imp - exp + pv + bd - bc), 0]|max|round(2) }}
+        availability: >
+          {{ states('sensor.taglicher_netzbezug') not in ['unknown', 'unavailable']
+             and states('sensor.tagliche_einspeisung') not in ['unknown', 'unavailable']
+             and states('sensor.dtu_ac_daily_energy') not in ['unknown', 'unavailable'] }}
+
       - name: "PV Eigenverbrauch Quote"
         unique_id: pv_eigenverbrauch_quote
         unit_of_measurement: "%"
@@ -929,6 +950,23 @@ utility_meter:
     cycle: monthly
     offset:
       days: 0
+
+  # Batterie-Durchsatz (EcoFlow Stream) für die Hausverbrauchs-Bilanz
+  tagliche_batterieladung:
+    source: sensor.stream_ac_pro_3683_cumulative_energy_charge_wh
+    name: "Tägliche Batterieladung"
+    cycle: daily
+    offset:
+      hours: 0
+      minutes: 0
+
+  tagliche_batterieentladung:
+    source: sensor.stream_ac_pro_3683_cumulative_energy_discharge_wh
+    name: "Tägliche Batterieentladung"
+    cycle: daily
+    offset:
+      hours: 0
+      minutes: 0
 
   # Utility Meter für Energy müssen Integration Sensoren verwenden
   # Diese werden automatisch durch Home Assistant Energy Dashboard erstellt

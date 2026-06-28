@@ -1213,13 +1213,13 @@ views:
       title: Energie heute
       alignment: center
     - type: custom:mushroom-template-card
-      primary: '{{ states(''sensor.alle_verbrauche_energy_daily'')|float(0)|round(1) }} kWh'
+      primary: '{{ states(''sensor.verbrauch_heute'')|float(0)|round(1) }} kWh'
       secondary: Verbrauch heute
       icon: mdi:home-lightning-bolt
       icon_color: blue
       tap_action:
         action: more-info
-      entity: sensor.alle_verbrauche_energy_daily
+      entity: sensor.verbrauch_heute
       multiline_secondary: false
     - type: custom:mini-graph-card
       name: Lasten heute
@@ -1230,6 +1230,9 @@ views:
       show:
         legend: true
       entities:
+      - entity: sensor.ac_power
+        name: Klima
+        color: '#00acc1'
       - entity: sensor.alle_lichter_power_2
         name: Lichter
         color: '#fbc02d'

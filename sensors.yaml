@@ -115,8 +115,10 @@
   unit_time: h
   unique_id: einspeisung_energie
 
-# Klimaanlage: Riemann-Integral aus sensor.ac_power (die Midea-kWh-Zaehler
-# ac_total_energy/ac_current_energy melden unplausible Werte, daher selbst integriert)
+# Klimaanlage: Riemann-Integral aus sensor.ac_power. Die nativen Midea-Zaehler
+# (ac_total_energy/ac_current_energy) sind seit dem Umstellen des midea_ac
+# Energy/Power Data Format auf BCD ebenfalls plausibel und koennten alternativ
+# direkt genutzt werden; das Integral bleibt als verdrahtete Quelle bestehen.
 - platform: integration
   source: sensor.ac_power
   name: Klimaanlage Energie
