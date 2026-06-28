@@ -170,9 +170,21 @@
       praesenz_gate: '{{ jemand_zuhause if ac_laeuft else zone_anwesend }}'
       # Schlafenszeit kuehlt staerker: 22 Grad, sonst 24 Grad.
       ziel_setpoint: '{{ 22 if schlafenszeit_aktiv else 24 }}'
-      # Immer silent (leise). Der Kompressor dominiert den Energieverbrauch,
-      # ein schnellerer Luefter spart kaum, macht aber deutlich mehr Laerm.
-      ziel_fan: silent
+      # Abstand Ist zu Soll. Steuert die Luefterstufe (schnell kuehlen vs. leise halten).
+      delta: '{{ raum_temp - ziel_setpoint }}'
+      ist_fan: "{{ state_attr('climate.ac', 'fan_mode') }}"
+      # Luefter folgt dem Delta: bei grossem Abstand schneller kuehlen, nahe Sollwert
+      # leise. Hysterese ueber den aktuellen Luefter, damit es an der Schwelle nicht
+      # flattert: hoch ab Delta >= 3, zurueck auf silent erst unter Delta 1.5.
+      # Schlafenszeit bleibt immer silent (Laerm waere stoerender als langsames Kuehlen).
+      ziel_fan: >-
+        {% if schlafenszeit_aktiv %}
+          silent
+        {% elif ist_fan in ['low', 'medium', 'high', 'auto', 'max'] %}
+          {{ 'medium' if delta >= 1.5 else 'silent' }}
+        {% else %}
+          {{ 'medium' if delta >= 3 else 'silent' }}
+        {% endif %}
       # Warm genug fuer AC-Aktion. Hysterese folgt dem Sollwert: an ab Soll+1.5,
       # aus erst unter Soll+0.5. Tag (Soll 24): an 25.5 / aus 24.5.
       # Schlafenszeit (Soll 22): an 23.5 / aus 22.5 -> die kuehlere Nacht greift.
@@ -370,7 +382,7 @@
         {{ (not fan_an and temp > floor) or (fan_an and temp > floor - 1) }}
       # Tagsueber zusaetzlich Belegung noetig, in der Schlafenszeit nur Temperatur.
       soll_an: '{{ not niemand_zuhause and temp_warm and (schlafenszeit_aktiv or belegt) }}'
-      ziel_speed: "{% if temp > 28 %}75{% elif temp > 26 %}50{% elif temp > 24 %}40{% else %}25{% endif %}"
+      ziel_speed: "{% if temp > 28 %}100{% elif temp > 26 %}75{% elif temp > 24 %}50{% else %}25{% endif %}"
   - choose:
     # Einschalten + Speed setzen
     - conditions:
@@ -736,7 +748,7 @@
         temp_warm: >-
           {% set floor = 23 if is_state('input_boolean.schlafenszeit', 'on') else 25 %}
           {{ ((not fan_an and temp > floor) or (fan_an and temp > floor - 1)) and zone_anwesend }}
-        temp_speed: "{% if temp > 28 %}75{% elif temp > 26 %}50{% elif temp > 24 %}40{% else %}25{% endif %}"
+        temp_speed: "{% if temp > 28 %}100{% elif temp > 26 %}75{% elif temp > 24 %}50{% else %}25{% endif %}"
         # Zielspeed = Maximum aus CO2- und Temperatur-Bedarf. CO2 ist nie an Anwesenheit
         # gekoppelt (CO2 steigt nur, wenn jemand da ist).
         ziel_speed: "{{ [co2_speed, (temp_speed | int if temp_warm else 0)] | max }}"
