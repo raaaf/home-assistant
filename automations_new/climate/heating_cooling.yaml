@@ -775,12 +775,19 @@
             - condition: template
               value_template: '{{ soll_an }}'
           sequence:
+            # za4 ignoriert percentage, wenn sie zusammen mit preset_mode im
+            # selben turn_on kommt (Preset gewinnt, Speed faellt auf ~25%).
+            # Daher getrennt: erst Preset/an, dann Speed.
             - action: fan.turn_on
               target:
                 entity_id: fan.schlafzimmer
               data:
-                percentage: '{{ ziel_speed }}'
                 preset_mode: "Natural Wind"
+            - action: fan.set_percentage
+              target:
+                entity_id: fan.schlafzimmer
+              data:
+                percentage: '{{ ziel_speed }}'
 
       # Sonst: Ventilator aus (CO2 niedrig genug und nicht warm)
       default:
