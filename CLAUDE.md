@@ -194,10 +194,9 @@ binary_sensor.flur_motion       # Hallway motion sensor
 
 ### Light Group Naming
 
-Two-layer aggregation:
-1. **Z2M subgroups**: Device-level grouping in Zigbee2MQTT
-2. **Room groups**: `light.{room}_alle` or `alle_{room}_lichter`
-3. **Night lights**: `alle_{room}_nachtlichter`
+All grouping is HA-side (`lights.yaml`); Zigbee2MQTT groups are intentionally not used (caused issues):
+1. **Room groups**: `light.{room}_alle` or `alle_{room}_lichter`
+2. **Night lights**: `alle_{room}_nachtlichter`
 
 ### Automation Naming
 
@@ -661,7 +660,7 @@ The Adaptive Lighting configuration is optimized for Zigbee2MQTT with mixed Phil
 - `send_split_delay: 300` (300ms delay for IKEA to process ON before brightness)
 - `current_level_startup: 1` set on all IKEA bulbs via Z2M (starts at min brightness)
 - IKEA ignores `transition` on turn_on from off — only works when already on (dimming)
-- 23 IKEA lights (GU10, E27, JETSTROM panels), 29 Philips Hue lights (full transition support)
+- 23 IKEA lights (GU10, E27, JETSTROM panels), 28 Philips Hue lights (full transition support)
 
 **Color Temperature Range**:
 - Min: 2200K (warmest IKEA/Hue compatible)
