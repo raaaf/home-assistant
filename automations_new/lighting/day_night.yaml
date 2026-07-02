@@ -113,7 +113,7 @@
         target:
           entity_id:
           - automation.motion_flur_wohnung
-          - automation.ikea_motion_02_update
+          - automation.arbeitszimmer_motion
       - alias: Sanftes Aufwachlicht wenn jemand da ist
         if:
         - alias: Jemand ist zu Hause
@@ -124,7 +124,7 @@
           action: automation.turn_off
           target:
             entity_id:
-            - automation.ikea_motion_02_update
+            - automation.arbeitszimmer_motion
             - automation.kinderzimmer_motion
           data:
             stop_actions: true
@@ -209,7 +209,7 @@
           target:
             entity_id:
             - automation.kinderzimmer_motion
-            - automation.ikea_motion_02_update
+            - automation.arbeitszimmer_motion
         - alias: "Warte bis 08:00 Uhr"
           delay:
             seconds: >-

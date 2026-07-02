@@ -469,10 +469,10 @@ template:
           {{ is_state('automation.motion_kuche_2', 'off') or
              is_state('automation.motion_esstisch', 'off') or
              is_state('automation.motion_badezimmer_gross', 'off') or
-             is_state('automation.ikea_motion_02_update', 'off') }}
+             is_state('automation.arbeitszimmer_motion', 'off') }}
         availability: >
           {{ expand(['automation.motion_kuche_2', 'automation.motion_esstisch',
-                     'automation.motion_badezimmer_gross', 'automation.ikea_motion_02_update'])
+                     'automation.motion_badezimmer_gross', 'automation.arbeitszimmer_motion'])
              | selectattr('state', 'defined') | list | length == 4 }}
         icon: >
           {% if this.state == 'on' %}
@@ -486,14 +486,14 @@ template:
               is_state('automation.motion_kuche_2', 'off'),
               is_state('automation.motion_esstisch', 'off'),
               is_state('automation.motion_badezimmer_gross', 'off'),
-              is_state('automation.ikea_motion_02_update', 'off')
+              is_state('automation.arbeitszimmer_motion', 'off')
             ] | select('true') | list | length }}
           disabled_automations: >
             {{ [
               'Küche' if is_state('automation.motion_kuche_2', 'off') else none,
               'Esstisch' if is_state('automation.motion_esstisch', 'off') else none,
               'Badezimmer' if is_state('automation.motion_badezimmer_gross', 'off') else none,
-              'Arbeitszimmer' if is_state('automation.ikea_motion_02_update', 'off') else none
+              'Arbeitszimmer' if is_state('automation.arbeitszimmer_motion', 'off') else none
             ] | reject('none') | list | join(', ') }}
 
   # Fan speed calculation sensors

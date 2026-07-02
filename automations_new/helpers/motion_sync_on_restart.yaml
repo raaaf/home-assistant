@@ -132,7 +132,7 @@
       sequence:
       - action: automation.turn_off
         target:
-          entity_id: automation.ikea_motion_02_update  # Office motion
+          entity_id: automation.arbeitszimmer_motion  # Office motion
         data: {}
   - alias: "Disable bedroom motion if gaming mode is active"
     choose:
@@ -185,7 +185,7 @@
           entity_id:
           - automation.motion_kuche_2  # Kitchen motion
           - automation.motion_flur_wohnung  # Hallway motion
-          - automation.ikea_motion_02_update  # Office motion
+          - automation.arbeitszimmer_motion  # Office motion
           - automation.motion_schlafzimmer  # Bedroom motion
           - automation.motion_badezimmer_gross  # Bathroom motion
           - automation.motion_esstisch  # Dining table motion
