@@ -126,6 +126,10 @@
             - condition: trigger
               id: schlafenszeit-aus
           sequence:
+            - alias: "Nicht faden waehrend der Aufwachroutine (die steuert die Lautstaerke selbst)"
+              condition: state
+              entity_id: input_boolean.wakeup_active
+              state: 'off'
             - condition: template
               value_template: >
                 {{ not (is_state('input_boolean.kochen', 'on') or

@@ -187,6 +187,7 @@
   entities:
     - light.philips_light_15_bett
     - light.philips_light_16_tv
+    - light.ikea_light_03   # Schlafzimmer Decke
 
 - platform: group
   unique_id: alle_schlafzimmer_nachtlichter

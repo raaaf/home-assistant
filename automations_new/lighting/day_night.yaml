@@ -69,6 +69,10 @@
       - condition: trigger
         id: wakeup
       sequence:
+      - alias: "Wakeup-Flag setzen (verhindert konkurrierenden schlafenszeit-aus Volume-Fade)"
+        action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.wakeup_active
       - alias: Schlafenszeit beenden
         action: input_boolean.turn_off
         target:
@@ -141,6 +145,12 @@
             - media_player.schlafzimmer
           data:
             volume_level: 0.0
+        - alias: "AL für Wakeup-Räume aus (sonst faengt Adaptive Lighting den turn_on/Fade ab und haelt die Lampen dunkel)"
+          action: switch.turn_off
+          target:
+            entity_id:
+            - switch.adaptive_lighting_arbeitszimmer
+            - switch.adaptive_lighting_kinderzimmer
         - alias: "Aufwachlichter auf 1% setzen als Startpunkt für den Fade"
           action: light.turn_on
           target:
@@ -220,12 +230,18 @@
               {% else %}
                 0
               {% endif %}
-        - alias: "08:00 Uhr: Alle Lichter ausschalten"
+        - alias: "08:00 Uhr: Aufwachlichter ausschalten"
           action: light.turn_off
           target:
             entity_id:
-            - light.alle_schlafzimmer_lichter
+            - light.alle_schlafzimmer_aufwachlichter
             - light.alle_kinderzimmer_lichter
+        - alias: "AL für Wakeup-Räume wieder an (Lichter sind aus, AL adaptiert ab naechstem Einschalten normal)"
+          action: switch.turn_on
+          target:
+            entity_id:
+            - switch.adaptive_lighting_arbeitszimmer
+            - switch.adaptive_lighting_kinderzimmer
         - alias: "08:00 Uhr: Musik auf Taglautstärke setzen (nur spielende HomePods)"
           parallel:
             - if:
@@ -293,6 +309,10 @@
           continue_on_error: true
           target:
             entity_id: lock.nuki_wohnungstur_lock
+      - alias: "Wakeup-Flag zuruecksetzen (auch wenn niemand zuhause war)"
+        action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.wakeup_active
     - alias: Sonnenaufgang - Schlafenszeit beenden (Fallback)
       conditions:
       - condition: trigger

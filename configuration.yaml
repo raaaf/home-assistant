@@ -1008,6 +1008,10 @@ input_boolean:
     name: "Bedtime Reminder aktiv"
     icon: mdi:bed-clock
     initial: false
+  wakeup_active:
+    name: "Aufwachroutine aktiv"
+    icon: mdi:weather-sunset-up
+    initial: false
 
 input_datetime:
   tv_auto_off_time:
