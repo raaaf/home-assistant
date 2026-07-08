@@ -218,13 +218,6 @@
                 curve: linear
         - alias: "Warten bis Aufwachlicht abgeschlossen (10 Minuten)"
           delay: "00:10:00"
-        - alias: Motion-Automationen für Wake-Up Räume wieder aktivieren
-          action: automation.turn_on
-          target:
-            entity_id:
-            - automation.kinderzimmer_motion
-            - automation.motion_schlafzimmer
-            - automation.arbeitszimmer_motion
         - alias: "Warte bis 08:00 Uhr"
           delay:
             seconds: >-
@@ -247,6 +240,13 @@
             entity_id:
             - switch.adaptive_lighting_arbeitszimmer
             - switch.adaptive_lighting_kinderzimmer
+        - alias: Motion-Automationen für Wake-Up Räume wieder aktivieren
+          action: automation.turn_on
+          target:
+            entity_id:
+            - automation.kinderzimmer_motion
+            - automation.motion_schlafzimmer
+            - automation.arbeitszimmer_motion
         - alias: "08:00 Uhr: Musik auf Taglautstärke setzen (nur spielende HomePods)"
           parallel:
             - if:
