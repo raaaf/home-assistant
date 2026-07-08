@@ -125,10 +125,13 @@
           value_template: "{{ states('input_boolean.alle_sind_weg') == 'off' }}"
         then:
         - alias: Motion-Automationen für Wake-Up Räume deaktivieren
+          # Achtung, gekreuzte entity_ids nach Room-Swap:
+          # automation.motion_schlafzimmer = "Motion » Arbeitszimmer" = physisches Schlafzimmer (Bett/TV/Decke)
+          # automation.arbeitszimmer_motion = "Motion » Schlafzimmer" = Alex' Büro
           action: automation.turn_off
           target:
             entity_id:
-            - automation.arbeitszimmer_motion
+            - automation.motion_schlafzimmer
             - automation.kinderzimmer_motion
           data:
             stop_actions: true
@@ -219,7 +222,7 @@
           target:
             entity_id:
             - automation.kinderzimmer_motion
-            - automation.arbeitszimmer_motion
+            - automation.motion_schlafzimmer
         - alias: "Warte bis 08:00 Uhr"
           delay:
             seconds: >-
