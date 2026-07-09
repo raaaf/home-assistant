@@ -164,7 +164,7 @@
           data:
             brightness_pct: 1
             transition: 0
-        - alias: "Schlafzimmer und Kinderzimmer über 10 Minuten auf 100% hochfahren + HomePods mitsynchronisieren"
+        - alias: "Schlafzimmer und Kinderzimmer über 30 Minuten auf 100% hochfahren + HomePods mitsynchronisieren"
           parallel:
             - action: light.turn_on
               target:
@@ -173,51 +173,51 @@
                 - light.alle_kinderzimmer_lichter
               data:
                 brightness_pct: 100
-                transition: 600
+                transition: 1800
             - action: script.fade_volume
               continue_on_error: true
               data:
                 target_player: media_player.homepod_wohnzimmer
                 target_volume: 0.30
-                duration: 600
+                duration: 1800
                 curve: linear
             - action: script.fade_volume
               continue_on_error: true
               data:
                 target_player: media_player.arbeitszimmer
                 target_volume: 0.30
-                duration: 600
+                duration: 1800
                 curve: linear
             - action: script.fade_volume
               continue_on_error: true
               data:
                 target_player: media_player.kuche
                 target_volume: 0.50
-                duration: 600
+                duration: 1800
                 curve: linear
             - action: script.fade_volume
               continue_on_error: true
               data:
                 target_player: media_player.homepod_badezimmer
                 target_volume: 0.50
-                duration: 600
+                duration: 1800
                 curve: linear
             - action: script.fade_volume
               continue_on_error: true
               data:
                 target_player: media_player.homepod_kinderzimmer
                 target_volume: 0.50
-                duration: 600
+                duration: 1800
                 curve: linear
             - action: script.fade_volume
               continue_on_error: true
               data:
                 target_player: media_player.schlafzimmer
                 target_volume: 0.40
-                duration: 600
+                duration: 1800
                 curve: linear
-        - alias: "Warten bis Aufwachlicht abgeschlossen (10 Minuten)"
-          delay: "00:10:00"
+        - alias: "Warten bis Aufwachlicht abgeschlossen (30 Minuten)"
+          delay: "00:30:00"
         - alias: "Warte bis 08:00 Uhr"
           delay:
             seconds: >-
