@@ -78,8 +78,8 @@ PYEOF
 | `configuration.yaml` | Main entry point (899 lines) |
 | `automations_new/` | All automations (34 files, 6,740 lines) |
 | `custom_components/` | 24 custom integrations |
-| `blueprints/` | 195 automation blueprints |
-| `scripts.yaml` | Reusable scripts (14 scripts) |
+| `blueprints/` | 162 blueprints (5 automation + 157 switch_manager) |
+| `scripts.yaml` | Reusable scripts (12 scripts) |
 | `themes/` | 6 UI themes |
 | `secrets.yaml` | Sensitive data (never commit) |
 
@@ -343,7 +343,6 @@ script.scene_enable_adaptive_lighting   # Enable circadian for room
 script.scene_disable_adaptive_lighting  # Disable circadian
 script.scene_enable_motion_automations  # Re-enable motion triggers
 script.scene_disable_motion_automations # Disable motion triggers
-script.scene_check_conflicts            # Validate scene combinations
 ```
 
 ---
@@ -616,7 +615,7 @@ Uses `chime_tts` custom component for audio announcements with notification chim
 |------|-------|---------|
 | `configuration.yaml` | 899 | Main configuration |
 | `adaptive_lighting.yaml` | 386 | Circadian lighting (10 rooms) |
-| `scripts.yaml` | 559 | Reusable scripts |
+| `scripts.yaml` | 650 | Reusable scripts |
 | `sensors.yaml` | 360 | Template/platform sensors |
 | `lights.yaml` | 139 | Light groups |
 | `binary_sensors.yaml` | 78 | Binary sensors |
@@ -629,7 +628,7 @@ Uses `chime_tts` custom component for audio announcements with notification chim
 | Directory | Purpose |
 |-----------|---------|
 | `.storage/` | HA internal storage (do not edit) |
-| `blueprints/` | 195 automation blueprints |
+| `blueprints/` | 162 blueprints (5 automation + 157 switch_manager) |
 | `custom_components/` | 24 custom integrations |
 | `themes/` | 6 UI themes |
 | `www/` | Static web assets |
