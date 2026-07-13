@@ -1543,10 +1543,10 @@ views:
       chips:
       - type: template
         icon: mdi:printer-3d-nozzle-heat
-        content: '{{ states(''sensor.prusa_mk4_nozzle_temperature'')|round(0) }}/{{ states(''sensor.prusa_mk4_nozzle_target_temperature'')|round(0) }} °C'
+        content: '{{ states(''sensor.prusa_mk4_nozzle_temperature'')|round(0, default=''-'') }}/{{ states(''sensor.prusa_mk4_nozzle_target_temperature'')|round(0, default=''-'') }} °C'
       - type: template
         icon: mdi:heating-coil
-        content: '{{ states(''sensor.prusa_mk4_heatbed_temperature'')|round(0) }}/{{ states(''sensor.prusa_mk4_heatbed_target_temperature'')|round(0) }} °C'
+        content: '{{ states(''sensor.prusa_mk4_heatbed_temperature'')|round(0, default=''-'') }}/{{ states(''sensor.prusa_mk4_heatbed_target_temperature'')|round(0, default=''-'') }} °C'
       - type: template
         icon: mdi:speedometer
         content: '{{ states(''sensor.prusa_mk4_print_speed'') }}%'
