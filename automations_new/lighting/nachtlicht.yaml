@@ -1,10 +1,10 @@
 # Lighting - Nachtlicht
-# Automation for nightlight using aqara_hub_lightbulb
-# Turns on warm reddish light from 10pm until sunrise
+# Nachtlicht (Aqara Hub): rotes Licht von 22:00 Uhr bis Sonnenaufgang
+# Zusaetzlich: Automation fuer den manuellen Angleich im Nachtmodus
 
 - id: nachtlicht_an
   alias: Lighting » Nachtlicht ein (22:00 Uhr)
-  description: Schaltet Nachtlicht um 22:00 Uhr ein mit warmem rötlichem Licht
+  description: Schaltet Nachtlicht um 22:00 Uhr ein mit rotem Licht
   triggers:
     - trigger: time
       at: '22:00:00'
@@ -29,8 +29,8 @@
       target:
         entity_id: light.aqara_hub_lightbulb
       data:
-        brightness: 25
-        rgb_color: [255, 80, 40]  # Warm reddish color
+        brightness: 38
+        rgb_color: [255, 0, 0]  # Rot (Nachtmodus)
         transition: 2
   mode: restart
 
@@ -63,3 +63,80 @@
       data:
         transition: 2
   mode: restart
+
+- id: 'nachtmodus_manueller_angleich'
+  alias: Licht » Nachtmodus manueller Angleich
+  description: Wenn nachts ein CCT-only-Licht manuell eingeschaltet wird, werden
+    alle eingeschalteten Lichter im Raum auf 2200K und 15% angeglichen. Das explizite
+    Einschalten markiert die betroffenen Lichter bei AL als manual_control, wodurch
+    das automatische Motion-Aus im Raum bis zum AL-Autoreset pausiert. Nach dem
+    Autoreset passt der AL-Sleep-Modus Farblichter wieder auf Rot an, waehrend
+    die Lichter an bleiben.
+  triggers:
+    - trigger: state
+      entity_id:
+        - light.ikea_light_01
+        - light.ikea_light_02
+        - light.ikea_light_03
+        - light.ikea_light_07_decke_1
+        - light.ikea_light_08_decke_2
+        - light.ikea_light_09_decke_3
+        - light.ikea_light_10_decke_4
+        - light.ikea_light_11_decke_5
+        - light.ikea_light_12_decke_6
+        - light.ikea_light_13
+        - light.ikea_light_14_decke_1
+        - light.ikea_light_15_decke_2
+        - light.ikea_light_16_1
+        - light.ikea_light_17_2
+        - light.ikea_light_18_wand_1
+        - light.ikea_light_19_wand_2
+        - light.ikea_light_20_wand_3
+        - light.ikea_light_21_wand_4
+        - light.ikea_light_22_wand_5
+        - light.ikea_light_23_wand_6
+      from: 'off'
+      to: 'on'
+  conditions:
+    - condition: or
+      conditions:
+        - condition: state
+          entity_id: input_boolean.nachtlicht
+          state: 'on'
+        - condition: state
+          entity_id: input_boolean.schlafenszeit
+          state: 'on'
+    - alias: Nur manuelle Einschaltungen (nicht durch Automationen)
+      condition: template
+      value_template: >
+        {{ trigger.to_state.context.parent_id is none or
+           trigger.to_state.context.user_id is not none }}
+  actions:
+    - variables:
+        area: "{{ area_name(trigger.entity_id) }}"
+        excluded:
+          - light.hyperhdr
+          - light.aqara_hub_lightbulb
+          - light.smart_humidifier_2309261197601964110148e1e9db5e1c
+          - light.smart_humidifier_2309261197601964110148e1e9db5e1c_dnd
+          - light.mmgg_wi11_7a1c_indicator_light
+          - light.zhimi_za4_2dca_indicator_light
+          - light.zhimi_za4_fb1b_indicator_light
+        lights_on: >
+          {{ expand(area_entities(area))
+             | selectattr('domain', 'eq', 'light')
+             | selectattr('state', 'eq', 'on')
+             | rejectattr('attributes.entity_id', 'defined')
+             | rejectattr('entity_id', 'in', excluded)
+             | map(attribute='entity_id') | list }}
+    - condition: template
+      value_template: "{{ lights_on | count > 0 }}"
+    - action: light.turn_on
+      target:
+        entity_id: "{{ lights_on }}"
+      data:
+        color_temp_kelvin: 2200
+        brightness_pct: 15
+        transition: 2
+  mode: queued
+  max: 10

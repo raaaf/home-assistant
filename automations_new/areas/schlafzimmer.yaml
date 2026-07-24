@@ -20,6 +20,7 @@
       - entity_state_enabled
       night_lights_entity_state:
       - input_boolean.schlafenszeit
+      - input_boolean.nachtlicht
       include_light_control:
       - use_brightness
       - use_transition
@@ -32,10 +33,16 @@
       - if_lights_are_on_adjust_when_crossing_over
       - use_brightness
       - use_transition
+      night_light_brightness: 15
       night_light_transition_on: 2
       night_light_transition_off: 10
       night_lights_after_time: '19:00:00'
       night_lights_before_time: 05:30:00
+      include_night_light_colour_control: use_rgb_colour
+      night_light_rgb_colour:
+      - 255
+      - 0
+      - 0
       include_ambient: ambient_enabled
       ambient_light_sensor: sensor.balkon_motion_illuminance_safe
       ambient_light_value: 300

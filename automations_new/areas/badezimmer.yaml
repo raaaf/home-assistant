@@ -239,8 +239,9 @@
       ambient_light_value: 800
       ambient_light_high_value: 1000
       night_lights_conditions:
-      - time_enabled
+      - entity_state_enabled
       night_lights_entity_state:
+      - input_boolean.nachtlicht
       - input_boolean.schlafenszeit
       include_light_control:
       - use_brightness
@@ -250,9 +251,14 @@
       include_night_light_control:
       - use_brightness
       - use_transition
-      night_light_brightness: 30
+      night_light_brightness: 15
       night_light_transition_on: 3
       night_light_transition_off: 9
+      include_night_light_colour_control: use_rgb_colour
+      night_light_rgb_colour:
+      - 255
+      - 0
+      - 0
       boolean_scenes_scripts: input_boolean.musik_badezimmer
       time_delay: 0
       night_time_delay: 0

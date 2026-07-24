@@ -19,6 +19,27 @@
       light_transition_on: 2
       light_transition_off: 10
       time_delay: 0.5
+      include_night_lights: night_lights_enabled
+      night_lights:
+        entity_id:
+          - light.alle_flur_nachtlichter
+      night_lights_conditions:
+      - entity_state_enabled
+      night_lights_entity_state:
+      - input_boolean.nachtlicht
+      - input_boolean.schlafenszeit
+      include_night_light_control:
+      - use_brightness
+      - use_transition
+      night_light_brightness: 15
+      night_light_transition_on: 2
+      night_light_transition_off: 10
+      include_night_light_colour_control: use_rgb_colour
+      night_light_rgb_colour:
+      - 255
+      - 0
+      - 0
+      night_time_delay: 0.5
 
 - id: '1672931147408'
   alias: Motion » Flur
@@ -47,12 +68,21 @@
       - use_transition
       night_light_transition_on: 2
       night_light_transition_off: 10
-      night_time_delay: 0
-      time_delay: 0
+      night_time_delay: 0.5
+      time_delay: 0.5
       include_ambient: ambient_enabled
       ambient_light_sensor: sensor.balkon_motion_illuminance_safe
       night_lights_conditions:
-      - time_enabled
+      - entity_state_enabled
+      night_lights_entity_state:
+      - input_boolean.nachtlicht
+      - input_boolean.schlafenszeit
+      night_light_brightness: 15
+      include_night_light_colour_control: use_rgb_colour
+      night_light_rgb_colour:
+      - 255
+      - 0
+      - 0
       ambient_light_options: ambient_light_option_enabled
       ambient_light_value: 800
       ambient_light_high_value: 1000

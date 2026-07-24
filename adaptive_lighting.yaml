@@ -56,7 +56,13 @@
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
   max_color_temp: 4000 # IKEA maximum cool white
   prefer_rgb_color: false
-  sleep_brightness: 10 # Consistent across all rooms
+  # Sleep Mode erzwingt Rot [255,0,0] statt CCT (Warnfarbe fuer Nachtmodus); sleep_color_temp bleibt Fallback fuer reine CCT-Lichter
+  sleep_brightness: 15 # Consistent across all rooms
+  sleep_rgb_or_color_temp: rgb_color
+  sleep_rgb_color:
+    - 255
+    - 0
+    - 0
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 10 # Short transitions prevent IKEA lockups
   transition_until_sleep: true
@@ -98,7 +104,12 @@
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
   max_color_temp: 4000 # IKEA maximum cool white
   prefer_rgb_color: false
-  sleep_brightness: 20 # Match evening min_brightness
+  sleep_brightness: 15 # Nachtmodus 15%
+  sleep_rgb_or_color_temp: rgb_color
+  sleep_rgb_color:
+    - 255
+    - 0
+    - 0
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 10  # Short transitions prevent IKEA lockups
   transition_until_sleep: true
@@ -139,7 +150,12 @@
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
   max_color_temp: 4000 # IKEA maximum cool white
   prefer_rgb_color: false
-  sleep_brightness: 10 # Consistent across all rooms
+  sleep_brightness: 15 # Consistent across all rooms
+  sleep_rgb_or_color_temp: rgb_color
+  sleep_rgb_color:
+    - 255
+    - 0
+    - 0
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 10 # Short transitions prevent IKEA lockups
   transition_until_sleep: true
@@ -174,7 +190,12 @@
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
   max_color_temp: 4000 # IKEA maximum cool white
   prefer_rgb_color: false
-  sleep_brightness: 10 # Consistent across all rooms
+  sleep_brightness: 5 # Kinderzimmer-Ausnahme: schlafendes Kind
+  sleep_rgb_or_color_temp: rgb_color
+  sleep_rgb_color:
+    - 255
+    - 0
+    - 0
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 10 # Short transitions prevent IKEA lockups
   transition_until_sleep: true
@@ -217,7 +238,12 @@
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
   max_color_temp: 4000 # IKEA maximum cool white
   prefer_rgb_color: false
-  sleep_brightness: 20 # Match evening min_brightness
+  sleep_brightness: 15 # Nachtmodus 15%
+  sleep_rgb_or_color_temp: rgb_color
+  sleep_rgb_color:
+    - 255
+    - 0
+    - 0
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 10  # Short transitions prevent IKEA lockups
   transition_until_sleep: true
@@ -251,7 +277,12 @@
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
   max_color_temp: 4000 # IKEA maximum cool white
   prefer_rgb_color: false
-  sleep_brightness: 10 # Consistent across all rooms
+  sleep_brightness: 15 # Consistent across all rooms
+  sleep_rgb_or_color_temp: rgb_color
+  sleep_rgb_color:
+    - 255
+    - 0
+    - 0
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 10 # Short transitions prevent IKEA lockups
   transition_until_sleep: true
@@ -294,7 +325,12 @@
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
   max_color_temp: 4000 # IKEA maximum cool white
   prefer_rgb_color: false
-  sleep_brightness: 10 # Consistent across all rooms
+  sleep_brightness: 15 # Consistent across all rooms
+  sleep_rgb_or_color_temp: rgb_color
+  sleep_rgb_color:
+    - 255
+    - 0
+    - 0
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 10 # Short transitions prevent IKEA lockups
   transition_until_sleep: true
@@ -330,7 +366,12 @@
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
   max_color_temp: 4000 # IKEA maximum cool white
   prefer_rgb_color: false
-  sleep_brightness: 10 # Consistent across all rooms
+  sleep_brightness: 15 # Consistent across all rooms
+  sleep_rgb_or_color_temp: rgb_color
+  sleep_rgb_color:
+    - 255
+    - 0
+    - 0
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 10  # Short transitions prevent IKEA lockups
   transition_until_sleep: true
@@ -379,7 +420,12 @@
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
   max_color_temp: 4000 # IKEA maximum cool white
   prefer_rgb_color: false
-  sleep_brightness: 10 # Consistent across all rooms
+  sleep_brightness: 15 # Consistent across all rooms
+  sleep_rgb_or_color_temp: rgb_color
+  sleep_rgb_color:
+    - 255
+    - 0
+    - 0
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 10 # Short transitions prevent IKEA lockups
   transition_until_sleep: true
@@ -421,7 +467,8 @@
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
   max_color_temp: 4000 # IKEA maximum cool white
   prefer_rgb_color: false
-  sleep_brightness: 30 # Match evening min_brightness
+  sleep_brightness: 40 # Balkon-Ausnahme: 40% ohne Rot
+  sleep_rgb_or_color_temp: color_temp
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 10 # Short transitions prevent IKEA lockups
   transition_until_sleep: false # No sleep transition for outdoor

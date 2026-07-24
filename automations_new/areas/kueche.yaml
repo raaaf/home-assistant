@@ -99,8 +99,9 @@
       after_time: 06:00:00
       before_time: '22:00:00'
       night_lights_conditions:
-      - time_enabled
+      - entity_state_enabled
       night_lights_entity_state:
+      - input_boolean.nachtlicht
       - input_boolean.schlafenszeit
       include_light_control:
       - use_brightness
@@ -111,8 +112,14 @@
       include_night_light_control:
       - use_brightness
       - use_transition
+      night_light_brightness: 15
       night_light_transition_on: 2
       night_light_transition_off: 10
+      include_night_light_colour_control: use_rgb_colour
+      night_light_rgb_colour:
+      - 255
+      - 0
+      - 0
       ambient_light_high_value: 1000
       motion_bypass_lights_on:
       - input_boolean.kochen

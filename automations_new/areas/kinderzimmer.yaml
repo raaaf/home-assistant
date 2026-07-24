@@ -37,8 +37,14 @@
       - entity_state_enabled
       night_lights_entity_state:
       - input_boolean.schlafenszeit
+      - input_boolean.nachtlicht
       include_sun: sun_disabled
       night_light_brightness: 5
+      include_night_light_colour_control: use_rgb_colour
+      night_light_rgb_colour:
+      - 255
+      - 0
+      - 0
       ambient_light_value: 300
       ambient_light_high_value: 400
       # Bypass motion turn-off when manual control is active

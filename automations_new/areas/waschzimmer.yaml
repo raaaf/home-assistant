@@ -16,8 +16,9 @@
       night_lights:
         entity_id: light.philips_light_17
       night_lights_conditions:
-      - time_enabled
+      - entity_state_enabled
       night_lights_entity_state:
+      - input_boolean.nachtlicht
       - input_boolean.schlafenszeit
       include_light_control:
       - use_brightness
@@ -27,7 +28,7 @@
       include_night_light_control:
       - use_brightness
       - use_transition
-      night_light_brightness: 1
+      night_light_brightness: 15
       night_light_transition_on: 2
       night_light_transition_off: 10
       time_delay: 0
@@ -56,17 +57,20 @@
       time_delay: 0
       include_night_lights: night_lights_enabled
       night_lights_conditions:
-      - time_enabled
+      - entity_state_enabled
       night_lights_entity_state:
+      - input_boolean.nachtlicht
       - input_boolean.schlafenszeit
       night_lights:
         entity_id: light.alle_ankleide_lichter
       include_night_light_control:
       - use_brightness
       - use_transition
-      night_light_brightness: 30
+      night_light_brightness: 15
       night_light_transition_on: 2
       night_light_transition_off: 10
+      include_night_light_colour_control: use_colour_temperature
+      night_light_colour_temperature: 2200
       night_time_delay: 0
       night_lights_after_time: '22:00:00'
       night_lights_before_time: 06:00:00

@@ -777,9 +777,12 @@
       - use_transition
       light_transition_on: 2
       light_transition_off: 10
-      include_night_lights: night_lights_disabled
+      include_night_lights: night_lights_enabled
       night_lights:
-        entity_id: light.alle_kuche_nachtlichter
+        entity_id:
+        - light.philips_light_18_1
+        - light.philips_light_19_2
+        - light.philips_light_20_3
       night_lights_after_time: '22:00:00'
       night_lights_before_time: 06:00:00
       night_time_delay: 0
@@ -792,16 +795,23 @@
       after_time: 06:00:00
       before_time: '22:00:00'
       night_lights_conditions:
-      - time_enabled
+      - entity_state_enabled
       night_lights_entity_state:
+      - input_boolean.nachtlicht
       - input_boolean.schlafenszeit
       include_sun: sun_disabled
       include_night_light_control:
       - use_brightness
       - use_transition
+      night_light_brightness: 15
       night_light_transition_on: 2
       night_light_transition_off: 10
       ambient_light_high_value: 400
+      include_night_light_colour_control: use_rgb_colour
+      night_light_rgb_colour:
+      - 255
+      - 0
+      - 0
       include_bypass:
       - bypass_enabled_stop
       motion_bypass_lights_stop:
@@ -822,7 +832,27 @@
       - use_transition
       light_transition_on: 2
       light_transition_off: 10
-      include_night_lights: night_lights_disabled
+      include_night_lights: night_lights_enabled
+      night_lights:
+        entity_id:
+        - light.philips_light_28_spieletisch
+      night_lights_conditions:
+      - entity_state_enabled
+      night_lights_entity_state:
+      - input_boolean.nachtlicht
+      - input_boolean.schlafenszeit
+      include_night_light_control:
+      - use_brightness
+      - use_transition
+      night_light_brightness: 15
+      night_light_transition_on: 2
+      night_light_transition_off: 10
+      include_night_light_colour_control: use_rgb_colour
+      night_light_rgb_colour:
+      - 255
+      - 0
+      - 0
+      night_time_delay: 0
       time_delay: 0
       include_ambient: ambient_enabled
       ambient_light_sensor: sensor.balkon_motion_illuminance_safe
