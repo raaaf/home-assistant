@@ -103,12 +103,6 @@
           - action: automation.turn_off
             target:
               entity_id: automation.motion_esstisch
-      - action: light.turn_on
-        target:
-          entity_id: light.hyperhdr
-        data:
-          effect: USB Capture
-          brightness_pct: 50
       - action: light.turn_off
         data:
           transition: 6
@@ -180,6 +174,25 @@
             data:
               brightness_pct: 100
               color_temp_kelvin: 4000
+      - alias: "Ambilight mit Retry einschalten (HyperHDR-Verbindung bricht beim Filmstart oft kurz ab)"
+        repeat:
+          sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.hyperhdr
+            data:
+              effect: USB Capture
+              brightness_pct: 50
+          - wait_template: "{{ is_state('light.hyperhdr', 'on') }}"
+            timeout: '00:00:20'
+          until:
+          - condition: or
+            conditions:
+            - condition: state
+              entity_id: light.hyperhdr
+              state: 'on'
+            - condition: template
+              value_template: "{{ repeat.index >= 6 }}"
     - conditions:
       - condition: trigger
         id: 'off'
