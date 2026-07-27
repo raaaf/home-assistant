@@ -36,8 +36,6 @@
     - light.philips_light_21_schrank_1
     - light.philips_light_22_schrank_2
     - light.philips_light_23_schrank_3
-    # Individual light
-    - light.philips_light_28_spieletisch
 
 - platform: group
   unique_id: alle_wohnzimmer_lichter_ohne_esstisch
@@ -59,8 +57,6 @@
     - light.philips_light_21_schrank_1
     - light.philips_light_22_schrank_2
     - light.philips_light_23_schrank_3
-    # Individual light
-    - light.philips_light_28_spieletisch
 
 - platform: group
   unique_id: alle_kuche_lichter
@@ -146,7 +142,7 @@
   unique_id: alle_waschzimmer_lichter
   name: Alle Waschzimmer Lichter
   entities:
-    - light.philips_light_17
+    - light.philips_light_28
 
 - platform: group
   unique_id: alle_balkon_lichter
@@ -248,7 +244,6 @@
     - light.philips_light_18_1
     - light.philips_light_19_2
     - light.philips_light_20_3
-    - light.philips_light_28_spieletisch
 
 - platform: group
   unique_id: alle_kuche_rgb_lichter

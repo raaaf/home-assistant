@@ -14,7 +14,7 @@
         entity_id: light.alle_waschzimmer_lichter
       include_night_lights: night_lights_enabled
       night_lights:
-        entity_id: light.philips_light_17
+        entity_id: light.philips_light_28
       night_lights_conditions:
       - entity_state_enabled
       night_lights_entity_state:
@@ -31,6 +31,11 @@
       night_light_brightness: 15
       night_light_transition_on: 2
       night_light_transition_off: 10
+      include_night_light_colour_control: use_rgb_colour
+      night_light_rgb_colour:
+      - 255
+      - 0
+      - 0
       time_delay: 0
       night_lights_after_time: '22:00:00'
       night_lights_before_time: 06:00:00

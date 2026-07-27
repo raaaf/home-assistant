@@ -46,8 +46,6 @@
     - light.philips_light_21_schrank_1
     - light.philips_light_22_schrank_2
     - light.philips_light_23_schrank_3
-    # Individual light
-    - light.philips_light_28_spieletisch
   interval: 300  # 5 min - smooth sunrise/sunset transitions without excessive Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 2  # Smooth fade-in on turn_on (intercepted by AL)
@@ -268,7 +266,7 @@
 
 - name: "Waschzimmer"
   lights:
-    - light.philips_light_17
+    - light.philips_light_28
   interval: 300  # 5 min - smooth sunrise/sunset transitions without excessive Zigbee traffic
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 2  # Smooth fade-in on turn_on (intercepted by AL)

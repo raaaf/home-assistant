@@ -831,7 +831,13 @@
       - binary_sensor.wohnzimmer_manual_control
 - id: '1737900000002'
   alias: Motion » Spieletisch
-  description: Bewegungsgesteuerte Beleuchtung am Spieletisch via Vibrationssensor
+  description: Bewegungsgesteuerte Beleuchtung am Spieletisch via Vibrationssensor.
+    Deaktiviert seit 27.07.2026, weil die Lampe (light.philips_light_28) jetzt als
+    Waschzimmer Decke haengt und am Spieletisch vorerst keine Lampe sitzt. Die
+    light-Referenzen zeigen absichtlich auf die alte, nicht mehr existierende
+    entity_id, damit ein versehentliches Aktivieren nicht das Waschzimmer schaltet.
+    Wenn wieder eine Lampe montiert ist, entity_id eintragen und initial_state entfernen.
+  initial_state: false
   use_blueprint:
     path: Blackshome/sensor-light.yaml
     input:
