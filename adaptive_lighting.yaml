@@ -273,7 +273,7 @@
   min_brightness: 30
   max_brightness: 100
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
-  max_color_temp: 4000 # IKEA maximum cool white
+  max_color_temp: 6535 # Hue-only room, no IKEA cap (also set in core.yaml startup automation)
   prefer_rgb_color: false
   sleep_brightness: 15 # Consistent across all rooms
   sleep_rgb_or_color_temp: rgb_color
