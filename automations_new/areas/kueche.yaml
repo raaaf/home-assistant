@@ -112,7 +112,7 @@
       include_night_light_control:
       - use_brightness
       - use_transition
-      night_light_brightness: 15
+      night_light_brightness: 50  # Indirekte Lichter (Schrank, Insel oben), heller als die anderen Raeume
       night_light_transition_on: 2
       night_light_transition_off: 10
       include_night_light_colour_control: use_rgb_colour

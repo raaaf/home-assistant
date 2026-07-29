@@ -461,7 +461,7 @@
       - if_lights_are_on_adjust_when_crossing_over
       - use_brightness
       - use_transition
-      night_light_brightness: 15
+      night_light_brightness: 30  # Indirekte Lichter (Bett, PC 1-2)
       night_light_transition_on: 2
       night_light_transition_off: 10
       night_lights_after_time: '19:00:00'

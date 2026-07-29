@@ -251,7 +251,7 @@
       include_night_light_control:
       - use_brightness
       - use_transition
-      night_light_brightness: 15
+      night_light_brightness: 30  # Indirekte Lichter (Schrank, Fenster)
       night_light_transition_on: 3
       night_light_transition_off: 9
       include_night_light_colour_control: use_rgb_colour

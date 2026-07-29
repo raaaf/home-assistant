@@ -55,7 +55,7 @@
   max_color_temp: 4000 # IKEA maximum cool white
   prefer_rgb_color: false
   # Sleep Mode erzwingt Rot [255,0,0] statt CCT (Warnfarbe fuer Nachtmodus); sleep_color_temp bleibt Fallback fuer reine CCT-Lichter
-  sleep_brightness: 15 # Consistent across all rooms
+  sleep_brightness: 30 # Wohnzimmer-Ausnahme: indirektes Licht (Schrank) soll nachts heller sein
   sleep_rgb_or_color_temp: rgb_color
   sleep_rgb_color:
     - 255
