@@ -355,7 +355,7 @@
     take_over_control_mode=pause_changed (pausiert nur geänderte Attribute).
     adapt_only_on_bare_turn_on bleibt false - true verursacht 100% Helligkeit beim Einschalten
     via Automationen mit expliziten Werten (wird als manual_control fehlinterpretiert).
-    Sleep Mode = Rot [255,0,0] @ 15% (Wohnzimmer 30%, Kinderzimmer 5%, Balkon color_temp @ 40%),
+    Sleep Mode = Rot [255,0,0] @ 15% (Kueche 50%, Wohnzimmer 30%, Kinderzimmer 5%, Balkon color_temp @ 40%),
     CCT-Lichter fallen auf sleep_color_temp 2200K zurueck.
   mode: single
   triggers:
@@ -402,6 +402,12 @@
         entity_id: switch.adaptive_lighting_wohnzimmer
         sleep_brightness: 30
         use_defaults: current
+    - alias: Kueche Sleep-Helligkeit hoeher (wie die Motion-Nachtlichter)
+      action: adaptive_lighting.change_switch_settings
+      data:
+        entity_id: switch.adaptive_lighting_kueche
+        sleep_brightness: 50
+        use_defaults: current
     - alias: Kinderzimmer Sleep-Helligkeit niedriger (schlafendes Kind)
       action: adaptive_lighting.change_switch_settings
       data:
@@ -430,6 +436,6 @@
           separate_turn_on_commands=true, send_split_delay=300, initial_transition=2,
           take_over_control_mode=pause_changed, adapt_only_on_bare_turn_on=false,
           skip_redundant_commands=false, include_config_in_attributes=false,
-          sleep_rgb_color=[255,0,0] @ sleep_brightness=15 (Wohnzimmer 30, Kinderzimmer 5),
+          sleep_rgb_color=[255,0,0] @ sleep_brightness=15 (Kueche 50, Wohnzimmer 30, Kinderzimmer 5),
           Balkon color_temp @ 40, Waschzimmer max_color_temp=6535
           (interval=300 liegt im YAML, nicht ueber change_switch_settings setzbar)
