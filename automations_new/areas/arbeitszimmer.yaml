@@ -461,7 +461,7 @@
       - if_lights_are_on_adjust_when_crossing_over
       - use_brightness
       - use_transition
-      night_light_brightness: 30  # Indirekte Lichter (Bett, PC 1-2)
+      night_light_brightness: 50  # Indirekte Lichter (Bett, PC 1-2), physisch Schlafzimmer
       night_light_transition_on: 2
       night_light_transition_off: 10
       night_lights_after_time: '19:00:00'
@@ -469,7 +469,7 @@
       include_night_light_colour_control: use_rgb_colour
       night_light_rgb_colour:
       - 255
-      - 0
+      - 80
       - 0
       include_ambient: ambient_enabled
       ambient_light_sensor: sensor.balkon_motion_illuminance_safe

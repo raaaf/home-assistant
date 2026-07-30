@@ -43,7 +43,7 @@
       include_night_light_colour_control: use_rgb_colour
       night_light_rgb_colour:
       - 255
-      - 0
+      - 80
       - 0
       ambient_light_value: 300
       ambient_light_high_value: 400

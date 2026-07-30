@@ -34,7 +34,7 @@
       include_night_light_colour_control: use_rgb_colour
       night_light_rgb_colour:
       - 255
-      - 0
+      - 80
       - 0
       time_delay: 0
       night_lights_after_time: '22:00:00'

@@ -30,7 +30,7 @@
         entity_id: light.aqara_hub_lightbulb
       data:
         brightness: 38
-        rgb_color: [255, 0, 0]  # Rot (Nachtmodus)
+        rgb_color: [255, 80, 0]  # Amber (Nachtmodus)
         transition: 2
   mode: restart
 

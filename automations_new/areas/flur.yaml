@@ -37,7 +37,7 @@
       include_night_light_colour_control: use_rgb_colour
       night_light_rgb_colour:
       - 255
-      - 0
+      - 80
       - 0
       night_time_delay: 0.5
 
@@ -81,7 +81,7 @@
       include_night_light_colour_control: use_rgb_colour
       night_light_rgb_colour:
       - 255
-      - 0
+      - 80
       - 0
       ambient_light_options: ambient_light_option_enabled
       ambient_light_value: 800

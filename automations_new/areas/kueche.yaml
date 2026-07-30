@@ -118,7 +118,7 @@
       include_night_light_colour_control: use_rgb_colour
       night_light_rgb_colour:
       - 255
-      - 0
+      - 80
       - 0
       ambient_light_high_value: 1000
       motion_bypass_lights_on:

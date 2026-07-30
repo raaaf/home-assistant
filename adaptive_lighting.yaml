@@ -54,12 +54,12 @@
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
   max_color_temp: 4000 # IKEA maximum cool white
   prefer_rgb_color: false
-  # Sleep Mode erzwingt Rot [255,0,0] statt CCT (Warnfarbe fuer Nachtmodus); sleep_color_temp bleibt Fallback fuer reine CCT-Lichter
+  # Sleep Mode erzwingt Amber [255,80,0] statt CCT (mehr Lumen als reines Rot, bleibt warm); sleep_color_temp bleibt Fallback fuer reine CCT-Lichter
   sleep_brightness: 30 # Wohnzimmer-Ausnahme: indirektes Licht (Schrank) soll nachts heller sein
   sleep_rgb_or_color_temp: rgb_color
   sleep_rgb_color:
     - 255
-    - 0
+    - 80
     - 0
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 10 # Short transitions prevent IKEA lockups
@@ -106,7 +106,7 @@
   sleep_rgb_or_color_temp: rgb_color
   sleep_rgb_color:
     - 255
-    - 0
+    - 80
     - 0
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 10  # Short transitions prevent IKEA lockups
@@ -148,11 +148,11 @@
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
   max_color_temp: 4000 # IKEA maximum cool white
   prefer_rgb_color: false
-  sleep_brightness: 15 # Consistent across all rooms
+  sleep_brightness: 1 # Schlafzimmer-Slug-Ausnahme: Stehlampe Alex-Arbeitsplatz, kaum Licht noetig
   sleep_rgb_or_color_temp: rgb_color
   sleep_rgb_color:
     - 255
-    - 0
+    - 80
     - 0
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 10 # Short transitions prevent IKEA lockups
@@ -192,7 +192,7 @@
   sleep_rgb_or_color_temp: rgb_color
   sleep_rgb_color:
     - 255
-    - 0
+    - 80
     - 0
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 10 # Short transitions prevent IKEA lockups
@@ -236,11 +236,11 @@
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
   max_color_temp: 4000 # IKEA maximum cool white
   prefer_rgb_color: false
-  sleep_brightness: 15 # Nachtmodus 15%
+  sleep_brightness: 30 # Badezimmer: wie night_light_brightness der Motion-Automation
   sleep_rgb_or_color_temp: rgb_color
   sleep_rgb_color:
     - 255
-    - 0
+    - 80
     - 0
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 10  # Short transitions prevent IKEA lockups
@@ -279,7 +279,7 @@
   sleep_rgb_or_color_temp: rgb_color
   sleep_rgb_color:
     - 255
-    - 0
+    - 80
     - 0
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 10 # Short transitions prevent IKEA lockups
@@ -323,11 +323,11 @@
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
   max_color_temp: 4000 # IKEA maximum cool white
   prefer_rgb_color: false
-  sleep_brightness: 15 # Consistent across all rooms
+  sleep_brightness: 50 # Arbeitszimmer-Slug-Ausnahme: Bett/PC (physisch Schlafzimmer), wie Motion-Nachtlichter
   sleep_rgb_or_color_temp: rgb_color
   sleep_rgb_color:
     - 255
-    - 0
+    - 80
     - 0
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 10 # Short transitions prevent IKEA lockups
@@ -368,7 +368,7 @@
   sleep_rgb_or_color_temp: rgb_color
   sleep_rgb_color:
     - 255
-    - 0
+    - 80
     - 0
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 10  # Short transitions prevent IKEA lockups
@@ -418,11 +418,11 @@
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
   max_color_temp: 4000 # IKEA maximum cool white
   prefer_rgb_color: false
-  sleep_brightness: 15 # Consistent across all rooms
+  sleep_brightness: 30 # Flur: wie night_light_brightness der Motion-Automationen
   sleep_rgb_or_color_temp: rgb_color
   sleep_rgb_color:
     - 255
-    - 0
+    - 80
     - 0
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 10 # Short transitions prevent IKEA lockups

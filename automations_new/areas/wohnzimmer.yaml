@@ -816,14 +816,14 @@
       include_night_light_control:
       - use_brightness
       - use_transition
-      night_light_brightness: 15
+      night_light_brightness: 30
       night_light_transition_on: 2
       night_light_transition_off: 10
       ambient_light_high_value: 400
       include_night_light_colour_control: use_rgb_colour
       night_light_rgb_colour:
       - 255
-      - 0
+      - 80
       - 0
       include_bypass:
       - bypass_enabled_stop
@@ -863,13 +863,13 @@
       include_night_light_control:
       - use_brightness
       - use_transition
-      night_light_brightness: 15
+      night_light_brightness: 30
       night_light_transition_on: 2
       night_light_transition_off: 10
       include_night_light_colour_control: use_rgb_colour
       night_light_rgb_colour:
       - 255
-      - 0
+      - 80
       - 0
       night_time_delay: 0
       time_delay: 0
