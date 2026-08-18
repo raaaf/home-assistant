@@ -364,7 +364,7 @@
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
   max_color_temp: 4000 # IKEA maximum cool white
   prefer_rgb_color: false
-  sleep_brightness: 15 # Consistent across all rooms
+  sleep_brightness: 10 # Nicht heller als min_brightness (10), Ankleide hat keine Nachtlichtgruppe
   sleep_rgb_or_color_temp: rgb_color
   sleep_rgb_color:
     - 255
