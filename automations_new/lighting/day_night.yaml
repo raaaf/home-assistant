@@ -531,18 +531,27 @@
       min_brightness: 20
       max_brightness: 100
       max_color_temp: 4000
-  - alias: "Reset Badezimmer, Waschzimmer, Schlafzimmer (Buero), Balkon (min_brightness 30)"
+  - alias: "Reset Badezimmer, Waschzimmer, Schlafzimmer (Buero) (min_brightness 30)"
     action: adaptive_lighting.change_switch_settings
     target:
       entity_id:
       - switch.adaptive_lighting_badezimmer
       - switch.adaptive_lighting_waschzimmer
       - switch.adaptive_lighting_schlafzimmer
-      - switch.adaptive_lighting_balkon
     data:
       min_sunset_time: "20:00:00"
       max_sunset_time: "20:30:00"
       min_brightness: 30
+      max_brightness: 100
+      max_color_temp: 4000
+  - alias: "Reset Balkon (min_brightness 40, gleich wie sleep_brightness)"
+    action: adaptive_lighting.change_switch_settings
+    target:
+      entity_id: switch.adaptive_lighting_balkon
+    data:
+      min_sunset_time: "20:00:00"
+      max_sunset_time: "20:30:00"
+      min_brightness: 40
       max_brightness: 100
       max_color_temp: 4000
   mode: single
