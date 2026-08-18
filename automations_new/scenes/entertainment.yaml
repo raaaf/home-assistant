@@ -116,7 +116,7 @@
     target:
       entity_id: input_datetime.tv_auto_off_time
     data:
-      timestamp: "{{ (now() + timedelta(minutes=30)).timestamp() }}"
+      timestamp: "{{ (now() + timedelta(minutes=30)).timestamp() | int }}"
   - alias: "Timer nur fuer sichtbaren Countdown"
     action: timer.start
     target:
