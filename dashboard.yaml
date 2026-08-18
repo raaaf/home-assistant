@@ -1,3 +1,5 @@
+# Export der Live-Config aus .storage/lovelace.lovelace (Storage-Mode).
+# Diese Datei wird von HA NICHT geladen, sie dient dem Upload per Raw-Editor.
 views:
 - theme: Backend-selected
   title: Home
@@ -10,6 +12,9 @@ views:
     grid-template-areas: '"left middle right"
 
       '
+    mediaquery:
+      '(max-width: 1023px)':
+        grid-template-columns: 0 100% 0
   badges: []
   cards:
   - type: custom:gap-card
@@ -558,11 +563,14 @@ views:
   type: custom:layout-card
   layout_type: custom:grid-layout
   layout_options:
-    grid-template-columns: auto 1000px auto
+    grid-template-columns: 10% 80% 10%
     grid-template-rows: auto
     grid-template-areas: '"left middle right"
 
       '
+    mediaquery:
+      '(max-width: 1023px)':
+        grid-template-columns: 0 100% 0
   badges: []
   cards:
   - type: custom:gap-card
@@ -999,11 +1007,14 @@ views:
   type: custom:layout-card
   layout_type: custom:grid-layout
   layout_options:
-    grid-template-columns: auto 1000px auto
+    grid-template-columns: 10% 80% 10%
     grid-template-rows: auto
     grid-template-areas: '"left middle right"
 
       '
+    mediaquery:
+      '(max-width: 1023px)':
+        grid-template-columns: 0 100% 0
   badges: []
   cards:
   - type: custom:gap-card
@@ -1213,13 +1224,13 @@ views:
       title: Energie heute
       alignment: center
     - type: custom:mushroom-template-card
-      primary: '{{ states(''sensor.verbrauch_heute'')|float(0)|round(1) }} kWh'
+      primary: '{{ states(''sensor.alle_verbrauche_energy_daily'')|float(0)|round(1) }} kWh'
       secondary: Verbrauch heute
       icon: mdi:home-lightning-bolt
       icon_color: blue
       tap_action:
         action: more-info
-      entity: sensor.verbrauch_heute
+      entity: sensor.alle_verbrauche_energy_daily
       multiline_secondary: false
     - type: custom:mini-graph-card
       name: Lasten heute
@@ -1230,9 +1241,6 @@ views:
       show:
         legend: true
       entities:
-      - entity: sensor.ac_power
-        name: Klima
-        color: '#00acc1'
       - entity: sensor.alle_lichter_power_2
         name: Lichter
         color: '#fbc02d'
@@ -1254,11 +1262,14 @@ views:
   type: custom:layout-card
   layout_type: custom:grid-layout
   layout_options:
-    grid-template-columns: auto 1000px auto
+    grid-template-columns: 10% 80% 10%
     grid-template-rows: auto
     grid-template-areas: '"left middle right"
 
       '
+    mediaquery:
+      '(max-width: 1023px)':
+        grid-template-columns: 0 100% 0
   badges: []
   cards:
   - type: custom:gap-card
@@ -1492,11 +1503,14 @@ views:
   type: custom:layout-card
   layout_type: custom:grid-layout
   layout_options:
-    grid-template-columns: auto 1000px auto
+    grid-template-columns: 10% 80% 10%
     grid-template-rows: auto
     grid-template-areas: '"left middle right"
 
       '
+    mediaquery:
+      '(max-width: 1023px)':
+        grid-template-columns: 0 100% 0
   badges: []
   cards:
   - type: custom:gap-card
@@ -1521,7 +1535,7 @@ views:
         entity: sensor.prusa_mk4_progress
     - type: custom:mushroom-template-card
       primary: Prusa MK4
-      secondary: '{% if is_state(''sensor.prusa_mk4'',''printing'') %}{{ states(''sensor.prusa_mk4_progress'')|round(0) }}% · {{ states(''sensor.prusa_mk4_filename'') }}{% else %}{{ states(''sensor.prusa_mk4'') }}{% endif %}'
+      secondary: '{% if is_state(''sensor.prusa_mk4'',''printing'') %}{{ states(''sensor.prusa_mk4_progress'')|float(0)|round(0) }}% · {{ states(''sensor.prusa_mk4_filename'') }}{% else %}{{ states(''sensor.prusa_mk4'') }}{% endif %}'
       icon: mdi:printer-3d-nozzle
       multiline_secondary: true
       entity: sensor.prusa_mk4
@@ -1543,10 +1557,10 @@ views:
       chips:
       - type: template
         icon: mdi:printer-3d-nozzle-heat
-        content: '{{ states(''sensor.prusa_mk4_nozzle_temperature'')|round(0, default=''-'') }}/{{ states(''sensor.prusa_mk4_nozzle_target_temperature'')|round(0, default=''-'') }} °C'
+        content: '{{ states(''sensor.prusa_mk4_nozzle_temperature'')|round(0) }}/{{ states(''sensor.prusa_mk4_nozzle_target_temperature'')|round(0) }} °C'
       - type: template
         icon: mdi:heating-coil
-        content: '{{ states(''sensor.prusa_mk4_heatbed_temperature'')|round(0, default=''-'') }}/{{ states(''sensor.prusa_mk4_heatbed_target_temperature'')|round(0, default=''-'') }} °C'
+        content: '{{ states(''sensor.prusa_mk4_heatbed_temperature'')|round(0) }}/{{ states(''sensor.prusa_mk4_heatbed_target_temperature'')|round(0) }} °C'
       - type: template
         icon: mdi:speedometer
         content: '{{ states(''sensor.prusa_mk4_print_speed'') }}%'
@@ -1558,7 +1572,7 @@ views:
         chip:
           type: template
           icon: mdi:timer-outline
-          content: '{% set t=(as_timestamp(states(''sensor.prusa_mk4_print_finish''))-as_timestamp(now()))|int(0) %}{% if t<60 %}<1 min{% else %}{{ t//3600 }}h {{ (t%3600)//60 }}m{% endif %}'
+          content: '{% set f=as_timestamp(states(''sensor.prusa_mk4_print_finish''), 0) %}{% set t=((f-as_timestamp(now()))|int(0)) if f else 0 %}{% if t<60 %}<1 min{% else %}{{ t//3600 }}h {{ (t%3600)//60 }}m{% endif %}'
     - type: custom:mushroom-chips-card
       alignment: center
       chips:
@@ -1621,11 +1635,14 @@ views:
   type: custom:layout-card
   layout_type: custom:grid-layout
   layout_options:
-    grid-template-columns: auto 1000px auto
+    grid-template-columns: 10% 80% 10%
     grid-template-rows: auto
     grid-template-areas: '"left middle right"
 
       '
+    mediaquery:
+      '(max-width: 1023px)':
+        grid-template-columns: 0 100% 0
   badges: []
   cards:
   - type: custom:gap-card
@@ -1674,11 +1691,14 @@ views:
   type: custom:layout-card
   layout_type: custom:grid-layout
   layout_options:
-    grid-template-columns: auto 1000px auto
+    grid-template-columns: 10% 80% 10%
     grid-template-rows: auto
     grid-template-areas: '"left middle right"
 
       '
+    mediaquery:
+      '(max-width: 1023px)':
+        grid-template-columns: 0 100% 0
   badges: []
   cards:
   - type: custom:gap-card
@@ -1811,11 +1831,14 @@ views:
   type: custom:layout-card
   layout_type: custom:grid-layout
   layout_options:
-    grid-template-columns: auto 1000px auto
+    grid-template-columns: 10% 80% 10%
     grid-template-rows: auto
     grid-template-areas: '"left middle right"
 
       '
+    mediaquery:
+      '(max-width: 1023px)':
+        grid-template-columns: 0 100% 0
   badges: []
   cards:
   - type: custom:gap-card
@@ -1892,11 +1915,14 @@ views:
   type: custom:layout-card
   layout_type: custom:grid-layout
   layout_options:
-    grid-template-columns: auto 1000px auto
+    grid-template-columns: 10% 80% 10%
     grid-template-rows: auto
     grid-template-areas: '"left middle right"
 
       '
+    mediaquery:
+      '(max-width: 1023px)':
+        grid-template-columns: 0 100% 0
   badges: []
   cards:
   - type: custom:gap-card
@@ -2006,11 +2032,14 @@ views:
   type: custom:layout-card
   layout_type: custom:grid-layout
   layout_options:
-    grid-template-columns: auto 1000px auto
+    grid-template-columns: 10% 80% 10%
     grid-template-rows: auto
     grid-template-areas: '"left middle right"
 
       '
+    mediaquery:
+      '(max-width: 1023px)':
+        grid-template-columns: 0 100% 0
   badges: []
   cards:
   - type: custom:gap-card
