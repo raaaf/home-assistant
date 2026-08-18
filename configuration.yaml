@@ -823,13 +823,19 @@ template:
         device_class: illuminance
         icon: mdi:brightness-6
         state: >-
-          {% set sensor_state = states('sensor.ikea_motion_03_illuminance') %}
-          {% if sensor_state not in ['unknown', 'unavailable'] and sensor_state | float(0) >= 0 %}
-            {{ sensor_state | float(0) | round(0) }}
+          {# now() erzwingt ein Re-Render pro Minute. Ohne das wuerde ein stehender #}
+          {# Sensor nie neu bewertet, weil kein State-Change ihn ausloest. #}
+          {% set src = states.sensor.ikea_motion_03_illuminance %}
+          {% set fresh = src is not none
+                         and src.state not in ['unknown', 'unavailable']
+                         and (now() - src.last_updated).total_seconds() < 21600 %}
+          {% if fresh and src.state | float(0) >= 0 %}
+            {{ src.state | float(0) | round(0) }}
           {% else %}
-            {# Balkon-Sensor liefert keinen Wert (z.B. Sleepy-Device nach Neustart). #}
-            {# Fallback sonnenstandsabhaengig: tagsueber hell (ueber Motion-Schwelle, #}
-            {# kein Fehltrigger), nachts dunkel (Licht funktioniert weiter). #}
+            {# Balkon-Sensor liefert keinen Wert oder haengt fest (12.-18.08.2026: #}
+            {# 6 Tage bei 1334 lx eingefroren, Z2M-Availability hat es nicht bemerkt, #}
+            {# weil das Geraet eingebucht blieb). Fallback sonnenstandsabhaengig: #}
+            {# tagsueber hell (ueber Motion-Schwelle, kein Fehltrigger), nachts dunkel. #}
             {{ 2000 if state_attr('sun.sun', 'elevation') | float(-90) > 3 else 5 }}
           {% endif %}
 
