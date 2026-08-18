@@ -235,15 +235,18 @@
         entity_id: light.alle_badezimmer_lichter
       include_ambient: ambient_enabled
       # Raumsensor statt Balkon: der Balkonwert sagt nur, wie hell es draussen
-      # ist, und lag mit 800 lx praktisch immer ueber der Schwelle. Werte aus
-      # 7 Tagen Recorder-Historie bei komplett ausgeschaltetem Badlicht:
-      # nachts p95 = 1 lx, tagsueber dunkelste 5 % = 84 lx, Median 251 lx.
+      # ist, und lag praktisch immer ueber der Schwelle.
+      # Schwelle nach Nutzerrueckmeldung, nicht nach Statistik: bei 101 lx und
+      # ausgeschaltetem Licht war das Bad subjektiv zu dunkel. 101 lx ist in
+      # der 7-Tage-Historie erst Perzentil 12, die Statistik haette also viel
+      # zu niedrig angesetzt. 150 lx laesst das Licht in rund 20 % der
+      # Tagesmesswerte angehen, p25 liegt bei 167 lx.
       # ambient_light_option_enabled = "Sensor wird vom Licht beeinflusst";
       # der Blueprint verlangt dafuer low == high, also kein Offset.
       ambient_light_sensor: sensor.tuya_motion_01_illuminance
       ambient_light_options: ambient_light_option_enabled
-      ambient_light_value: 40
-      ambient_light_high_value: 40
+      ambient_light_value: 150
+      ambient_light_high_value: 150
       night_lights_conditions:
       - entity_state_enabled
       night_lights_entity_state:
