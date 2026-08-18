@@ -136,19 +136,13 @@
             - automation.kinderzimmer_motion
           data:
             stop_actions: true
-        - alias: "Alle HomePods auf 0% setzen vor dem Aufwach-Fade"
-          action: media_player.volume_set
-          continue_on_error: true
+        # fire-and-forget: continue_on_error faengt den pyatv-TimeoutError nicht
+        # ab. Am 18.08. hat ein haengender HomePod hier den ganzen Wakeup-Lauf
+        # gekillt (Licht-Fade und wakeup_active-Reset liefen nie).
+        - alias: "Alle HomePods auf 0% setzen vor dem Aufwach-Fade (fire-and-forget)"
+          action: script.turn_on
           target:
-            entity_id:
-            - media_player.homepod_wohnzimmer
-            - media_player.arbeitszimmer
-            - media_player.kuche
-            - media_player.homepod_badezimmer
-            - media_player.homepod_kinderzimmer
-            - media_player.schlafzimmer
-          data:
-            volume_level: 0.0
+            entity_id: script.homepods_mute
         - alias: "AL für Wakeup-Räume aus (sonst faengt Adaptive Lighting den turn_on/Fade ab und haelt die Lampen dunkel)"
           action: switch.turn_off
           target:

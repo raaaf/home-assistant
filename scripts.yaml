@@ -648,3 +648,98 @@ lock_wohnungstuer_safe:
             Die Wohnungstür konnte nach 3 Versuchen nicht verriegelt werden
             (Status: {{ states('lock.nuki_wohnungstur_lock') }}, {{ context_message }}).
             Bitte manuell prüfen.
+
+homepods_mute:
+  alias: HomePods stummschalten
+  description: >-
+    Setzt alle HomePods auf 0%. Jedes Geraet wird einzeln und parallel
+    angesprochen, damit ein haengendes Geraet die anderen nicht blockiert.
+    Immer per script.turn_on (fire-and-forget) aufrufen: pyatv wirft bei
+    toter Verbindung einen TimeoutError, den continue_on_error nicht faengt.
+  icon: mdi:volume-mute
+  mode: restart
+  sequence:
+  - parallel:
+    - action: media_player.volume_set
+      continue_on_error: true
+      target:
+        entity_id: media_player.homepod_wohnzimmer
+      data:
+        volume_level: 0.0
+    - action: media_player.volume_set
+      continue_on_error: true
+      target:
+        entity_id: media_player.arbeitszimmer
+      data:
+        volume_level: 0.0
+    - action: media_player.volume_set
+      continue_on_error: true
+      target:
+        entity_id: media_player.kuche
+      data:
+        volume_level: 0.0
+    - action: media_player.volume_set
+      continue_on_error: true
+      target:
+        entity_id: media_player.homepod_badezimmer
+      data:
+        volume_level: 0.0
+    - action: media_player.volume_set
+      continue_on_error: true
+      target:
+        entity_id: media_player.homepod_kinderzimmer
+      data:
+        volume_level: 0.0
+    - action: media_player.volume_set
+      continue_on_error: true
+      target:
+        entity_id: media_player.schlafzimmer
+      data:
+        volume_level: 0.0
+
+homepod_wake:
+  alias: HomePod aufwecken
+  description: >-
+    Weckt einen einzelnen HomePod nach einer Vorlaufzeit. Ein turn_on auf alle
+    sechs Geraete in einem Aufruf hat am 11.08. um 06:20:00 sekundengenau einen
+    apple_tv-Disconnect-Burst ueber alle Geraete ausgeloest, deshalb einzeln und
+    versetzt. Immer per script.turn_on (fire-and-forget) aufrufen: pyatv wirft
+    bei toter Verbindung einen TimeoutError, den continue_on_error nicht faengt.
+  icon: mdi:speaker-wireless
+  mode: parallel
+  max: 10
+  fields:
+    target_player:
+      name: Target media player
+      description: HomePod der aufgeweckt werden soll.
+      required: true
+      example: media_player.kuche
+      selector:
+        entity:
+          domain: media_player
+    start_delay:
+      name: Start delay
+      description: Wartezeit vor dem turn_on, um die Geraete zu staffeln.
+      required: false
+      default: 0
+      example: '5'
+      selector:
+        number:
+          min: 0
+          max: 300
+          step: 1
+          unit_of_measurement: s
+          mode: box
+  sequence:
+  - delay:
+      seconds: "{{ start_delay | default(0) | int }}"
+  - action: media_player.turn_on
+    continue_on_error: true
+    target:
+      entity_id: "{{ target_player }}"
+  - delay:
+      seconds: 3
+  - action: homeassistant.update_entity
+    continue_on_error: true
+    target:
+      entity_id: "{{ target_player }}"

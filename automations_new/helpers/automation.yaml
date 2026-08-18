@@ -34,27 +34,54 @@
     after: 04:50:00
     before: '10:00:00'
   actions:
-  - alias: "HomePods aufwecken mit turn_on"
-    action: media_player.turn_on
+  # Je Geraet ein eigener fire-and-forget-Lauf, um 5 s versetzt. Ein einzelner
+  # turn_on auf alle sechs HomePods gleichzeitig hat am 11.08. um 06:20:00
+  # sekundengenau einen Disconnect-Burst ueber alle apple_tv-Geraete ausgeloest.
+  # Getrennte Laeufe heissen ausserdem: ein haengendes Geraet blockiert die
+  # anderen nicht, und der pyatv-TimeoutError kann die Automation nicht killen.
+  - action: script.turn_on
+    alias: "HomePods versetzt aufwecken (fire-and-forget)"
     target:
-      entity_id:
-      - media_player.arbeitszimmer
-      - media_player.schlafzimmer
-      - media_player.homepod_badezimmer
-      - media_player.homepod_kinderzimmer
-      - media_player.homepod_wohnzimmer
-      - media_player.kuche
-  - delay: 00:00:03
-  - alias: "Entity-Status aktualisieren"
-    action: homeassistant.update_entity
+      entity_id: script.homepod_wake
+    data:
+      variables:
+        target_player: media_player.arbeitszimmer
+        start_delay: 0
+  - action: script.turn_on
     target:
-      entity_id:
-      - media_player.arbeitszimmer
-      - media_player.schlafzimmer
-      - media_player.homepod_badezimmer
-      - media_player.homepod_kinderzimmer
-      - media_player.homepod_wohnzimmer
-      - media_player.kuche
+      entity_id: script.homepod_wake
+    data:
+      variables:
+        target_player: media_player.schlafzimmer
+        start_delay: 5
+  - action: script.turn_on
+    target:
+      entity_id: script.homepod_wake
+    data:
+      variables:
+        target_player: media_player.homepod_badezimmer
+        start_delay: 10
+  - action: script.turn_on
+    target:
+      entity_id: script.homepod_wake
+    data:
+      variables:
+        target_player: media_player.homepod_kinderzimmer
+        start_delay: 15
+  - action: script.turn_on
+    target:
+      entity_id: script.homepod_wake
+    data:
+      variables:
+        target_player: media_player.homepod_wohnzimmer
+        start_delay: 20
+  - action: script.turn_on
+    target:
+      entity_id: script.homepod_wake
+    data:
+      variables:
+        target_player: media_player.kuche
+        start_delay: 25
   - action: logbook.log
     data:
       name: HomePod Pre-Wake
