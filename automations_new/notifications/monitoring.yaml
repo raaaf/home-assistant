@@ -315,3 +315,63 @@
       domain: automation
   mode: queued
   max: 10
+- id: 'appletv_wohnzimmer_watchdog'
+  alias: Helper » AppleTV Wohnzimmer Watchdog
+  description: >-
+    Laeuft Movie-Mode ueber den AppleTV-Eingang (CBL/SAT), waehrend HA den
+    Wohnzimmer-AppleTV als off/unavailable sieht, ist die apple_tv-Verbindung
+    eingefroren. Dann Config-Entry neu laden, damit der TV-Timer den AppleTV
+    spaeter schlafen legen kann (sonst weckt er per CEC alles wieder auf).
+  triggers:
+  - trigger: state
+    entity_id: input_boolean.movie
+    to: 'on'
+    for: "00:05:00"
+    id: movie-start
+  - trigger: time_pattern
+    minutes: "/30"
+    id: check
+  conditions:
+  - condition: state
+    entity_id: input_boolean.movie
+    state: 'on'
+  - condition: template
+    value_template: "{{ states('media_player.wohnzimmer') in ['off', 'unavailable', 'unknown'] }}"
+  - alias: "Denon spielt vom AppleTV-Eingang"
+    condition: template
+    value_template: "{{ state_attr('media_player.denon_avr_x3200w', 'source') == 'CBL/SAT' }}"
+  actions:
+  - action: homeassistant.reload_config_entry
+    target:
+      entity_id: media_player.wohnzimmer
+  - action: notify.admin_only
+    data:
+      title: "AppleTV Watchdog"
+      message: "AppleTV Wohnzimmer war eingefroren (Movie-Mode aktiv, Entity {{ states('media_player.wohnzimmer') }}). Integration neu geladen."
+  - action: persistent_notification.create
+    data:
+      title: "AppleTV Watchdog"
+      message: "AppleTV-Wohnzimmer-Verbindung war waehrend Movie-Mode eingefroren und wurde neu geladen."
+      notification_id: appletv_watchdog
+  mode: single
+- id: 'appletv_disconnect_logger'
+  alias: Helper » AppleTV Disconnect Logger
+  description: >-
+    Schreibt jedes apple_tv-Logevent mit Zeitstempel ins Logbook. Noetig, weil
+    system_log/list dedupliziert, beim Neustart geleert wird und auf diesem
+    System keine aktuelle home-assistant.log auf dem Share liegt. Erst damit
+    sind Periodizitaet und Korrelation der Disconnects auswertbar.
+  triggers:
+  - trigger: event
+    event_type: system_log_event
+  conditions:
+  - condition: template
+    value_template: "{{ trigger.event.data.name == 'homeassistant.components.apple_tv' }}"
+  actions:
+  - action: logbook.log
+    data:
+      name: AppleTV
+      message: >-
+        {{ trigger.event.data.level }} | {{ (trigger.event.data.message | first) | truncate(200, true) }}
+  mode: queued
+  max: 50
