@@ -90,7 +90,7 @@
     entity_id: sensor.prusa_mk4_nozzle_temperature
     below: 40
     for:
-      minutes: 5
+      minutes: 10
   conditions:
   - alias: "Drucker druckt nicht"
     condition: state
