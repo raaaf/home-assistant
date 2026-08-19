@@ -222,11 +222,22 @@ scene_enable_motion_automations:
       default: ""
       selector:
         text:
+    exclude_players:
+      description: >-
+        Media-Player, die NICHT spielen duerfen (optional). exclude_scenes prueft nur
+        input_booleans; Geraete-Gates wie der laufende AppleTV brauchen dieses Feld,
+        sonst muss jede Aufrufstelle die Bedingung selbst nachbauen.
+      example: "media_player.appletv"
+      required: false
+      default: ""
+      selector:
+        text:
   sequence:
   - variables:
       automation_list: "{{ automations.split(',') }}"
       scenes_to_check: "{{ exclude_scenes.split(',') if exclude_scenes else [] }}"
-  - alias: Prüfe Szenen-Konflikte
+      players_to_check: "{{ exclude_players.split(',') if exclude_players else [] }}"
+  - alias: Prüfe Szenen- und Geraete-Konflikte
     if:
     - condition: template
       value_template: >
@@ -234,6 +245,11 @@ scene_enable_motion_automations:
         {% for scene in scenes_to_check %}
           {% set scene_entity = 'input_boolean.' ~ scene.strip() %}
           {% if has_value(scene_entity) and is_state(scene_entity, 'on') %}
+            {% set conflicts.found = true %}
+          {% endif %}
+        {% endfor %}
+        {% for player in players_to_check %}
+          {% if is_state(player.strip(), 'playing') %}
             {% set conflicts.found = true %}
           {% endif %}
         {% endfor %}
@@ -766,3 +782,158 @@ movie_motion_restore:
     data:
       automations: "automation.motion_flur_wohnung"
       exclude_scenes: "party,party_wohnzimmer"
+
+scene_stop_rgb_effect:
+  alias: 'Szene » Hue-Effekt stoppen und Lichter ausschalten'
+  description: >-
+    Beendet einen laufenden Hue-Effekt, setzt die RGB-Lichter zurueck in den
+    color_temp-Modus (sonst starten sie beim naechsten Mal wieder farbig) und
+    schaltet danach die Raumlichter aus.
+  icon: mdi:palette-off
+  mode: parallel
+  max: 10
+  fields:
+    rgb_lights:
+      description: RGB-Lichter, deren Effekt gestoppt und zurueckgesetzt wird
+      required: true
+      selector:
+        object:
+    off_lights:
+      description: Lichter, die danach ausgeschaltet werden
+      required: true
+      selector:
+        object:
+  sequence:
+  - alias: "Hue-Effekt stoppen"
+    action: light.turn_on
+    target:
+      entity_id: "{{ rgb_lights }}"
+    data:
+      effect: stop_effect
+  - alias: "RGB-Lichter zurueck in den color_temp-Modus"
+    action: light.turn_on
+    target:
+      entity_id: "{{ rgb_lights }}"
+    data:
+      color_temp_kelvin: 2700
+      brightness_pct: 1
+  - delay:
+      milliseconds: 500
+  - alias: "Lichter ausschalten"
+    action: light.turn_off
+    target:
+      entity_id: "{{ off_lights }}"
+    data:
+      transition: 5
+
+restore_leselicht:
+  alias: 'Szene » Leselicht wiederherstellen'
+  description: Schaltet das Leselicht wieder ein, wenn der Schalter aktiv ist
+  icon: mdi:book-open-variant
+  mode: parallel
+  max: 10
+  sequence:
+  - condition: state
+    entity_id: input_boolean.leselicht
+    state: 'on'
+  - delay:
+      milliseconds: 500
+  - action: light.turn_on
+    target:
+      entity_id: light.ikea_light_19_wand_2
+    data:
+      brightness_pct: 100
+      color_temp_kelvin: 4000
+
+luftreiniger_auto_modus:
+  alias: 'Luftreiniger » Auto-Modus setzen wenn noetig'
+  description: Setzt den Xiaomi Luftreiniger auf Auto, falls er in einem anderen Preset steht
+  icon: mdi:air-purifier
+  mode: parallel
+  max: 10
+  sequence:
+  - if:
+    - condition: template
+      value_template: "{{ state_attr('fan.zhimi_vb4_bce4_air_purifier', 'preset_mode') != 'Auto' }}"
+    then:
+    - action: fan.set_preset_mode
+      target:
+        entity_id: fan.zhimi_vb4_bce4_air_purifier
+      data:
+        preset_mode: Auto
+
+al_set_manual_control:
+  alias: 'AL » Manual Control setzen oder loeschen'
+  description: >-
+    Markiert die Weisslicht-Gruppen eines oder mehrerer Raeume als manuell
+    gesteuert (oder loescht die Markierung). Diese Zuordnung Raum -> Weisslicht-
+    Gruppe ist die einzige AUSFUEHRENDE Kopie, damit sie nicht in jeder Szene
+    erneut gepflegt werden muss. Zwei weitere Kopien derselben Entity-Menge
+    existieren bewusst und lassen sich nicht ersetzen: der state-Trigger des
+    Party-Weisslicht-Waechters in scenes/activities.yaml (Trigger nehmen keine
+    Templates) und die Blink-Lichter der Tuerklingel in notifications/alerts.yaml
+    (andere Lichtmenge). Aendert sich eine Weisslicht-Gruppe, alle drei anfassen.
+    adaptive_lighting.set_manual_control akzeptiert pro Aufruf nur einen Switch,
+    daher die Schleife.
+  icon: mdi:hand-back-right
+  mode: parallel
+  max: 10
+  fields:
+    rooms:
+      description: Liste der Raumnamen (wohnzimmer, kueche, flur, schlafzimmer, ankleide, kinderzimmer)
+      required: true
+      selector:
+        object:
+    manual_control:
+      description: true = als manuell markieren, false = Markierung loeschen
+      required: true
+      selector:
+        boolean:
+  sequence:
+  - variables:
+      room_lights:
+        wohnzimmer:
+        - light.ikea_light_18_wand_1
+        - light.ikea_light_19_wand_2
+        - light.ikea_light_20_wand_3
+        - light.ikea_light_21_wand_4
+        - light.ikea_light_22_wand_5
+        - light.ikea_light_23_wand_6
+        - light.philips_light_19_2
+        - light.philips_light_20_3
+        kueche:
+        - light.ikea_light_14_decke_1
+        - light.ikea_light_15_decke_2
+        flur:
+        - light.ikea_light_07_decke_1
+        - light.ikea_light_08_decke_2
+        - light.ikea_light_09_decke_3
+        - light.ikea_light_10_decke_4
+        - light.ikea_light_11_decke_5
+        - light.ikea_light_12_decke_6
+        schlafzimmer:
+        - light.ikea_light_16_1
+        - light.ikea_light_17_2
+        ankleide:
+        - light.ikea_light_01
+        - light.ikea_light_02
+        kinderzimmer:
+        - light.ikea_light_13
+  - repeat:
+      for_each: "{{ rooms }}"
+      sequence:
+      - alias: "Unbekannten Raum melden statt lights: None zu senden"
+        if:
+        - condition: template
+          value_template: "{{ repeat.item not in room_lights }}"
+        then:
+        - action: system_log.write
+          data:
+            message: "al_set_manual_control: Raum {{ repeat.item }} nicht in room_lights"
+            level: warning
+        else:
+        - action: adaptive_lighting.set_manual_control
+          data:
+            entity_id: "switch.adaptive_lighting_{{ repeat.item }}"
+            lights: "{{ room_lights[repeat.item] }}"
+            manual_control: "{{ manual_control }}"

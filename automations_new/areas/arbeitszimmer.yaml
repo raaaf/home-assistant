@@ -304,6 +304,7 @@
           data:
             automations: "automation.motion_schlafzimmer"
             exclude_scenes: "party"
+            exclude_players: "media_player.appletv"
     - alias: Gaming einschalten
       conditions:
       - condition: trigger

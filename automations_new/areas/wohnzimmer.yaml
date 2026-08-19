@@ -160,20 +160,7 @@
           target:
             entity_id: automation.motion_flur_wohnung
       - alias: "Leselicht wiederherstellen falls aktiv"
-        choose:
-        - conditions:
-          - condition: state
-            entity_id: input_boolean.leselicht
-            state: 'on'
-          sequence:
-          - delay:
-              milliseconds: 500
-          - action: light.turn_on
-            target:
-              entity_id: light.ikea_light_19_wand_2
-            data:
-              brightness_pct: 100
-              color_temp_kelvin: 4000
+        action: script.restore_leselicht
       - alias: "Ambilight mit Retry einschalten (HyperHDR-Verbindung bricht beim Filmstart oft kurz ab)"
         repeat:
           sequence:
@@ -465,6 +452,12 @@
     id: 'off'
     trigger: state
   conditions: []
+  # Eine Liste fuer beide Richtungen: laufen mark und clear auseinander, bleiben
+  # Raeume dauerhaft als manuell markiert und AL adaptiert sie nie wieder.
+  variables:
+    party_wz_raeume:
+    - wohnzimmer
+    - kueche
   actions:
   - choose:
     - conditions:
@@ -489,30 +482,12 @@
           - action: automation.turn_off
             target:
               entity_id: automation.motion_esstisch
-      # 2. Mark white-only lights as manual control (prevents AL from touching them)
-      # Note: Must call separately per switch - can't pass multiple switches with lights
-      - alias: "Mark Wohnzimmer white lights as manual"
-        action: adaptive_lighting.set_manual_control
+      # 2. Weisslicht-Gruppen als manuell markieren (haelt AL von ihnen fern)
+      - alias: "Weisslicht-Gruppen als manuell markieren"
+        action: script.al_set_manual_control
         data:
-          entity_id: switch.adaptive_lighting_wohnzimmer
-          lights:
-          - light.ikea_light_18_wand_1
-          - light.ikea_light_19_wand_2
-          - light.ikea_light_20_wand_3
-          - light.ikea_light_21_wand_4
-          - light.ikea_light_22_wand_5
-          - light.ikea_light_23_wand_6
-          - light.philips_light_19_2
-          - light.philips_light_20_3
           manual_control: true
-      - alias: "Mark Küche white lights as manual"
-        action: adaptive_lighting.set_manual_control
-        data:
-          entity_id: switch.adaptive_lighting_kueche
-          lights:
-          - light.ikea_light_14_decke_1
-          - light.ikea_light_15_decke_2
-          manual_control: true
+          rooms: "{{ party_wz_raeume }}"
       # 3. Disable AL switches (prevents any adaptation)
       - alias: "Disable adaptive lighting"
         action: switch.turn_off
@@ -536,20 +511,7 @@
         target:
           entity_id: switch.steckdose_kuechengeraete
       - alias: "Leselicht wiederherstellen falls aktiv"
-        choose:
-        - conditions:
-          - condition: state
-            entity_id: input_boolean.leselicht
-            state: 'on'
-          sequence:
-          - delay:
-              milliseconds: 500
-          - action: light.turn_on
-            target:
-              entity_id: light.ikea_light_19_wand_2
-            data:
-              brightness_pct: 100
-              color_temp_kelvin: 4000
+        action: script.restore_leselicht
       # 6. Start Hue effect on RGB lights ONLY
       - alias: "Start Hue effect: colorloop (Party Wohnzimmer)"
         action: light.turn_on
@@ -565,145 +527,49 @@
       - condition: trigger
         id: 'off'
       sequence:
-      - alias: "Stop Hue effect on party lights"
-        action: light.turn_on
-        target:
-          entity_id:
+      - alias: "Hue-Effekt stoppen und Lichter ausschalten"
+        action: script.scene_stop_rgb_effect
+        data:
+          rgb_lights:
           - light.alle_wohnzimmer_rgb_lichter
           - light.alle_kuche_rgb_lichter
-        data:
-          effect: stop_effect
-      - alias: "Reset RGB lights to color_temp mode before turning off"
-        action: light.turn_on
-        data:
-          color_temp_kelvin: 2700
-          brightness_pct: 1
-        target:
-          entity_id:
-          - light.alle_wohnzimmer_rgb_lichter
-          - light.alle_kuche_rgb_lichter
-      - delay:
-          milliseconds: 500
-      - action: light.turn_off
-        data:
-          transition: 5
-        target:
-          entity_id:
+          off_lights:
           - light.alle_wohnzimmer_lichter
           - light.alle_kuche_lichter
       - delay:
           seconds: 6
-      # Clear manual control flags before re-enabling AL
-      # Note: Must call separately per switch - can't pass multiple switches with lights
-      - alias: "Clear Wohnzimmer manual control"
-        action: adaptive_lighting.set_manual_control
+      # Manual-Control-Markierungen loeschen, bevor AL wieder anlaeuft
+      - alias: "Manual-Control-Markierungen loeschen"
+        action: script.al_set_manual_control
         data:
-          entity_id: switch.adaptive_lighting_wohnzimmer
-          lights:
-          - light.ikea_light_18_wand_1
-          - light.ikea_light_19_wand_2
-          - light.ikea_light_20_wand_3
-          - light.ikea_light_21_wand_4
-          - light.ikea_light_22_wand_5
-          - light.ikea_light_23_wand_6
-          - light.philips_light_19_2
-          - light.philips_light_20_3
           manual_control: false
-      - alias: "Clear Küche manual control"
-        action: adaptive_lighting.set_manual_control
-        data:
-          entity_id: switch.adaptive_lighting_kueche
-          lights:
-          - light.ikea_light_14_decke_1
-          - light.ikea_light_15_decke_2
-          manual_control: false
-      - alias: "Re-enable living room adaptive lighting if movie/party off"
-        choose:
-        - conditions:
-          - condition: state
-            entity_id: input_boolean.movie
-            state: 'off'
-          - condition: state
-            entity_id: input_boolean.party
-            state: 'off'
-          sequence:
-          - action: switch.turn_on
-            target:
-              entity_id: switch.adaptive_lighting_wohnzimmer
-      - alias: "Re-enable kitchen adaptive lighting if movie/kochen/party off"
-        choose:
-        - conditions:
-          - condition: state
-            entity_id: input_boolean.movie
-            state: 'off'
-          - condition: state
-            entity_id: input_boolean.kochen
-            state: 'off'
-          - condition: state
-            entity_id: input_boolean.party
-            state: 'off'
-          sequence:
-          - action: switch.turn_on
-            target:
-              entity_id: switch.adaptive_lighting_kueche
-      - alias: "Re-enable kitchen motion only if no conflicting scenes are active"
-        choose:
-        - conditions:
-          - condition: state
-            entity_id: input_boolean.movie
-            state: 'off'
-          - condition: state
-            entity_id: input_boolean.kochen
-            state: 'off'
-          - condition: state
-            entity_id: input_boolean.party
-            state: 'off'
-          sequence:
-          - action: automation.turn_on
-            target:
-              entity_id: automation.motion_kuche_2
-      - alias: "Re-enable hallway motion only if no conflicting scenes are active"
-        choose:
-        - conditions:
-          - condition: state
-            entity_id: input_boolean.movie
-            state: 'off'
-          - condition: state
-            entity_id: input_boolean.party
-            state: 'off'
-          sequence:
-          - action: automation.turn_on
-            target:
-              entity_id: automation.motion_flur_wohnung
-      - alias: "Reaktiviere Esstisch-Motion wenn nicht gegessen wird und kein Film/Party"
-        choose:
-        - conditions:
-          - condition: state
-            entity_id: input_boolean.essen
-            state: 'off'
-          - condition: state
-            entity_id: input_boolean.movie
-            state: 'off'
-          - condition: state
-            entity_id: input_boolean.party
-            state: 'off'
-          sequence:
-          - action: automation.turn_on
-            target:
-              entity_id: automation.motion_esstisch
-      - alias: "Reaktiviere Spieletisch-Motion wenn kein Film/Party"
-        choose:
-        - conditions:
-          - condition: state
-            entity_id: input_boolean.movie
-            state: 'off'
-          - condition: state
-            entity_id: input_boolean.party
-            state: 'off'
-          sequence:
-          - action: automation.turn_on
-            target:
-              entity_id: automation.motion_spieletisch
+          rooms: "{{ party_wz_raeume }}"
+      - alias: "Adaptive Lighting und Motion mit Konflikt-Pruefung reaktivieren"
+        parallel:
+        - action: script.scene_enable_adaptive_lighting
+          data:
+            room: "wohnzimmer"
+            exclude_scenes: "movie,party"
+        - action: script.scene_enable_adaptive_lighting
+          data:
+            room: "kueche"
+            exclude_scenes: "movie,kochen,party"
+        - action: script.scene_enable_motion_automations
+          data:
+            automations: "automation.motion_kuche_2"
+            exclude_scenes: "movie,kochen,party"
+        - action: script.scene_enable_motion_automations
+          data:
+            automations: "automation.motion_flur_wohnung"
+            exclude_scenes: "movie,party"
+        - action: script.scene_enable_motion_automations
+          data:
+            automations: "automation.motion_esstisch"
+            exclude_scenes: "essen,movie,party"
+        - action: script.scene_enable_motion_automations
+          data:
+            automations: "automation.motion_spieletisch"
+            exclude_scenes: "movie,party"
     default: []
   mode: restart
 - id: '1744714272996'
@@ -1001,15 +867,7 @@
         target:
           entity_id: fan.zhimi_vb4_bce4_air_purifier
       - alias: "Auto-Modus setzen wenn noetig"
-        if:
-        - condition: template
-          value_template: "{{ state_attr('fan.zhimi_vb4_bce4_air_purifier', 'preset_mode') != 'Auto' }}"
-        then:
-        - action: fan.set_preset_mode
-          target:
-            entity_id: fan.zhimi_vb4_bce4_air_purifier
-          data:
-            preset_mode: Auto
+        action: script.luftreiniger_auto_modus
 
     - alias: "Feuchtigkeit hoch — einschalten"
       conditions:
@@ -1030,15 +888,7 @@
         target:
           entity_id: fan.zhimi_vb4_bce4_air_purifier
       - alias: "Auto-Modus setzen wenn noetig"
-        if:
-        - condition: template
-          value_template: "{{ state_attr('fan.zhimi_vb4_bce4_air_purifier', 'preset_mode') != 'Auto' }}"
-        then:
-        - action: fan.set_preset_mode
-          target:
-            entity_id: fan.zhimi_vb4_bce4_air_purifier
-          data:
-            preset_mode: Auto
+        action: script.luftreiniger_auto_modus
 
     - alias: "PM2.5 gut — ausschalten"
       conditions:
@@ -1101,15 +951,7 @@
         target:
           entity_id: fan.zhimi_vb4_bce4_air_purifier
       - alias: "Auto-Modus setzen wenn noetig"
-        if:
-        - condition: template
-          value_template: "{{ state_attr('fan.zhimi_vb4_bce4_air_purifier', 'preset_mode') != 'Auto' }}"
-        then:
-        - action: fan.set_preset_mode
-          target:
-            entity_id: fan.zhimi_vb4_bce4_air_purifier
-          data:
-            preset_mode: Auto
+        action: script.luftreiniger_auto_modus
 
     - alias: "Alle weg — ausschalten"
       conditions:
@@ -1165,15 +1007,7 @@
             target:
               entity_id: fan.zhimi_vb4_bce4_air_purifier
       - alias: "Auto-Modus setzen wenn noetig"
-        if:
-        - condition: template
-          value_template: "{{ state_attr('fan.zhimi_vb4_bce4_air_purifier', 'preset_mode') != 'Auto' }}"
-        then:
-        - action: fan.set_preset_mode
-          target:
-            entity_id: fan.zhimi_vb4_bce4_air_purifier
-          data:
-            preset_mode: Auto
+        action: script.luftreiniger_auto_modus
   mode: single
   max_exceeded: silent
 

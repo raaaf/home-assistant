@@ -92,6 +92,16 @@
     id: 'off'
     trigger: state
   conditions: []
+  # Eine Liste fuer beide Richtungen: laufen mark und clear auseinander, bleiben
+  # Raeume dauerhaft als manuell markiert und AL adaptiert sie nie wieder.
+  variables:
+    party_raeume:
+    - wohnzimmer
+    - kueche
+    - flur
+    - schlafzimmer
+    - ankleide
+    - kinderzimmer
   actions:
   - choose:
     - conditions:
@@ -122,64 +132,11 @@
             target:
               entity_id: automation.motion_esstisch
       # 2. Mark white-only lights as manual control (prevents AL from touching them)
-      # Note: Must call separately per switch - can't pass multiple switches with lights
-      - alias: "Mark Wohnzimmer white lights as manual"
-        action: adaptive_lighting.set_manual_control
+      - alias: "Weisslicht-Gruppen als manuell markieren"
+        action: script.al_set_manual_control
         data:
-          entity_id: switch.adaptive_lighting_wohnzimmer
-          lights:
-          - light.ikea_light_18_wand_1
-          - light.ikea_light_19_wand_2
-          - light.ikea_light_20_wand_3
-          - light.ikea_light_21_wand_4
-          - light.ikea_light_22_wand_5
-          - light.ikea_light_23_wand_6
-          - light.philips_light_19_2
-          - light.philips_light_20_3
           manual_control: true
-      - alias: "Mark Küche white lights as manual"
-        action: adaptive_lighting.set_manual_control
-        data:
-          entity_id: switch.adaptive_lighting_kueche
-          lights:
-          - light.ikea_light_14_decke_1
-          - light.ikea_light_15_decke_2
-          manual_control: true
-      - alias: "Mark Flur white lights as manual"
-        action: adaptive_lighting.set_manual_control
-        data:
-          entity_id: switch.adaptive_lighting_flur
-          lights:
-          - light.ikea_light_07_decke_1
-          - light.ikea_light_08_decke_2
-          - light.ikea_light_09_decke_3
-          - light.ikea_light_10_decke_4
-          - light.ikea_light_11_decke_5
-          - light.ikea_light_12_decke_6
-          manual_control: true
-      - alias: "Mark Schlafzimmer white lights as manual"
-        action: adaptive_lighting.set_manual_control
-        data:
-          entity_id: switch.adaptive_lighting_schlafzimmer
-          lights:
-          - light.ikea_light_16_1
-          - light.ikea_light_17_2
-          manual_control: true
-      - alias: "Mark Ankleide white lights as manual"
-        action: adaptive_lighting.set_manual_control
-        data:
-          entity_id: switch.adaptive_lighting_ankleide
-          lights:
-          - light.ikea_light_01
-          - light.ikea_light_02
-          manual_control: true
-      - alias: "Mark Kinderzimmer white lights as manual"
-        action: adaptive_lighting.set_manual_control
-        data:
-          entity_id: switch.adaptive_lighting_kinderzimmer
-          lights:
-          - light.ikea_light_13
-          manual_control: true
+          rooms: "{{ party_raeume }}"
       # 3. Disable AL switches (prevents any adaptation)
       - alias: "Disable adaptive lighting"
         action: switch.turn_off
@@ -213,20 +170,7 @@
           - light.alle_badezimmer_lichter
           - light.alle_kinderzimmer_lichter
       - alias: "Leselicht wiederherstellen falls aktiv"
-        choose:
-        - conditions:
-          - condition: state
-            entity_id: input_boolean.leselicht
-            state: 'on'
-          sequence:
-          - delay:
-              milliseconds: 500
-          - action: light.turn_on
-            target:
-              entity_id: light.ikea_light_19_wand_2
-            data:
-              brightness_pct: 100
-              color_temp_kelvin: 4000
+        action: script.restore_leselicht
       # 6. Start Hue effect on RGB lights ONLY
       - alias: "Start Hue effect: colorloop (Party global)"
         action: light.turn_on
@@ -246,39 +190,17 @@
       - condition: trigger
         id: 'off'
       sequence:
-      - alias: "Stop Hue effect on all party lights"
-        action: light.turn_on
-        target:
-          entity_id:
+      - alias: "Hue-Effekt stoppen und Lichter ausschalten"
+        action: script.scene_stop_rgb_effect
+        data:
+          rgb_lights:
           - light.alle_wohnzimmer_rgb_lichter
           - light.alle_kuche_rgb_lichter
           - light.alle_flur_rgb_lichter
           - light.alle_schlafzimmer_rgb_lichter
           - light.alle_badezimmer_rgb_lichter
           - light.alle_kinderzimmer_rgb_lichter
-        data:
-          effect: stop_effect
-      - alias: "Reset RGB lights to color_temp mode before turning off"
-        action: light.turn_on
-        data:
-          color_temp_kelvin: 2700
-          brightness_pct: 1
-        target:
-          entity_id:
-          - light.alle_wohnzimmer_rgb_lichter
-          - light.alle_kuche_rgb_lichter
-          - light.alle_flur_rgb_lichter
-          - light.alle_schlafzimmer_rgb_lichter
-          - light.alle_badezimmer_rgb_lichter
-          - light.alle_kinderzimmer_rgb_lichter
-      - delay:
-          milliseconds: 500
-      - alias: "Turn off all party lights"
-        action: light.turn_off
-        data:
-          transition: 5
-        target:
-          entity_id:
+          off_lights:
           - light.alle_wohnzimmer_lichter
           - light.alle_kuche_lichter
           - light.alle_flur_lichter
@@ -289,107 +211,26 @@
       - delay:
           seconds: 6
       # Clear manual control flags before re-enabling AL
-      # Note: Must call separately per switch - can't pass multiple switches with lights
-      - alias: "Clear Wohnzimmer manual control"
-        action: adaptive_lighting.set_manual_control
+      - alias: "Manual-Control-Markierungen loeschen"
+        action: script.al_set_manual_control
         data:
-          entity_id: switch.adaptive_lighting_wohnzimmer
-          lights:
-          - light.ikea_light_18_wand_1
-          - light.ikea_light_19_wand_2
-          - light.ikea_light_20_wand_3
-          - light.ikea_light_21_wand_4
-          - light.ikea_light_22_wand_5
-          - light.ikea_light_23_wand_6
-          - light.philips_light_19_2
-          - light.philips_light_20_3
           manual_control: false
-      - alias: "Clear Küche manual control"
-        action: adaptive_lighting.set_manual_control
-        data:
-          entity_id: switch.adaptive_lighting_kueche
-          lights:
-          - light.ikea_light_14_decke_1
-          - light.ikea_light_15_decke_2
-          manual_control: false
-      - alias: "Clear Flur manual control"
-        action: adaptive_lighting.set_manual_control
-        data:
-          entity_id: switch.adaptive_lighting_flur
-          lights:
-          - light.ikea_light_07_decke_1
-          - light.ikea_light_08_decke_2
-          - light.ikea_light_09_decke_3
-          - light.ikea_light_10_decke_4
-          - light.ikea_light_11_decke_5
-          - light.ikea_light_12_decke_6
-          manual_control: false
-      - alias: "Clear Schlafzimmer manual control"
-        action: adaptive_lighting.set_manual_control
-        data:
-          entity_id: switch.adaptive_lighting_schlafzimmer
-          lights:
-          - light.ikea_light_16_1
-          - light.ikea_light_17_2
-          manual_control: false
-      - alias: "Clear Ankleide manual control"
-        action: adaptive_lighting.set_manual_control
-        data:
-          entity_id: switch.adaptive_lighting_ankleide
-          lights:
-          - light.ikea_light_01
-          - light.ikea_light_02
-          manual_control: false
-      - alias: "Clear Kinderzimmer manual control"
-        action: adaptive_lighting.set_manual_control
-        data:
-          entity_id: switch.adaptive_lighting_kinderzimmer
-          lights:
-          - light.ikea_light_13
-          manual_control: false
-      - alias: "Re-enable living room adaptive lighting if party_wohnzimmer is off"
-        choose:
-        - conditions:
-          - condition: state
-            entity_id: input_boolean.party_wohnzimmer
-            state: 'off'
-          - condition: state
-            entity_id: input_boolean.movie
-            state: 'off'
-          sequence:
-          - action: switch.turn_on
-            target:
-              entity_id: switch.adaptive_lighting_wohnzimmer
-      - alias: "Re-enable kitchen adaptive lighting if cooking/movie/party_wohnzimmer off"
-        choose:
-        - conditions:
-          - condition: state
-            entity_id: input_boolean.kochen
-            state: 'off'
-          - condition: state
-            entity_id: input_boolean.movie
-            state: 'off'
-          - condition: state
-            entity_id: input_boolean.party_wohnzimmer
-            state: 'off'
-          sequence:
-          - action: switch.turn_on
-            target:
-              entity_id: switch.adaptive_lighting_kueche
-      - alias: "Re-enable bathroom adaptive lighting if sauna/baden off"
-        choose:
-        - conditions:
-          - condition: state
-            entity_id: input_boolean.sauna
-            state: 'off'
-          - condition: state
-            entity_id: input_boolean.baden
-            state: 'off'
-          sequence:
-          - action: switch.turn_on
-            target:
-              entity_id: switch.adaptive_lighting_badezimmer
-      - alias: "Re-enable other room adaptive lighting unconditionally"
+          rooms: "{{ party_raeume }}"
+      - alias: "Adaptive Lighting mit Konflikt-Pruefung reaktivieren"
+        parallel:
+        - action: script.scene_enable_adaptive_lighting
+          data:
+            room: "wohnzimmer"
+            exclude_scenes: "party_wohnzimmer,movie"
+        - action: script.scene_enable_adaptive_lighting
+          data:
+            room: "kueche"
+            exclude_scenes: "kochen,movie,party_wohnzimmer"
+        - action: script.scene_enable_adaptive_lighting
+          data:
+            room: "badezimmer"
+            exclude_scenes: "sauna,baden"
+      - alias: "Uebrige Raeume bedingungslos reaktivieren"
         action: switch.turn_on
         target:
           entity_id:
@@ -399,105 +240,38 @@
           - switch.adaptive_lighting_schlafzimmer
           - switch.adaptive_lighting_waschzimmer
           - switch.adaptive_lighting_balkon
-      - alias: "Re-enable kitchen motion if no conflicting scenes"
-        choose:
-        - conditions:
-          - condition: state
-            entity_id: input_boolean.movie
-            state: 'off'
-          - condition: state
-            entity_id: input_boolean.kochen
-            state: 'off'
-          - condition: state
-            entity_id: input_boolean.essen
-            state: 'off'
-          - condition: state
-            entity_id: input_boolean.party_wohnzimmer
-            state: 'off'
-          sequence:
-          - action: automation.turn_on
-            target:
-              entity_id: automation.motion_kuche_2  # Kitchen motion
-      - alias: "Re-enable hallway motion if no conflicting scenes"
-        choose:
-        - conditions:
-          - condition: state
-            entity_id: input_boolean.movie
-            state: 'off'
-          - condition: state
-            entity_id: input_boolean.party_wohnzimmer
-            state: 'off'
-          sequence:
-          - action: automation.turn_on
-            target:
-              entity_id: automation.motion_flur_wohnung  # Hallway motion
-      - alias: "Re-enable office motion if work/gaming mode is off"
-        choose:
-        - conditions:
-          - condition: state
-            entity_id: input_boolean.arbeit
-            state: 'off'
-          - condition: state
-            entity_id: input_boolean.gaming
-            state: 'off'
-          sequence:
-          - action: automation.turn_on
-            target:
-              entity_id: automation.arbeitszimmer_motion  # Office motion
-      - alias: "Re-enable dining table motion if eating/movie mode is off"
-        choose:
-        - conditions:
-          - condition: state
-            entity_id: input_boolean.essen
-            state: 'off'
-          - condition: state
-            entity_id: input_boolean.movie
-            state: 'off'
-          sequence:
-          - action: automation.turn_on
-            target:
-              entity_id: automation.motion_esstisch  # Dining table motion
-      - alias: "Re-enable game table motion if movie is off"
-        choose:
-        - conditions:
-          - condition: state
-            entity_id: input_boolean.movie
-            state: 'off'
-          sequence:
-          - action: automation.turn_on
-            target:
-              entity_id: automation.motion_spieletisch  # Game table motion
-      - alias: "Re-enable bathroom motion if sauna/baden mode is off"
-        choose:
-        - conditions:
-          - condition: state
-            entity_id: input_boolean.sauna
-            state: 'off'
-          - condition: state
-            entity_id: input_boolean.baden
-            state: 'off'
-          sequence:
-          - action: automation.turn_on
-            target:
-              entity_id: automation.motion_badezimmer_gross  # Bathroom motion
+      - alias: "Motion-Automationen mit Konflikt-Pruefung reaktivieren"
+        parallel:
+        - action: script.scene_enable_motion_automations
+          data:
+            automations: "automation.motion_kuche_2"
+            exclude_scenes: "movie,kochen,essen,party_wohnzimmer"
+        - action: script.scene_enable_motion_automations
+          data:
+            automations: "automation.motion_flur_wohnung"
+            exclude_scenes: "movie,party_wohnzimmer"
+        - action: script.scene_enable_motion_automations
+          data:
+            automations: "automation.arbeitszimmer_motion"
+            exclude_scenes: "arbeit,gaming"
+        - action: script.scene_enable_motion_automations
+          data:
+            automations: "automation.motion_esstisch"
+            exclude_scenes: "essen,movie,party_wohnzimmer"
+        - action: script.scene_enable_motion_automations
+          data:
+            automations: "automation.motion_spieletisch"
+            exclude_scenes: "movie,party_wohnzimmer"
+        - action: script.scene_enable_motion_automations
+          data:
+            automations: "automation.motion_badezimmer_gross"
+            exclude_scenes: "sauna,baden"
       - alias: "Re-enable bedroom motion if gaming/schlafenszeit is off and no TV playing"
-        choose:
-        - conditions:
-          - condition: state
-            entity_id: input_boolean.gaming
-            state: 'off'
-          - condition: state
-            entity_id: input_boolean.schlafenszeit
-            state: 'off'
-          - condition: not
-            conditions:
-            - condition: state
-              entity_id: media_player.appletv
-              state: 'playing'
-          sequence:
-          - action: automation.turn_on
-            target:
-              entity_id: automation.motion_schlafzimmer  # Bedroom motion
+        action: script.scene_enable_motion_automations
+        data:
+          automations: "automation.motion_schlafzimmer"
+          exclude_scenes: "gaming,schlafenszeit"
+          exclude_players: "media_player.appletv"
       - alias: "Re-enable kinderzimmer motion if schlafenszeit is off"
         choose:
         - conditions:

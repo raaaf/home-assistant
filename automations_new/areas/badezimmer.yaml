@@ -90,30 +90,13 @@
       - condition: trigger
         id: 'off'
       sequence:
-      - alias: "Stop Hue effect"
-        action: light.turn_on
-        target:
-          entity_id:
+      - alias: "Hue-Effekt stoppen und Lichter ausschalten"
+        action: script.scene_stop_rgb_effect
+        data:
+          rgb_lights:
           - light.alle_badezimmer_lichter
           - light.alle_badezimmer_nachtlichter
-        data:
-          effect: stop_effect
-      - alias: "Reset RGB lights to color_temp mode before turning off"
-        action: light.turn_on
-        data:
-          color_temp_kelvin: 2700
-          brightness_pct: 1
-        target:
-          entity_id:
-          - light.alle_badezimmer_lichter
-          - light.alle_badezimmer_nachtlichter
-      - delay:
-          milliseconds: 500
-      - action: light.turn_off
-        data:
-          transition: 5
-        target:
-          entity_id:
+          off_lights:
           - light.alle_badezimmer_lichter
           - light.alle_badezimmer_nachtlichter
       - action: cover.set_cover_position
@@ -178,30 +161,13 @@
       - condition: trigger
         id: 'off'
       sequence:
-      - alias: "Stop Hue effect"
-        action: light.turn_on
-        target:
-          entity_id:
+      - alias: "Hue-Effekt stoppen und Lichter ausschalten"
+        action: script.scene_stop_rgb_effect
+        data:
+          rgb_lights:
           - light.alle_badezimmer_lichter
           - light.alle_badezimmer_nachtlichter
-        data:
-          effect: stop_effect
-      - alias: "Reset RGB lights to color_temp mode before turning off"
-        action: light.turn_on
-        data:
-          color_temp_kelvin: 2700
-          brightness_pct: 1
-        target:
-          entity_id:
-          - light.alle_badezimmer_lichter
-          - light.alle_badezimmer_nachtlichter
-      - delay:
-          milliseconds: 500
-      - action: light.turn_off
-        data:
-          transition: 5
-        target:
-          entity_id:
+          off_lights:
           - light.alle_badezimmer_lichter
           - light.alle_badezimmer_nachtlichter
       - delay:
