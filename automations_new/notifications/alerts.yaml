@@ -503,3 +503,55 @@
           name: "Bedtime Reminder"
           message: "Snooze per Notification-Button"
           domain: automation
+
+- id: '1755523800001'
+  alias: Notification » NAS Backup Meldung
+  description: Empfaengt Webhooks der Synology (Hyper Backup, Speicher, System) und
+    meldet sie per Push und persistenter Benachrichtigung
+  mode: queued
+  max: 10
+  triggers:
+  - trigger: webhook
+    webhook_id: !secret nas_webhook_id
+    allowed_methods:
+    - POST
+    local_only: true
+  actions:
+  # Der Text kommt von aussen und ist unvertrauenswuerdig. Drei getrennte Schutzmassnahmen,
+  # jede gegen etwas anderes. Keine ersetzt eine andere:
+  #   1. Das feste Praefix "Meldung der Synology: " unten. DAS blockt die
+  #      Geraetekommandos: die mobile_app-Plattform vergleicht message exakt gegen
+  #      request_location_update, clear_notification, command_* usw. Mit Praefix
+  #      kann message nie gleich einem Kommando sein. Nie entfernen.
+  #   2. Die Klammer-Ersetzung entschaerft Markdown-Links und -Bilder, die
+  #      persistent_notification im Frontend sonst klickbar rendert.
+  #   3. truncate deckelt die Laenge. leeway=0, sonst laesst Jinja bis zu 205
+  #      Zeichen unveraendert durch.
+  - variables:
+      meldung: >-
+        {{ (trigger.json.text if trigger.json is defined and trigger.json.text is defined
+            else (trigger.data.text if trigger.data is defined and trigger.data.text is defined
+            else 'Synology meldet ein Ereignis'))
+           | string | replace('[', '(') | replace(']', ')')
+           | truncate(200, true, '...', 0) }}
+      # Feste id pro Ereignistyp per Schluesselwort. Der Text selbst darf die id
+      # NICHT bestimmen, sonst legt jeder abweichende erste Wort eine weitere
+      # persistente Notification an, die nie wieder ueberschrieben wird.
+      meldung_id: >-
+        {% set t = meldung | lower %}
+        {% if 'backup' in t or 'sicherung' in t %}backup
+        {% elif 'speicher' in t or 'storage' in t or 'volume' in t or 'datentraeger' in t
+             or 'festplatte' in t or 'raid' in t %}speicher
+        {% elif 'temperat' in t or 'luefter' in t or 'fan' in t or 'usv' in t %}hardware
+        {% elif 'aktualisier' in t or 'dsm-update' in t
+             or ('update' in t and 'kein' not in t) %}update
+        {% else %}allgemein{% endif %}
+  - action: notify.rafael
+    data:
+      title: NAS
+      message: 'Meldung der Synology: {{ meldung }}'
+  - action: persistent_notification.create
+    data:
+      notification_id: "synology_nas_{{ meldung_id | trim }}"
+      title: NAS
+      message: '{{ now().strftime(''%d.%m.%Y %H:%M'') }} - Meldung der Synology: {{ meldung }}'
