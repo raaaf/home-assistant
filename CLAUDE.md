@@ -358,7 +358,9 @@ Defined in `automations_new/climate/heating_cooling.yaml`.
 The AC sits in the Arbeitszimmer (office) and is steered by **"Helper » AC manual"**:
 
 - **Hysteresis**: on at >= 25.5 C, off below 24.5 C (no flapping, no dead zone).
-- **Window gates cooling**, not mode: windows closed -> `cool`, windows open -> `off` (cooling with open windows is pointless). Outdoor temperature is irrelevant. There is **no steady-state `fan_only`** anymore (the Midea fan mode is useless for cooling).
+- **Window gates cooling**, not mode: windows closed -> `cool`, windows open -> `off` (cooling with open windows is pointless). There is **no steady-state `fan_only`** anymore (the Midea fan mode is useless for cooling).
+- **Outdoor temperature gates cooling** below 20 C (`aussen_zu_kalt`): the room cools down on its own, the compressor is pointless. Source is `sensor.temperatur_aussen` (combined Aqara + Tuya balcony sensors), falling back to `weather.fuerth_bayern`. `sensor.ac_outdoor_temperature` is deliberately unused, it sits on the outdoor unit and picks up its waste heat. Two `numeric_state` triggers on the 20 C threshold wake the automation.
+- **No delta block**: when it is cooler outside than in, cooling is *not* blocked, it only sends a push (`lueften_besser`, outdoor <= indoor - 2 C). HA cannot open the windows, so a hard block would just leave the room hot. The ventilation case is already covered by the window gate.
 - **Cleanup run**: whenever cooling stops after **>= 10 min** of `cool`, the AC runs `fan_only` (silent) for **30 min** to dry the evaporator (mold protection), then `timer.ac_cleanup` turns it off via "Klima » AC Reinigungslauf beendet". Resuming `cool` cancels the timer. This is the only situation `fan_only` is used.
 - **Presence gate** (`zone_anwesend`): active mode (Arbeit/Gaming/Schlafenszeit), an active MacBook, or AppleTV playing. No one home -> off.
 - **Hybrid temperature source**: Arbeitszimmer sensor during Arbeit/Gaming (AC blows into the office), `sensor.temperatur_schlafzimmer` during Schlafenszeit/AppleTV.

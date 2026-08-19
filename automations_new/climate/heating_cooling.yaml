@@ -117,6 +117,18 @@
   - entity_id: media_player.appletv
     trigger: state
     id: praesenz-tv
+  # Aussentemperatur: Kuehlen wird unter der Untergrenze gesperrt, also muss das
+  # Ueberschreiten der Schwelle die Automation wecken.
+  - entity_id: sensor.temperatur_aussen
+    above: 19.9
+    for: 00:05:00
+    trigger: numeric_state
+    id: aussen-warm
+  - entity_id: sensor.temperatur_aussen
+    below: 20
+    for: 00:05:00
+    trigger: numeric_state
+    id: aussen-kalt
   conditions:
   - condition: state
     entity_id: input_boolean.alle_sind_weg
@@ -147,6 +159,25 @@
         {% else %}
           25
         {% endif %}
+      # Aussentemperatur: sensor.temperatur_aussen ist bereits die Kombination der
+      # beiden Balkonsensoren (Aqara + Tuya). Fallback auf den DWD, wenn beide weg
+      # sind. sensor.ac_outdoor_temperature wird bewusst NICHT genutzt: der sitzt am
+      # Aussengeraet und misst dessen Abwaerme mit.
+      aussen_temp: >-
+        {% if has_value('sensor.temperatur_aussen') %}
+          {{ states('sensor.temperatur_aussen') | float(25) }}
+        {% elif state_attr('weather.fuerth_bayern', 'temperature') is not none %}
+          {{ state_attr('weather.fuerth_bayern', 'temperature') | float(25) }}
+        {% else %}
+          25
+        {% endif %}
+      # Untergrenze: unter 20 C draussen ist Kompressorkuehlung nicht mehr sinnvoll,
+      # der Raum kuehlt von allein ab. Harte Sperre, kein Delta-Vergleich: HA kann
+      # die Fenster nicht oeffnen, ein Delta-Block wuerde den Raum nur heiss lassen.
+      aussen_zu_kalt: '{{ aussen_temp < 20 }}'
+      # Draussen deutlich kuehler als drinnen: Lueften waere billiger als Kuehlen.
+      # Blockt nichts, loest nur einen Hinweis aus, wenn das Kuehlen anlaeuft.
+      lueften_besser: '{{ aussen_temp <= raum_temp - 2 }}'
       # Fenster zu (ausser AZ, dort haengt der AC-Schlauch). Kuehlen nur bei zu, Umluft immer erlaubt.
       fenster_zu: "{{ is_state('binary_sensor.fenster_tueren_ohne_arbeitszimmer', 'off') }}"
       aktueller_modus: '{{ states(''climate.ac'') if has_value(''climate.ac'') else ''off'' }}'
@@ -189,11 +220,12 @@
       # aus erst unter Soll+0.5. Tag (Soll 24): an 25.5 / aus 24.5.
       # Schlafenszeit (Soll 22): an 23.5 / aus 22.5 -> die kuehlere Nacht greift.
       warm: '{{ (raum_temp >= ziel_setpoint + 0.5) if ac_laeuft else (raum_temp >= ziel_setpoint + 1.5) }}'
-      # Aktiv nur bei Anwesenheit und geschlossenem Fenster (kuehlen bei offenem
-      # Fenster waere sinnlos). Reiner Umluftbetrieb entfaellt, statt Kuehlen gibt
-      # es nur noch off (ggf. mit Reinigungslauf, siehe off-Zweig). Aussentemp egal.
+      # Aktiv nur bei Anwesenheit, geschlossenem Fenster und mindestens 20 C draussen
+      # (kuehlen bei offenem Fenster waere sinnlos, unter 20 C aussen unnoetig).
+      # Reiner Umluftbetrieb entfaellt, statt Kuehlen gibt es nur noch off
+      # (ggf. mit Reinigungslauf, siehe off-Zweig).
       ziel_modus: >-
-        {% if praesenz_gate and warm and fenster_zu %}
+        {% if praesenz_gate and warm and fenster_zu and not aussen_zu_kalt %}
           cool
         {% else %}
           off
@@ -264,6 +296,17 @@
           target:
             entity_id: climate.ac
         - delay: 00:00:02
+        - alias: "Hinweis wenn Lueften billiger waere als Kuehlen"
+          if:
+          - condition: template
+            value_template: '{{ lueften_besser }}'
+          then:
+          - action: notify.rafael
+            data:
+              title: AC kuehlt, draussen ist es kuehler
+              message: >-
+                Innen {{ raum_temp | round(1) }} C, aussen {{ aussen_temp | round(1) }} C.
+                Fenster auf waere billiger als der Kompressor.
       # ieco (intelligent eco): immer beim Kuehlen, drosselt den Kompressor sparsam
       # und laeuft leise (auch nachts). Hinweis: ieco und gear schliessen sich aus.
       - if:
