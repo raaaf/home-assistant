@@ -40,7 +40,6 @@
         ''on'') }}'
       wird_heiss: '{{ has_value(''input_boolean.heute_wird_es_heiss_werden'') and is_state(''input_boolean.heute_wird_es_heiss_werden'', ''on'')
         }}'
-      position_arbeit: 1
       position_west: "{% if wird_sehr_heiss %}0{% elif wird_heiss %}10{% else %}100{% endif %}"
   - choose:
     # Morgens: Kinderzimmer + Schlafzimmer (= cover.aqara_cover_01, Bett-Raum)

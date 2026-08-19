@@ -6,19 +6,12 @@
   alias: Notifications » Heizung > 4 Stunden
   description: Benachrichtigt wenn Heizungen länger als 4 Stunden aktiv sind
   triggers:
-  - entity_id: sensor.heizung_schlafzimmer_an
-    above: 4
-    trigger: numeric_state
-  - entity_id: sensor.heizung_kinderzimmer_an
-    above: 4
-    trigger: numeric_state
-  - entity_id: sensor.heizung_badezimmer_an
-    above: 4
-    trigger: numeric_state
-  - entity_id: sensor.heizung_flur_an
-    above: 4
-    trigger: numeric_state
-  - entity_id: sensor.heizung_wohnzimmer_an
+  - entity_id:
+    - sensor.heizung_schlafzimmer_an
+    - sensor.heizung_kinderzimmer_an
+    - sensor.heizung_badezimmer_an
+    - sensor.heizung_flur_an
+    - sensor.heizung_wohnzimmer_an
     above: 4
     trigger: numeric_state
   conditions:

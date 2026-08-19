@@ -13,13 +13,11 @@
       above: 200
       for:
         minutes: 5
-      id: einspeisung-hoch
     - trigger: numeric_state
       entity_id: sensor.stream_ac_pro_3683_power_battery_2
       above: 94
       for:
         minutes: 2
-      id: batterie-voll
   conditions:
     - condition: numeric_state
       entity_id: sensor.stream_ac_pro_3683_power_battery_2

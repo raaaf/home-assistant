@@ -48,8 +48,6 @@
         condition: state
         entity_id: input_boolean.schlafenszeit
         state: 'off'
-      - condition: template
-        value_template: "{{ has_value('input_boolean.schlafenszeit') }}"
       - alias: Keine manuelle Steuerung aktiv (Adaptive Lighting)
         condition: template
         value_template: >-
