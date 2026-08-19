@@ -155,6 +155,64 @@
     - light.philips_light_07_blumen
 
 # =============================================================================
+# ZONEN - Untergruppen fuer HomeKit
+# =============================================================================
+
+- platform: group
+  unique_id: wohnzimmer_esstisch
+  name: Wohnzimmer Esstisch
+  entities:
+    - light.philips_light_18_1
+    - light.philips_light_19_2
+    - light.philips_light_20_3
+
+- platform: group
+  unique_id: wohnzimmer_wand
+  name: Wohnzimmer Wand
+  entities:
+    - light.ikea_light_18_wand_1
+    - light.ikea_light_19_wand_2
+    - light.ikea_light_20_wand_3
+    - light.ikea_light_21_wand_4
+    - light.ikea_light_22_wand_5
+    - light.ikea_light_23_wand_6
+
+- platform: group
+  unique_id: wohnzimmer_spielematte
+  name: Wohnzimmer Spielematte
+  entities:
+    - light.philips_light_24
+    - light.philips_light_25_spielematte_2
+    - light.philips_light_26_spielematte_3
+    - light.philips_light_27_spielematte_4
+
+- platform: group
+  unique_id: kuche_insel
+  name: Küche Insel
+  entities:
+    - light.philips_light_11_oben
+    - light.philips_light_12_unten
+
+- platform: group
+  unique_id: flur_decke
+  name: Flur Decke
+  entities:
+    - light.ikea_light_07_decke_1
+    - light.ikea_light_08_decke_2
+    - light.ikea_light_09_decke_3
+    - light.ikea_light_10_decke_4
+    - light.ikea_light_11_decke_5
+    - light.ikea_light_12_decke_6
+
+# Raumtausch 2026: PC-Lichter stehen im Schlafraum (entity_ids sagen "arbeitszimmer")
+- platform: group
+  unique_id: schlafzimmer_pc
+  name: Schlafzimmer PC
+  entities:
+    - light.philips_light_01_pc_1
+    - light.philips_light_02_pc_2
+
+# =============================================================================
 # NACHTLICHTER - Separate Gruppen fuer Nachtmodi
 # =============================================================================
 
