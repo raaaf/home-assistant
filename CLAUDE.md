@@ -75,11 +75,11 @@ PYEOF
 
 | Path | Purpose |
 |------|---------|
-| `configuration.yaml` | Main entry point (899 lines) |
-| `automations_new/` | All automations (34 files, 6,740 lines) |
+| `configuration.yaml` | Main entry point |
+| `automations_new/` | All automations (34 files) |
 | `custom_components/` | 24 custom integrations |
 | `blueprints/` | 162 blueprints (5 automation + 157 switch_manager) |
-| `scripts.yaml` | Reusable scripts (12 scripts) |
+| `scripts.yaml` | Reusable scripts |
 | `themes/` | 6 UI themes |
 | `secrets.yaml` | Sensitive data (never commit) |
 
@@ -92,7 +92,7 @@ PYEOF
 The configuration uses a **modular split-configuration pattern** with `!include` directives:
 
 ```
-configuration.yaml (899 lines)
+configuration.yaml
 ├── homeassistant:           # Core settings, auth, MFA
 ├── http:                    # Proxy & security
 ├── recorder:                # Database (14-day retention)
@@ -118,8 +118,8 @@ configuration.yaml (899 lines)
 ### Automations Directory Structure
 
 ```
-automations_new/
-├── areas/                    # 9 room-specific files
+automations_new/                # 34 files
+├── areas/                    # 9 room files
 │   ├── arbeitszimmer.yaml   # Office
 │   ├── badezimmer.yaml      # Bathroom
 │   ├── balkon.yaml          # Balcony
@@ -130,36 +130,44 @@ automations_new/
 │   ├── waschzimmer.yaml     # Laundry
 │   └── wohnzimmer.yaml      # Living room
 │
-├── lighting/                 # 8 lighting files
+├── lighting/                 # 4 lighting files
 │   ├── adaptive_lighting.yaml    # Manual control detection
-│   ├── circadian.yaml            # Dynamic Lighting triggers
-│   ├── day_night.yaml            # Time-based transitions
+│   ├── day_night.yaml            # Time-based transitions, wake-up, sleep mode
 │   ├── motion_sensors.yaml       # Motion triggers
-│   ├── nachtlicht.yaml           # Night light mode
-│   └── parabolic_sunrise_*.yaml  # Wake-up lighting (4 rooms)
+│   └── nachtlicht.yaml           # Night light mode
 │
 ├── climate/                  # 2 climate files
-│   ├── heating_cooling.yaml # HVAC automation
+│   ├── heating_cooling.yaml # AC, fans, floor heating
 │   └── rollos.yaml          # Blind/roller control
 │
+├── appliances/               # 5 appliance files
+│   ├── air_quality.yaml     # Air purifier, humidifier
+│   ├── cleaning.yaml        # Robbi vacuum
+│   ├── laundry.yaml         # Washer, dryer
+│   ├── other.yaml           # Misc devices
+│   └── prusa.yaml           # 3D printer
+│
 ├── helpers/                  # 5 helper files
-│   ├── automation.yaml      # Automation management
+│   ├── automation.yaml      # Automation management, wakeup music
 │   ├── energy.yaml          # Energy tracking
 │   ├── motion_sync_on_restart.yaml
-│   ├── presence.yaml        # Presence detection (571 lines)
+│   ├── presence.yaml        # Presence detection
 │   └── system.yaml          # System checks
 │
-├── notifications/            # 3 notification files
-│   ├── alerts.yaml          # Alert triggers
-│   ├── environment.yaml     # Environmental warnings
+├── notifications/            # 4 notification files
+│   ├── alerts.yaml          # Alert triggers, NAS webhook
+│   ├── energy_surplus.yaml  # Solar surplus hints
+│   ├── environment.yaml     # Environmental warnings, energy reports
 │   └── monitoring.yaml      # Health checks
 │
-├── scenes/                   # 2 scene files
+├── scenes/                   # 3 scene files
 │   ├── activities.yaml      # Guest, Party modes
-│   └── entertainment.yaml   # Gaming, TV modes
+│   ├── entertainment.yaml   # Gaming, TV modes
+│   └── media_volume.yaml    # Per-scene volume handling
 │
-└── system/
-    └── core.yaml            # System boot/restart
+└── system/                   # 2 system files
+    ├── core.yaml            # System boot/restart, AL startup settings
+    └── sabnzbd_nightmode.yaml
 ```
 
 ---
@@ -250,7 +258,7 @@ Examples:
 
 The system uses the **Adaptive Lighting** custom component for circadian rhythm lighting across all 10 rooms.
 
-**Configuration**: `adaptive_lighting.yaml` (386 lines)
+**Configuration**: `adaptive_lighting.yaml`
 
 **Room Configuration**:
 | Room | Lights | Reset Time | Notes |
@@ -341,11 +349,19 @@ binary_sensor.scene_conflict_detected  # Conflict warning
 ### Scene Scripts
 
 ```yaml
-script.scene_enable_adaptive_lighting   # Enable circadian for room
+script.scene_enable_adaptive_lighting   # Enable circadian for room (with scene conflict check)
 script.scene_disable_adaptive_lighting  # Disable circadian
-script.scene_enable_motion_automations  # Re-enable motion triggers
+script.scene_enable_motion_automations  # Re-enable motion triggers (with scene conflict check)
 script.scene_disable_motion_automations # Disable motion triggers
+script.al_set_manual_control            # Mark/clear AL manual control per room (mapping lives here)
+script.scene_stop_rgb_effect            # Stop a Hue effect, reset to color_temp, turn lights off
+script.restore_leselicht                # Restore the reading light if input_boolean.leselicht is on
+script.movie_motion_restore             # Re-enable motion automations when the movie scene ends
 ```
+
+The four `scene_*` scripts take an `exclude_scenes` list of `input_boolean` names and do nothing
+while one of them is on. That check only sees input_booleans. A gate on a media_player (e.g. the
+AppleTV guard around `automation.motion_schlafzimmer`) still has to sit at the call site.
 
 ---
 
@@ -362,9 +378,9 @@ The AC sits in the Arbeitszimmer (office) and is steered by **"Helper » AC manu
 - **Outdoor temperature gates cooling** below 20 C (`aussen_zu_kalt`): the room cools down on its own, the compressor is pointless. Source is `sensor.temperatur_aussen` (combined Aqara + Tuya balcony sensors), falling back to `weather.fuerth_bayern`. `sensor.ac_outdoor_temperature` is deliberately unused, it sits on the outdoor unit and picks up its waste heat. Two `numeric_state` triggers on the 20 C threshold wake the automation.
 - **No delta block**: when it is cooler outside than in, cooling is *not* blocked, it only sends a push (`lueften_besser`, outdoor <= indoor - 2 C). HA cannot open the windows, so a hard block would just leave the room hot. The ventilation case is already covered by the window gate.
 - **Cleanup run**: whenever cooling stops after **>= 10 min** of `cool`, the AC runs `fan_only` (silent) for **30 min** to dry the evaporator (mold protection), then `timer.ac_cleanup` turns it off via "Klima » AC Reinigungslauf beendet". Resuming `cool` cancels the timer. This is the only situation `fan_only` is used.
-- **Presence gate** (`zone_anwesend`): active mode (Arbeit/Gaming/Schlafenszeit), an active MacBook, or AppleTV playing. No one home -> off.
-- **Hybrid temperature source**: Arbeitszimmer sensor during Arbeit/Gaming (AC blows into the office), `sensor.temperatur_schlafzimmer` during Schlafenszeit/AppleTV.
-- **Setpoint** 24 C, fan `silent`, preset **`ieco`** whenever cooling (energy saving + quiet).
+- **Presence gate** (`zone_anwesend`): Gaming or Schlafenszeit, an active MacBook, or AppleTV playing. **Arbeit deliberately does NOT count**: the flag is shared with Alex, who sits in the other room. No one home -> off.
+- **One temperature source**: `sensor.arbeitszimmer_temperatur`, fallback `sensor.ac_indoor_temperature`. There is no mode-dependent switching; after the room swap the bed, the AC and the sensor share one room.
+- **Setpoint** 24 C, or **22 C during Schlafenszeit**. Fan follows the distance to target (`medium` from delta 3, back to `silent` below 1.5); Schlafenszeit is always `silent`. Preset **`ieco`** whenever cooling.
 
 > **iECO vs gear**: `preset ieco` and `select.ac_rate_select` (gear_50/75 power limit) are **mutually exclusive** on this Midea (setting one clears the other). Control runs via `ieco`; gear is only useful as a hard wattage cap (e.g. PV coupling).
 
@@ -380,7 +396,7 @@ The AC sits in the Arbeitszimmer (office) and is steered by **"Helper » AC manu
 
 ### Known sensor defect
 
-`sensor.qingping_air_monitor_lite_temperature` reads 4-8 C too low (variable, not a fixed offset). All temperature logic uses `sensor.temperatur_schlafzimmer` instead; the Qingping is used for CO2 only.
+`sensor.qingping_air_monitor_lite_temperature` reads 4-8 C too low (variable, not a fixed offset). All temperature logic uses `sensor.arbeitszimmer_temperatur` instead; the Qingping is used for CO2 only. `sensor.temperatur_schlafzimmer`, which older notes name here, does not exist as an entity and is referenced nowhere.
 
 ### Heating
 
@@ -615,17 +631,20 @@ Uses `chime_tts` custom component for audio announcements with notification chim
 
 ### Root Configuration Files
 
-| File | Lines | Purpose |
-|------|-------|---------|
-| `configuration.yaml` | 899 | Main configuration |
-| `adaptive_lighting.yaml` | 386 | Circadian lighting (10 rooms) |
-| `scripts.yaml` | 650 | Reusable scripts |
-| `sensors.yaml` | 360 | Template/platform sensors |
-| `lights.yaml` | 139 | Light groups |
-| `binary_sensors.yaml` | 78 | Binary sensors |
-| `notifies.yaml` | 36 | Notification services |
-| `climates.yaml` | 137 | Climate config |
-| `dashboard.yaml` | 1,097 | Lovelace UI |
+No line counts here on purpose: they were wrong in 8 of 9 rows before they were
+removed (audit 2026-08-19). Run `wc -l` when you need one.
+
+| File | Purpose |
+|------|---------|
+| `configuration.yaml` | Main configuration |
+| `adaptive_lighting.yaml` | Circadian lighting (10 rooms) |
+| `scripts.yaml` | Reusable scripts |
+| `sensors.yaml` | Template/platform sensors |
+| `lights.yaml` | Light groups |
+| `binary_sensors.yaml` | Binary sensors |
+| `notifies.yaml` | Notification services |
+| `climates.yaml` | Climate config |
+| `dashboard.yaml` | Lovelace UI |
 
 ### Supporting Directories
 
@@ -645,6 +664,18 @@ Uses `chime_tts` custom component for audio announcements with notification chim
 
 - **Never commit `secrets.yaml`** to version control
 - **Use `!secret key_name`** for all sensitive data
+- **The repo `raaaf/home-assistant` is PUBLIC.** Anything committed here is world-readable
+  immediately. Treat every id, token, host name and internal URL as a credential.
+- **Webhook ids are credentials.** A `webhook_id` is the only authentication for
+  `/api/webhook/<id>`, so it belongs in `secrets.yaml`, never inline. Currently required key:
+  `nas_webhook_id` (Synology Hyper Backup, `notifications/alerts.yaml`). There is no
+  `secrets.yaml.example`, so a fresh checkout fails on the missing key rather than silently.
+- **`local_only: true` is not a second factor.** It resolves the client IP through
+  `use_x_forwarded_for` + `trusted_proxies` in `configuration.yaml`. If a reverse proxy or tunnel
+  host is missing from `trusted_proxies`, every request looks local.
+- **Webhook payloads are attacker-controlled.** Never pass `trigger.json.*` as a bare `message` to
+  `notify.*`: the mobile_app platform reads certain exact message values as device commands. Embed
+  the text in a fixed sentence and cap its length.
 - **Review `manifest.json`** permissions for custom components
 - **IP bans managed** in `ip_bans.yaml`
 - **Trusted networks** configured in `configuration.yaml`
@@ -668,7 +699,7 @@ The Adaptive Lighting configuration is optimized for Zigbee2MQTT with mixed Phil
 **Color Temperature Range**:
 - Min: 2200K (warmest IKEA/Hue compatible)
 - Max: 4000K (IKEA maximum cool white)
-- Sleep: amber [255, 80, 0]; brightness per room: Kueche/Bett 50%, Wohnzimmer/Bad/Flur 30%, default 15%, Kinderzimmer 5%, Stehlampe 1%, Balkon 2200K at 40%; CCT-only bulbs fall back to 2200K
+- Sleep: amber [255, 80, 0]; brightness per room: Kueche/Bett 50%, Wohnzimmer/Bad/Flur 30%, Waschzimmer 25%, default 15%, Kinderzimmer 5%, Stehlampe 1%, Balkon 2200K at 40%; CCT-only bulbs fall back to 2200K. Ankleide is deliberately excluded from sleep mode (clothes are picked there at night), so it has no sleep_brightness override
 
 **IKEA Fade-In Solution**:
 IKEA TRADFRI/JETSTROM bulbs ignore the `transition` parameter when turning on from off.

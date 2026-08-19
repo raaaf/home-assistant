@@ -364,7 +364,10 @@
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
   max_color_temp: 4000 # IKEA maximum cool white
   prefer_rgb_color: false
-  sleep_brightness: 10 # Nicht heller als min_brightness (10), Ankleide hat keine Nachtlichtgruppe
+  # Kein eigener sleep_brightness-Wert: Ankleide ist bewusst aus dem Sleep Mode
+  # ausgenommen, day_night.yaml schaltet ihren Sleep-Switch nie ein. Der Wert ist
+  # damit tot. Diese Datei wird ohnehin nur beim Erst-Import gelesen; zur Laufzeit
+  # setzt die for_each-Schleife in system/core.yaml den Basiswert 15 (Audit 2026-08-19).
   sleep_rgb_or_color_temp: rgb_color
   sleep_rgb_color:
     - 255

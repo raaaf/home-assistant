@@ -438,12 +438,6 @@
         entity_id: switch.adaptive_lighting_kinderzimmer
         sleep_brightness: 5
         use_defaults: current
-    - alias: Ankleide Sleep-Helligkeit nicht ueber min_brightness (keine Nachtlichtgruppe)
-      action: adaptive_lighting.change_switch_settings
-      data:
-        entity_id: switch.adaptive_lighting_ankleide
-        sleep_brightness: 10
-        use_defaults: current
     - alias: Balkon ohne Rot (aussen), nachts 2200K bei 40%
       action: adaptive_lighting.change_switch_settings
       data:
@@ -466,6 +460,6 @@
           separate_turn_on_commands=true, send_split_delay=300, initial_transition=2,
           take_over_control_mode=pause_changed, adapt_only_on_bare_turn_on=false,
           skip_redundant_commands=false, include_config_in_attributes=false,
-          sleep_rgb_color=[255,80,0] @ sleep_brightness=15 (Kueche/Bett 50, Wohnzimmer/Bad/Flur 30, Ankleide 10, Waschzimmer 25, Kinderzimmer 5, Stehlampe 1),
+          sleep_rgb_color=[255,80,0] @ sleep_brightness=15 (Kueche/Bett 50, Wohnzimmer/Bad/Flur 30, Waschzimmer 25, Kinderzimmer 5, Stehlampe 1),
           Balkon color_temp @ 40
           (interval=300 liegt im YAML, nicht ueber change_switch_settings setzbar)
