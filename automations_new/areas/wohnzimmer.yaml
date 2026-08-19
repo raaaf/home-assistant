@@ -226,26 +226,6 @@
         data:
           room: "kueche"
           exclude_scenes: "kochen,abwaschen,party,party_wohnzimmer"
-      - alias: "Reaktiviere Motion-Automationen mit Konflikt-Prüfung"
-        action: script.scene_enable_motion_automations
-        data:
-          automations: "automation.motion_kuche_2"
-          exclude_scenes: "kochen,abwaschen,party,party_wohnzimmer"
-      - alias: "Reaktiviere Esstisch-Motion mit Konflikt-Prüfung"
-        action: script.scene_enable_motion_automations
-        data:
-          automations: "automation.motion_esstisch"
-          exclude_scenes: "essen"
-      - alias: "Reaktiviere Spieletisch-Motion mit Konflikt-Prüfung"
-        action: script.scene_enable_motion_automations
-        data:
-          automations: "automation.motion_spieletisch"
-          exclude_scenes: ""
-      - alias: "Reaktiviere Flur-Motion mit Konflikt-Prüfung"
-        action: script.scene_enable_motion_automations
-        data:
-          automations: "automation.motion_flur_wohnung"
-          exclude_scenes: "party,party_wohnzimmer"
       - target:
           entity_id:
           - light.hyperhdr
@@ -317,22 +297,23 @@
             - light.alle_kuche_nachtlichter
             - light.alle_wohnzimmer_nachtlichter
           action: light.turn_on
-      - alias: "Reaktiviere Motion-Automationen mit Konflikt-Prüfung"
-        action: script.scene_enable_motion_automations
-        data:
-          automations: "automation.motion_kuche_2"
-          exclude_scenes: "kochen,party,party_wohnzimmer"
-      - alias: "Reaktiviere Esstisch-Motion mit Konflikt-Prüfung"
-        action: script.scene_enable_motion_automations
-        data:
-          automations: "automation.motion_esstisch"
-          exclude_scenes: "essen"
-      - alias: "Reaktiviere Spieletisch-Motion mit Konflikt-Prüfung"
-        action: script.scene_enable_motion_automations
-        data:
-          automations: "automation.motion_spieletisch"
-          exclude_scenes: ""
+      - alias: "Motion-Automationen wiederherstellen"
+        action: script.movie_motion_restore
   mode: restart
+- id: 'movie_off_motion_restore'
+  alias: Wohnzimmer » Film Ende Motion-Wiederherstellung
+  description: >-
+    Reaktiviert die waehrend des Films deaktivierten Motion-Automationen, sobald
+    input_boolean.movie ausgeht. Faengt alle Wege ab (AVR aus, TV Auto off,
+    manuelles Umschalten), damit man abends sofort wieder sieht, wo man hinlaeuft.
+  triggers:
+  - trigger: state
+    entity_id: input_boolean.movie
+    from: 'on'
+    to: 'off'
+  actions:
+  - action: script.movie_motion_restore
+  mode: single
 - id: '1671133998236'
   alias: Wohnzimmer » Weihnachtsbaum
   description: Steuert Weihnachtsbaum-Beleuchtung mit erweiterten Features

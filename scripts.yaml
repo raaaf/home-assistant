@@ -743,3 +743,26 @@ homepod_wake:
     continue_on_error: true
     target:
       entity_id: "{{ target_player }}"
+
+movie_motion_restore:
+  alias: 'Szene » Film Motion wiederherstellen'
+  description: Reaktiviert die waehrend des Films deaktivierten Motion-Automationen
+  icon: mdi:motion-sensor
+  mode: single
+  sequence:
+  - action: script.scene_enable_motion_automations
+    data:
+      automations: "automation.motion_kuche_2"
+      exclude_scenes: "kochen,abwaschen,party,party_wohnzimmer"
+  - action: script.scene_enable_motion_automations
+    data:
+      automations: "automation.motion_esstisch"
+      exclude_scenes: "essen"
+  - action: script.scene_enable_motion_automations
+    data:
+      automations: "automation.motion_spieletisch"
+      exclude_scenes: ""
+  - action: script.scene_enable_motion_automations
+    data:
+      automations: "automation.motion_flur_wohnung"
+      exclude_scenes: "party,party_wohnzimmer"
