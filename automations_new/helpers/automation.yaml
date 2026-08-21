@@ -113,7 +113,7 @@
   # Playback, 18.08. ok). Darum bis zu 3 Trigger-Pulse, bis ein HomePod spielt.
   # Kein automation-level "variables" fuer den Playing-Check: das wird nur einmal
   # beim Trigger gerendert und wuerde dauerhaft false bleiben.
-  - alias: "HomeKit-Trigger pulsen bis Musik spielt (max. 3 Versuche)"
+  - alias: "HomeKit-Trigger pulsen bis Musik stabil spielt (max. 3 Versuche)"
     repeat:
       sequence:
       - action: input_boolean.turn_on
@@ -127,16 +127,27 @@
           entity_id:
           - input_boolean.werktag_musik
           - input_boolean.werktag_aufwachen
-      - alias: "Warten bis Musik spielt"
+      - alias: "Warten bis ein HomePod 'playing' meldet"
         wait_template: "{{ ['media_player.arbeitszimmer', 'media_player.schlafzimmer', 'media_player.homepod_badezimmer', 'media_player.homepod_kinderzimmer', 'media_player.homepod_wohnzimmer', 'media_player.kuche'] | select('is_state', 'playing') | list | length > 0 }}"
         timeout: 00:00:25
         continue_on_timeout: true
+      # 21.08.2026: Ein HomePod meldete 16 s nach dem Puls kurz "playing"
+      # (Reconnect-Artefakt ohne media_title), der Lauf galt als Erfolg,
+      # Retries und Fehler-Push entfielen. Darum zaehlt nur Wiedergabe,
+      # die 20 s nach dem ersten "playing" noch laeuft.
+      - alias: "Stabilitaetsfenster vor der Erfolgspruefung"
+        if:
+        - condition: template
+          value_template: "{{ wait.completed }}"
+        then:
+        - delay: 00:00:20
       until:
       - condition: template
-        value_template: "{{ wait.completed or repeat.index >= 3 }}"
-  # wait.completed der letzten Iteration ist das Ergebnis der Schleife.
+        value_template: "{{ repeat.index >= 3 or ['media_player.arbeitszimmer', 'media_player.schlafzimmer', 'media_player.homepod_badezimmer', 'media_player.homepod_kinderzimmer', 'media_player.homepod_wohnzimmer', 'media_player.kuche'] | select('is_state', 'playing') | list | length > 0 }}"
+  # Erfolg ist der Live-Zustand nach dem Stabilitaetsfenster, nicht
+  # wait.completed: das war am 21.08. der falsch-positive Kurzimpuls.
   - variables:
-      musik_laeuft: "{{ wait.completed | default(false) }}"
+      musik_laeuft: "{{ ['media_player.arbeitszimmer', 'media_player.schlafzimmer', 'media_player.homepod_badezimmer', 'media_player.homepod_kinderzimmer', 'media_player.homepod_wohnzimmer', 'media_player.kuche'] | select('is_state', 'playing') | list | length > 0 }}"
   # Kein eigener Volume-Fade mehr: den 30-Minuten-Fade der HomePods macht
   # "State » Tag/Nacht" (Wakeup); zwei parallele Fades auf dieselben Player
   # liefen gegeneinander.
