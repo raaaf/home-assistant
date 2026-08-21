@@ -36,6 +36,9 @@
     - light.philips_light_21_schrank_1
     - light.philips_light_22_schrank_2
     - light.philips_light_23_schrank_3
+    # Kindertisch / Werkbank (2 lights)
+    - light.ikea_light_24
+    - light.ikea_light_25
 
 - platform: group
   unique_id: alle_wohnzimmer_lichter_ohne_esstisch
@@ -57,6 +60,9 @@
     - light.philips_light_21_schrank_1
     - light.philips_light_22_schrank_2
     - light.philips_light_23_schrank_3
+    # Kindertisch / Werkbank (2 lights)
+    - light.ikea_light_24
+    - light.ikea_light_25
 
 - platform: group
   unique_id: alle_kuche_lichter
@@ -375,3 +381,6 @@
     - light.ikea_light_02
     # Kinderzimmer (1 light)
     - light.ikea_light_13
+    # Wohnzimmer Kindertisch (2 lights)
+    - light.ikea_light_24
+    - light.ikea_light_25
