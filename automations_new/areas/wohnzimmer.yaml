@@ -260,7 +260,7 @@
         data:
           effect: Cinema dim lights
         action: light.turn_on
-      - alias: "Wohnzimmer Wand 1-6 einschalten (AL regelt Helligkeit/Farbe)"
+      - alias: "Wohnzimmer Wand 1-6 + Kindertisch einschalten (AL regelt Helligkeit/Farbe)"
         action: light.turn_on
         target:
           entity_id:
@@ -270,6 +270,8 @@
           - light.ikea_light_21_wand_4
           - light.ikea_light_22_wand_5
           - light.ikea_light_23_wand_6
+          - light.ikea_light_24
+          - light.ikea_light_25
         data:
           transition: 2
       - if:
