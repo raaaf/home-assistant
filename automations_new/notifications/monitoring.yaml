@@ -354,6 +354,47 @@
       message: "AppleTV-Wohnzimmer-Verbindung war waehrend Movie-Mode eingefroren und wurde neu geladen."
       notification_id: appletv_watchdog
   mode: single
+- id: 'homepod_unavailable_watchdog'
+  alias: Helper » HomePod Watchdog
+  description: >-
+    Bleibt ein HomePod laenger als 15 Minuten unavailable, ist die
+    pyatv-Verbindung tot und kommt oft erst mit einem Reload des
+    Config-Entries wieder (gleiches Muster wie der AppleTV-Watchdog,
+    aber ohne Movie-Kopplung). Normales Standby ist "paused"/"standby",
+    nicht "unavailable", darum keine Fehlalarme im Alltag.
+  triggers:
+  - trigger: state
+    entity_id:
+    - media_player.homepod_wohnzimmer
+    - media_player.homepod_badezimmer
+    - media_player.homepod_kinderzimmer
+    - media_player.arbeitszimmer
+    - media_player.schlafzimmer
+    - media_player.kuche
+    to: 'unavailable'
+    for: "00:15:00"
+  actions:
+  - action: homeassistant.reload_config_entry
+    continue_on_error: true
+    target:
+      entity_id: "{{ trigger.entity_id }}"
+  - action: logbook.log
+    data:
+      name: HomePod Watchdog
+      message: "{{ trigger.entity_id }} war 15 Min unavailable, Config-Entry neu geladen."
+      domain: automation
+  - alias: "Push nur wenn der Reload nicht geholfen hat"
+    delay: 00:02:00
+  - if:
+    - condition: template
+      value_template: "{{ states(trigger.entity_id) == 'unavailable' }}"
+    then:
+    - action: notify.admin_only
+      data:
+        title: "HomePod Watchdog"
+        message: "{{ trigger.entity_id }} ist trotz Reload weiter unavailable."
+  mode: queued
+  max: 6
 - id: 'appletv_disconnect_logger'
   alias: Helper » AppleTV Disconnect Logger
   description: >-
