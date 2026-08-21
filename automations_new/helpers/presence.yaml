@@ -432,7 +432,11 @@
           entity_id: lock.nuki_wohnungstur_lock
           state: locked
         then:
+        # 21.08.2026: Nuki-Bridge antwortete mit 503, der Fehler hat den ganzen
+        # Willkommenslauf gekillt (Musik, Steckdosen liefen nie). Aufschliessen
+        # darf den Rest nicht blockieren.
         - action: lock.unlock
+          continue_on_error: true
           target:
             entity_id: lock.nuki_wohnungstur_lock
           data: {}
@@ -501,18 +505,57 @@
             duration: 30
             curve: linear
       - delay: 00:01:00
-      - alias: Wichtige Steckdosen wieder einschalten
-        # Bodenspots (switch.flur_licht) und Thermomix (switch.steckdose_kuechengeraete)
-        # bewusst NICHT wieder einschalten - nur manuell aktivieren.
-        action: switch.turn_on
-        target:
-          entity_id:
+      # Bodenspots (switch.flur_licht) und Thermomix (switch.steckdose_kuechengeraete)
+      # bewusst NICHT wieder einschalten - nur manuell aktivieren.
+      # 21.08.2026: Ein Sammel-turn_on hat den TP-Link-Fehler der Lichterkette
+      # verschluckt, sie blieb aus. Darum einzeln mit continue_on_error,
+      # danach ein Retry fuer alles, was noch aus ist, und ehrlicher Push.
+      - alias: Wichtige Steckdosen einzeln einschalten
+        repeat:
+          for_each:
           - switch.steckdose_avr
           - switch.wohnzimmer_steckdose
           - switch.neo_plug_02
           - switch.neo_plug_01
           - switch.aqara_plug_01
-        data: {}
+          sequence:
+          - action: switch.turn_on
+            continue_on_error: true
+            target:
+              entity_id: "{{ repeat.item }}"
+            data: {}
+      - delay: 00:00:10
+      - alias: Retry fuer Steckdosen die noch aus sind
+        variables:
+          steckdosen_noch_aus: >-
+            {{ ['switch.steckdose_avr', 'switch.wohnzimmer_steckdose',
+                'switch.neo_plug_02', 'switch.neo_plug_01', 'switch.aqara_plug_01']
+               | reject('is_state', 'on') | list }}
+      - if:
+        - condition: template
+          value_template: "{{ steckdosen_noch_aus | length > 0 }}"
+        then:
+        - repeat:
+            for_each: "{{ steckdosen_noch_aus }}"
+            sequence:
+            - action: switch.turn_on
+              continue_on_error: true
+              target:
+                entity_id: "{{ repeat.item }}"
+              data: {}
+        - delay: 00:00:10
+        - if:
+          - condition: template
+            value_template: >-
+              {{ steckdosen_noch_aus | reject('is_state', 'on') | list | length > 0 }}
+          then:
+          - action: notify.rafael
+            continue_on_error: true
+            data:
+              title: Willkommensmodus
+              message: >-
+                Steckdosen nicht eingeschaltet: {{ steckdosen_noch_aus
+                | reject('is_state', 'on') | list | join(', ') }}
       - alias: Schlafenszeit aktivieren wenn bereits Schlafenszeit
         if:
         - condition: template
