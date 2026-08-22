@@ -116,3 +116,53 @@
       entity_id: switch.arbeitszimmer_prusa_mk4_pc_rafael
   mode: single
   max_exceeded: silent
+
+- id: 'prusa_steckdose_taster'
+  alias: '3D-Druck » Steckdose Taster'
+  description: >-
+    IKEA E1766 (ikea_switch_01) am Drucker schaltet die Prusa-Steckdose.
+    open = Strom an, close = Strom aus (blockiert waehrend aktivem Druck),
+    stop (halten) wird ignoriert.
+  triggers:
+  - trigger: mqtt
+    topic: zigbee2mqtt/ikea_switch_01
+  conditions:
+  - condition: template
+    value_template: "{{ (trigger.payload_json.action | default('')) in ['open', 'close'] }}"
+  actions:
+  - choose:
+    - alias: "open -> Strom an"
+      conditions:
+      - condition: template
+        value_template: "{{ trigger.payload_json.action == 'open' }}"
+      sequence:
+      - action: switch.turn_on
+        target:
+          entity_id: switch.arbeitszimmer_prusa_mk4_pc_rafael
+    - alias: "close -> Strom aus, nur wenn kein Druck aktiv"
+      conditions:
+      - condition: template
+        value_template: "{{ trigger.payload_json.action == 'close' }}"
+      sequence:
+      - if:
+        - alias: "Drucker druckt nicht"
+          condition: state
+          entity_id: sensor.prusa_mk4
+          state:
+          - idle
+          - finished
+          - stopped
+          - error
+          - ready
+          - unavailable
+          - unknown
+        then:
+        - action: switch.turn_off
+          target:
+            entity_id: switch.arbeitszimmer_prusa_mk4_pc_rafael
+        else:
+        - action: notify.rafael
+          data:
+            title: Prusa
+            message: "Steckdose nicht ausgeschaltet, Drucker ist aktiv ({{ states('sensor.prusa_mk4') }})."
+  mode: single
