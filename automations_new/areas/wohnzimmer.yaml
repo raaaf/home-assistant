@@ -721,7 +721,7 @@
       include_ambient: ambient_enabled
       ambient_light_sensor: sensor.balkon_motion_illuminance_safe
       ambient_light_options: ambient_light_option_enabled
-      ambient_light_value: 300
+      ambient_light_value: 800
       ambient_light_high_value: 400
       include_time: time_disabled
       include_sun: sun_disabled
