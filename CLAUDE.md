@@ -281,8 +281,7 @@ transition: 10             # Short for IKEA compatibility
 min_color_temp: 2200       # Warm (IKEA/Hue compatible)
 max_color_temp: 4000       # Cool white maximum
 sleep_brightness: 15       # Night mode default; per-room exceptions in system/core.yaml startup automation
-sleep_rgb_or_color_temp: rgb_color  # Sleep mode forces amber on color lights (nicht Balkon)
-sleep_rgb_color: [255, 80, 0]
+sleep_rgb_or_color_temp: color_temp # Uniform 2200K everywhere: the 24 IKEA bulbs cannot do RGB, mixed moods are not acceptable
 sleep_color_temp: 2200     # Warmest for sleep
 take_over_control: true    # Manual control detection
 detect_non_ha_changes: false  # Disabled — prevents random turn-ons with Z2M
@@ -699,7 +698,7 @@ The Adaptive Lighting configuration is optimized for Zigbee2MQTT with mixed Phil
 **Color Temperature Range**:
 - Min: 2200K (warmest IKEA/Hue compatible)
 - Max: 4000K (IKEA maximum cool white)
-- Sleep: amber [255, 80, 0]; brightness per room: Kueche/Bett 50%, Wohnzimmer/Bad/Flur 30%, Waschzimmer 25%, default 15%, Kinderzimmer 5%, Stehlampe 1%, Balkon 2200K at 40%; CCT-only bulbs fall back to 2200K. Ankleide is deliberately excluded from sleep mode (clothes are picked there at night), so it has no sleep_brightness override
+- Sleep: 2200K everywhere (no RGB, so Philips and IKEA look identical); brightness per room: Kueche/Bett 50%, Balkon 40%, Wohnzimmer/Bad/Flur 30%, Waschzimmer 25%, default 15%, Kinderzimmer 5%, Stehlampe 1%. Ankleide is deliberately excluded from sleep mode (clothes are picked there at night), so it has no sleep_brightness override
 
 **IKEA Fade-In Solution**:
 IKEA TRADFRI/JETSTROM bulbs ignore the `transition` parameter when turning on from off.

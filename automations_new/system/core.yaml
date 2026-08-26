@@ -355,7 +355,7 @@
     take_over_control_mode=pause_changed (pausiert nur geänderte Attribute).
     adapt_only_on_bare_turn_on bleibt false - true verursacht 100% Helligkeit beim Einschalten
     via Automationen mit expliziten Werten (wird als manual_control fehlinterpretiert).
-    Sleep Mode = Amber [255,80,0] @ 15% (Kueche/Arbeitszimmer-Slug 50%, Wohnzimmer/Bad/Flur 30%, Kinderzimmer 5%, Schlafzimmer-Slug 1%, Balkon color_temp @ 40%),
+    Sleep Mode = 2200K @ 15% (Kueche/Arbeitszimmer-Slug 50%, Balkon 40%, Wohnzimmer/Bad/Flur 30%, Kinderzimmer 5%, Schlafzimmer-Slug 1%),
     CCT-Lichter fallen auf sleep_color_temp 2200K zurueck.
   mode: single
   triggers:
@@ -387,11 +387,8 @@
               initial_transition: 2
               take_over_control_mode: pause_changed
               adapt_only_on_bare_turn_on: false
-              sleep_rgb_or_color_temp: rgb_color
-              sleep_rgb_color:
-                - 255
-                - 80
-                - 0
+              sleep_rgb_or_color_temp: color_temp
+              sleep_color_temp: 2200
               sleep_brightness: 15
               skip_redundant_commands: false
               include_config_in_attributes: false
@@ -438,11 +435,10 @@
         entity_id: switch.adaptive_lighting_kinderzimmer
         sleep_brightness: 5
         use_defaults: current
-    - alias: Balkon ohne Rot (aussen), nachts 2200K bei 40%
+    - alias: Balkon Sleep-Helligkeit hoeher (aussen, 2200K bei 40%)
       action: adaptive_lighting.change_switch_settings
       data:
         entity_id: switch.adaptive_lighting_balkon
-        sleep_rgb_or_color_temp: color_temp
         sleep_brightness: 40
         use_defaults: current
     - alias: Waschzimmer Sleep-Helligkeit hoeher (nachts besser sichtbar)
@@ -460,6 +456,5 @@
           separate_turn_on_commands=true, send_split_delay=300, initial_transition=2,
           take_over_control_mode=pause_changed, adapt_only_on_bare_turn_on=false,
           skip_redundant_commands=false, include_config_in_attributes=false,
-          sleep_rgb_color=[255,80,0] @ sleep_brightness=15 (Kueche/Bett 50, Wohnzimmer/Bad/Flur 30, Waschzimmer 25, Kinderzimmer 5, Stehlampe 1),
-          Balkon color_temp @ 40
+          sleep_color_temp=2200 @ sleep_brightness=15 (Kueche/Bett 50, Balkon 40, Wohnzimmer/Bad/Flur 30, Waschzimmer 25, Kinderzimmer 5, Stehlampe 1),
           (interval=300 liegt im YAML, nicht ueber change_switch_settings setzbar)
