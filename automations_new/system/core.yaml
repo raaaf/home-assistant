@@ -389,7 +389,7 @@
               adapt_only_on_bare_turn_on: false
               sleep_rgb_or_color_temp: color_temp
               sleep_color_temp: 2200
-              sleep_brightness: 15
+              sleep_brightness: 5
               skip_redundant_commands: false
               include_config_in_attributes: false
               use_defaults: current
@@ -397,19 +397,19 @@
       action: adaptive_lighting.change_switch_settings
       data:
         entity_id: switch.adaptive_lighting_wohnzimmer
-        sleep_brightness: 30
+        sleep_brightness: 20
         use_defaults: current
     - alias: Kueche Sleep-Helligkeit hoeher (wie die Motion-Nachtlichter)
       action: adaptive_lighting.change_switch_settings
       data:
         entity_id: switch.adaptive_lighting_kueche
-        sleep_brightness: 50
+        sleep_brightness: 20
         use_defaults: current
     - alias: Arbeitszimmer-Slug Sleep-Helligkeit hoeher (Bett/PC, physisch Schlafzimmer)
       action: adaptive_lighting.change_switch_settings
       data:
         entity_id: switch.adaptive_lighting_arbeitszimmer
-        sleep_brightness: 50
+        sleep_brightness: 15
         use_defaults: current
     - alias: Schlafzimmer-Slug Sleep-Helligkeit minimal (Stehlampe Alex-Arbeitsplatz)
       action: adaptive_lighting.change_switch_settings
@@ -421,13 +421,13 @@
       action: adaptive_lighting.change_switch_settings
       data:
         entity_id: switch.adaptive_lighting_badezimmer
-        sleep_brightness: 30
+        sleep_brightness: 10
         use_defaults: current
     - alias: Flur Sleep-Helligkeit wie Motion-Nachtlichter
       action: adaptive_lighting.change_switch_settings
       data:
         entity_id: switch.adaptive_lighting_flur
-        sleep_brightness: 30
+        sleep_brightness: 10
         use_defaults: current
     - alias: Kinderzimmer Sleep-Helligkeit niedriger (schlafendes Kind)
       action: adaptive_lighting.change_switch_settings
@@ -441,11 +441,17 @@
         entity_id: switch.adaptive_lighting_balkon
         sleep_brightness: 40
         use_defaults: current
+    - alias: Ankleide Sleep-Helligkeit (greift nur falls Sleep Mode dort je aktiviert wird)
+      action: adaptive_lighting.change_switch_settings
+      data:
+        entity_id: switch.adaptive_lighting_ankleide
+        sleep_brightness: 20
+        use_defaults: current
     - alias: Waschzimmer Sleep-Helligkeit hoeher (nachts besser sichtbar)
       action: adaptive_lighting.change_switch_settings
       data:
         entity_id: switch.adaptive_lighting_waschzimmer
-        sleep_brightness: 25
+        sleep_brightness: 20
         use_defaults: current
     - alias: Abschluss loggen
       action: logbook.log
@@ -456,5 +462,5 @@
           separate_turn_on_commands=true, send_split_delay=300, initial_transition=2,
           take_over_control_mode=pause_changed, adapt_only_on_bare_turn_on=false,
           skip_redundant_commands=false, include_config_in_attributes=false,
-          sleep_color_temp=2200 @ sleep_brightness=15 (Kueche/Bett 50, Balkon 40, Wohnzimmer/Bad/Flur 30, Waschzimmer 25, Kinderzimmer 5, Stehlampe 1),
+          sleep_color_temp=2200 @ sleep_brightness=5 (Balkon 40, Kueche/Wohnzimmer/Waschzimmer/Ankleide 20, Bett 15, Bad/Flur 10, Kinderzimmer 5, Stehlampe 1),
           (interval=300 liegt im YAML, nicht ueber change_switch_settings setzbar)
