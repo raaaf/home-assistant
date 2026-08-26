@@ -195,7 +195,7 @@
       include_night_lights: night_lights_enabled
       night_lights:
         entity_id: light.alle_badezimmer_nachtlichter
-      night_lights_after_time: '22:00:00'
+      night_lights_after_time: '23:00:00'
       night_lights_before_time: 06:00:00
       light_switch:
         entity_id: light.alle_badezimmer_lichter

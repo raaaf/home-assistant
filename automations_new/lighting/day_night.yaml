@@ -18,14 +18,8 @@
   - trigger: time
     at: sensor.einschlafzeit_timestamp
     id: einschlafzeit
-  - trigger: state
-    entity_id: input_boolean.schlafenszeit
-    from: 'off'
-    to: 'on'
-    for: 00:00:30
-    id: early-schlafenszeit
   - trigger: time
-    at: '22:00:00'
+    at: '23:00:00'
     id: schlafenszeit
   - trigger: homeassistant
     event: start
@@ -387,18 +381,7 @@
         data:
           timestamp: '{{ (state_attr(''sun.sun'', ''next_dawn'')|as_datetime).timestamp()
             }}'
-    - alias: Frühe Schlafenszeit - Sleep Mode für wichtige Räume
-      conditions:
-      - condition: trigger
-        id: early-schlafenszeit
-      sequence:
-      - alias: Sleep Mode für Haupträume aktivieren
-        action: switch.turn_on
-        target:
-          entity_id:
-          - switch.adaptive_lighting_sleep_mode_kinderzimmer
-          - switch.adaptive_lighting_sleep_mode_arbeitszimmer
-    - alias: 22:00 Uhr - Kompletter Nachtmodus
+    - alias: 23:00 Uhr - Kompletter Nachtmodus
       conditions:
       - condition: trigger
         id: schlafenszeit
@@ -495,8 +478,8 @@
       # End transition 30 minutes from now
       max_sunset_time: >-
         {{ (now() + timedelta(minutes=30)).strftime('%H:%M:%S') }}
-      # Dim down to sleep brightness
-      min_brightness: 10
+      # Alle Räume auf dasselbe Abendniveau: 2200K bei 40 % bis zum Nachtmodus um 23:00
+      min_brightness: 40
       max_brightness: 100
   mode: single
 - id: adaptive_lighting_morning_reset

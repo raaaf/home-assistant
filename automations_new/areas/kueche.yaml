@@ -87,7 +87,7 @@
       include_night_lights: night_lights_enabled
       night_lights:
         entity_id: light.alle_kuche_nachtlichter
-      night_lights_after_time: '22:00:00'
+      night_lights_after_time: '23:00:00'
       night_lights_before_time: 06:00:00
       night_time_delay: 0
       time_delay: 0
@@ -97,7 +97,7 @@
       ambient_light_value: 800
       include_time: time_disabled
       after_time: 06:00:00
-      before_time: '22:00:00'
+      before_time: '23:00:00'
       night_lights_conditions:
       - entity_state_enabled
       night_lights_entity_state:

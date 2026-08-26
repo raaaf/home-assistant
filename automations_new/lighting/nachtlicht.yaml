@@ -1,13 +1,13 @@
 # Lighting - Nachtlicht
-# Nachtlicht (Aqara Hub): rotes Licht von 22:00 Uhr bis Sonnenaufgang
+# Nachtlicht (Aqara Hub): rotes Licht von 23:00 Uhr bis Sonnenaufgang
 # Zusaetzlich: Automation fuer den manuellen Angleich im Nachtmodus
 
 - id: nachtlicht_an
-  alias: Lighting » Nachtlicht ein (22:00 Uhr)
-  description: Schaltet Nachtlicht um 22:00 Uhr ein mit rotem Licht
+  alias: Lighting » Nachtlicht ein (23:00 Uhr)
+  description: Schaltet Nachtlicht um 23:00 Uhr ein mit rotem Licht
   triggers:
     - trigger: time
-      at: '22:00:00'
+      at: '23:00:00'
       id: time_trigger
     - trigger: state
       entity_id: input_boolean.nachtlicht

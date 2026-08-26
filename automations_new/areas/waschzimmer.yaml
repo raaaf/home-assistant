@@ -37,7 +37,7 @@
       - 80
       - 0
       time_delay: 0
-      night_lights_after_time: '22:00:00'
+      night_lights_after_time: '23:00:00'
       night_lights_before_time: 06:00:00
       # Bypass motion turn-off when manual control is active
       include_bypass:
@@ -77,7 +77,7 @@
       include_night_light_colour_control: use_colour_temperature
       night_light_colour_temperature: 2200
       night_time_delay: 0
-      night_lights_after_time: '22:00:00'
+      night_lights_after_time: '23:00:00'
       night_lights_before_time: 06:00:00
       # Bypass motion turn-off when manual control is active
       include_bypass:
