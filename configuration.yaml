@@ -69,6 +69,11 @@ logger:
     custom_components.nuki_ng: critical  # Nuki cloud 500s transient
     homeassistant.components.ipp: critical  # Printer offline floods logs
 
+# Required for "Helper » AppleTV Disconnect Logger": without fire_event
+# no system_log_event is fired and the automation never triggers.
+system_log:
+  fire_event: true
+
 # Database optimization
 recorder:
   purge_keep_days: 14
@@ -104,6 +109,16 @@ recorder:
       - sensor.kamera_*_energy_*
   include:
     entities:
+      # All apple_tv integration players - overrides the media_player domain
+      # exclude. Needed to correlate connection losses with playback.
+      - media_player.wohnzimmer  # AppleTV Wohnzimmer
+      - media_player.appletv  # AppleTV Schlafzimmer
+      - media_player.kuche  # HomePod Mini "Arbeitszimmer (2)", disconnect source
+      - media_player.arbeitszimmer  # HomePod
+      - media_player.schlafzimmer  # HomePod Mini
+      - media_player.homepod_wohnzimmer  # HomePod
+      - media_player.homepod_kinderzimmer  # HomePod Mini
+      - media_player.homepod_badezimmer  # HomePod Mini
       # Dashboard power sensors - explicitly included for history tracking
       # Solar panels
       - sensor.inverter_port_1_dc_power  # Panel 1
