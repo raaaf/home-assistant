@@ -130,6 +130,11 @@
     trigger: numeric_state
     id: aussen-kalt
   conditions:
+  # Geraet abgebaut oder in HA deaktiviert: ohne climate.ac gibt es nichts zu
+  # steuern, Service-Calls wuerden nur Fehler werfen. Kommt das Geraet zurueck,
+  # laeuft die Automation ohne weitere Aenderung wieder an.
+  - condition: template
+    value_template: "{{ has_value('climate.ac') }}"
   - condition: state
     entity_id: input_boolean.alle_sind_weg
     state: 'off'
@@ -404,7 +409,10 @@
     for: 00:10:00
     trigger: state
     id: belegt-aus
-  conditions: []
+  conditions:
+  # Fan abgebaut oder in HA deaktiviert: nichts zu steuern.
+  - condition: template
+    value_template: "{{ has_value('fan.kinderzimmer') }}"
   actions:
   - variables:
       kinder_fan: fan.kinderzimmer
@@ -768,6 +776,9 @@
       for: "00:05:00"
       id: 'sensor-unavailable'
   conditions:
+    # Fan abgebaut oder in HA deaktiviert: nichts zu steuern.
+    - condition: template
+      value_template: "{{ has_value('fan.schlafzimmer') }}"
     - condition: state
       entity_id: input_boolean.alle_sind_weg
       state: 'off'
