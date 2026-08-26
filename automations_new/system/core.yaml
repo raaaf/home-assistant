@@ -4,23 +4,14 @@
 
 - id: '1642085317177'
   alias: Helpers » Fenster / Türen
-  description: Intelligente Warnanzeige für offene Fenster/Türen mit Eskalation, Wetterberücksichtigung
-    und adaptiver Beleuchtung
+  description: Push beim Verlassen des Hauses und bei offenen Fenstern unter kritischen Bedingungen
   mode: restart
   max_exceeded: silent
   triggers:
   - trigger: state
-    entity_id: binary_sensor.fenster_tueren
+    entity_id: input_boolean.alle_sind_weg
     to: 'on'
-    for:
-      hours: 0
-      minutes: 1
-      seconds: 0
-    id: open
-  - trigger: state
-    entity_id: binary_sensor.fenster_tueren
-    to: 'off'
-    id: closed
+    id: leaving
   - trigger: state
     entity_id: binary_sensor.fenster_tueren
     to: 'on'
@@ -28,21 +19,13 @@
       hours: 0
       minutes: 10
       seconds: 0
-    id: escalation
-  - trigger: state
-    entity_id: input_boolean.alle_sind_weg
-    to: 'on'
-    id: leaving
+    id: critical_open
   conditions: []
   actions:
   - variables:
       open_elements: "{{ expand(state_attr('binary_sensor.fenster_tueren', 'entity_id'))\
         \ \n   | selectattr('state', 'in', ['on', 'open']) \n   | map(attribute='name')\
         \ | join(', ') | default('Unbekannt', true) }}\n"
-      open_duration_minutes: '{{ ((now() - states.binary_sensor.fenster_tueren.last_changed).total_seconds()
-        / 60) | round(1) }}
-
-        '
       is_cold_outside: '{{ states(''sensor.temperatur_aussen'') | float(20) < 5 }}
 
         '
@@ -53,14 +36,8 @@
         | selectattr(''state'', ''eq'', ''on'') | list | count > 0) }}
 
         '
-      is_night_quiet_hours: '{{ now().hour >= 22 or now().hour < 6 }}
-
-        '
       is_critical_situation: '{{ is_cold_outside or (is_bad_weather and heating_active)
         }}
-
-        '
-      all_away: '{{ is_state(''input_boolean.alle_sind_weg'', ''on'') }}
 
         '
   - choose:
@@ -94,140 +71,40 @@
           message: 'Haus verlassen mit offenen Fenstern/Türen: {{ open_elements }}
 
             '
-    - alias: Fenster/Türen offen - Adaptive Warnung aktivieren (nur wenn zuhause)
+    - alias: Fenster/Türen offen bei kritischen Bedingungen - Push (nur wenn zuhause)
       conditions:
       - condition: trigger
-        id: open
+        id: critical_open
       - alias: Jemand ist zuhause
         condition: state
         entity_id: input_boolean.alle_sind_weg
         state: 'off'
-      - alias: Aqara Hub ist verfügbar
+      - alias: Nur bei Kaelte oder Schlechtwetter mit laufender Heizung
         condition: template
-        value_template: '{{ has_value(''light.aqara_hub_lightbulb'') }}'
-      - alias: Warnung auch nachts nur bei kritischen Situationen
-        condition: or
-        conditions:
-        - condition: template
-          value_template: '{{ not is_night_quiet_hours }}'
-        - condition: template
-          value_template: '{{ is_critical_situation }}'
+        value_template: '{{ is_critical_situation }}'
       sequence:
-      - alias: Adaptive Warnbeleuchtung basierend auf Situation
-        action: light.turn_on
-        target:
-          entity_id: light.aqara_hub_lightbulb
-        data:
-          rgb_color: "{% if is_critical_situation %}\n  [255, 0, 255]  # Magenta bei\
-            \ kritischem Wetter/Kälte\n{% elif open_duration_minutes < 5 %}\n  [255,\
-            \ 165, 0]  # Orange: 1-5 Min\n{% else %}\n  [255, 69, 0]   # Rot-Orange:\
-            \ >5 Min\n{% endif %}\n"
-          brightness_pct: "{% if is_critical_situation %}\n  60\n{% elif is_night_quiet_hours\
-            \ %}\n  15  # Gedämpft nachts\n{% else %}\n  {{ min(25 + (open_duration_minutes\
-            \ * 2), 50) | int }}\n{% endif %}\n"
-          effect: '{{ ''color_loop'' if (is_critical_situation and heating_active)
-            else ''none'' }}'
-      - alias: Pulsierende Warnung bei kritischen Bedingungen
+      - alias: Push-Benachrichtigung bei kritischen Bedingungen
         if:
         - condition: template
-          value_template: '{{ is_critical_situation }}'
+          value_template: '{{ has_value(''notify.family'') }}'
         then:
-        - repeat:
-            count: 3
-            sequence:
-            - action: light.turn_on
-              target:
-                entity_id: light.aqara_hub_lightbulb
-              data:
-                brightness_pct: 80
-            - delay: 00:00:01
-            - action: light.turn_on
-              target:
-                entity_id: light.aqara_hub_lightbulb
-              data:
-                brightness_pct: 20
-            - delay: 00:00:01
-      - alias: Erste Warnung in Logbuch eintragen
+        - action: notify.family
+          data:
+            title: "Fenster oder Türen offen"
+            message: 'Seit 10 Minuten offen: {{ open_elements }}{% if is_cold_outside
+              %} (Außentemperatur: {{ states(''sensor.temperatur_aussen'') }}°C){% endif
+              %}{% if is_bad_weather %} - Schlechtes Wetter!{% endif %}'
+            data:
+              tag: fenster_tueren_kritisch
+      - alias: Kritische Warnung in Logbuch eintragen
         action: logbook.log
         data:
           name: Fenster/Türen Warnung
-          message: 'Fenster/Türen seit 1+ Min offen - {{ ''KRITISCHE'' if is_critical_situation
-            else ''Standard'' }} Warnung aktiviert. Offen: {{ open_elements }}. Bedingungen:
-            Außentemp {{ states(''sensor.temperatur_aussen'') }}°C,  Wetter: {{ states(''weather.fuerth_bayern'')
-            }},  Heizung: {{ ''an'' if heating_active else ''aus'' }}
+          message: 'Seit 10 Min offen bei kritischen Bedingungen: {{ open_elements }}.
+            Außentemp {{ states(''sensor.temperatur_aussen'') }}°C, Wetter {{ states(''weather.fuerth_bayern'')
+            }}, Heizung {{ ''an'' if heating_active else ''aus'' }}
 
             '
-    - alias: Eskalation nach 10+ Minuten (nur wenn zuhause)
-      conditions:
-      - condition: trigger
-        id: escalation
-      - alias: Jemand ist zuhause
-        condition: state
-        entity_id: input_boolean.alle_sind_weg
-        state: 'off'
-      - alias: Aqara Hub ist verfügbar
-        condition: template
-        value_template: '{{ has_value(''light.aqara_hub_lightbulb'') }}'
-      sequence:
-      - alias: Intensivere Warnbeleuchtung
-        action: light.turn_on
-        target:
-          entity_id: light.aqara_hub_lightbulb
-        data:
-          rgb_color:
-          - 255
-          - 0
-          - 0
-          brightness_pct: '{{ 80 if is_critical_situation else 60 }}
-
-            '
-          effect: '{{ ''color_loop'' if is_critical_situation else ''none'' }}'
-      - alias: Eskalation in Logbuch eintragen
-        action: logbook.log
-        data:
-          name: Fenster/Türen Eskalation
-          message: 'ESKALATION: Fenster/Türen seit {{ open_duration_minutes }} Min
-            offen! Bedingungen: {{ ''KRITISCH'' if is_critical_situation else ''Normal''
-            }}
-
-            '
-    - alias: Fenster/Türen geschlossen - Warnung deaktivieren
-      conditions:
-      - condition: trigger
-        id: closed
-      - alias: Aqara Hub ist verfügbar
-        condition: template
-        value_template: '{{ has_value(''light.aqara_hub_lightbulb'') }}'
-      sequence:
-      - alias: Warnbeleuchtung ausschalten
-        action: light.turn_off
-        target:
-          entity_id: light.aqara_hub_lightbulb
-        data: {}
-      - alias: Entwarnung in Logbuch eintragen
-        action: logbook.log
-        data:
-          name: Fenster/Türen Entwarnung
-          message: 'Alle Fenster/Türen geschlossen nach {{ open_duration_minutes }}
-            Min - Warnung deaktiviert
-
-            '
-    - alias: Fehlerbehandlung - Hub nicht verfügbar
-      conditions:
-      - condition: template
-        value_template: '{{ not has_value(''light.aqara_hub_lightbulb'') }}'
-      - alias: Jemand ist zuhause (keine Alternative bei Abwesenheit)
-        condition: state
-        entity_id: input_boolean.alle_sind_weg
-        state: 'off'
-      sequence:
-      - alias: Fehler loggen
-        action: logbook.log
-        data:
-          name: Fenster/Türen Warnung Fehler
-          message: 'Aqara Hub nicht verfügbar - Warnung konnte nicht {{ ''aktiviert''
-            if trigger.id == ''open'' else ''deaktiviert'' }} werden. Status: {{ states(''light.aqara_hub_lightbulb'')
-            }}.'
 - id: '1740754575040'
   alias: System » Zentrale Fehlerbehandlung
   description: Verarbeitet alle Systemfehler zentral und reagiert entsprechend
