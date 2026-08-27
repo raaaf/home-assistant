@@ -368,6 +368,12 @@ AppleTV guard around `automation.motion_schlafzimmer`) still has to sit at the c
 
 Defined in `automations_new/climate/heating_cooling.yaml`.
 
+> **Currently stored away (as of 2026-08-27):** the Midea AC (`climate.ac`) and both Smartmi za4
+> fans (`fan.schlafzimmer`, `fan.kinderzimmer`) are in the basement and will not go back up until
+> summer 2027. Their entities are therefore absent, not broken. The automations already skip
+> themselves when the device is gone (commit 2bd73d1), so everything below describes dormant logic
+> and stays here for reference.
+
 ### Air Conditioning (`climate.ac`, Midea via `midea_ac`)
 
 The AC sits in the Arbeitszimmer (office) and is steered by **"Helper » AC manual"**:

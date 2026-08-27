@@ -890,6 +890,12 @@ template:
         device_class: running
         icon: mdi:bridge
 
+      - name: "HyperHDR Pi Running"
+        unique_id: hyperhdr_pi_running
+        state: "on"
+        device_class: running
+        icon: mdi:raspberry-pi
+
       # Überwachung
       - name: "Camera Schlafzimmer Running"
         unique_id: camera_schlafzimmer_running
