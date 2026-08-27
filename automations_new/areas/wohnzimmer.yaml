@@ -201,7 +201,7 @@
               - switch.adaptive_lighting_wohnzimmer
               - switch.adaptive_lighting_kueche
             data:
-              max_brightness: 100
+              max_brightness: "{{ states('input_number.al_tagesmax_helligkeit') | int(100) }}"
               min_brightness: 10
       - alias: "Re-enable Living Room Adaptive Lighting with conflict check"
         action: script.scene_enable_adaptive_lighting

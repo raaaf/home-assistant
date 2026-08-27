@@ -318,6 +318,18 @@
         entity_id: switch.adaptive_lighting_balkon
         sleep_brightness: 40
         use_defaults: current
+    - alias: Flur und Ankleide feste Tagesobergrenze (kein Tageslicht, Aussenlicht ist dort kein Signal)
+      action: adaptive_lighting.change_switch_settings
+      data:
+        entity_id: switch.adaptive_lighting_flur
+        max_brightness: 80
+        use_defaults: current
+    - alias: Ankleide volle Obergrenze (dort wird Kleidung gesucht)
+      action: adaptive_lighting.change_switch_settings
+      data:
+        entity_id: switch.adaptive_lighting_ankleide
+        max_brightness: 100
+        use_defaults: current
     - alias: Ankleide Sleep-Helligkeit (greift nur falls Sleep Mode dort je aktiviert wird)
       action: adaptive_lighting.change_switch_settings
       data:

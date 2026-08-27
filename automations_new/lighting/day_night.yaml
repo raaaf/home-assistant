@@ -478,10 +478,104 @@
       # End transition 30 minutes from now
       max_sunset_time: >-
         {{ (now() + timedelta(minutes=30)).strftime('%H:%M:%S') }}
-      # Alle Räume auf dasselbe Abendniveau: 2200K bei 40 % bis zum Nachtmodus um 23:00
+      # Alle Räume auf dasselbe Abendniveau: 2200K bei 40 % bis zum Nachtmodus um 23:00.
+      # max_brightness wird hier bewusst NICHT gesetzt: es gehoert
+      # "Licht » Tageshelligkeit nach Aussenlicht" allein, und abends klebt die
+      # Kurve ohnehin am unteren Ende, die Obergrenze ist dort wirkungslos.
       min_brightness: 40
-      max_brightness: 100
   mode: single
+- id: al_tageshelligkeit_nach_aussenlicht
+  alias: Licht » Tageshelligkeit nach Aussenlicht
+  description: >-
+    Setzt die Obergrenze der AL-Helligkeitskurve nach der gemessenen Aussenhelligkeit.
+    Der Sonnenstand allein kann das nicht: um 13 Uhr bei Regen ist es drinnen dunkel,
+    die Kurve steht aber auf demselben Plateau wie bei Sonne. Gemessen wird draussen
+    (Balkon), nicht im Raum, sonst entsteht ein Regelkreis: Licht an, Lux steigt,
+    Helligkeit runter, Lux faellt, Helligkeit hoch.
+    Flur und Ankleide sind bewusst nicht dabei, die messen ganztags 2 bis 71 lx.
+    Fuer sie ist Aussenhelligkeit kein Signal, sie haben feste Werte aus system/core.yaml.
+  mode: single
+  max_exceeded: silent
+  triggers:
+  - trigger: time_pattern
+    minutes: /5
+  - trigger: homeassistant
+    event: start
+    id: start
+  - alias: Nach dem Morgen-Reset sofort neu setzen
+    trigger: state
+    entity_id: input_boolean.schlafenszeit
+    from: 'on'
+    to: 'off'
+  conditions:
+  - alias: Nicht waehrend der Schlafenszeit, dort gehoert die Kurve dem Abend-Fade
+    condition: state
+    entity_id: input_boolean.schlafenszeit
+    state: 'off'
+  - alias: >-
+      Keine Szene aktiv. Film, Kochen und Essen setzen max_brightness selbst
+      (40, 100, 70) und wuerden sonst binnen fuenf Minuten ueberschrieben. Beim
+      Szenenende schreibt der jeweilige Reset den Helferwert direkt an AL, die
+      Modulation ist danach sofort wieder korrekt.
+    condition: state
+    entity_id: binary_sensor.any_scene_active
+    state: 'off'
+  actions:
+  - alias: Nach einem Neustart warten bis die AL-Schalter da sind
+    if:
+    - condition: trigger
+      id: start
+    then:
+    - delay: "00:00:45"
+  - variables:
+      # Fallback 2000 wie im Safe-Sensor selbst: fehlt die Entity ganz, gilt "heller Tag",
+      # also die niedrigste Obergrenze. Zu dunkel ist der teurere Fehler als zu hell.
+      lux: "{{ states('sensor.balkon_motion_illuminance_safe') | float(2000) }}"
+      # Vier grobe Stufen statt einer stetigen Kurve: bei stetiger Rechnung wuerde
+      # jede Wolke die Helligkeit nachziehen. Die Schwellen stammen aus sieben Tagen
+      # Messung am Balkon (Mittag 1147, Abend 480, Nacht 1 lx).
+      stufe: >-
+        {% if lux >= 1000 %}70
+        {% elif lux >= 600 %}80
+        {% elif lux >= 300 %}90
+        {% else %}100{% endif %}
+      aktuell: "{{ states('input_number.al_tagesmax_helligkeit') | int(0) }}"
+  # Der AL-Aufruf laeuft bewusst UNBEDINGT, nicht nur bei geaenderter Stufe: die Szenen
+  # (Film, Kochen, Essen) schreiben max_brightness direkt an AL, ohne den Helfer
+  # nachzufuehren. Waere der Aufruf hinter der Aenderungspruefung, bliebe ein Raum nach
+  # einer Szene auf dem Szenenwert haengen, solange sich draussen nichts tut.
+  - alias: Obergrenze auf die Raeume mit Tageslicht anwenden
+    action: adaptive_lighting.change_switch_settings
+    data:
+      entity_id:
+      - switch.adaptive_lighting_wohnzimmer
+      - switch.adaptive_lighting_kueche
+      - switch.adaptive_lighting_badezimmer
+      - switch.adaptive_lighting_kinderzimmer
+      - switch.adaptive_lighting_waschzimmer
+      - switch.adaptive_lighting_arbeitszimmer
+      - switch.adaptive_lighting_schlafzimmer
+      - switch.adaptive_lighting_balkon
+      max_brightness: "{{ stufe | int }}"
+      use_defaults: current
+  - alias: Helfer und Logbuch nur bei echtem Stufenwechsel
+    if:
+    - condition: template
+      value_template: "{{ stufe | int != aktuell }}"
+    then:
+    - alias: Neue Stufe merken (Szenen-Resets lesen diesen Wert)
+      action: input_number.set_value
+      target:
+        entity_id: input_number.al_tagesmax_helligkeit
+      data:
+        value: "{{ stufe | int }}"
+    - alias: Wechsel im Logbuch festhalten
+      action: logbook.log
+      data:
+        name: Tageshelligkeit
+        message: >-
+          Aussen {{ lux | round(0) }} lx, Obergrenze {{ aktuell }} -> {{ stufe | int }} %
+
 - id: adaptive_lighting_morning_reset
   alias: Adaptive Lighting » Morning Reset to Default Sunset Times
   description: Resets adaptive lighting to conservative default times in the morning
@@ -509,7 +603,6 @@
       min_sunset_time: "20:00:00"
       max_sunset_time: "20:30:00"
       min_brightness: 10
-      max_brightness: 100
       max_color_temp: 4000
   - alias: "Reset Wohnzimmer, Küche, Flur (min_brightness 20)"
     action: adaptive_lighting.change_switch_settings
@@ -522,7 +615,6 @@
       min_sunset_time: "20:00:00"
       max_sunset_time: "20:30:00"
       min_brightness: 20
-      max_brightness: 100
       max_color_temp: 4000
   - alias: "Reset Badezimmer, Waschzimmer, Schlafzimmer (Buero) (min_brightness 30)"
     action: adaptive_lighting.change_switch_settings
@@ -535,7 +627,6 @@
       min_sunset_time: "20:00:00"
       max_sunset_time: "20:30:00"
       min_brightness: 30
-      max_brightness: 100
       max_color_temp: 4000
   - alias: "Reset Balkon (min_brightness 40, gleich wie sleep_brightness)"
     action: adaptive_lighting.change_switch_settings
@@ -545,6 +636,5 @@
       min_sunset_time: "20:00:00"
       max_sunset_time: "20:30:00"
       min_brightness: 40
-      max_brightness: 100
       max_color_temp: 4000
   mode: single

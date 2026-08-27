@@ -59,7 +59,7 @@
         target:
           entity_id: switch.adaptive_lighting_kueche
         data:
-          max_brightness: 100
+          max_brightness: "{{ states('input_number.al_tagesmax_helligkeit') | int(100) }}"
           min_brightness: 10
       - alias: "Re-enable Adaptive Lighting with conflict check"
         action: script.scene_enable_adaptive_lighting
@@ -94,7 +94,7 @@
       include_ambient: ambient_enabled
       ambient_light_sensor: sensor.balkon_motion_illuminance_safe
       ambient_light_options: ambient_light_option_enabled
-      ambient_light_value: 800
+      ambient_light_value: 1200
       include_time: time_disabled
       after_time: 06:00:00
       before_time: '23:00:00'
@@ -120,7 +120,7 @@
       - 255
       - 80
       - 0
-      ambient_light_high_value: 1000
+      ambient_light_high_value: 1400
       motion_bypass_lights_on:
       - input_boolean.kochen
       motion_bypass_lights_off:
@@ -199,7 +199,7 @@
         target:
           entity_id: switch.adaptive_lighting_wohnzimmer
         data:
-          max_brightness: 100
+          max_brightness: "{{ states('input_number.al_tagesmax_helligkeit') | int(100) }}"
           min_brightness: 10
       - alias: "Re-enable Adaptive Lighting with conflict check"
         action: script.scene_enable_adaptive_lighting

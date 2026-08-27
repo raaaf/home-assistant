@@ -14,7 +14,7 @@
       light_switch:
         entity_id: light.alle_kinderzimmer_lichter
       include_ambient: ambient_enabled
-      ambient_light_sensor: sensor.balkon_motion_illuminance_safe
+      ambient_light_sensor: sensor.kinderzimmer_illuminance_safe
       include_night_lights: night_lights_enabled
       night_lights:
         entity_id: light.alle_kinderzimmer_nachtlichter
@@ -45,8 +45,8 @@
       - 255
       - 80
       - 0
-      ambient_light_value: 300
-      ambient_light_high_value: 400
+      ambient_light_value: 200
+      ambient_light_high_value: 300
       # Bypass motion turn-off when manual control is active
       include_bypass:
       - bypass_enabled_stop

@@ -844,13 +844,64 @@ template:
           {% set fresh = src is not none
                          and src.state not in ['unknown', 'unavailable']
                          and (now() - src.last_updated).total_seconds() < 21600 %}
-          {% if fresh and src.state | float(0) >= 0 %}
+          {# float(-1) statt float(0): ein nicht-numerischer Zustand wuerde sonst als #}
+          {# 0 lx durchgehen und "stockdunkel" bedeuten, also faelschlich Licht ausloesen. #}
+          {% if fresh and src.state | float(-1) >= 0 %}
             {{ src.state | float(0) | round(0) }}
           {% else %}
             {# Balkon-Sensor liefert keinen Wert oder haengt fest (12.-18.08.2026: #}
             {# 6 Tage bei 1334 lx eingefroren, Z2M-Availability hat es nicht bemerkt, #}
             {# weil das Geraet eingebucht blieb). Fallback sonnenstandsabhaengig: #}
             {# tagsueber hell (ueber Motion-Schwelle, kein Fehltrigger), nachts dunkel. #}
+            {{ 2000 if state_attr('sun.sun', 'elevation') | float(-90) > 3 else 5 }}
+          {% endif %}
+
+      - name: "Flur Illuminance (Safe)"
+        unique_id: flur_illuminance_safe
+        unit_of_measurement: "lx"
+        device_class: illuminance
+        icon: mdi:brightness-6
+        state: >-
+          {# Der Flur hat drei Melder mit sehr unterschiedlicher Sicht (7-Tage-Mittel #}
+          {# mittags 48 / 10 / 71 lx). Das Maximum entscheidet, sonst wuerde der #}
+          {# dunkelste Winkel das ganze Stockwerk beleuchten lassen. #}
+          {# now() erzwingt ein Re-Render pro Minute, wie beim Balkon-Sensor: die #}
+          {# Melder senden Lux nur bei Bewegung, ein stehender Wert loest nichts aus. #}
+          {% set quellen = ['sensor.ikea_motion_04_illuminance',
+                            'sensor.ikea_motion_05_illuminance',
+                            'sensor.philips_motion_01_motion_1_illuminance'] %}
+          {% set ns = namespace(werte=[]) %}
+          {% for q in quellen %}
+            {% set src = states[q] %}
+            {% set wert = src.state | float(-1) if src is not none else -1 %}
+            {% if src is not none
+                  and src.state not in ['unknown', 'unavailable']
+                  and (now() - src.last_updated).total_seconds() < 21600
+                  and wert >= 0 %}
+              {% set ns.werte = ns.werte + [wert] %}
+            {% endif %}
+          {% endfor %}
+          {% if ns.werte | length > 0 %}
+            {{ ns.werte | max | round(0) }}
+          {% else %}
+            {# Alle drei tot oder eingefroren: gleicher sonnenstandsabhaengiger #}
+            {# Fallback wie beim Balkon, damit kein Dauerlicht entsteht. #}
+            {{ 2000 if state_attr('sun.sun', 'elevation') | float(-90) > 3 else 5 }}
+          {% endif %}
+
+      - name: "Kinderzimmer Illuminance (Safe)"
+        unique_id: kinderzimmer_illuminance_safe
+        unit_of_measurement: "lx"
+        device_class: illuminance
+        icon: mdi:brightness-6
+        state: >-
+          {% set src = states.sensor.tuya_motion_02_illuminance %}
+          {% set fresh = src is not none
+                         and src.state not in ['unknown', 'unavailable']
+                         and (now() - src.last_updated).total_seconds() < 21600 %}
+          {% if fresh and src.state | float(-1) >= 0 %}
+            {{ src.state | float(0) | round(0) }}
+          {% else %}
             {{ 2000 if state_attr('sun.sun', 'elevation') | float(-90) > 3 else 5 }}
           {% endif %}
 
@@ -1068,6 +1119,19 @@ input_text:
     max: 100
 
 input_number:
+  # Tages-Obergrenze der Adaptive-Lighting-Helligkeit, gesetzt von
+  # "Licht » Tageshelligkeit nach Aussenlicht". Einzige Quelle der Wahrheit:
+  # die Szenen-Resets (Film, Kochen, Essen) lesen diesen Wert, statt hart auf
+  # 100 zurueckzufallen, sonst wuerden sie die Aussenlicht-Modulation ueberschreiben.
+  al_tagesmax_helligkeit:
+    name: "AL Tagesmaximum Helligkeit"
+    min: 10
+    max: 100
+    step: 5
+    unit_of_measurement: "%"
+    icon: mdi:brightness-percent
+    initial: 100
+
   # Climate control temperature thresholds
   ac_temp_hot:
     name: "AC Aktivierung Temperatur (heiß)"
