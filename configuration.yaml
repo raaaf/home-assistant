@@ -1193,35 +1193,35 @@ input_number:
     max: 1
     step: 0.01
     icon: mdi:volume-high
-    initial: 0.35
+    initial: 0.50
   saved_volume_badezimmer:
     name: "Gespeicherte Lautstärke Badezimmer"
     min: 0
     max: 1
     step: 0.01
     icon: mdi:volume-high
-    initial: 0.35
+    initial: 0.50
   saved_volume_kinderzimmer:
     name: "Gespeicherte Lautstärke Kinderzimmer"
     min: 0
     max: 1
     step: 0.01
     icon: mdi:volume-high
-    initial: 0.35
+    initial: 0.50
   saved_volume_arbeitszimmer:
     name: "Gespeicherte Lautstärke Arbeitszimmer"
     min: 0
     max: 1
     step: 0.01
     icon: mdi:volume-high
-    initial: 0.35
+    initial: 0.50
   saved_volume_schlafzimmer:
     name: "Gespeicherte Lautstärke Schlafzimmer"
     min: 0
     max: 1
     step: 0.01
     icon: mdi:volume-high
-    initial: 0.35
+    initial: 0.45
   # Energy cost parameters
   strompreis_kwh:
     name: "Strompreis pro kWh"
