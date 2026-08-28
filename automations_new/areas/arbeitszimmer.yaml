@@ -18,6 +18,16 @@
     to: 'on'
     id: work-rafael-on
   - trigger: state
+    entity_id: sensor.macbook_pro_rafael_internal_battery_state_2
+    not_to:
+    - 'Discharging'
+    - unknown
+    - unavailable
+    not_from:
+    - unknown
+    - unavailable
+    id: work-rafael-on
+  - trigger: state
     entity_id: binary_sensor.macbook_pro_2_active
     to: 'off'
     id: work-alex-off
@@ -132,7 +142,11 @@
         condition: state
         entity_id: input_boolean.gaming
         state: 'off'
-      - alias: Rafael arbeitet am Monitor
+      - alias: MacBook ist aktiv
+        condition: state
+        entity_id: binary_sensor.macbook_pro_rafael_active_2
+        state: 'on'
+      - alias: Rafael arbeitet am Monitor oder haengt am Strom
         condition: or
         conditions:
         - condition: numeric_state
@@ -141,6 +155,11 @@
         - condition: state
           entity_id: sensor.macbook_pro_rafael_primary_display_name_2
           state: "XG27JCG"
+        - alias: MacBook haengt am Strom
+          condition: template
+          value_template: >
+            {{ states('sensor.macbook_pro_rafael_internal_battery_state_2')
+               not in ['Discharging', 'unknown', 'unavailable'] }}
       sequence:
       - alias: "Arbeit aktivieren (falls noch nicht aktiv)"
         if:
@@ -151,31 +170,27 @@
         - action: input_boolean.turn_on
           target:
             entity_id: input_boolean.arbeit
-      - alias: "Rafael Lichter einschalten (PC 1 + PC 2) nur bei Rollo zu oder dunkel (nur wenn aus)"
+      - alias: "Rafael Lichter einschalten (PC 1 + 2, Bett, TV) nur wenn dunkel (nur wenn aus)"
         if:
-        - condition: and
-          conditions:
-          - alias: Mindestens ein Licht ist aus
-            condition: template
-            value_template: >
-              {{ is_state('light.philips_light_01_pc_1', 'off') or
-                 is_state('light.philips_light_02_pc_2', 'off') }}
-          - condition: or
-            conditions:
-            - alias: Rollo ist geschlossen
-              condition: state
-              entity_id: cover.aqara_cover_01
-              state: 'closed'
-            - alias: Dunkel draußen
-              condition: numeric_state
-              entity_id: sensor.sunlight_pct
-              below: 40
+        - alias: Mindestens ein Licht ist aus
+          condition: template
+          value_template: >
+            {{ is_state('light.philips_light_01_pc_1', 'off') or
+               is_state('light.philips_light_02_pc_2', 'off') or
+               is_state('light.philips_light_15_bett', 'off') or
+               is_state('light.philips_light_16_tv', 'off') }}
+        - alias: Dunkel draußen
+          condition: numeric_state
+          entity_id: sensor.sunlight_pct
+          below: 40
         then:
         - action: light.turn_on
           target:
             entity_id:
             - light.philips_light_01_pc_1
             - light.philips_light_02_pc_2
+            - light.philips_light_15_bett
+            - light.philips_light_16_tv
           data:
             transition: 2
 
@@ -214,21 +229,29 @@
             - light.ikea_light_17_2
           data:
             transition: 2
-      - alias: "Rafael PC-Lichter einschalten wenn er arbeitet (nur wenn aus)"
+      - alias: "Rafael Lichter einschalten wenn er arbeitet (nur wenn aus)"
         if:
         - condition: state
           entity_id: binary_sensor.macbook_pro_rafael_active_2
           state: 'on'
+        - alias: Dunkel draußen
+          condition: numeric_state
+          entity_id: sensor.sunlight_pct
+          below: 40
         - condition: template
           value_template: >
             {{ is_state('light.philips_light_01_pc_1', 'off') or
-               is_state('light.philips_light_02_pc_2', 'off') }}
+               is_state('light.philips_light_02_pc_2', 'off') or
+               is_state('light.philips_light_15_bett', 'off') or
+               is_state('light.philips_light_16_tv', 'off') }}
         then:
         - action: light.turn_on
           target:
             entity_id:
             - light.philips_light_01_pc_1
             - light.philips_light_02_pc_2
+            - light.philips_light_15_bett
+            - light.philips_light_16_tv
           data:
             transition: 2
 
@@ -283,6 +306,8 @@
           entity_id:
           - light.philips_light_01_pc_1
           - light.philips_light_02_pc_2
+          - light.philips_light_15_bett
+          - light.philips_light_16_tv
         data:
           transition: 2
       - alias: "Arbeit-Szene deaktivieren wenn Alex auch aus"
@@ -396,25 +421,20 @@
               entity_id: input_boolean.arbeit
           - alias: "Rafael Lichter einschalten wenn aktiv und dunkel"
             if:
-            - condition: and
-              conditions:
-              - condition: state
-                entity_id: binary_sensor.macbook_pro_rafael_active_2
-                state: 'on'
-              - condition: or
-                conditions:
-                - condition: state
-                  entity_id: cover.aqara_cover_01
-                  state: 'closed'
-                - condition: numeric_state
-                  entity_id: sensor.sunlight_pct
-                  below: 40
+            - condition: state
+              entity_id: binary_sensor.macbook_pro_rafael_active_2
+              state: 'on'
+            - condition: numeric_state
+              entity_id: sensor.sunlight_pct
+              below: 40
             then:
             - action: light.turn_on
               target:
                 entity_id:
                 - light.philips_light_01_pc_1
                 - light.philips_light_02_pc_2
+                - light.philips_light_15_bett
+                - light.philips_light_16_tv
               data:
                 transition: 2
         default:
