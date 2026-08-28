@@ -19,13 +19,9 @@
     id: work-rafael-on
   - trigger: state
     entity_id: sensor.macbook_pro_rafael_internal_battery_state_2
-    not_to:
-    - 'Discharging'
-    - unknown
-    - unavailable
-    not_from:
-    - unknown
-    - unavailable
+    to:
+    - 'Charging'
+    - 'Full'
     id: work-rafael-on
   - trigger: state
     entity_id: binary_sensor.macbook_pro_2_active
@@ -156,10 +152,11 @@
           entity_id: sensor.macbook_pro_rafael_primary_display_name_2
           state: "XG27JCG"
         - alias: MacBook haengt am Strom
-          condition: template
-          value_template: >
-            {{ states('sensor.macbook_pro_rafael_internal_battery_state_2')
-               not in ['Discharging', 'unknown', 'unavailable'] }}
+          condition: state
+          entity_id: sensor.macbook_pro_rafael_internal_battery_state_2
+          state:
+          - 'Charging'
+          - 'Full'
       sequence:
       - alias: "Arbeit aktivieren (falls noch nicht aktiv)"
         if:
