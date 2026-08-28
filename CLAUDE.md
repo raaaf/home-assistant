@@ -258,7 +258,11 @@ Examples:
 
 The system uses the **Adaptive Lighting** custom component for circadian rhythm lighting across all 10 rooms.
 
-**Configuration**: `automations_new/system/core.yaml`, automation `System » Adaptive Lighting Settings nach Neustart`. It is the single source of truth and re-applies every setting ~30 s after each start. The former `adaptive_lighting.yaml` was deleted on 2026-08-28 (a copy sits in `docs/plans/snapshots/`); AL had read it once at first import and never again, so edits to it had been silently ineffective for months.
+**Configuration**: two files, and both are load-bearing for different reasons.
+
+`adaptive_lighting.yaml` **must exist and stay included**. Deleting it on 2026-08-28 destroyed all ten config entries and every AL switch on the next restart, and the fix was to restore both file and `!include` and restart again. The values inside still only apply at first import, so editing them changes nothing, but the file anchors the config entries.
+
+`automations_new/system/core.yaml`, automation `System » Adaptive Lighting Settings nach Neustart`, is where the live values come from. It re-applies them ~30 s after every start. Change settings there.
 
 **Room Configuration**:
 | Room | Lights | Reset Time | Notes |
@@ -314,7 +318,8 @@ When manual control is detected:
 - Scene automations can disable/re-enable AL per room
 
 **Key Files**:
-- `automations_new/system/core.yaml` - Main AL configuration (10 rooms), applied at every start
+- `adaptive_lighting.yaml` - Anchors the 10 config entries, must not be deleted
+- `automations_new/system/core.yaml` - Live AL configuration, applied at every start
 - `automations_new/lighting/adaptive_lighting.yaml` - AL-related automations
 - `automations_new/lighting/day_night.yaml` - Time-based transitions
 
@@ -640,7 +645,8 @@ removed (audit 2026-08-19). Run `wc -l` when you need one.
 | File | Purpose |
 |------|---------|
 | `configuration.yaml` | Main configuration |
-| `automations_new/system/core.yaml` | Circadian lighting (10 rooms), single source of truth |
+| `adaptive_lighting.yaml` | Anchors the AL config entries, values only apply at first import |
+| `automations_new/system/core.yaml` | Circadian lighting (10 rooms), live values |
 | `scripts.yaml` | Reusable scripts |
 | `sensors.yaml` | Template/platform sensors |
 | `lights.yaml` | Light groups |
@@ -712,7 +718,7 @@ The workaround requires two settings working together:
 
 This is applied via `System » Adaptive Lighting Settings nach Neustart` automation in `system/core.yaml`.
 
-AL reads its config from **Config Entries**, which is why the YAML was deleted: it only ever seeded them once. Change settings in the startup automation in `automations_new/system/core.yaml`, never anywhere else, and remember that `change_switch_settings` is runtime-only and does not persist into the config entry.
+AL reads its config from **Config Entries**, which the YAML seeds once and then anchors: remove the YAML and HA drops the entries on the next restart. Change settings in the startup automation in `automations_new/system/core.yaml`, never anywhere else, and remember that `change_switch_settings` is runtime-only and does not persist into the config entry.
 
 **Exception, `max_brightness`:** that field belongs to `Licht » Tageshelligkeit nach Aussenlicht` (eight rooms with daylight, driven by the balcony lux sensor via `input_number.al_tagesmax_helligkeit`) and to fixed values for Flur and Ankleide in the startup automation. Do not set it anywhere else.
 
@@ -731,7 +737,7 @@ AL reads its config from **Config Entries**, which is why the YAML was deleted: 
 1. Check `switch.adaptive_lighting_{room}` is on
 2. Check `binary_sensor.{room}_manual_control` - manual control pauses AL
 3. Check `binary_sensor.any_scene_active` - scenes may disable AL
-4. Verify light is in AL config: `automations_new/system/core.yaml`
+4. Verify light is in AL config: `adaptive_lighting.yaml` (the `lights:` lists)
 
 **Automations not triggering**:
 1. Check if automation is enabled: `automation.{name}` state
