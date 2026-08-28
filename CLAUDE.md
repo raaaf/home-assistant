@@ -448,22 +448,20 @@ input_datetime.einschlafzeit_arbeitstag  # Workday sleep time
 input_datetime.einschlafzeit_freier_tag  # Weekend sleep time
 ```
 
-### Input Number (Thresholds)
+### Input Number
 ```yaml
-# Climate thresholds
-input_number.ac_temp_hot, ac_temp_warm, ac_temp_comfortable
-
-# Blind positions (0-100%)
-input_number.rollo_position_closed, partial, half, open
-
-# Fan speeds (0-100%)
-input_number.fan_speed_low, medium, high, max
+input_number.saved_volume_*          # Volume before a scene, restored afterwards
+input_number.al_tagesmax_helligkeit  # Daytime ceiling for Adaptive Lighting
 ```
 
-### Input Select (Choices)
-```yaml
-input_select.wakeup_routine_phase  # Wake-up phase tracking
-```
+**Removed on 2026-08-28:** twelve sliders that looked like thresholds and were read by nothing.
+`ac_temp_hot/warm/comfortable`, `rollo_position_closed/partial/half/open` and
+`fan_speed_low/medium/high/max` sat on the dashboard promising control that did not exist: the
+climate automation computes `ziel_setpoint` and `ziel_speed` itself, and `rollos.yaml` uses
+`position_west` and friends. Also gone: `input_boolean.test_morning_routine`,
+`input_datetime.wakeup_routine_started` and `input_select.wakeup_routine_phase`, none of which
+any automation ever read. There is no `input_select:` block in YAML any more;
+`input_select.trockner` is a UI helper and untouched.
 
 ---
 

@@ -2073,7 +2073,6 @@ views:
       - entity: sensor.active_scenes
         name: Aktive Szenen
         icon: mdi:play-circle
-      - entity: input_select.wakeup_routine_phase
       - entity: binary_sensor.any_scene_active
       - entity: binary_sensor.scene_conflict_detected
       - entity: binary_sensor.motion_automations_disabled
@@ -2139,87 +2138,6 @@ views:
         icon: mdi:television-off
         icon_color: blue
       title: Szenen
-    - type: grid
-      square: false
-      columns: 3
-      cards:
-      - type: custom:mushroom-entity-card
-        entity: input_number.ac_temp_comfortable
-        name: Komfortabel
-        layout: horizontal
-        icon: mdi:thermometer
-        icon_color: grey
-      - type: custom:mushroom-entity-card
-        entity: input_number.ac_temp_warm
-        name: Warm
-        layout: horizontal
-        icon: mdi:thermometer
-        icon_color: grey
-      - type: custom:mushroom-entity-card
-        entity: input_number.ac_temp_hot
-        name: Heiß
-        layout: horizontal
-        icon: mdi:thermometer
-        icon_color: grey
-      title: Klima
-    - type: grid
-      square: false
-      columns: 4
-      cards:
-      - type: custom:mushroom-entity-card
-        entity: input_number.rollo_position_closed
-        name: Geschlossen
-        layout: horizontal
-        icon: mdi:window-shutter
-        icon_color: grey
-      - type: custom:mushroom-entity-card
-        entity: input_number.rollo_position_partial
-        name: Teilweise
-        layout: horizontal
-        icon: mdi:window-shutter
-        icon_color: grey
-      - type: custom:mushroom-entity-card
-        entity: input_number.rollo_position_half
-        name: Halb
-        layout: horizontal
-        icon: mdi:window-shutter-open
-        icon_color: grey
-      - type: custom:mushroom-entity-card
-        entity: input_number.rollo_position_open
-        name: Offen
-        layout: horizontal
-        icon: mdi:window-shutter-open
-        icon_color: grey
-      title: Rollo-Positionen
-    - type: grid
-      square: false
-      columns: 4
-      cards:
-      - type: custom:mushroom-entity-card
-        entity: input_number.fan_speed_low
-        name: Niedrig
-        layout: horizontal
-        icon: mdi:fan-speed-1
-        icon_color: grey
-      - type: custom:mushroom-entity-card
-        entity: input_number.fan_speed_medium
-        name: Mittel
-        layout: horizontal
-        icon: mdi:fan-speed-2
-        icon_color: grey
-      - type: custom:mushroom-entity-card
-        entity: input_number.fan_speed_high
-        name: Hoch
-        layout: horizontal
-        icon: mdi:fan-speed-3
-        icon_color: grey
-      - type: custom:mushroom-entity-card
-        entity: input_number.fan_speed_max
-        name: Max
-        layout: horizontal
-        icon: mdi:fan
-        icon_color: grey
-      title: Lüfter-Stufen
     - type: custom:auto-entities
       card:
         type: entities
@@ -2227,7 +2145,6 @@ views:
         state_color: true
       filter:
         include:
-        - entity_id: input_boolean.test_morning_routine
         - entity_id: input_boolean.haustur_besucher_inside
         - domain: input_datetime
         - domain: input_text
