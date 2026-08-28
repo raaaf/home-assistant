@@ -24,6 +24,10 @@
     - 'Full'
     id: work-rafael-on
   - trigger: state
+    entity_id: input_boolean.arbeit
+    to: 'on'
+    id: work-rafael-on
+  - trigger: state
     entity_id: binary_sensor.macbook_pro_2_active
     to: 'off'
     id: work-alex-off
