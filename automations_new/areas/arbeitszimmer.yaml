@@ -167,7 +167,7 @@
         - action: input_boolean.turn_on
           target:
             entity_id: input_boolean.arbeit
-      - alias: "Rafael Lichter einschalten (PC 1 + 2, Bett, TV) nur wenn dunkel (nur wenn aus)"
+      - alias: "Rafael Lichter einschalten (PC 1 + 2, Bett, TV) (nur wenn aus)"
         if:
         - alias: Mindestens ein Licht ist aus
           condition: template
@@ -176,10 +176,6 @@
                is_state('light.philips_light_02_pc_2', 'off') or
                is_state('light.philips_light_15_bett', 'off') or
                is_state('light.philips_light_16_tv', 'off') }}
-        - alias: Dunkel draußen
-          condition: numeric_state
-          entity_id: sensor.sunlight_pct
-          below: 40
         then:
         - action: light.turn_on
           target:
@@ -231,10 +227,6 @@
         - condition: state
           entity_id: binary_sensor.macbook_pro_rafael_active_2
           state: 'on'
-        - alias: Dunkel draußen
-          condition: numeric_state
-          entity_id: sensor.sunlight_pct
-          below: 40
         - condition: template
           value_template: >
             {{ is_state('light.philips_light_01_pc_1', 'off') or
@@ -416,14 +408,11 @@
           - action: input_boolean.turn_on
             target:
               entity_id: input_boolean.arbeit
-          - alias: "Rafael Lichter einschalten wenn aktiv und dunkel"
+          - alias: "Rafael Lichter einschalten wenn er arbeitet"
             if:
             - condition: state
               entity_id: binary_sensor.macbook_pro_rafael_active_2
               state: 'on'
-            - condition: numeric_state
-              entity_id: sensor.sunlight_pct
-              below: 40
             then:
             - action: light.turn_on
               target:
