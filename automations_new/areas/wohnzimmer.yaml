@@ -188,21 +188,25 @@
           entity_id: input_boolean.movie
         data: {}
         action: input_boolean.turn_off
-      - alias: "Brightness-Reset nur außerhalb Schlafenszeit"
-        choose:
-        - conditions:
-          - condition: state
-            entity_id: input_boolean.schlafenszeit
-            state: 'off'
-          sequence:
-          - action: adaptive_lighting.change_switch_settings
-            target:
-              entity_id:
-              - switch.adaptive_lighting_wohnzimmer
-              - switch.adaptive_lighting_kueche
-            data:
-              max_brightness: "{{ states('input_number.al_tagesmax_helligkeit') | int(100) }}"
-              min_brightness: 10
+      - alias: "Brightness-Reset, immer, mit dem zur Tageszeit passenden Minimum"
+        # Frueher lief dieser Reset nur ausserhalb der Schlafenszeit. Endete ein Film nach
+        # 23 Uhr, blieben Wohnzimmer und Kueche auf min_brightness 5 und max_brightness 40
+        # haengen, bis der Morgen-Reset sie einsammelte. Beobachtet am 27.08.2026: die
+        # AL-Kurve war eine flache Linie, weil der Abend-Fade das Minimum und die Film-Szene
+        # das Maximum auf denselben Wert gedrueckt hatten.
+        # Jetzt laeuft der Reset immer und setzt das Minimum, das gerade gelten soll:
+        # 40 waehrend der Schlafenszeit (identisch zum Abend-Fade), sonst 10.
+        action: adaptive_lighting.change_switch_settings
+        target:
+          entity_id:
+          - switch.adaptive_lighting_wohnzimmer
+          - switch.adaptive_lighting_kueche
+        data:
+          max_brightness: "{{ states('input_number.al_tagesmax_helligkeit') | int(100) }}"
+          # 20 ist der Tageswert fuer Wohnzimmer und Kueche (siehe Startup-Automation und
+          # Morgen-Reset), 40 der Abendwert des Fades. Frueher stand hier 10, das gehoert
+          # Arbeitszimmer, Kinderzimmer und Ankleide.
+          min_brightness: "{{ 40 if is_state('input_boolean.schlafenszeit', 'on') else 20 }}"
       - alias: "Re-enable Living Room Adaptive Lighting with conflict check"
         action: script.scene_enable_adaptive_lighting
         data:
@@ -254,7 +258,9 @@
               - switch.adaptive_lighting_kueche
             data:
               max_brightness: 80
-              min_brightness: 10
+              # Fest 20, der Tageswert beider Raeume. Kein Schlafenszeit-Zweig noetig:
+              # der umgebende choose laeuft ohnehin nur bei Schlafenszeit off.
+              min_brightness: 20
       - target:
           entity_id: light.hyperhdr
         data:
@@ -669,11 +675,10 @@
       night_light_transition_on: 2
       night_light_transition_off: 10
       ambient_light_high_value: 400
-      include_night_light_colour_control: use_rgb_colour
-      night_light_rgb_colour:
-      - 255
-      - 80
-      - 0
+      # 2200K statt RGB-Amber: sonst setzt die Blueprint erst Rot und Adaptive
+      # Lighting korrigiert eine Sekunde spaeter auf 2200K, sichtbar als Farbsprung.
+      include_night_light_colour_control: use_colour_temperature
+      night_light_colour_temperature: 2200
       include_bypass:
       - bypass_enabled_stop
       motion_bypass_lights_stop:

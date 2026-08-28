@@ -937,3 +937,41 @@ al_set_manual_control:
             entity_id: "switch.adaptive_lighting_{{ repeat.item }}"
             lights: "{{ room_lights[repeat.item] }}"
             manual_control: "{{ manual_control }}"
+
+al_min_brightness_setzen:
+  alias: "AL » min_brightness je Raum setzen"
+  description: >-
+    Die Zuordnung der Tages-Mindesthelligkeit je Raum. Sie steht bewusst nur an dieser einen
+    Stelle, weil sie an zwei Zeitpunkten gebraucht wird: beim Start durch
+    "System » Adaptive Lighting Settings nach Neustart" (automations_new/system/core.yaml)
+    und beim Aufwachen durch "Adaptive Lighting » Morning Reset"
+    (automations_new/lighting/day_night.yaml). Zwei Kopien liefen sonst auseinander, ohne dass
+    es jemandem auffaellt.
+  mode: single
+  sequence:
+    - repeat:
+        for_each:
+          - schalter:
+              - switch.adaptive_lighting_ankleide
+              - switch.adaptive_lighting_arbeitszimmer
+              - switch.adaptive_lighting_kinderzimmer
+            wert: 10
+          - schalter:
+              - switch.adaptive_lighting_flur
+              - switch.adaptive_lighting_kueche
+              - switch.adaptive_lighting_wohnzimmer
+            wert: 20
+          - schalter:
+              - switch.adaptive_lighting_badezimmer
+              - switch.adaptive_lighting_schlafzimmer
+              - switch.adaptive_lighting_waschzimmer
+            wert: 30
+          - schalter:
+              - switch.adaptive_lighting_balkon
+            wert: 40
+        sequence:
+          - action: adaptive_lighting.change_switch_settings
+            data:
+              entity_id: "{{ repeat.item.schalter }}"
+              min_brightness: "{{ repeat.item.wert }}"
+              use_defaults: current

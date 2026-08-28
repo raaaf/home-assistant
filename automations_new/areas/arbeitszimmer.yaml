@@ -467,11 +467,10 @@
       night_light_transition_off: 10
       night_lights_after_time: '19:00:00'
       night_lights_before_time: 07:00:00
-      include_night_light_colour_control: use_rgb_colour
-      night_light_rgb_colour:
-      - 255
-      - 80
-      - 0
+      # 2200K statt RGB-Amber: sonst setzt die Blueprint erst Rot und Adaptive
+      # Lighting korrigiert eine Sekunde spaeter auf 2200K, sichtbar als Farbsprung.
+      include_night_light_colour_control: use_colour_temperature
+      night_light_colour_temperature: 2200
       include_ambient: ambient_enabled
       ambient_light_sensor: sensor.balkon_motion_illuminance_safe
       ambient_light_value: 300

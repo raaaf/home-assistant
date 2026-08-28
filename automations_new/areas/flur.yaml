@@ -34,11 +34,10 @@
       night_light_brightness: 30  # Indirekte Lichter (Flur Schrank)
       night_light_transition_on: 2
       night_light_transition_off: 10
-      include_night_light_colour_control: use_rgb_colour
-      night_light_rgb_colour:
-      - 255
-      - 80
-      - 0
+      # 2200K statt RGB-Amber: sonst setzt die Blueprint erst Rot und Adaptive
+      # Lighting korrigiert eine Sekunde spaeter auf 2200K, sichtbar als Farbsprung.
+      include_night_light_colour_control: use_colour_temperature
+      night_light_colour_temperature: 2200
       night_time_delay: 0.5
 
 - id: '1672931147408'
@@ -78,11 +77,10 @@
       - input_boolean.nachtlicht
       - input_boolean.schlafenszeit
       night_light_brightness: 30  # Indirekte Lichter (Flur Schrank, Stahltraeger)
-      include_night_light_colour_control: use_rgb_colour
-      night_light_rgb_colour:
-      - 255
-      - 80
-      - 0
+      # 2200K statt RGB-Amber: sonst setzt die Blueprint erst Rot und Adaptive
+      # Lighting korrigiert eine Sekunde spaeter auf 2200K, sichtbar als Farbsprung.
+      include_night_light_colour_control: use_colour_temperature
+      night_light_colour_temperature: 2200
       ambient_light_options: ambient_light_option_enabled
       ambient_light_value: 150
       ambient_light_high_value: 250

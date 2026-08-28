@@ -592,49 +592,24 @@
   conditions: []
   actions:
   # Split into three calls to preserve room-specific min_brightness values
-  - alias: "Reset Arbeitszimmer (Schlafraum), Kinderzimmer, Ankleide (min_brightness 10)"
+  - alias: "Sonnenzeiten und Farbtemperatur zurueck auf Tageswerte (alle Raeume gleich)"
     action: adaptive_lighting.change_switch_settings
-    target:
+    data:
       entity_id:
-      - switch.adaptive_lighting_arbeitszimmer
-      - switch.adaptive_lighting_kinderzimmer
       - switch.adaptive_lighting_ankleide
-    data:
-      min_sunset_time: "20:00:00"
-      max_sunset_time: "20:30:00"
-      min_brightness: 10
-      max_color_temp: 4000
-  - alias: "Reset Wohnzimmer, Küche, Flur (min_brightness 20)"
-    action: adaptive_lighting.change_switch_settings
-    target:
-      entity_id:
-      - switch.adaptive_lighting_wohnzimmer
-      - switch.adaptive_lighting_kueche
-      - switch.adaptive_lighting_flur
-    data:
-      min_sunset_time: "20:00:00"
-      max_sunset_time: "20:30:00"
-      min_brightness: 20
-      max_color_temp: 4000
-  - alias: "Reset Badezimmer, Waschzimmer, Schlafzimmer (Buero) (min_brightness 30)"
-    action: adaptive_lighting.change_switch_settings
-    target:
-      entity_id:
+      - switch.adaptive_lighting_arbeitszimmer
       - switch.adaptive_lighting_badezimmer
-      - switch.adaptive_lighting_waschzimmer
+      - switch.adaptive_lighting_balkon
+      - switch.adaptive_lighting_flur
+      - switch.adaptive_lighting_kinderzimmer
+      - switch.adaptive_lighting_kueche
       - switch.adaptive_lighting_schlafzimmer
-    data:
+      - switch.adaptive_lighting_waschzimmer
+      - switch.adaptive_lighting_wohnzimmer
       min_sunset_time: "20:00:00"
       max_sunset_time: "20:30:00"
-      min_brightness: 30
       max_color_temp: 4000
-  - alias: "Reset Balkon (min_brightness 40, gleich wie sleep_brightness)"
-    action: adaptive_lighting.change_switch_settings
-    target:
-      entity_id: switch.adaptive_lighting_balkon
-    data:
-      min_sunset_time: "20:00:00"
-      max_sunset_time: "20:30:00"
-      min_brightness: 40
-      max_color_temp: 4000
+      use_defaults: current
+  - alias: "min_brightness je Raum (Zuordnung liegt im Skript, siehe scripts.yaml)"
+    action: script.al_min_brightness_setzen
   mode: single

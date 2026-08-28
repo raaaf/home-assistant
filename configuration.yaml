@@ -194,7 +194,11 @@ waste_collection_schedule:
   day_switch_time: "10:00"
 
 # Adaptive Lighting
-adaptive_lighting: !include adaptive_lighting.yaml
+# adaptive_lighting: entfernt am 28.08.2026. Das YAML wurde von AL nur beim allerersten
+# Import gelesen und danach nie wieder, Aenderungen daran waren seit Monaten wirkungslos.
+# Die Wahrheit steht jetzt vollstaendig in "System » Adaptive Lighting Settings nach Neustart"
+# (automations_new/system/core.yaml), die alle Felder nach jedem Start setzt.
+# Die zehn Config Entries bleiben bestehen, async_setup loescht sie ohne YAML nicht.
 
 # Power Calculation
 powercalc:

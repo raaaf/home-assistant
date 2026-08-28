@@ -60,7 +60,8 @@
           entity_id: switch.adaptive_lighting_kueche
         data:
           max_brightness: "{{ states('input_number.al_tagesmax_helligkeit') | int(100) }}"
-          min_brightness: 10
+          # 20 ist der Tageswert von Kueche und Wohnzimmer, 40 der Abendwert des Fades.
+          min_brightness: "{{ 40 if is_state('input_boolean.schlafenszeit', 'on') else 20 }}"
       - alias: "Re-enable Adaptive Lighting with conflict check"
         action: script.scene_enable_adaptive_lighting
         data:
@@ -115,11 +116,10 @@
       night_light_brightness: 50  # Indirekte Lichter (Schrank, Insel oben), heller als die anderen Raeume
       night_light_transition_on: 2
       night_light_transition_off: 10
-      include_night_light_colour_control: use_rgb_colour
-      night_light_rgb_colour:
-      - 255
-      - 80
-      - 0
+      # 2200K statt RGB-Amber: sonst setzt die Blueprint erst Rot und Adaptive
+      # Lighting korrigiert eine Sekunde spaeter auf 2200K, sichtbar als Farbsprung.
+      include_night_light_colour_control: use_colour_temperature
+      night_light_colour_temperature: 2200
       ambient_light_high_value: 1400
       motion_bypass_lights_on:
       - input_boolean.kochen
@@ -200,7 +200,8 @@
           entity_id: switch.adaptive_lighting_wohnzimmer
         data:
           max_brightness: "{{ states('input_number.al_tagesmax_helligkeit') | int(100) }}"
-          min_brightness: 10
+          # 20 ist der Tageswert von Kueche und Wohnzimmer, 40 der Abendwert des Fades.
+          min_brightness: "{{ 40 if is_state('input_boolean.schlafenszeit', 'on') else 20 }}"
       - alias: "Re-enable Adaptive Lighting with conflict check"
         action: script.scene_enable_adaptive_lighting
         data:

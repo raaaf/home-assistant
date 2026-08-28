@@ -40,11 +40,10 @@
       - input_boolean.nachtlicht
       include_sun: sun_disabled
       night_light_brightness: 5
-      include_night_light_colour_control: use_rgb_colour
-      night_light_rgb_colour:
-      - 255
-      - 80
-      - 0
+      # 2200K statt RGB-Amber: sonst setzt die Blueprint erst Rot und Adaptive
+      # Lighting korrigiert eine Sekunde spaeter auf 2200K, sichtbar als Farbsprung.
+      include_night_light_colour_control: use_colour_temperature
+      night_light_colour_temperature: 2200
       ambient_light_value: 200
       ambient_light_high_value: 300
       # Bypass motion turn-off when manual control is active

@@ -229,11 +229,10 @@
       night_light_brightness: 30  # Indirekte Lichter (Schrank, Fenster)
       night_light_transition_on: 3
       night_light_transition_off: 9
-      include_night_light_colour_control: use_rgb_colour
-      night_light_rgb_colour:
-      - 255
-      - 80
-      - 0
+      # 2200K statt RGB-Amber: sonst setzt die Blueprint erst Rot und Adaptive
+      # Lighting korrigiert eine Sekunde spaeter auf 2200K, sichtbar als Farbsprung.
+      include_night_light_colour_control: use_colour_temperature
+      night_light_colour_temperature: 2200
       boolean_scenes_scripts: input_boolean.musik_badezimmer
       time_delay: 0
       night_time_delay: 0

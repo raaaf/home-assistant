@@ -31,11 +31,10 @@
       night_light_brightness: 15
       night_light_transition_on: 2
       night_light_transition_off: 10
-      include_night_light_colour_control: use_rgb_colour
-      night_light_rgb_colour:
-      - 255
-      - 80
-      - 0
+      # 2200K statt RGB-Amber: sonst setzt die Blueprint erst Rot und Adaptive
+      # Lighting korrigiert eine Sekunde spaeter auf 2200K, sichtbar als Farbsprung.
+      include_night_light_colour_control: use_colour_temperature
+      night_light_colour_temperature: 2200
       time_delay: 0
       night_lights_after_time: '23:00:00'
       night_lights_before_time: 06:00:00

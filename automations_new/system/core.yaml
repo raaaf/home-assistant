@@ -269,6 +269,41 @@
               sleep_brightness: 5
               skip_redundant_commands: false
               include_config_in_attributes: false
+              # Ab hier die Felder, die frueher nur in adaptive_lighting.yaml standen und
+              # damit ausschliesslich im Config Entry lebten. AL liest das YAML nach dem
+              # ersten Import nie wieder, also driftete der Config Entry unbemerkt und nach
+              # jedem Neustart galten rund 30 Sekunden lang alte Werte. Werte stammen aus dem
+              # Snapshot vom 28.08.2026, sind also verhaltensneutral uebernommen.
+              #
+              # WICHTIG, am 28.08.2026 einzeln durchgetestet: `interval` ist das einzige
+              # dieser Felder, das `change_switch_settings` ABLEHNT (switch.py schliesst
+              # interval, name und lights explizit aus). Ein abgelehntes Feld laesst den
+              # GANZEN Aufruf mit "extra keys not allowed" scheitern und damit auch alle
+              # Felder danach, also niemals `interval` hier ergaenzen. Sein Wert (300 s)
+              # lebt allein im Config Entry, nachzulesen im Snapshot unter
+              # docs/plans/snapshots/2026-08-28-al-snapshot.json.
+              # Die Feldliste in services.yaml ist NICHT das Schema, sie beschreibt nur die
+              # UI-Maske: max_sunset_time und andere fehlen dort und funktionieren trotzdem.
+              #
+              # max_brightness steht bewusst nicht hier: das gehoert
+              # "Licht » Tageshelligkeit nach Aussenlicht" (acht Raeume) und den festen
+              # Werten weiter unten (Flur, Ankleide).
+              transition: 10
+              brightness_mode: tanh
+              take_over_control: true
+              intercept: true
+              multi_light_intercept: true
+              min_color_temp: 2200
+              max_color_temp: 4000
+              min_sunrise_time: "05:00:00"
+              max_sunrise_time: "07:00:00"
+              min_sunset_time: "20:00:00"
+              max_sunset_time: "20:30:00"
+              adapt_delay: 1
+              detect_non_ha_changes: false
+              only_once: false
+              prefer_rgb_color: false
+              sleep_transition: 10
               use_defaults: current
     - alias: Wohnzimmer Sleep-Helligkeit hoeher (indirektes Licht am Schrank)
       action: adaptive_lighting.change_switch_settings
@@ -318,6 +353,36 @@
         entity_id: switch.adaptive_lighting_balkon
         sleep_brightness: 40
         use_defaults: current
+    - alias: "transition_until_sleep: ueberall an, nur der Balkon aus (aussen, kein Uebergang noetig)"
+      repeat:
+        for_each:
+          - schalter: [switch.adaptive_lighting_ankleide, switch.adaptive_lighting_arbeitszimmer, switch.adaptive_lighting_badezimmer, switch.adaptive_lighting_flur, switch.adaptive_lighting_kinderzimmer, switch.adaptive_lighting_kueche, switch.adaptive_lighting_schlafzimmer, switch.adaptive_lighting_waschzimmer, switch.adaptive_lighting_wohnzimmer]
+            wert: true
+          - schalter: [switch.adaptive_lighting_balkon]
+            wert: false
+        sequence:
+          - action: adaptive_lighting.change_switch_settings
+            data:
+              entity_id: "{{ repeat.item.schalter }}"
+              transition_until_sleep: "{{ repeat.item.wert }}"
+              use_defaults: current
+    - alias: "min_brightness je Raum (Zuordnung liegt im Skript, siehe scripts.yaml)"
+      action: script.al_min_brightness_setzen
+    - alias: "autoreset_control_seconds je Raum (drei Gruppen, aus dem Snapshot)"
+      repeat:
+        for_each:
+          - schalter: [switch.adaptive_lighting_arbeitszimmer, switch.adaptive_lighting_kinderzimmer, switch.adaptive_lighting_kueche, switch.adaptive_lighting_schlafzimmer, switch.adaptive_lighting_wohnzimmer]
+            wert: 3600
+          - schalter: [switch.adaptive_lighting_ankleide, switch.adaptive_lighting_balkon, switch.adaptive_lighting_waschzimmer]
+            wert: 7200
+          - schalter: [switch.adaptive_lighting_badezimmer, switch.adaptive_lighting_flur]
+            wert: 900
+        sequence:
+          - action: adaptive_lighting.change_switch_settings
+            data:
+              entity_id: "{{ repeat.item.schalter }}"
+              autoreset_control_seconds: "{{ repeat.item.wert }}"
+              use_defaults: current
     - alias: Flur und Ankleide feste Tagesobergrenze (kein Tageslicht, Aussenlicht ist dort kein Signal)
       action: adaptive_lighting.change_switch_settings
       data:
@@ -352,4 +417,8 @@
           take_over_control_mode=pause_changed, adapt_only_on_bare_turn_on=false,
           skip_redundant_commands=false, include_config_in_attributes=false,
           sleep_color_temp=2200 @ sleep_brightness=5 (Balkon 40, Kueche/Wohnzimmer/Waschzimmer/Ankleide 20, Bett 15, Bad/Flur 10, Kinderzimmer 5, Stehlampe 1),
-          (interval=300 liegt im YAML, nicht ueber change_switch_settings setzbar)
+          dazu 16 gemeinsame Felder (transition, brightness_mode, take_over_control, intercept,
+          multi_light_intercept, Farbtemperaturen, Sonnenzeiten, adapt_delay, sleep_transition)
+          sowie min_brightness, autoreset_control_seconds und transition_until_sleep je Raumgruppe.
+          Nicht gesetzt: interval (Service lehnt es ab, lebt im Config Entry) und max_brightness
+          (gehoert der Tageshelligkeits-Automation bzw. den festen Werten fuer Flur und Ankleide)
