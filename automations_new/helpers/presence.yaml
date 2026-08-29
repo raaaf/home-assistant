@@ -494,14 +494,14 @@
           continue_on_error: true
           data:
             target_player: media_player.arbeitszimmer
-            target_volume: 0.50
+            target_volume: 0.35
             duration: 30
             curve: linear
         - action: script.fade_volume
           continue_on_error: true
           data:
             target_player: media_player.schlafzimmer
-            target_volume: 0.45
+            target_volume: 0.30
             duration: 30
             curve: linear
       - delay: 00:01:00

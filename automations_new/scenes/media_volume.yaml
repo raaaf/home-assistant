@@ -69,7 +69,7 @@
   actions:
     - choose:
         # =======================================================
-        # SCHLAFENSZEIT AN — Wohnzimmer 35%, Flur/Küche/Bad/Kinderzimmer 40%, Schlafzimmer 45%
+        # SCHLAFENSZEIT AN — Wohnzimmer/Arbeitszimmer 35%, Schlafzimmer 30%, Küche/Bad/Kinderzimmer 40%
         # =======================================================
         - conditions:
             - condition: trigger
@@ -108,14 +108,14 @@
                   continue_on_error: true
                   data:
                     target_player: media_player.arbeitszimmer
-                    target_volume: 0.40
+                    target_volume: 0.35
                     duration: 60
                     curve: linear
                 - action: script.fade_volume
                   continue_on_error: true
                   data:
                     target_player: media_player.schlafzimmer
-                    target_volume: 0.45
+                    target_volume: 0.30
                     duration: 60
                     curve: linear
 
@@ -171,14 +171,14 @@
                   continue_on_error: true
                   data:
                     target_player: media_player.arbeitszimmer
-                    target_volume: 0.50
+                    target_volume: 0.35
                     duration: 60
                     curve: linear
                 - action: script.fade_volume
                   continue_on_error: true
                   data:
                     target_player: media_player.schlafzimmer
-                    target_volume: 0.45
+                    target_volume: 0.30
                     duration: 60
                     curve: linear
 
@@ -686,7 +686,7 @@
                     entity_id: input_number.saved_volume_arbeitszimmer
                   data:
                     value: >
-                      {{ state_attr('media_player.arbeitszimmer', 'volume_level') | float(0.50) }}
+                      {{ state_attr('media_player.arbeitszimmer', 'volume_level') | float(0.35) }}
                 - action: media_player.volume_set
                   continue_on_error: true
                   target:
@@ -704,7 +704,7 @@
                     entity_id: input_number.saved_volume_schlafzimmer
                   data:
                     value: >
-                      {{ state_attr('media_player.schlafzimmer', 'volume_level') | float(0.45) }}
+                      {{ state_attr('media_player.schlafzimmer', 'volume_level') | float(0.30) }}
                 - action: media_player.volume_set
                   continue_on_error: true
                   target:
@@ -734,7 +734,6 @@
                   continue_on_error: true
                   target:
                     entity_id:
-                      - media_player.arbeitszimmer
                       - media_player.kuche
                       - media_player.homepod_badezimmer
                       - media_player.homepod_kinderzimmer
@@ -743,9 +742,15 @@
                 - action: media_player.volume_set
                   continue_on_error: true
                   target:
+                    entity_id: media_player.arbeitszimmer
+                  data:
+                    volume_level: 0.35
+                - action: media_player.volume_set
+                  continue_on_error: true
+                  target:
                     entity_id: media_player.schlafzimmer
                   data:
-                    volume_level: 0.45
+                    volume_level: 0.30
                 - action: media_player.media_stop
                   continue_on_error: true
                   target:
@@ -814,7 +819,7 @@
                     entity_id: media_player.arbeitszimmer
                   data:
                     volume_level: >
-                      {{ states('input_number.saved_volume_arbeitszimmer') | float(0.50) }}
+                      {{ states('input_number.saved_volume_arbeitszimmer') | float(0.35) }}
                 # Schlafzimmer
                 - action: media_player.volume_set
                   continue_on_error: true
@@ -822,6 +827,6 @@
                     entity_id: media_player.schlafzimmer
                   data:
                     volume_level: >
-                      {{ states('input_number.saved_volume_schlafzimmer') | float(0.45) }}
+                      {{ states('input_number.saved_volume_schlafzimmer') | float(0.30) }}
   mode: queued
   max: 4

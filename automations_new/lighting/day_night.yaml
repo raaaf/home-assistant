@@ -181,7 +181,7 @@
           data:
             variables:
               target_player: media_player.arbeitszimmer
-              target_volume: 0.50
+              target_volume: 0.35
               duration: 1800
               curve: linear
         - action: script.turn_on
@@ -217,7 +217,7 @@
           data:
             variables:
               target_player: media_player.schlafzimmer
-              target_volume: 0.45
+              target_volume: 0.30
               duration: 1800
               curve: linear
         - alias: "Warten bis Aufwachlicht abgeschlossen (30 Minuten)"
@@ -309,7 +309,7 @@
                   target:
                     entity_id: media_player.arbeitszimmer
                   data:
-                    volume_level: 0.50
+                    volume_level: 0.35
             - if:
                 - condition: template
                   value_template: "{{ is_state('media_player.schlafzimmer', 'playing') }}"
@@ -319,7 +319,7 @@
                   target:
                     entity_id: media_player.schlafzimmer
                   data:
-                    volume_level: 0.45
+                    volume_level: 0.30
         - alias: "08:00 Uhr: Wohnungstür entsperren"
           action: lock.unlock
           continue_on_error: true
