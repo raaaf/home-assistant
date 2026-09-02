@@ -557,26 +557,22 @@
                 Steckdosen nicht eingeschaltet: {{ steckdosen_noch_aus
                 | reject('is_state', 'on') | list | join(', ') }}
       # Die Yeelights haengen an diesen Steckdosen und gehen mit dem Strom von
-      # selbst an. Darum erst nach den Steckdosen: warten bis sie erreichbar
-      # sind, dann Uhrzeit an, Gaming Licht + Kinderzimmer Nachtlicht aus.
+      # selbst an. Uhrzeit darf leuchten. Gaming Licht + Kinderzimmer Nachtlicht
+      # schaltet "Licht » Yeelight nach Steckdose aus" wieder ab, nicht dieser
+      # Lauf: die Lichter melden nach dem Reconnect erst "off" und erst danach
+      # "on", und light.turn_off der Yeelight-Integration ist bei "off" ein
+      # No-op. Ein turn_off hier kam deshalb immer zu frueh an.
       - alias: "Warten bis die Yeelights nach dem Einschalten der Steckdosen erreichbar sind"
         wait_template: >-
           {{ has_value('light.yeelight_cubematrix_0xdc5475bbc814')
              and has_value('light.kinderzimmer_kinderzimmer_nachtlicht') }}
         timeout: 00:01:00
         continue_on_timeout: true
-      - alias: "Yeelight Uhrzeit (Wohnzimmer) an, Gaming Licht + Kinderzimmer Nachtlicht aus"
-        parallel:
-        - action: light.turn_on
-          continue_on_error: true
-          target:
-            entity_id: light.yeelight_cubematrix_0xdc5475bd7828
-        - action: light.turn_off
-          continue_on_error: true
-          target:
-            entity_id:
-            - light.yeelight_cubematrix_0xdc5475bbc814
-            - light.kinderzimmer_kinderzimmer_nachtlicht
+      - alias: "Yeelight Uhrzeit (Wohnzimmer) an"
+        action: light.turn_on
+        continue_on_error: true
+        target:
+          entity_id: light.yeelight_cubematrix_0xdc5475bd7828
       - alias: Schlafenszeit aktivieren wenn bereits Schlafenszeit
         if:
         - condition: template
@@ -665,16 +661,22 @@
   description: >-
     Gaming Licht und Kinderzimmer Nachtlicht gehen an, sobald ihre Steckdose
     Strom bekommt (Einschaltverhalten der Yeelight). Sie sollen aber nur ueber
-    Automationen leuchten, darum sofort wieder aus, wenn sie aus unavailable
-    heraus eingeschaltet auftauchen.
+    Automationen leuchten, darum wieder aus, sobald sie nach unavailable als
+    "on" gemeldet werden. Die Integration meldet nach dem Reconnect zuerst
+    "off" und erst 0,5 bis 15 s spaeter den echten Zustand "on"; ein Trigger
+    auf unavailable -> on hat deshalb nie gefeuert, und light.turn_off ist bei
+    gemeldetem "off" ein No-op. Darum: bei jedem Verlassen von unavailable
+    auf "on" warten, dann ausschalten.
   triggers:
   - trigger: state
     entity_id:
     - light.yeelight_cubematrix_0xdc5475bbc814
     - light.kinderzimmer_kinderzimmer_nachtlicht
     from: unavailable
-    to: 'on'
   actions:
+  - wait_template: "{{ is_state(trigger.entity_id, 'on') }}"
+    timeout: 00:01:00
+    continue_on_timeout: false
   - action: light.turn_off
     continue_on_error: true
     target:
