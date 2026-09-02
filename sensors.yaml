@@ -49,6 +49,17 @@
   types:
     - GelberSack
 
+# History Stats - Mückenlampe Betriebsstunden (14 Tage = Recorder-Fenster)
+- platform: history_stats
+  name: Mückenlampe Betriebsstunden 14 Tage
+  unique_id: mueckenlampe_betriebsstunden_14d
+  entity_id: light.wohnzimmer_wohnzimmer_muckenlampe_outlet
+  state: "on"
+  type: time
+  duration:
+    days: 14
+  end: "{{ now() }}"
+
 # History Stats - Heizungen (je Raum)
 - platform: history_stats
   name: Heizung Schlafzimmer An

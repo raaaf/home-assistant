@@ -1048,3 +1048,107 @@
       notification_id: luftreiniger_filter
   mode: single
   max_exceeded: silent
+
+- id: 'wohnzimmer_mueckenlampe'
+  alias: Wohnzimmer » Mückenlampe
+  description: >-
+    UV-Mückenlampe nur nachts (April bis Oktober) und nur, wenn das
+    Wohnzimmerlicht aus ist: UV lockt nur als hellste Lichtquelle im Raum.
+    Aus bei Sonnenaufgang oder sobald das Raumlicht angeht. Schlafenszeit
+    holt den Start nach, falls HA bei Sonnenuntergang nicht lief.
+  triggers:
+  - trigger: numeric_state
+    entity_id: sun.sun
+    attribute: elevation
+    below: 0
+    id: dunkel
+  - trigger: numeric_state
+    entity_id: sun.sun
+    attribute: elevation
+    above: 0
+    id: hell
+  - trigger: state
+    entity_id: light.alle_wohnzimmer_lichter
+    to: 'off'
+    for:
+      minutes: 2
+    id: licht-aus
+  - trigger: state
+    entity_id: light.alle_wohnzimmer_lichter
+    to: 'on'
+    id: licht-an
+  - trigger: state
+    entity_id: input_boolean.schlafenszeit
+    to: 'on'
+    id: schlafenszeit
+  conditions:
+  - alias: "Steckdose ist verfügbar"
+    condition: template
+    value_template: "{{ has_value('light.wohnzimmer_wohnzimmer_muckenlampe_outlet') }}"
+  variables:
+    nacht: "{{ state_attr('sun.sun', 'elevation') | float(0) < 0 }}"
+    # Mückensaison nach Monat. Die Aussentemperatur spielt keine Rolle:
+    # es geht um Viecher, die trotz Gitter drin sind, und drinnen ist es warm.
+    saison: "{{ now().month in range(4, 11) }}"
+  actions:
+  - choose:
+    - alias: "Sonnenaufgang oder Raumlicht an — aus"
+      conditions:
+      - condition: trigger
+        id:
+        - hell
+        - licht-an
+      sequence:
+      - action: light.turn_off
+        target:
+          entity_id: light.wohnzimmer_wohnzimmer_muckenlampe_outlet
+
+    - alias: "Nacht, Saison, Raum dunkel — an"
+      conditions:
+      - condition: trigger
+        id:
+        - dunkel
+        - licht-aus
+        - schlafenszeit
+      - condition: template
+        value_template: "{{ nacht and saison }}"
+      - condition: state
+        entity_id: light.alle_wohnzimmer_lichter
+        state: 'off'
+      sequence:
+      - action: light.turn_on
+        target:
+          entity_id: light.wohnzimmer_wohnzimmer_muckenlampe_outlet
+  mode: queued
+  max_exceeded: silent
+
+- id: 'mueckenlampe_reinigung'
+  alias: "Benachrichtigung » Mückenlampe reinigen"
+  description: >-
+    Erinnert daran, die Auffangschale zu leeren, wenn die Lampe in den letzten
+    14 Tagen über 100 Stunden lief. Höchstens einmal pro Woche.
+  triggers:
+  - trigger: numeric_state
+    entity_id: sensor.muckenlampe_betriebsstunden_14_tage
+    above: 100
+  conditions:
+  - condition: time
+    after: '08:00:00'
+    before: '22:00:00'
+  - alias: "Letzte Notification > 7 Tage her"
+    condition: template
+    value_template: >-
+      {% set last = state_attr('automation.benachrichtigung_muckenlampe_reinigen', 'last_triggered') %}
+      {{ last is none or (now() - last).total_seconds() > 7 * 24 * 60 * 60 }}
+  actions:
+  - action: notify.rafael
+    data:
+      title: "Mückenlampe reinigen"
+      message: "Die Mückenlampe lief in den letzten 14 Tagen {{ states('sensor.muckenlampe_betriebsstunden_14_tage') | round(0) }} Stunden. Auffangschale leeren."
+  - action: persistent_notification.create
+    data:
+      title: "Mückenlampe reinigen"
+      message: "Die Mückenlampe im Wohnzimmer lief in den letzten 14 Tagen {{ states('sensor.muckenlampe_betriebsstunden_14_tage') | round(0) }} Stunden. Auffangschale leeren."
+      notification_id: mueckenlampe_reinigung
+  mode: single
+  max_exceeded: silent
