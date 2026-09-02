@@ -41,6 +41,8 @@
       wird_heiss: '{{ has_value(''input_boolean.heute_wird_es_heiss_werden'') and is_state(''input_boolean.heute_wird_es_heiss_werden'', ''on'')
         }}'
       position_west: "{% if wird_sehr_heiss %}0{% elif wird_heiss %}10{% else %}100{% endif %}"
+      # Gaming und AppleTV halten das Schlafzimmer-Rollo zu (entertainment.yaml, schlafzimmer.yaml).
+      rollo_01_frei: "{{ is_state('input_boolean.gaming', 'off') and not is_state('media_player.appletv', 'playing') }}"
   - choose:
     # Morgens: Kinderzimmer + Schlafzimmer (= cover.aqara_cover_01, Bett-Raum)
     # voll auf. Das Buero (Alex, = cover.aqara_cover_03) bleibt zu und wird nur
@@ -51,9 +53,15 @@
       sequence:
       - action: cover.open_cover
         target:
-          entity_id:
-          - cover.aqara_cover_02
-          - cover.aqara_cover_01
+          entity_id: cover.aqara_cover_02
+      - alias: "Schlafzimmer-Rollo nur, wenn nicht gespielt oder geschaut wird"
+        if:
+        - condition: template
+          value_template: '{{ rollo_01_frei }}'
+        then:
+        - action: cover.open_cover
+          target:
+            entity_id: cover.aqara_cover_01
       - action: logbook.log
         data:
           name: Rollos Morgen
@@ -65,7 +73,15 @@
       sequence:
       - action: cover.open_cover
         target:
-          entity_id: cover.rollos_sonnenaufgang
+          entity_id: cover.aqara_cover_02
+      - alias: "Schlafzimmer-Rollo nur, wenn nicht gespielt oder geschaut wird"
+        if:
+        - condition: template
+          value_template: '{{ rollo_01_frei }}'
+        then:
+        - action: cover.open_cover
+          target:
+            entity_id: cover.aqara_cover_01
       - if:
         - condition: template
           value_template: '{{ wird_sehr_heiss or wird_heiss }}'

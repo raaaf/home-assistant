@@ -556,6 +556,27 @@
               message: >-
                 Steckdosen nicht eingeschaltet: {{ steckdosen_noch_aus
                 | reject('is_state', 'on') | list | join(', ') }}
+      # Die Yeelights haengen an diesen Steckdosen und gehen mit dem Strom von
+      # selbst an. Darum erst nach den Steckdosen: warten bis sie erreichbar
+      # sind, dann Uhrzeit an, Gaming Licht + Kinderzimmer Nachtlicht aus.
+      - alias: "Warten bis die Yeelights nach dem Einschalten der Steckdosen erreichbar sind"
+        wait_template: >-
+          {{ has_value('light.yeelight_cubematrix_0xdc5475bbc814')
+             and has_value('light.kinderzimmer_kinderzimmer_nachtlicht') }}
+        timeout: 00:01:00
+        continue_on_timeout: true
+      - alias: "Yeelight Uhrzeit (Wohnzimmer) an, Gaming Licht + Kinderzimmer Nachtlicht aus"
+        parallel:
+        - action: light.turn_on
+          continue_on_error: true
+          target:
+            entity_id: light.yeelight_cubematrix_0xdc5475bd7828
+        - action: light.turn_off
+          continue_on_error: true
+          target:
+            entity_id:
+            - light.yeelight_cubematrix_0xdc5475bbc814
+            - light.kinderzimmer_kinderzimmer_nachtlicht
       - alias: Schlafenszeit aktivieren wenn bereits Schlafenszeit
         if:
         - condition: template
@@ -638,4 +659,25 @@
         data:
           context_message: "nach Gast-Modus"
   mode: single
+  max_exceeded: silent
+- id: 'yeelight_steckdose_einschalten_abfangen'
+  alias: Licht » Yeelight nach Steckdose aus
+  description: >-
+    Gaming Licht und Kinderzimmer Nachtlicht gehen an, sobald ihre Steckdose
+    Strom bekommt (Einschaltverhalten der Yeelight). Sie sollen aber nur ueber
+    Automationen leuchten, darum sofort wieder aus, wenn sie aus unavailable
+    heraus eingeschaltet auftauchen.
+  triggers:
+  - trigger: state
+    entity_id:
+    - light.yeelight_cubematrix_0xdc5475bbc814
+    - light.kinderzimmer_kinderzimmer_nachtlicht
+    from: unavailable
+    to: 'on'
+  actions:
+  - action: light.turn_off
+    continue_on_error: true
+    target:
+      entity_id: "{{ trigger.entity_id }}"
+  mode: parallel
   max_exceeded: silent

@@ -49,7 +49,17 @@
       motion_trigger:
       - binary_sensor.flur_motion
       light_switch:
-        entity_id: light.alle_flur_lichter
+        # Bewusst nicht die Gruppe: der Stahltraeger darf nur nachts an (Nachtlicht-Pfad),
+        # tagsueber waere er Verschwendung.
+        entity_id:
+          - light.ikea_light_07_decke_1
+          - light.ikea_light_08_decke_2
+          - light.ikea_light_09_decke_3
+          - light.ikea_light_10_decke_4
+          - light.ikea_light_11_decke_5
+          - light.ikea_light_12_decke_6
+          - light.philips_light_08_schrank_1
+          - light.philips_light_09_2
       include_night_lights: night_lights_enabled
       night_lights:
         entity_id:

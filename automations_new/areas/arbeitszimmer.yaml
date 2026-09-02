@@ -171,21 +171,34 @@
         - action: input_boolean.turn_on
           target:
             entity_id: input_boolean.arbeit
-      - alias: "Rafael Lichter einschalten (PC 1 + 2, Bett, TV) (nur wenn aus)"
+      - alias: "Rafael Lichter einschalten (PC 1 + 2) (nur wenn aus)"
         if:
         - alias: Mindestens ein Licht ist aus
           condition: template
           value_template: >
             {{ is_state('light.philips_light_01_pc_1', 'off') or
-               is_state('light.philips_light_02_pc_2', 'off') or
-               is_state('light.philips_light_15_bett', 'off') or
-               is_state('light.philips_light_16_tv', 'off') }}
+               is_state('light.philips_light_02_pc_2', 'off') }}
         then:
         - action: light.turn_on
           target:
             entity_id:
             - light.philips_light_01_pc_1
             - light.philips_light_02_pc_2
+          data:
+            transition: 2
+      - alias: "Bett + TV nur nachts (tagsueber Verschwendung) (nur wenn aus)"
+        if:
+        - condition: state
+          entity_id: sun.sun
+          state: below_horizon
+        - condition: template
+          value_template: >
+            {{ is_state('light.philips_light_15_bett', 'off') or
+               is_state('light.philips_light_16_tv', 'off') }}
+        then:
+        - action: light.turn_on
+          target:
+            entity_id:
             - light.philips_light_15_bett
             - light.philips_light_16_tv
           data:
@@ -423,10 +436,21 @@
                 entity_id:
                 - light.philips_light_01_pc_1
                 - light.philips_light_02_pc_2
-                - light.philips_light_15_bett
-                - light.philips_light_16_tv
               data:
                 transition: 2
+            - alias: "Bett + TV nur nachts (tagsueber Verschwendung)"
+              if:
+              - condition: state
+                entity_id: sun.sun
+                state: below_horizon
+              then:
+              - action: light.turn_on
+                target:
+                  entity_id:
+                  - light.philips_light_15_bett
+                  - light.philips_light_16_tv
+                data:
+                  transition: 2
         default:
         - alias: "Niemand arbeitet - Decke aus + AL reaktivieren"
           action: light.turn_off
@@ -451,10 +475,16 @@
       motion_trigger:
       - binary_sensor.ikea_motion_02
       light_switch:
-        entity_id: light.alle_arbeitszimmer_lichter
+        # Bewusst nicht die Gruppe: Bett + TV duerfen nur nachts an (Nachtlicht-Pfad),
+        # tagsueber waeren sie Verschwendung.
+        entity_id:
+          - light.ikea_light_03
+          - light.philips_light_01_pc_1
+          - light.philips_light_02_pc_2
       include_night_lights: night_lights_enabled
       night_lights:
-        entity_id: light.alle_arbeitszimmer_nachtlichter
+        # Nachts nur das Bettlicht, nicht die PC-Lichter (Wunsch 2026-08-31)
+        entity_id: light.philips_light_15_bett
       night_lights_conditions:
       - entity_state_enabled
       night_lights_entity_state:
@@ -472,7 +502,7 @@
       - if_lights_are_on_adjust_when_crossing_over
       - use_brightness
       - use_transition
-      night_light_brightness: 50  # Indirekte Lichter (Bett, PC 1-2), physisch Schlafzimmer
+      night_light_brightness: 50  # Nur Bettlicht, physisch Schlafzimmer
       night_light_transition_on: 2
       night_light_transition_off: 10
       night_lights_after_time: '19:00:00'

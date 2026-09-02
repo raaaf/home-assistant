@@ -299,6 +299,12 @@ brightness_mode: "tanh"    # Smooth brightness curve
 - `switch.adaptive_lighting_{room}` - Enable/disable AL for room
 - `switch.adaptive_lighting_sleep_mode_{room}` - Force sleep mode
 
+### Yeelight CubeMatrix (3 Stück, LAN)
+
+`light.yeelight_cubematrix_0xdc5475bbc814` (Gaming Licht, Arbeitszimmer), `light.yeelight_cubematrix_0xdc5475bd7828` (Uhrzeit, Wohnzimmer), `light.kinderzimmer_kinderzimmer_nachtlicht`. Sie hängen an den Steckdosen des Willkommenslaufs und gehen mit dem Strom von selbst an. `Licht » Yeelight nach Steckdose aus` (`helpers/presence.yaml`) schaltet Gaming Licht und Kinderzimmer Nachtlicht sofort wieder aus, wenn sie aus `unavailable` als `on` auftauchen. Nur Uhrzeit darf mit dem Strom leuchten. Eine Automation, die eine der beiden anderen einschalten will, muss das nach dem Verfügbarwerden tun.
+
+Bett, TV (`philips_light_15/16`) und Stahlträger gehen nur nachts an (`sun.sun` unter dem Horizont bzw. Nachtlicht-Pfad der Motion-Blueprints); tagsüber sind sie bewusst aus den Motion-Lichtlisten ausgenommen.
+
 ### Manual Control Detection
 
 Template binary sensors track manual control state via AL's `manual_control` attribute:
