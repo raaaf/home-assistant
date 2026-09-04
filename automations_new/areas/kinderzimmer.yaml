@@ -175,8 +175,11 @@
 - id: 'kinderzimmer_nachtlichter_schlafenszeit'
   alias: Licht » Kinderzimmer Nachtlichter bei Schlafenszeit
   description: >-
-    Yeelight Nachtlicht und Govee Sternenprojektor (H60B0) leuchten waehrend
-    der Schlafenszeit, sonst nicht. Beide bekommen bewusst turn_on ohne
+    Schlafenszeit an: Govee Sternenprojektor (H60B0) an, zum Einschlafen.
+    Um Mitternacht geht der Govee aus. Sobald der Govee ausgeht (Mitternacht
+    oder sein App-Timer), uebernimmt das Yeelight Nachtlicht bis Schlafenszeit
+    aus. Beginnt die Schlafenszeit erst nach Mitternacht, faellt der Govee weg
+    und die Yeelight leuchtet direkt. Beide bekommen bewusst turn_on ohne
     Parameter: der Govee laedt dann die in der Govee-App gesetzte
     Sternen-Szene, die ueber die lokale Schnittstelle nicht waehlbar ist, die
     Yeelight ihren letzten Zustand.
@@ -189,8 +192,26 @@
     entity_id: input_boolean.schlafenszeit
     to: 'off'
     id: sleep_end
+  - trigger: time
+    at: '00:00:00'
+    id: midnight
+  - trigger: state
+    entity_id: light.h60b0
+    from: 'on'
+    to: 'off'
+    id: govee_off
   actions:
   - choose:
+    - conditions:
+      - condition: trigger
+        id: sleep_start
+      - condition: time
+        after: '12:00:00'
+      sequence:
+      - action: light.turn_on
+        continue_on_error: true
+        target:
+          entity_id: light.h60b0
     - conditions:
       - condition: trigger
         id: sleep_start
@@ -198,9 +219,29 @@
       - action: light.turn_on
         continue_on_error: true
         target:
-          entity_id:
-          - light.kinderzimmer_kinderzimmer_nachtlicht
-          - light.h60b0
+          entity_id: light.kinderzimmer_kinderzimmer_nachtlicht
+    - conditions:
+      - condition: trigger
+        id: midnight
+      - condition: state
+        entity_id: input_boolean.schlafenszeit
+        state: 'on'
+      sequence:
+      - action: light.turn_off
+        continue_on_error: true
+        target:
+          entity_id: light.h60b0
+    - conditions:
+      - condition: trigger
+        id: govee_off
+      - condition: state
+        entity_id: input_boolean.schlafenszeit
+        state: 'on'
+      sequence:
+      - action: light.turn_on
+        continue_on_error: true
+        target:
+          entity_id: light.kinderzimmer_kinderzimmer_nachtlicht
     - conditions:
       - condition: trigger
         id: sleep_end
@@ -211,4 +252,4 @@
           entity_id:
           - light.kinderzimmer_kinderzimmer_nachtlicht
           - light.h60b0
-  mode: restart
+  mode: queued
