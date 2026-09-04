@@ -666,7 +666,9 @@
     "off" und erst 0,5 bis 15 s spaeter den echten Zustand "on"; ein Trigger
     auf unavailable -> on hat deshalb nie gefeuert, und light.turn_off ist bei
     gemeldetem "off" ein No-op. Darum: bei jedem Verlassen von unavailable
-    auf "on" warten, dann ausschalten.
+    auf "on" warten, dann ausschalten. Ausnahme: waehrend der Schlafenszeit
+    soll das Kinderzimmer Nachtlicht leuchten (Licht » Kinderzimmer
+    Nachtlichter bei Schlafenszeit), dann bleibt es an.
   triggers:
   - trigger: state
     entity_id:
@@ -677,6 +679,10 @@
   - wait_template: "{{ is_state(trigger.entity_id, 'on') }}"
     timeout: 00:01:00
     continue_on_timeout: false
+  - condition: template
+    value_template: >-
+      {{ not (trigger.entity_id == 'light.kinderzimmer_kinderzimmer_nachtlicht'
+              and is_state('input_boolean.schlafenszeit', 'on')) }}
   - action: light.turn_off
     continue_on_error: true
     target:

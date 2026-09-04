@@ -22,7 +22,7 @@ This is a sophisticated German-language Home Assistant configuration for a smart
 ### Environment Constraints
 
 - **No Docker access**: Claude Code has no access to the Docker host. Do not suggest `docker exec` commands for validation, reload, or log viewing.
-- **HA REST API** is available via `$HA_URL` and `$HA_TOKEN` (stored in `~/.claude/settings.json` env).
+- **HA REST API** is available via `$HA_URL` (the HA IP, not `homeassistant.local`: the sandbox proxy cannot resolve mDNS) and `$HA_TOKEN` (exported once per session by the SessionStart hook `~/.claude/hooks/ha-token-env.sh` from 1Password). Inside the Bash sandbox curl must go through the proxy: always pass `--noproxy ''`, otherwise the sandbox `NO_PROXY` for 192.168.0.0/16 forces a direct connect that is blocked.
 - YAML syntax validation can be done locally with `yamllint`.
 
 ### Key Commands
@@ -38,16 +38,16 @@ git -C /Volumes/config log --oneline -10
 
 # HA REST API (uses $HA_URL and $HA_TOKEN from env)
 # Check config
-curl -s -H "Authorization: Bearer $HA_TOKEN" "$HA_URL/api/config" | jq .version
+curl -s --noproxy '' -H "Authorization: Bearer $HA_TOKEN" "$HA_URL/api/config" | jq .version
 
 # Reload automations
-curl -s -X POST -H "Authorization: Bearer $HA_TOKEN" "$HA_URL/api/services/automation/reload"
+curl -s --noproxy '' -X POST -H "Authorization: Bearer $HA_TOKEN" "$HA_URL/api/services/automation/reload"
 
 # Reload scripts
-curl -s -X POST -H "Authorization: Bearer $HA_TOKEN" "$HA_URL/api/services/script/reload"
+curl -s --noproxy '' -X POST -H "Authorization: Bearer $HA_TOKEN" "$HA_URL/api/services/script/reload"
 
 # Call a service (example: script.fade_volume)
-curl -s -X POST -H "Authorization: Bearer $HA_TOKEN" -H "Content-Type: application/json" \
+curl -s --noproxy '' -X POST -H "Authorization: Bearer $HA_TOKEN" -H "Content-Type: application/json" \
   "$HA_URL/api/services/script/fade_volume" \
   -d '{"target_player":"media_player.homepod_kueche","target_volume":0.20,"duration":30,"curve":"linear"}'
 
@@ -301,7 +301,9 @@ brightness_mode: "tanh"    # Smooth brightness curve
 
 ### Yeelight CubeMatrix (3 Stück, LAN)
 
-`light.yeelight_cubematrix_0xdc5475bbc814` (Gaming Licht, Arbeitszimmer), `light.yeelight_cubematrix_0xdc5475bd7828` (Uhrzeit, Wohnzimmer), `light.kinderzimmer_kinderzimmer_nachtlicht`. Sie hängen an den Steckdosen des Willkommenslaufs und gehen mit dem Strom von selbst an. `Licht » Yeelight nach Steckdose aus` (`helpers/presence.yaml`) schaltet Gaming Licht und Kinderzimmer Nachtlicht wieder aus, sobald sie nach `unavailable` als `on` gemeldet werden. Achtung: die Integration meldet nach dem Reconnect zuerst `off` und erst 0,5 bis 15 s später `on`; ein Trigger `unavailable -> on` feuert deshalb nie, und `light.turn_off` ist bei gemeldetem `off` ein No-op (Guard in HA core). Deshalb auf `on` warten, dann ausschalten. Nur Uhrzeit darf mit dem Strom leuchten. Eine Automation, die eine der beiden anderen einschalten will, muss das nach dem Verfügbarwerden tun.
+`light.yeelight_cubematrix_0xdc5475bbc814` (Gaming Licht, Arbeitszimmer), `light.yeelight_cubematrix_0xdc5475bd7828` (Uhrzeit, Wohnzimmer), `light.kinderzimmer_kinderzimmer_nachtlicht`. Sie hängen an den Steckdosen des Willkommenslaufs und gehen mit dem Strom von selbst an. `Licht » Yeelight nach Steckdose aus` (`helpers/presence.yaml`) schaltet Gaming Licht und Kinderzimmer Nachtlicht wieder aus, sobald sie nach `unavailable` als `on` gemeldet werden. Achtung: die Integration meldet nach dem Reconnect zuerst `off` und erst 0,5 bis 15 s später `on`; ein Trigger `unavailable -> on` feuert deshalb nie, und `light.turn_off` ist bei gemeldetem `off` ein No-op (Guard in HA core). Deshalb auf `on` warten, dann ausschalten. Nur Uhrzeit darf mit dem Strom leuchten, mit einer Ausnahme: während `input_boolean.schlafenszeit` bleibt das Kinderzimmer Nachtlicht an, weil `Licht » Kinderzimmer Nachtlichter bei Schlafenszeit` (`areas/kinderzimmer.yaml`) es dann zusammen mit dem Govee Sternenprojektor `light.h60b0` einschaltet. Eine Automation, die eine der beiden anderen einschalten will, muss das nach dem Verfügbarwerden tun.
+
+Der Govee H60B0 (Star Light Projector, `govee_light_local`) bekommt bewusst `light.turn_on` ohne Parameter: der Sternenmodus ist nur in der Govee-App wählbar, die lokale Schnittstelle kennt nur zwölf Szenen. Die Lampe lädt beim Einschalten die zuletzt in der App gesetzte Szene. Kein `brightness`, `rgb_color` oder `effect` mitschicken, das überschreibt sie.
 
 Bett, TV (`philips_light_15/16`) und Stahlträger gehen nur nachts an (`sun.sun` unter dem Horizont bzw. Nachtlicht-Pfad der Motion-Blueprints); tagsüber sind sie bewusst aus den Motion-Lichtlisten ausgenommen.
 

@@ -172,3 +172,43 @@
         target:
           entity_id: automation.kinderzimmer_motion
   mode: single
+- id: 'kinderzimmer_nachtlichter_schlafenszeit'
+  alias: Licht » Kinderzimmer Nachtlichter bei Schlafenszeit
+  description: >-
+    Yeelight Nachtlicht und Govee Sternenprojektor (H60B0) leuchten waehrend
+    der Schlafenszeit, sonst nicht. Beide bekommen bewusst turn_on ohne
+    Parameter: der Govee laedt dann die in der Govee-App gesetzte
+    Sternen-Szene, die ueber die lokale Schnittstelle nicht waehlbar ist, die
+    Yeelight ihren letzten Zustand.
+  triggers:
+  - trigger: state
+    entity_id: input_boolean.schlafenszeit
+    to: 'on'
+    id: sleep_start
+  - trigger: state
+    entity_id: input_boolean.schlafenszeit
+    to: 'off'
+    id: sleep_end
+  actions:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: sleep_start
+      sequence:
+      - action: light.turn_on
+        continue_on_error: true
+        target:
+          entity_id:
+          - light.kinderzimmer_kinderzimmer_nachtlicht
+          - light.h60b0
+    - conditions:
+      - condition: trigger
+        id: sleep_end
+      sequence:
+      - action: light.turn_off
+        continue_on_error: true
+        target:
+          entity_id:
+          - light.kinderzimmer_kinderzimmer_nachtlicht
+          - light.h60b0
+  mode: restart
