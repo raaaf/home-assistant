@@ -1052,9 +1052,9 @@
 - id: 'wohnzimmer_mueckenlampe'
   alias: Wohnzimmer » Mückenlampe
   description: >-
-    UV-Mückenlampe nur nachts (April bis Oktober) und nur, wenn das
-    Wohnzimmerlicht aus ist: UV lockt nur als hellste Lichtquelle im Raum.
-    Aus bei Sonnenaufgang oder sobald das Raumlicht angeht. Schlafenszeit
+    UV-Mückenlampe nur in der Abenddämmerung (Sonnenuntergang bis 23:00) und nur,
+    wenn das Wohnzimmerlicht aus ist: UV lockt nur als hellste Lichtquelle im Raum.
+    Aus um 23:00, bei Sonnenaufgang oder sobald das Raumlicht angeht. Schlafenszeit
     holt den Start nach, falls HA bei Sonnenuntergang nicht lief.
   triggers:
   - trigger: numeric_state
@@ -1067,6 +1067,9 @@
     attribute: elevation
     above: 0
     id: hell
+  - trigger: time
+    at: '23:00:00'
+    id: ende
   - trigger: state
     entity_id: light.alle_wohnzimmer_lichter
     to: 'off'
@@ -1087,15 +1090,26 @@
     value_template: "{{ has_value('light.wohnzimmer_wohnzimmer_muckenlampe_outlet') }}"
   variables:
     nacht: "{{ state_attr('sun.sun', 'elevation') | float(0) < 0 }}"
-    # Mückensaison nach Monat. Die Aussentemperatur spielt keine Rolle:
-    # es geht um Viecher, die trotz Gitter drin sind, und drinnen ist es warm.
-    saison: "{{ now().month in range(4, 11) }}"
+    # Saison nach Tageshöchsttemperatur statt nach Kalendermonat. Der Monatsfilter
+    # April bis Oktober liess die Lampe auch an kalten Rand-Tagen laufen, an denen
+    # draussen nichts fliegt und die Balkontür zu bleibt, also gar nichts hereinkommt.
+    # Culex fliegt unter rund 15 C kaum; 18 C Tagesmaximum ist die Schwelle, ab der
+    # abends gelüftet wird. Quelle wie bei der Heizung: sensor.fuerth_daily.
+    # Fällt die Prognose aus, entscheidet die aktuelle Aussentemperatur.
+    saison: >-
+      {% set f = state_attr('sensor.fuerth_daily', 'forecast') %}
+      {% if f is not none and f | length > 0 and f[0].temperature is not none %}
+        {{ f[0].temperature | float(0) >= 18 }}
+      {% else %}
+        {{ states('sensor.temperatur_aussen') | float(0) >= 18 }}
+      {% endif %}
   actions:
   - choose:
-    - alias: "Sonnenaufgang oder Raumlicht an — aus"
+    - alias: "23:00, Sonnenaufgang oder Raumlicht an — aus"
       conditions:
       - condition: trigger
         id:
+        - ende
         - hell
         - licht-an
       sequence:
@@ -1103,7 +1117,7 @@
         target:
           entity_id: light.wohnzimmer_wohnzimmer_muckenlampe_outlet
 
-    - alias: "Nacht, Saison, Raum dunkel — an"
+    - alias: "Dämmerung vor 23:00, Saison, Raum dunkel — an"
       conditions:
       - condition: trigger
         id:
@@ -1112,6 +1126,11 @@
         - schlafenszeit
       - condition: template
         value_template: "{{ nacht and saison }}"
+      # Nur das Abendfenster. `nacht` allein wäre auch um 03:00 wahr, die
+      # untere Grenze 12:00 schliesst den Morgen aus.
+      - condition: time
+        after: '12:00:00'
+        before: '23:00:00'
       - condition: state
         entity_id: light.alle_wohnzimmer_lichter
         state: 'off'
@@ -1126,11 +1145,15 @@
   alias: "Benachrichtigung » Mückenlampe reinigen"
   description: >-
     Erinnert daran, die Auffangschale zu leeren, wenn die Lampe in den letzten
-    14 Tagen über 100 Stunden lief. Höchstens einmal pro Woche.
+    14 Tagen über 20 Stunden lief. Höchstens einmal pro Woche.
+    Schwelle war 100 h, solange die Lampe von Sonnenuntergang bis Sonnenaufgang
+    lief (rund 10,5 h pro Nacht). Seit dem Abendfenster bis 23:00 sind es je nach
+    Jahreszeit 1,5 bis 3,5 h, 100 h wären unerreichbar. 20 h entspricht rund zehn
+    Betriebsabenden.
   triggers:
   - trigger: numeric_state
     entity_id: sensor.muckenlampe_betriebsstunden_14_tage
-    above: 100
+    above: 20
   conditions:
   - condition: time
     after: '08:00:00'
