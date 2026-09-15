@@ -507,6 +507,13 @@
     entity_id: input_boolean.schlafenszeit
     from: 'on'
     to: 'off'
+    id: schlafenszeit_ende
+  - alias: Nach einer Szene den Helferwert wieder durchsetzen
+    trigger: state
+    entity_id: binary_sensor.any_scene_active
+    from: 'on'
+    to: 'off'
+    id: szene_ende
   conditions:
   - alias: Nicht waehrend der Schlafenszeit, dort gehoert die Kurve dem Abend-Fade
     condition: state
@@ -540,41 +547,61 @@
         {% elif lux >= 300 %}90
         {% else %}100{% endif %}
       aktuell: "{{ states('input_number.al_tagesmax_helligkeit') | int(0) }}"
-  # Der AL-Aufruf laeuft bewusst UNBEDINGT, nicht nur bei geaenderter Stufe: die Szenen
-  # (Film, Kochen, Essen) schreiben max_brightness direkt an AL, ohne den Helfer
-  # nachzufuehren. Waere der Aufruf hinter der Aenderungspruefung, bliebe ein Raum nach
-  # einer Szene auf dem Szenenwert haengen, solange sich draussen nichts tut.
-  - alias: Obergrenze auf die Raeume mit Tageslicht anwenden
-    action: adaptive_lighting.change_switch_settings
-    data:
-      entity_id:
-      - switch.adaptive_lighting_wohnzimmer
-      - switch.adaptive_lighting_kueche
-      - switch.adaptive_lighting_badezimmer
-      - switch.adaptive_lighting_kinderzimmer
-      - switch.adaptive_lighting_waschzimmer
-      - switch.adaptive_lighting_arbeitszimmer
-      - switch.adaptive_lighting_schlafzimmer
-      - switch.adaptive_lighting_balkon
-      max_brightness: "{{ stufe | int }}"
-      use_defaults: current
-  - alias: Helfer und Logbuch nur bei echtem Stufenwechsel
+  # adaptive_lighting.change_switch_settings ruft in AL _update_time_interval_listener()
+  # auf: das entfernt den periodischen Interval-Listener und startet ihn neu, sodass der
+  # naechste Tick erst nach stagger_offset + interval kommt. Der Offset ist ein Hash-Wert
+  # zwischen 0 und 300 s, also immer mehr als 300 s entfernt, und bei einem Aufruf alle
+  # 5 Minuten wird dieser Tick nie erreicht. AL kam so nie zu seiner eigenen periodischen
+  # Anpassung fuer diese acht Raeume, jeder Aufruf erzwang stattdessen eine Anpassung mit
+  # initial_transition (2 s) statt der konfigurierten transition (10 s), und alle acht
+  # Raeume feuerten gleichzeitig, was das seit AL 1.32 eingefuehrte Request-Staggering
+  # aushebelt. Flur und Ankleide sind nicht in dieser Liste und deshalb nicht betroffen.
+  # Der alte unbedingte Aufruf war mit einem haengenbleibenden Szenenwert begruendet; das
+  # decken jetzt die Trigger unten ab, die Szenen-Reset-Pfade schreiben den Helferwert
+  # ohnehin selbst an AL zurueck (areas/wohnzimmer.yaml:205, areas/kueche.yaml:61,201).
+  - alias: Obergrenze setzen, nur bei Stufenwechsel oder nach fremdem Schreibzugriff
     if:
-    - condition: template
-      value_template: "{{ stufe | int != aktuell }}"
+    - condition: or
+      conditions:
+      - condition: template
+        value_template: "{{ stufe | int != aktuell }}"
+      - condition: trigger
+        id:
+        - start
+        - schlafenszeit_ende
+        - szene_ende
     then:
-    - alias: Neue Stufe merken (Szenen-Resets lesen diesen Wert)
-      action: input_number.set_value
-      target:
-        entity_id: input_number.al_tagesmax_helligkeit
+    - alias: Obergrenze auf die Raeume mit Tageslicht anwenden
+      action: adaptive_lighting.change_switch_settings
       data:
-        value: "{{ stufe | int }}"
-    - alias: Wechsel im Logbuch festhalten
-      action: logbook.log
-      data:
-        name: Tageshelligkeit
-        message: >-
-          Aussen {{ lux | round(0) }} lx, Obergrenze {{ aktuell }} -> {{ stufe | int }} %
+        entity_id:
+        - switch.adaptive_lighting_wohnzimmer
+        - switch.adaptive_lighting_kueche
+        - switch.adaptive_lighting_badezimmer
+        - switch.adaptive_lighting_kinderzimmer
+        - switch.adaptive_lighting_waschzimmer
+        - switch.adaptive_lighting_arbeitszimmer
+        - switch.adaptive_lighting_schlafzimmer
+        - switch.adaptive_lighting_balkon
+        max_brightness: "{{ stufe | int }}"
+        use_defaults: current
+    - alias: Helfer und Logbuch nur bei echtem Stufenwechsel
+      if:
+      - condition: template
+        value_template: "{{ stufe | int != aktuell }}"
+      then:
+      - alias: Neue Stufe merken (Szenen-Resets lesen diesen Wert)
+        action: input_number.set_value
+        target:
+          entity_id: input_number.al_tagesmax_helligkeit
+        data:
+          value: "{{ stufe | int }}"
+      - alias: Wechsel im Logbuch festhalten
+        action: logbook.log
+        data:
+          name: Tageshelligkeit
+          message: >-
+            Aussen {{ lux | round(0) }} lx, Obergrenze {{ aktuell }} -> {{ stufe | int }} %
 
 - id: adaptive_lighting_morning_reset
   alias: Adaptive Lighting » Morning Reset to Default Sunset Times

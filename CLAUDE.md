@@ -267,13 +267,13 @@ The system uses the **Adaptive Lighting** custom component for circadian rhythm 
 **Room Configuration**:
 | Room | Lights | Reset Time | Notes |
 |------|--------|------------|-------|
-| Wohnzimmer | 17 lights | 1 hour | Living spaces |
+| Wohnzimmer | 18 lights | 1 hour | Living spaces |
 | Küche | 6 lights | 1 hour | Kitchen |
-| Schlafzimmer | 4 lights | 1 hour | Bedroom |
+| Schlafzimmer | 3 lights | 1 hour | Bedroom |
 | Kinderzimmer | 2 lights | 1 hour | Kids' room |
 | Badezimmer | 4 lights | 15 min | Bathroom |
 | Waschzimmer | 1 light | 2 hours | Laundry |
-| Arbeitszimmer | 4 lights | 1 hour | Office |
+| Arbeitszimmer | 5 lights | 1 hour | Office |
 | Ankleide | 2 lights | 2 hours | Dressing room |
 | Flur | 9 lights | 15 min | Hallway |
 | Balkon | 3 lights | 2 hours | Balcony |
@@ -284,7 +284,7 @@ interval: 300              # 5 min update cycle
 transition: 10             # Short for IKEA compatibility
 min_color_temp: 2200       # Warm (IKEA/Hue compatible)
 max_color_temp: 4000       # Cool white maximum
-sleep_brightness: 15       # Night mode default; per-room exceptions in system/core.yaml startup automation
+sleep_brightness: 5        # Night mode default; per-room exceptions in system/core.yaml startup automation
 sleep_rgb_or_color_temp: color_temp # Uniform 2200K everywhere: the 24 IKEA bulbs cannot do RGB, mixed moods are not acceptable
 sleep_color_temp: 2200     # Warmest for sleep
 take_over_control: true    # Manual control detection
@@ -716,7 +716,7 @@ The Adaptive Lighting configuration is optimized for Zigbee2MQTT with mixed Phil
 **Color Temperature Range**:
 - Min: 2200K (warmest IKEA/Hue compatible)
 - Max: 4000K (IKEA maximum cool white)
-- Sleep: 2200K everywhere (no RGB, so Philips and IKEA look identical); brightness per room: Kueche/Bett 50%, Balkon 40%, Wohnzimmer/Bad/Flur 30%, Waschzimmer 25%, default 15%, Kinderzimmer 5%, Stehlampe 1%. Ankleide is deliberately excluded from sleep mode (clothes are picked there at night), so it has no sleep_brightness override
+- Sleep: 2200K everywhere (no RGB, so Philips and IKEA look identical); brightness per room: Balkon 40%, Wohnzimmer/Kueche/Waschzimmer/Ankleide 20%, Arbeitszimmer (Bett) 15%, Badezimmer/Flur 10%, Kinderzimmer 5%, default 5%, Schlafzimmer (Stehlampe) 1%. Ankleide is excluded from the sleep-mode switch list (clothes are picked there at night), so its sleep_brightness of 20% only applies as a fallback if it is ever switched on
 
 **IKEA Fade-In Solution**:
 IKEA TRADFRI/JETSTROM bulbs ignore the `transition` parameter when turning on from off.
@@ -728,7 +728,7 @@ This is applied via `System » Adaptive Lighting Settings nach Neustart` automat
 
 AL reads its config from **Config Entries**, which the YAML seeds once and then anchors: remove the YAML and HA drops the entries on the next restart. Change settings in the startup automation in `automations_new/system/core.yaml`, never anywhere else, and remember that `change_switch_settings` is runtime-only and does not persist into the config entry.
 
-**Exception, `max_brightness`:** that field belongs to `Licht » Tageshelligkeit nach Aussenlicht` (eight rooms with daylight, driven by the balcony lux sensor via `input_number.al_tagesmax_helligkeit`) and to fixed values for Flur and Ankleide in the startup automation. Do not set it anywhere else.
+**Exception, `max_brightness`:** that field belongs to `Licht » Tageshelligkeit nach Aussenlicht` (eight rooms with daylight, driven by the balcony lux sensor via `input_number.al_tagesmax_helligkeit`) and to fixed values for Flur and Ankleide in the startup automation. Do not set it anywhere else. That automation now writes to AL only when the level changes or after a restart, the end of Schlafenszeit, or the end of a scene, because every `change_switch_settings` call restarts AL's own interval listener and forces an adaptation with `initial_transition` instead of `transition`.
 
 **Interval & Reset**:
 - 5-minute update interval (smooth sunrise/sunset transitions)
