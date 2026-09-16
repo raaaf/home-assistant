@@ -97,15 +97,15 @@
         action: scene.create
         data:
           scene_id: klingel_snapshot
-          snapshot_entities:
-          - light.philips_light_01_pc_1
-          - light.philips_light_02_pc_2
-          - light.ikea_light_04
-          - light.philips_light_15_bett
-          - light.philips_light_16_tv
-          - light.philips_light_21_schrank_1
-          - light.philips_light_22_schrank_2
-          - light.philips_light_23_schrank_3
+          # Nur erreichbare Lichter sichern, sonst warnt reproduce_state beim
+          # Wiederherstellen ("Invalid state specified ... unavailable")
+          snapshot_entities: >-
+            {{ expand('light.philips_light_01_pc_1', 'light.philips_light_02_pc_2',
+                      'light.ikea_light_04', 'light.philips_light_15_bett',
+                      'light.philips_light_16_tv', 'light.philips_light_21_schrank_1',
+                      'light.philips_light_22_schrank_2', 'light.philips_light_23_schrank_3')
+               | rejectattr('state', 'in', ['unavailable', 'unknown'])
+               | map(attribute='entity_id') | list }}
       - alias: "3x blinken"
         repeat:
           count: 3
