@@ -122,6 +122,12 @@
           - light.mmgg_wi11_7a1c_indicator_light
           - light.zhimi_za4_2dca_indicator_light
           - light.zhimi_za4_fb1b_indicator_light
+          # Yeelight CubeMatrix lehnt set_ct ab (TimeoutError bricht die Automation ab),
+          # Govee laedt beim Einschalten seine App-Szene und darf keine Parameter bekommen
+          - light.yeelight_cubematrix_0xdc5475bbc814
+          - light.yeelight_cubematrix_0xdc5475bd7828
+          - light.kinderzimmer_kinderzimmer_nachtlicht
+          - light.h60b0
         lights_on: >
           {{ expand(area_entities(area))
              | selectattr('domain', 'eq', 'light')
