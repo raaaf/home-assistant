@@ -101,7 +101,7 @@
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
   max_color_temp: 4000 # IKEA maximum cool white
   prefer_rgb_color: false
-  sleep_brightness: 20 # Kueche-Ausnahme: wie night_light_brightness der Motion-Automation
+  sleep_brightness: 20 # Kueche-Ausnahme fuer Adaptive Lighting; Motion-Nachtlichter bleiben separat bei 50 %
   sleep_rgb_or_color_temp: color_temp
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 10  # Short transitions prevent IKEA lockups
@@ -223,7 +223,7 @@
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
   max_color_temp: 4000 # IKEA maximum cool white
   prefer_rgb_color: false
-  sleep_brightness: 10 # Badezimmer: wie night_light_brightness der Motion-Automation
+  sleep_brightness: 10 # Badezimmer: Adaptive-Lighting-Sleep-Wert; Motion-Nachtlichter werden separat gesteuert
   sleep_rgb_or_color_temp: color_temp
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 10  # Short transitions prevent IKEA lockups
@@ -302,7 +302,7 @@
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
   max_color_temp: 4000 # IKEA maximum cool white
   prefer_rgb_color: false
-  sleep_brightness: 15 # Arbeitszimmer-Slug-Ausnahme: Bett/PC (physisch Schlafzimmer), wie Motion-Nachtlichter
+  sleep_brightness: 15 # Arbeitszimmer-Slug-Ausnahme: Bett/PC (physisch Schlafzimmer); Motion-Nachtlicht bleibt separat bei 50 %
   sleep_rgb_or_color_temp: color_temp
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 10 # Short transitions prevent IKEA lockups
@@ -393,7 +393,7 @@
   min_color_temp: 2200 # IKEA/Hue compatible warm minimum
   max_color_temp: 4000 # IKEA maximum cool white
   prefer_rgb_color: false
-  sleep_brightness: 10 # Flur: wie night_light_brightness der Motion-Automationen
+  sleep_brightness: 10 # Flur: Adaptive-Lighting-Sleep-Wert; Motion-Nachtlichter werden separat gesteuert
   sleep_rgb_or_color_temp: color_temp
   sleep_color_temp: 2200  # Warmest supported by all bulbs
   sleep_transition: 10 # Short transitions prevent IKEA lockups

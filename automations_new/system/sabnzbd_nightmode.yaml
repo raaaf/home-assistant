@@ -37,6 +37,13 @@
       entity_id: media_player.appletv
       from: 'playing'
       id: fullspeed
+    - trigger: numeric_state
+      entity_id: sensor.192_168_178_118_queue_count
+      above: 0
+      id: reconcile
+    - trigger: homeassistant
+      event: start
+      id: reconcile
 
     # --- Tageslimit wiederherstellen ---
     - trigger: state
@@ -64,7 +71,9 @@
     - choose:
         - conditions:
             - condition: trigger
-              id: fullspeed
+              id:
+                - fullspeed
+                - reconcile
             - condition: state
               entity_id: input_boolean.schlafenszeit
               state: 'on'
@@ -109,7 +118,9 @@
 
         - conditions:
             - condition: trigger
-              id: tageslimit
+              id:
+                - tageslimit
+                - reconcile
             - condition: numeric_state
               entity_id: number.192_168_178_118_speedlimit
               above: 33

@@ -55,11 +55,6 @@
     entity_id: sensor.sunlight_pct
     below: 40
     id: getting-dark
-  - trigger: state
-    entity_id: cover.aqara_cover_01
-    to: 'closed'
-    id: getting-dark
-
   conditions: []
   actions:
   - choose:
@@ -405,7 +400,7 @@
       - alias: "Bett wieder von Adaptive Lighting steuern lassen"
         action: adaptive_lighting.set_manual_control
         data:
-          entity_id: switch.adaptive_lighting_schlafzimmer
+          entity_id: switch.adaptive_lighting_arbeitszimmer
           lights:
           - light.philips_light_15_bett
           manual_control: false

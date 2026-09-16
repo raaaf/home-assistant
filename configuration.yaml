@@ -1110,6 +1110,11 @@ input_datetime:
     has_date: true
     has_time: true
 
+  party_start_time:
+    name: "Party-Modus Startzeit"
+    has_date: true
+    has_time: true
+
 
 input_text:
   haustur_besucher_dauer:

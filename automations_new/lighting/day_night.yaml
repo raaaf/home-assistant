@@ -41,7 +41,7 @@
             {% set sleep_dt = as_datetime(einschlafzeit) %}
             {% set wake_dt = as_datetime(wakeup) %}
             {% set n = now() %}
-            {% if n >= wake_dt and n < sleep_dt %}
+            {% if sleep_dt is not none and wake_dt is not none and n >= wake_dt and n < sleep_dt %}
               true
             {% else %}
               false
@@ -58,6 +58,40 @@
           entity_id: input_boolean.nachtlicht
       - alias: Sleep Mode für alle Räume deaktivieren
         action: script.reset_sleep_modes
+    - alias: Nach Neustart - Schlafenszeit-Zustand setzen (Nacht)
+      conditions:
+      - condition: trigger
+        id: restart
+      - condition: template
+        value_template: >-
+          {% set einschlafzeit = states('sensor.einschlafzeit_timestamp') %}
+          {% set wakeup = states('sensor.wakeup_light_timestamp') %}
+          {% if einschlafzeit in ['unknown', 'unavailable'] or wakeup in ['unknown', 'unavailable'] %}
+            false
+          {% else %}
+            {% set sleep_dt = as_datetime(einschlafzeit) %}
+            {% set wake_dt = as_datetime(wakeup) %}
+            {% set n = now() %}
+            {{ sleep_dt is not none and wake_dt is not none and (n >= sleep_dt or n < wake_dt) }}
+          {% endif %}
+      sequence:
+      - alias: Schlafenszeit aktivieren (nach Neustart - es ist Nacht)
+        action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.schlafenszeit
+      - alias: Sleep Mode für alle Räume ausser Ankleide wiederherstellen
+        action: switch.turn_on
+        target:
+          entity_id:
+          - switch.adaptive_lighting_sleep_mode_badezimmer
+          - switch.adaptive_lighting_sleep_mode_balkon
+          - switch.adaptive_lighting_sleep_mode_flur
+          - switch.adaptive_lighting_sleep_mode_kueche
+          - switch.adaptive_lighting_sleep_mode_waschzimmer
+          - switch.adaptive_lighting_sleep_mode_wohnzimmer
+          - switch.adaptive_lighting_sleep_mode_kinderzimmer
+          - switch.adaptive_lighting_sleep_mode_arbeitszimmer
+          - switch.adaptive_lighting_sleep_mode_schlafzimmer
     - alias: Aufwachen - Alarm deaktivieren und sanftes Licht
       conditions:
       - condition: trigger
@@ -320,11 +354,17 @@
                     entity_id: media_player.schlafzimmer
                   data:
                     volume_level: 0.30
-        - alias: "08:00 Uhr: Wohnungstür entsperren"
-          action: lock.unlock
-          continue_on_error: true
-          target:
-            entity_id: lock.nuki_wohnungstur_lock
+        - alias: "08:00 Uhr: Wohnungstür entsperren, nur wenn jemand zuhause ist"
+          if:
+          - condition: template
+            value_template: >-
+              {{ is_state('input_boolean.alle_sind_weg', 'off')
+                 and (is_state('person.rafael', 'home') or is_state('person.alex', 'home')) }}
+          then:
+          - action: lock.unlock
+            continue_on_error: true
+            target:
+              entity_id: lock.nuki_wohnungstur_lock
       - alias: "Wakeup-Flag zuruecksetzen (auch wenn niemand zuhause war)"
         action: input_boolean.turn_off
         target:
@@ -455,7 +495,17 @@
     from: 'off'
     to: 'on'
     id: schlafenszeit_on
-  conditions: []
+  - trigger: homeassistant
+    event: start
+    id: restart
+  conditions:
+  - condition: state
+    entity_id: input_boolean.schlafenszeit
+    state: 'on'
+  - alias: Schlafenszeit darf keine aktive Szene überschreiben
+    condition: state
+    entity_id: binary_sensor.any_scene_active
+    state: 'off'
   actions:
   - alias: Start 30-minute fade-down when schlafenszeit activates
     action: adaptive_lighting.change_switch_settings

@@ -44,6 +44,12 @@
     - conditions:
       - condition: trigger
         id: 'off'
+      - condition: template
+        value_template: >
+          {{ is_state('input_boolean.abwaschen', 'off') and
+             is_state('input_boolean.party', 'off') and
+             is_state('input_boolean.party_wohnzimmer', 'off') and
+             is_state('input_boolean.movie', 'off') }}
       sequence:
       - action: light.turn_off
         data:
@@ -183,6 +189,11 @@
     - conditions:
       - condition: trigger
         id: 'off'
+      - condition: template
+        value_template: >
+          {{ is_state('input_boolean.party', 'off') and
+             is_state('input_boolean.party_wohnzimmer', 'off') and
+             is_state('input_boolean.movie', 'off') }}
       sequence:
       - action: light.turn_off
         data:
@@ -254,6 +265,12 @@
     - conditions:
       - condition: trigger
         id: 'off'
+      - condition: template
+        value_template: >
+          {{ is_state('input_boolean.kochen', 'off') and
+             is_state('input_boolean.party', 'off') and
+             is_state('input_boolean.party_wohnzimmer', 'off') and
+             is_state('input_boolean.movie', 'off') }}
       sequence:
       - action: light.turn_off
         data:
@@ -271,7 +288,7 @@
         action: script.scene_enable_adaptive_lighting
         data:
           room: "kueche"
-          exclude_scenes: "kochen,party,party_wohnzimmer"
+          exclude_scenes: "kochen,party,party_wohnzimmer,movie"
       - alias: "Reaktiviere Motion-Automationen mit Konflikt-Prüfung"
         action: script.scene_enable_motion_automations
         data:

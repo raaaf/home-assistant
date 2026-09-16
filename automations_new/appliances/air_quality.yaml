@@ -153,19 +153,18 @@
       title: "Luftwäscher — Kein Wasser"
       message: "Der Venta Luftwäscher im Schlafzimmer hat vermutlich kein Wasser mehr. Bitte Wassertank auffüllen."
       notification_id: luftwascher_kein_wasser
-  - alias: "Push nur wenn nicht Schlafenszeit"
-    condition: and
-    conditions:
+  - if:
     - condition: state
       entity_id: input_boolean.schlafenszeit
       state: 'off'
     - condition: time
       after: '08:00:00'
       before: '22:00:00'
-  - action: notify.rafael
-    data:
-      title: "Luftwäscher — Kein Wasser"
-      message: "Venta im Schlafzimmer hat kein Wasser mehr. Bitte auffüllen."
+    then:
+    - action: notify.rafael
+      data:
+        title: "Luftwäscher — Kein Wasser"
+        message: "Venta im Schlafzimmer hat kein Wasser mehr. Bitte auffüllen."
   - alias: "Gerät ausschalten (Trockenlauf vermeiden)"
     action: switch.turn_off
     target:

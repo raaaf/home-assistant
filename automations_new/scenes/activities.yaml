@@ -23,12 +23,24 @@
       entity_id: timer.lock_door_after_guest
     id: timer-abgelaufen
     trigger: event
+  - event: start
+    id: reconcile
+    trigger: homeassistant
   conditions: []
   actions:
   - choose:
     - conditions:
-      - condition: trigger
-        id: gäste-an
+      - condition: or
+        conditions:
+        - condition: trigger
+          id: gäste-an
+        - condition: and
+          conditions:
+          - condition: trigger
+            id: reconcile
+          - condition: state
+            entity_id: input_boolean.guest_or_away
+            state: 'on'
       sequence:
       - action: automation.turn_off
         target:
@@ -41,8 +53,17 @@
           - switch.kuchengerate
         action: switch.turn_on
     - conditions:
-      - condition: trigger
-        id: gäste-aus
+      - condition: or
+        conditions:
+        - condition: trigger
+          id: gäste-aus
+        - condition: and
+          conditions:
+          - condition: trigger
+            id: reconcile
+          - condition: state
+            entity_id: input_boolean.guest_or_away
+            state: 'off'
       sequence:
       - target:
           entity_id:
@@ -189,6 +210,9 @@
     - conditions:
       - condition: trigger
         id: 'off'
+      - condition: state
+        entity_id: input_boolean.party_wohnzimmer
+        state: 'off'
       sequence:
       - alias: "Hue-Effekt stoppen und Lichter ausschalten"
         action: script.scene_stop_rgb_effect
@@ -361,9 +385,62 @@
     to: 'on'
     for: "03:15:00"
     id: stop
+  - trigger: state
+    entity_id: input_boolean.party
+    to: 'on'
+    id: started
+  - trigger: homeassistant
+    event: start
+    id: reconcile
   conditions: []
+  variables:
+    party_elapsed: "{{ (as_timestamp(now()) - as_timestamp(states('input_datetime.party_start_time'), 0)) | int(0) }}"
   actions:
   - choose:
+    - conditions:
+      - condition: trigger
+        id: started
+      sequence:
+      - action: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.party_start_time
+        data:
+          datetime: "{{ now().isoformat() }}"
+    - conditions:
+      - condition: trigger
+        id: reconcile
+      - condition: state
+        entity_id: input_boolean.party
+        state: 'on'
+      - condition: template
+        value_template: "{{ party_elapsed >= 10800 and party_elapsed < 11700 }}"
+      sequence:
+      - action: notify.family
+        data:
+          title: "Party-Modus"
+          message: "Party läuft seit 3 Stunden. In 15 Minuten wird automatisch deaktiviert."
+          data:
+            tag: party_timer
+            push:
+              interruption-level: time-sensitive
+    - conditions:
+      - condition: trigger
+        id: reconcile
+      - condition: state
+        entity_id: input_boolean.party
+        state: 'on'
+      - condition: template
+        value_template: "{{ party_elapsed >= 11700 }}"
+      sequence:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.party
+      - action: notify.family
+        data:
+          title: "Party-Modus beendet"
+          message: "Automatisch deaktiviert nach 3 Stunden 15 Minuten."
+          data:
+            tag: party_timer
     - conditions:
       - condition: trigger
         id: warn

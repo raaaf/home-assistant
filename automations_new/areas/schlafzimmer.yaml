@@ -51,6 +51,7 @@
       - bypass_enabled_stop
       motion_bypass_lights_stop:
       - binary_sensor.schlafzimmer_manual_control
+      - input_boolean.arbeit  # Keep bedroom work lighting on while working
 - id: 'schlafzimmer_appletv_ambilight'
   alias: 'Licht » Schlafzimmer TV Ambilight'
   description: Schaltet Ambilight ein und Rollo zu wenn Apple TV abspielt, deaktiviert Motion-Automation

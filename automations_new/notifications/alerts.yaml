@@ -197,11 +197,7 @@
     to: '1'
     id: clean
     trigger: state
-  conditions:
-  - condition: template
-    value_template: " {% set last = state_attr('automation.notification_wasserspender',\
-      \ 'last_triggered') %}\n    {{ last is none or (now() - last).total_seconds()\
-      \ > 12 * 60 * 60 }}"
+  conditions: []
   actions:
   - choose:
     - conditions:

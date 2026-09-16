@@ -91,6 +91,16 @@
     below: 40
     for:
       minutes: 10
+  - trigger: state
+    entity_id: sensor.prusa_mk4
+    to:
+    - idle
+    - finished
+    - stopped
+    - error
+    - ready
+    for:
+      seconds: 30
   conditions:
   - alias: "Drucker druckt nicht"
     condition: state
@@ -116,6 +126,39 @@
       entity_id: switch.arbeitszimmer_prusa_mk4_pc_rafael
   mode: single
   max_exceeded: silent
+
+- id: 'prusa_steckdose_startup_recovery'
+  alias: "Prusa » Steckdose nach Neustart abgleichen"
+  description: "Schaltet die Steckdose nach HA-Neustart nur bei bekannt ruhendem und kaltem Drucker aus"
+  triggers:
+  - trigger: homeassistant
+    event: start
+  conditions: []
+  actions:
+  - delay: "00:00:30"
+  - condition: state
+    entity_id: sensor.prusa_mk4
+    state:
+    - idle
+    - finished
+    - stopped
+    - error
+    - ready
+  - condition: numeric_state
+    entity_id: sensor.prusa_mk4_nozzle_temperature
+    below: 40
+  - condition: state
+    entity_id: switch.arbeitszimmer_prusa_mk4_pc_rafael
+    state: 'on'
+  - action: switch.turn_off
+    target:
+      entity_id: switch.arbeitszimmer_prusa_mk4_pc_rafael
+  - action: logbook.log
+    data:
+      name: Prusa
+      message: "Nach Neustart ausgeschaltet: Drucker ruht und Düse ist unter 40 Grad"
+      entity_id: switch.arbeitszimmer_prusa_mk4_pc_rafael
+  mode: single
 
 - id: 'prusa_steckdose_taster'
   alias: '3D-Druck » Steckdose Taster'
@@ -154,8 +197,6 @@
           - stopped
           - error
           - ready
-          - unavailable
-          - unknown
         then:
         - action: switch.turn_off
           target:

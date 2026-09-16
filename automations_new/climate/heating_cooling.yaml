@@ -13,6 +13,12 @@
     trigger: time
   conditions: []
   actions:
+  - condition: template
+    value_template: >-
+      {% set forecast = state_attr('sensor.fuerth_daily', 'forecast') %}
+      {% set temperature = forecast[0].temperature if forecast is not none and forecast | length > 0 else none %}
+      {{ states('sensor.fuerth_daily') not in ['unknown', 'unavailable']
+         and temperature is number }}
   - if:
     - condition: template
       value_template: '{{ states(''sensor.fuerth_daily'') not in [''unknown'', ''unavailable''] and state_attr(''sensor.fuerth_daily'', ''forecast'') is not none and state_attr(''sensor.fuerth_daily'', ''forecast'') | length > 0 and state_attr(''sensor.fuerth_daily'', ''forecast'')[0].temperature > 29 }}
@@ -45,7 +51,8 @@
   description: >
     Intelligente Klimaanlagen-Steuerung mit Hysterese: an ab 25.5°C, aus unter 24.5°C.
     Das Fenster entscheidet den Modus: Fenster zu -> Cool, Fenster auf -> nur Umluft (Fan).
-    Temperaturquelle: Arbeitszimmer-Sensor (nach Umbau stehen Bett, AC und Sensor im selben Raum).
+    Temperaturquelle: physischer Schlafzimmer-Sensor (Entity-ID bleibt nach dem Raumtausch
+    sensor.arbeitszimmer_temperatur).
     Gate: nur bei Anwesenheit, niemand abwesend. Aussentemperatur egal.
     Setpoint: 24°C. Preset ieco immer beim Kuehlen (sparsam und leise).
   triggers:
@@ -151,18 +158,18 @@
       # Anwesenheit im Schlafraum: Rafael-MacBook, Gaming, Schlafenszeit oder AppleTV.
       # Alex-Arbeit (geteiltes arbeit-Flag) zaehlt NICHT, Alex sitzt im Buero. Gate fuer Kuehlen/Umluft.
       zone_anwesend: '{{ gaming_aktiv or schlafenszeit_aktiv or macbook_aktiv or appletv_an }}'
-      # Temperaturquelle: Arbeitszimmer-Sensor. Nach dem Umbau stehen Bett, AC und
-      # Sensor alle im selben Raum, Arbeit/Gaming und Schlafenszeit teilen die Quelle.
+      # Temperaturquelle: physischer Schlafzimmer-Sensor. Die Entity-ID
+      # sensor.arbeitszimmer_temperatur bleibt nach dem Raumtausch historisch.
       # Fallback: AC indoor. Qingping-Temp wird NICHT genutzt (defekt, liest 4-8 Grad zu niedrig).
       raum_temp: >-
         {% set arbeit = states('sensor.arbeitszimmer_temperatur') %}
         {% set ac_indoor = states('sensor.ac_indoor_temperature') %}
         {% if has_value('sensor.arbeitszimmer_temperatur') %}
-          {{ arbeit | float(25) }}
+          {{ arbeit | float(0) }}
         {% elif has_value('sensor.ac_indoor_temperature') %}
-          {{ ac_indoor | float(25) }}
+          {{ ac_indoor | float(0) }}
         {% else %}
-          25
+          0
         {% endif %}
       # Aussentemperatur: sensor.temperatur_aussen ist bereits die Kombination der
       # beiden Balkonsensoren (Aqara + Tuya). Fallback auf den DWD, wenn beide weg
@@ -187,6 +194,8 @@
       fenster_zu: "{{ is_state('binary_sensor.fenster_tueren_ohne_arbeitszimmer', 'off') }}"
       aktueller_modus: '{{ states(''climate.ac'') if has_value(''climate.ac'') else ''off'' }}'
       ac_laeuft: '{{ aktueller_modus not in [''off'', ''unknown'', ''unavailable''] }}'
+      # Fan-only is the post-cooling drying cycle, not active compressor cooling.
+      kuehlt_aktiv: '{{ aktueller_modus == ''cool'' }}'
       # Reinigungslauf: nach dem Kuehlen laeuft die AC 30 Min als Umluft, um den
       # Verdampfer zu trocknen (Schimmelschutz). Sonst gibt es keinen Umluftbetrieb mehr.
       cleanup_aktiv: '{{ is_state(''timer.ac_cleanup'', ''active'') }}'
@@ -224,7 +233,7 @@
       # Warm genug fuer AC-Aktion. Hysterese folgt dem Sollwert: an ab Soll+1.5,
       # aus erst unter Soll+0.5. Tag (Soll 24): an 25.5 / aus 24.5.
       # Schlafenszeit (Soll 22): an 23.5 / aus 22.5 -> die kuehlere Nacht greift.
-      warm: '{{ (raum_temp >= ziel_setpoint + 0.5) if ac_laeuft else (raum_temp >= ziel_setpoint + 1.5) }}'
+      warm: '{{ (raum_temp >= ziel_setpoint + 0.5) if kuehlt_aktiv else (raum_temp >= ziel_setpoint + 1.5) }}'
       # Aktiv nur bei Anwesenheit, geschlossenem Fenster und mindestens 20 C draussen
       # (kuehlen bei offenem Fenster waere sinnlos, unter 20 C aussen unnoetig).
       # Reiner Umluftbetrieb entfaellt, statt Kuehlen gibt es nur noch off
@@ -384,8 +393,6 @@
   mode: single
 - id: '1749643406352'
   alias: Ventilator » Kinderzimmer
-  # Arbeitszimmer hat keinen eigenen Fan - dort uebernimmt climate.ac
-  # (gesteuert via "Helper » AC manual").
   description: 'Kinderzimmer-Fan: temperaturgesteuert. Tagsueber zusaetzlich Belegung
     (Radar) noetig, in der Schlafenszeit nur Temperatur. Schwelle 23 Grad (Schlaf) bzw.
     25 Grad (sonst). Unabhaengig von der Aussentemperatur.'
@@ -728,18 +735,36 @@
     - action: persistent_notification.create
       data:
         title: "Heizung Status nach Neustart"
-        message: "Heizung ist an aber Timer ist inaktiv. Watchdog prüft alle 15 min. Schalter: {{ switches_on | join(', ') }}"
+        message: "Nach Neustart: Heizung war an, Timer ist abgelaufen oder inaktiv. Schalter wurden ausgeschaltet: {{ switches_on | join(', ') }}"
         notification_id: heizung_restart_check
+    - action: script.turn_off_with_retry
+      data:
+        target_entities: "{{ switches_on }}"
+        retry_delay: 3
+        max_retries: 1
   mode: single
 - id: '1743835898092'
   alias: Helper » Frostwarnung zurücksetzen (jährlich im Mai)
-  description: 'Setzt den Frostwarnung-Status am 1. Mai zurück für die neue Saison'
+  description: 'Setzt den Frostwarnung-Status am 1. Mai oder bei frostfreier Vorhersage zurück'
   triggers:
   - trigger: time
     at: '08:00:00'
+    id: annual-reset
+  - trigger: state
+    entity_id: sensor.fuerth_daily
+    id: forecast-update
   conditions:
-  - condition: template
-    value_template: "{{ now().month == 5 and now().day == 1 }}"
+  - condition: or
+    conditions:
+    - condition: template
+      value_template: "{{ trigger.id == 'annual-reset' and now().month == 5 and now().day == 1 }}"
+    - condition: template
+      value_template: >-
+        {{ trigger.id == 'forecast-update'
+           and is_state('input_boolean.frost_warning_sent', 'on')
+           and states('sensor.fuerth_daily') not in ['unknown', 'unavailable']
+           and (state_attr('sensor.fuerth_daily', 'forecast') or []) | length > 0
+           and (state_attr('sensor.fuerth_daily', 'forecast')[0].templow | float(99)) >= 0 }}
   actions:
   - action: input_boolean.turn_off
     target:
@@ -771,6 +796,10 @@
       entity_id: media_player.appletv
       id: 'praesenz-tv'
     - trigger: state
+      entity_id: input_boolean.alle_sind_weg
+      to: 'on'
+      id: 'away'
+    - trigger: state
       entity_id: sensor.qingping_air_monitor_lite_co2_carbon_dioxide
       to: 'unavailable'
       for: "00:05:00"
@@ -780,13 +809,12 @@
     - condition: template
       value_template: "{{ has_value('fan.schlafzimmer') }}"
     - condition: state
-      entity_id: input_boolean.alle_sind_weg
-      state: 'off'
-    - condition: state
       entity_id: input_boolean.ventilator_schlafzimmer_override
       state: 'off'
   actions:
     - variables:
+        # Physischer Schlafzimmer-Sensor; die Entity-ID bleibt historisch
+        # sensor.arbeitszimmer_temperatur.
         temp: "{{ states('sensor.arbeitszimmer_temperatur') | float(22) }}"
         co2_speed: "{{ states('sensor.fan_speed_schlafzimmer_co2_calculated') | int(0) }}"
         fan_an: "{{ has_value('fan.schlafzimmer') and is_state('fan.schlafzimmer', 'on') }}"
@@ -806,7 +834,8 @@
         # Zielspeed = Maximum aus CO2- und Temperatur-Bedarf. CO2 ist nie an Anwesenheit
         # gekoppelt (CO2 steigt nur, wenn jemand da ist).
         ziel_speed: "{{ [co2_speed, (temp_speed | int if temp_warm else 0)] | max }}"
-        soll_an: "{{ ziel_speed > 0 }}"
+        niemand_zuhause: "{{ is_state('input_boolean.alle_sind_weg', 'on') }}"
+        soll_an: "{{ ziel_speed > 0 and not niemand_zuhause }}"
     - choose:
         # CO2-Sensor ausgefallen: Ventilator ausschalten, ABER nur wenn nicht
         # temperaturbedingt gebraucht (sonst faellt es durch zur soll_an-Logik).
@@ -994,3 +1023,39 @@
   - action: timer.cancel
     target:
       entity_id: timer.ac_override
+
+- id: climate_timer_startup_recovery
+  alias: "Klima » Timer nach Neustart abgleichen"
+  description: "Setzt abgelaufene Klima- und Ventilator-Overrides nach HA-Neustart zurück"
+  mode: single
+  triggers:
+  - trigger: homeassistant
+    event: start
+  actions:
+  - if:
+    - condition: state
+      entity_id: timer.ventilator_override
+      state: idle
+    then:
+    - action: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.ventilator_schlafzimmer_override
+  - if:
+    - condition: state
+      entity_id: timer.ac_override
+      state: idle
+    then:
+    - action: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.ac_override
+  - if:
+    - condition: state
+      entity_id: timer.ac_cleanup
+      state: idle
+    - condition: state
+      entity_id: climate.ac
+      state: fan_only
+    then:
+    - action: climate.turn_off
+      target:
+        entity_id: climate.ac

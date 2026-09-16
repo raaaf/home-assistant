@@ -14,11 +14,7 @@
     - sensor.heizung_wohnzimmer_an
     above: 4
     trigger: numeric_state
-  conditions:
-  - condition: template
-    value_template: >
-      {% set last = state_attr('automation.notifications_heizung_8_stunden', 'last_triggered') %}
-      {{ last is none or (now() - last).total_seconds() > 12 * 60 * 60 }}
+  conditions: []
   actions:
   - variables:
       room_name_raw: "{{ trigger.entity_id | regex_replace('^sensor.heizung_', '') | regex_replace('_an$', '') }}"

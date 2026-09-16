@@ -49,26 +49,26 @@
   mode: single
 - id: '1737546250999'
   alias: Helper » HomeKit Controller Reload bei Verbindungsverlust
-  description: Lädt die HomeKit Controller Integration neu, wenn HomePods oder Apple TVs unavailable werden
+  description: Lädt betroffene HomeKit Controller nach dem Neustart oder bei Verbindungsverlust neu
   triggers:
   - trigger: state
     entity_id:
-    # HomePods (5 Minis + 1 großer)
     - media_player.arbeitszimmer
     - media_player.schlafzimmer
     - media_player.homepod_badezimmer
     - media_player.homepod_kinderzimmer
     - media_player.homepod_wohnzimmer
     - media_player.kuche
-    # Apple TVs (2)
     - media_player.appletv
     - media_player.wohnzimmer
     to: unavailable
     for:
       seconds: 30
-  conditions:
-  - condition: template
-    value_template: "{{ trigger.from_state is not defined or trigger.from_state.state != 'unavailable' }}"
+    id: unavailable
+  - trigger: homeassistant
+    event: start
+    id: startup
+  conditions: []
   variables:
     all_devices:
       - media_player.arbeitszimmer
@@ -81,13 +81,19 @@
       - media_player.wohnzimmer
   actions:
   - choose:
-    - alias: "Manueller Trigger - alle Geräte neu laden"
+    - alias: "Nach Neustart nur problematische Geräte neu laden"
       conditions:
-        - condition: template
-          value_template: "{{ trigger.entity_id is not defined }}"
+      - condition: trigger
+        id: startup
       sequence:
+      - delay:
+          seconds: 30
+      - variables:
+          problem_devices: >-
+            {{ (all_devices | select('is_state', 'unknown') | list)
+               + (all_devices | select('is_state', 'unavailable') | list) }}
       - repeat:
-          for_each: "{{ all_devices | select('has_value') | list }}"
+          for_each: "{{ problem_devices }}"
           sequence:
           - condition: template
             value_template: "{{ device_id(repeat.item) is not none }}"
@@ -100,11 +106,13 @@
       - action: logbook.log
         data:
           name: Apple TV Reload
-          message: "Manueller Trigger - alle Apple TV/HomePod Config Entries neu geladen"
+          message: "Nach Neustart {{ problem_devices | length }} problematische Apple TV/HomePod Config Entries neu geladen"
     default:
-    - alias: "Automatischer Trigger - einzelnes Gerät neu laden"
+    - alias: "Einzelnes nicht verfügbares Gerät neu laden"
       delay:
         seconds: 10
+    - condition: template
+      value_template: "{{ trigger.entity_id is defined and device_id(trigger.entity_id) is not none }}"
     - action: homeassistant.reload_config_entry
       target:
         device_id: "{{ device_id(trigger.entity_id) }}"

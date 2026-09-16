@@ -51,19 +51,16 @@
         state: 'on'
       sequence:
       - alias: Push-Benachrichtigung beim Verlassen
-        if:
-        - condition: template
-          value_template: '{{ has_value(''notify.family'') }}'
-        then:
-        - action: notify.family
+        action: notify.family
+        continue_on_error: true
+        data:
+          title: "Fenster oder Türen noch offen"
+          message: 'Beim Verlassen des Hauses: {{ open_elements }} {% if is_cold_outside
+            %}(Außentemperatur: {{ states(''sensor.temperatur_aussen'') }}°C){% endif
+            %}{% if is_bad_weather %} - Schlechtes Wetter!{% endif %}'
           data:
-            title: "Fenster oder Türen noch offen"
-            message: 'Beim Verlassen des Hauses: {{ open_elements }} {% if is_cold_outside
-              %}(Außentemperatur: {{ states(''sensor.temperatur_aussen'') }}°C){% endif
-              %}{% if is_bad_weather %} - Schlechtes Wetter!{% endif %}'
-            data:
-              priority: high
-              tag: fenster_tueren_verlassen
+            priority: high
+            tag: fenster_tueren_verlassen
       - alias: Verlassen mit offenen Fenstern loggen
         action: logbook.log
         data:
@@ -84,18 +81,15 @@
         value_template: '{{ is_critical_situation }}'
       sequence:
       - alias: Push-Benachrichtigung bei kritischen Bedingungen
-        if:
-        - condition: template
-          value_template: '{{ has_value(''notify.family'') }}'
-        then:
-        - action: notify.family
+        action: notify.family
+        continue_on_error: true
+        data:
+          title: "Fenster oder Türen offen"
+          message: 'Seit 10 Minuten offen: {{ open_elements }}{% if is_cold_outside
+            %} (Außentemperatur: {{ states(''sensor.temperatur_aussen'') }}°C){% endif
+            %}{% if is_bad_weather %} - Schlechtes Wetter!{% endif %}'
           data:
-            title: "Fenster oder Türen offen"
-            message: 'Seit 10 Minuten offen: {{ open_elements }}{% if is_cold_outside
-              %} (Außentemperatur: {{ states(''sensor.temperatur_aussen'') }}°C){% endif
-              %}{% if is_bad_weather %} - Schlechtes Wetter!{% endif %}'
-            data:
-              tag: fenster_tueren_kritisch
+            tag: fenster_tueren_kritisch
       - alias: Kritische Warnung in Logbuch eintragen
         action: logbook.log
         data:
@@ -109,7 +103,7 @@
   alias: System » Zentrale Fehlerbehandlung
   description: Verarbeitet alle Systemfehler zentral und reagiert entsprechend
   triggers:
-  - event_type: home_assistant_error
+  - event_type: system_log_event
     trigger: event
   - entity_id:
     - input_text.fehlerprotokoll
@@ -119,56 +113,66 @@
       and trigger.to_state.state != trigger.from_state.state) }}"
   actions:
   - variables:
-      error_message: "{% if trigger.platform == 'event' %}\n  {{ trigger.event.data.message\
-        \ }}\n{% else %}\n  {{ trigger.to_state.state }}\n{% endif %}\n"
-      error_severity: "{% if trigger.platform == 'event' %}\n  {{ trigger.event.data.severity\
-        \ | default('Warnung') }}\n{% else %}\n  {{ 'Info' }}\n{% endif %}"
-      error_entity: "{% if trigger.platform == 'event' %}\n  {{ trigger.event.data.entity_id\
-        \ | default('unbekannt') }}\n{% else %}\n  {{ trigger.entity_id | default('unbekannt') }}\n{% endif %}"
+      error_message: "{% if trigger.platform == 'event' %}{% set message = trigger.event.data.message | default('Unbekannter Systemfehler') %}{% if message is string %}{{ message }}{% else %}{{ message | join('\\n') }}{% endif %}{% else %}{{ trigger.to_state.state }}{% endif %}"
+      error_severity: "{% if trigger.platform == 'event' %}{{ {'CRITICAL': 'Kritisch', 'ERROR': 'Kritisch', 'WARNING': 'Warnung', 'WARN': 'Warnung'}.get(trigger.event.data.level | default('INFO') | upper, 'Info') }}{% else %}Info{% endif %}"
+      error_entity: "{% if trigger.platform == 'event' %}{{ trigger.event.data.source | default('unbekannt') }}{% else %}{{ trigger.entity_id | default('unbekannt') }}{% endif %}"
+      is_self_generated: >-
+        {% if trigger.platform != 'event' %}
+          false
+        {% else %}
+          {% set details = (
+            (trigger.event.data.message | default('') | string) ~ ' ' ~
+            (trigger.event.data.exception | default('') | string) ~ ' ' ~
+            (trigger.event.data.name | default('') | string) ~ ' ' ~
+            (trigger.event.data.source | default('') | string)
+          ) | lower %}
+          {{ ('system » zentrale fehlerbehandlung' in details
+              or 'automation.system_zentrale_fehlerbehandlung' in details)
+             and ('notify.admin_only' in details or 'logbook.log' in details) }}
+        {% endif %}
+  - condition: template
+    value_template: "{{ not (is_self_generated | bool) }}"
   - data:
       name: Systemfehler
       message: '{{ error_severity }}: {{ error_message }} ({{ error_entity }})'
     action: logbook.log
-  - if:
-      - condition: template
-        value_template: '{{ has_value(''notify.admin_only'') }}'
-    then:
-      - choose:
-          - conditions:
-              - condition: template
-                value_template: "{{ error_severity == 'Kritisch' }}"
-            sequence:
-            - action: notify.admin_only
-              data:
-                title: "Kritischer Fehler"
-                message: '{{ error_message }}'
-                data:
-                  push:
-                    interruption-level: critical
-          - conditions:
-              - condition: template
-                value_template: "{{ error_severity == 'Warnung' }}"
-            sequence:
-            - action: notify.admin_only
-              data:
-                title: "System-Warnung"
-                message: '{{ error_message }}'
-                data:
-                  push:
-                    interruption-level: time-sensitive
-        default:
-          - action: notify.admin_only
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ error_severity == 'Kritisch' }}"
+        sequence:
+        - action: notify.admin_only
+          continue_on_error: true
+          data:
+            title: "Kritischer Fehler"
+            message: '{{ error_message }}'
             data:
-              title: ℹ️ System-Info
-              message: '{{ error_message }}'
-              data:
-                push:
-                  interruption-level: passive
-    else:
-      - action: logbook.log
-        data:
-          name: Benachrichtigung Fehler
-          message: 'Admin notification service nicht verfügbar für Fehler: {{ error_message }}'
+              push:
+                interruption-level: critical
+      - conditions:
+          - condition: template
+            value_template: "{{ error_severity == 'Warnung' }}"
+        sequence:
+        - action: notify.admin_only
+          continue_on_error: true
+          data:
+            title: "System-Warnung"
+            message: '{{ error_message }}'
+            data:
+              push:
+                interruption-level: time-sensitive
+      - conditions:
+          - condition: template
+            value_template: "{{ error_severity == 'Info' }}"
+        sequence:
+        - action: notify.admin_only
+          continue_on_error: true
+          data:
+            title: "System-Info"
+            message: '{{ error_message }}'
+            data:
+              push:
+                interruption-level: passive
   mode: queued
   max: 10
 
@@ -210,15 +214,34 @@
             wait_template: "{{ is_state_attr(triggered_entity, 'in_progress', true) }}"
             timeout: '00:01:00'
             continue_on_timeout: true
-          - alias: Wait up to 1 hour for the OTA upgrade to finish
-            wait_template: "{{ is_state_attr(triggered_entity, 'in_progress', false) }}"
-            timeout: '01:00:00'
-            continue_on_timeout: true
-          - alias: Log completed update
-            action: logbook.log
-            data:
-              name: Z2M OTA Update
-              message: 'Firmware update completed for {{ device_name }}'
+          - alias: Handle OTA start result
+            if:
+              - condition: template
+                value_template: "{{ wait.completed }}"
+            then:
+              - alias: Wait up to 1 hour for the OTA upgrade to finish
+                wait_template: "{{ is_state_attr(triggered_entity, 'in_progress', false) }}"
+                timeout: '01:00:00'
+                continue_on_timeout: true
+              - alias: Log OTA completion result
+                if:
+                  - condition: template
+                    value_template: "{{ wait.completed }}"
+                then:
+                  - action: logbook.log
+                    data:
+                      name: Z2M OTA Update
+                      message: 'Firmware update completed for {{ device_name }}'
+                else:
+                  - action: logbook.log
+                    data:
+                      name: Z2M OTA Update
+                      message: 'Firmware update timed out for {{ device_name }}'
+            else:
+              - action: logbook.log
+                data:
+                  name: Z2M OTA Update
+                  message: 'Firmware update did not start for {{ device_name }}'
 
 - id: '1740930000000'
   alias: System » Adaptive Lighting Settings nach Neustart
@@ -245,114 +268,77 @@
     - alias: AL-Einstellungen für alle Räume setzen
       repeat:
         for_each:
-          - switch.adaptive_lighting_wohnzimmer
-          - switch.adaptive_lighting_kueche
-          - switch.adaptive_lighting_schlafzimmer
-          - switch.adaptive_lighting_kinderzimmer
-          - switch.adaptive_lighting_badezimmer
-          - switch.adaptive_lighting_waschzimmer
-          - switch.adaptive_lighting_arbeitszimmer
-          - switch.adaptive_lighting_ankleide
-          - switch.adaptive_lighting_flur
-          - switch.adaptive_lighting_balkon
+        - schalter: switch.adaptive_lighting_wohnzimmer
+          sleep_brightness: 20
+        - schalter: switch.adaptive_lighting_kueche
+          sleep_brightness: 20
+        - schalter: switch.adaptive_lighting_schlafzimmer
+          sleep_brightness: 1
+        - schalter: switch.adaptive_lighting_kinderzimmer
+          sleep_brightness: 5
+        - schalter: switch.adaptive_lighting_badezimmer
+          sleep_brightness: 10
+        - schalter: switch.adaptive_lighting_waschzimmer
+          sleep_brightness: 20
+        - schalter: switch.adaptive_lighting_arbeitszimmer
+          sleep_brightness: 15
+        - schalter: switch.adaptive_lighting_ankleide
+          sleep_brightness: 20
+        - schalter: switch.adaptive_lighting_flur
+          sleep_brightness: 10
+        - schalter: switch.adaptive_lighting_balkon
+          sleep_brightness: 40
         sequence:
-          - action: adaptive_lighting.change_switch_settings
-            data:
-              entity_id: "{{ repeat.item }}"
-              separate_turn_on_commands: true
-              send_split_delay: 300
-              initial_transition: 2
-              take_over_control_mode: pause_changed
-              adapt_only_on_bare_turn_on: false
-              sleep_rgb_or_color_temp: color_temp
-              sleep_color_temp: 2200
-              sleep_brightness: 5
-              skip_redundant_commands: false
-              include_config_in_attributes: false
-              # Ab hier die Felder, die frueher nur in adaptive_lighting.yaml standen und
-              # damit ausschliesslich im Config Entry lebten. AL liest das YAML nach dem
-              # ersten Import nie wieder, also driftete der Config Entry unbemerkt und nach
-              # jedem Neustart galten rund 30 Sekunden lang alte Werte. Werte stammen aus dem
-              # Snapshot vom 28.08.2026, sind also verhaltensneutral uebernommen.
-              #
-              # WICHTIG, am 28.08.2026 einzeln durchgetestet: `interval` ist das einzige
-              # dieser Felder, das `change_switch_settings` ABLEHNT (switch.py schliesst
-              # interval, name und lights explizit aus). Ein abgelehntes Feld laesst den
-              # GANZEN Aufruf mit "extra keys not allowed" scheitern und damit auch alle
-              # Felder danach, also niemals `interval` hier ergaenzen. Sein Wert (300 s)
-              # lebt allein im Config Entry, nachzulesen im Snapshot unter
-              # docs/plans/snapshots/2026-08-28-al-snapshot.json.
-              # Die Feldliste in services.yaml ist NICHT das Schema, sie beschreibt nur die
-              # UI-Maske: max_sunset_time und andere fehlen dort und funktionieren trotzdem.
-              #
-              # max_brightness steht bewusst nicht hier: das gehoert
-              # "Licht » Tageshelligkeit nach Aussenlicht" (acht Raeume) und den festen
-              # Werten weiter unten (Flur, Ankleide).
-              transition: 10
-              brightness_mode: tanh
-              take_over_control: true
-              intercept: true
-              multi_light_intercept: true
-              min_color_temp: 2200
-              max_color_temp: 4000
-              min_sunrise_time: "05:00:00"
-              max_sunrise_time: "07:00:00"
-              min_sunset_time: "20:00:00"
-              max_sunset_time: "20:30:00"
-              adapt_delay: 1
-              detect_non_ha_changes: false
-              only_once: false
-              prefer_rgb_color: false
-              sleep_transition: 10
-              use_defaults: current
-    - alias: Wohnzimmer Sleep-Helligkeit hoeher (indirektes Licht am Schrank)
-      action: adaptive_lighting.change_switch_settings
-      data:
-        entity_id: switch.adaptive_lighting_wohnzimmer
-        sleep_brightness: 20
-        use_defaults: current
-    - alias: Kueche Sleep-Helligkeit hoeher (wie die Motion-Nachtlichter)
-      action: adaptive_lighting.change_switch_settings
-      data:
-        entity_id: switch.adaptive_lighting_kueche
-        sleep_brightness: 20
-        use_defaults: current
-    - alias: Arbeitszimmer-Slug Sleep-Helligkeit hoeher (Bett/PC, physisch Schlafzimmer)
-      action: adaptive_lighting.change_switch_settings
-      data:
-        entity_id: switch.adaptive_lighting_arbeitszimmer
-        sleep_brightness: 15
-        use_defaults: current
-    - alias: Schlafzimmer-Slug Sleep-Helligkeit minimal (Stehlampe Alex-Arbeitsplatz)
-      action: adaptive_lighting.change_switch_settings
-      data:
-        entity_id: switch.adaptive_lighting_schlafzimmer
-        sleep_brightness: 1
-        use_defaults: current
-    - alias: Badezimmer Sleep-Helligkeit wie Motion-Nachtlichter
-      action: adaptive_lighting.change_switch_settings
-      data:
-        entity_id: switch.adaptive_lighting_badezimmer
-        sleep_brightness: 10
-        use_defaults: current
-    - alias: Flur Sleep-Helligkeit wie Motion-Nachtlichter
-      action: adaptive_lighting.change_switch_settings
-      data:
-        entity_id: switch.adaptive_lighting_flur
-        sleep_brightness: 10
-        use_defaults: current
-    - alias: Kinderzimmer Sleep-Helligkeit niedriger (schlafendes Kind)
-      action: adaptive_lighting.change_switch_settings
-      data:
-        entity_id: switch.adaptive_lighting_kinderzimmer
-        sleep_brightness: 5
-        use_defaults: current
-    - alias: Balkon Sleep-Helligkeit hoeher (aussen, 2200K bei 40%)
-      action: adaptive_lighting.change_switch_settings
-      data:
-        entity_id: switch.adaptive_lighting_balkon
-        sleep_brightness: 40
-        use_defaults: current
+        - action: adaptive_lighting.change_switch_settings
+          continue_on_error: true
+          data:
+            entity_id: "{{ repeat.item.schalter }}"
+            separate_turn_on_commands: true
+            send_split_delay: 300
+            initial_transition: 2
+            take_over_control_mode: pause_changed
+            adapt_only_on_bare_turn_on: false
+            sleep_rgb_or_color_temp: color_temp
+            sleep_color_temp: 2200
+            sleep_brightness: "{{ repeat.item.sleep_brightness }}"
+            skip_redundant_commands: false
+            include_config_in_attributes: false
+            # Ab hier die Felder, die frueher nur in adaptive_lighting.yaml standen und
+            # damit ausschliesslich im Config Entry lebten. AL liest das YAML nach dem
+            # ersten Import nie wieder, also driftete der Config Entry unbemerkt und nach
+            # jedem Neustart galten rund 30 Sekunden lang alte Werte. Werte stammen aus dem
+            # Snapshot vom 28.08.2026, sind also verhaltensneutral uebernommen.
+            #
+            # WICHTIG, am 28.08.2026 einzeln durchgetestet: `interval` ist das einzige
+            # dieser Felder, das `change_switch_settings` ABLEHNT (switch.py schliesst
+            # interval, name und lights explizit aus). Ein abgelehntes Feld laesst den
+            # GANZEN Aufruf mit "extra keys not allowed" scheitern und damit auch alle
+            # Felder danach, also niemals `interval` hier ergaenzen. Sein Wert (300 s)
+            # lebt allein im Config Entry, nachzulesen im Snapshot unter
+            # docs/plans/snapshots/2026-08-28-al-snapshot.json.
+            # Die Feldliste in services.yaml ist NICHT das Schema, sie beschreibt nur die
+            # UI-Maske: max_sunset_time und andere fehlen dort und funktionieren trotzdem.
+            #
+            # max_brightness steht bewusst nicht hier: das gehoert
+            # "Licht » Tageshelligkeit nach Aussenlicht" (acht Raeume) und den festen
+            # Werten weiter unten (Flur, Ankleide).
+            transition: 10
+            brightness_mode: tanh
+            take_over_control: true
+            intercept: true
+            multi_light_intercept: true
+            min_color_temp: 2200
+            max_color_temp: 4000
+            min_sunrise_time: "05:00:00"
+            max_sunrise_time: "07:00:00"
+            min_sunset_time: "20:00:00"
+            max_sunset_time: "20:30:00"
+            adapt_delay: 1
+            detect_non_ha_changes: false
+            only_once: false
+            prefer_rgb_color: false
+            sleep_transition: 10
+            use_defaults: current
     - alias: "transition_until_sleep: ueberall an, nur der Balkon aus (aussen, kein Uebergang noetig)"
       repeat:
         for_each:
@@ -395,18 +381,6 @@
         entity_id: switch.adaptive_lighting_ankleide
         max_brightness: 100
         use_defaults: current
-    - alias: Ankleide Sleep-Helligkeit (greift nur falls Sleep Mode dort je aktiviert wird)
-      action: adaptive_lighting.change_switch_settings
-      data:
-        entity_id: switch.adaptive_lighting_ankleide
-        sleep_brightness: 20
-        use_defaults: current
-    - alias: Waschzimmer Sleep-Helligkeit hoeher (nachts besser sichtbar)
-      action: adaptive_lighting.change_switch_settings
-      data:
-        entity_id: switch.adaptive_lighting_waschzimmer
-        sleep_brightness: 20
-        use_defaults: current
     - alias: Abschluss loggen
       action: logbook.log
       data:
@@ -416,7 +390,7 @@
           separate_turn_on_commands=true, send_split_delay=300, initial_transition=2,
           take_over_control_mode=pause_changed, adapt_only_on_bare_turn_on=false,
           skip_redundant_commands=false, include_config_in_attributes=false,
-          sleep_color_temp=2200 @ sleep_brightness=5 (Balkon 40, Kueche/Wohnzimmer/Waschzimmer/Ankleide 20, Bett 15, Bad/Flur 10, Kinderzimmer 5, Stehlampe 1),
+          sleep_color_temp=2200 @ raumbezogener sleep_brightness (Balkon 40, Kueche/Wohnzimmer/Waschzimmer/Ankleide 20, Bett 15, Bad/Flur 10, Kinderzimmer 5, Stehlampe 1),
           dazu 16 gemeinsame Felder (transition, brightness_mode, take_over_control, intercept,
           multi_light_intercept, Farbtemperaturen, Sonnenzeiten, adapt_delay, sleep_transition)
           sowie min_brightness, autoreset_control_seconds und transition_until_sleep je Raumgruppe.

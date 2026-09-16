@@ -23,11 +23,18 @@
     below: 20
     id: sensoren
   conditions:
-  - alias: "Nicht öfter als alle 12 Stunden triggern"
+  - alias: "Je Wartungstyp höchstens alle 12 Stunden melden"
     condition: template
     value_template: >-
-      {% set last = state_attr('automation.notifications_robbi', 'last_triggered') %}
-      {{ last is none or (now() - last).total_seconds() > 43200 }}
+      {% set entities = {
+        'hauptbueste': 'persistent_notification.robbi_hauptbuerste',
+        'seitenbueste': 'persistent_notification.robbi_seitenbuerste',
+        'filter': 'persistent_notification.robbi_filter',
+        'sensoren': 'persistent_notification.robbi_sensoren'
+      } %}
+      {% set entity_id = entities.get(trigger.id) %}
+      {% set item = states[entity_id] if entity_id else none %}
+      {{ item is none or (now() - item.last_updated).total_seconds() > 43200 }}
   - alias: "Robbi ist verfügbar (nicht unbekannt/unavailable)"
     condition: template
     value_template: >-

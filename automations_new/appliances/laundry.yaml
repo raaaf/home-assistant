@@ -86,16 +86,46 @@
       - condition: trigger
         id: aus
       sequence:
-      - action: input_select.select_option
-        target:
-          entity_id: input_select.waschmaschine
-        data:
-          option: "Aus"
-      
-      # Persistent notification entfernen wenn vorhanden
-      - action: persistent_notification.dismiss
-        data:
-          notification_id: "waschmaschine_fertig"
+      - choose:
+        - conditions:
+          - condition: state
+            entity_id: input_select.waschmaschine
+            state: "Arbeitet"
+          sequence:
+          - action: input_select.select_option
+            target:
+              entity_id: input_select.waschmaschine
+            data:
+              option: "Fertig"
+          - parallel:
+            - action: notify.rafael
+              data:
+                title: "Waschmaschine ist fertig"
+                message: "Fertig um {{ now().strftime('%H:%M Uhr') }}"
+                data:
+                  push:
+                    interruption-level: critical
+            - action: notify.alex
+              data:
+                title: "Waschmaschine ist fertig"
+                message: "Fertig um {{ now().strftime('%H:%M Uhr') }}"
+                data:
+                  push:
+                    interruption-level: critical
+            - action: persistent_notification.create
+              data:
+                title: "Waschmaschine ist fertig"
+                message: "Fertig um {{ now().strftime('%H:%M Uhr') }}. Bitte die Wäsche aufhängen."
+                notification_id: waschmaschine_fertig
+        default:
+        - action: input_select.select_option
+          target:
+            entity_id: input_select.waschmaschine
+          data:
+            option: "Aus"
+        - action: persistent_notification.dismiss
+          data:
+            notification_id: "waschmaschine_fertig"
     
     default:
     # Fallback: nur Log-Eintrag statt Benachrichtigung

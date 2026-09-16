@@ -82,7 +82,7 @@
   unique_id: alle_schlafzimmer_lichter
   name: Alle Arbeitszimmer Alex Lichter
   entities:
-    # Schlafzimmer Decke (2 lights)
+    # Arbeitszimmer Decke (2 lights)
     - light.ikea_light_16_1
     - light.ikea_light_17_2
     # Stehlampe (nach Umbau hier: Alex-Arbeitsplatz)
@@ -112,10 +112,10 @@
   entities:
     # Individual light
     - light.ikea_light_03
-    # Arbeitszimmer PC (2 lights)
+    # Schlafzimmer PC (2 lights, entity IDs retain their historical names)
     - light.philips_light_01_pc_1
     - light.philips_light_02_pc_2
-    # Bett + TV (nach Umbau hier: Schlafplatz)
+    # Bett + TV (Schlafzimmer)
     - light.philips_light_15_bett
     - light.philips_light_16_tv
 
@@ -273,9 +273,9 @@
   unique_id: alle_arbeitszimmer_nachtlichter
   name: Alle Schlafzimmer Nachtlichter
   entities:
-    # Bett (nach Umbau hier: Schlafplatz, weiches Nachtlicht)
+    # Bett (Schlafzimmer, weiches Nachtlicht)
     - light.philips_light_15_bett
-    # PC-Lichter (nach Umbau hier: Schlafplatz)
+    # PC-Lichter (Schlafzimmer, entity IDs retain their historical names)
     - light.philips_light_01_pc_1
     - light.philips_light_02_pc_2
 

@@ -75,43 +75,11 @@
       level: info
   - if:
     - condition: template
-      value_template: '{{ unknown_devices | selectattr(''entity_id'', ''match'', ''.*_motion_.*|.*_kontaktsensor_.*'')
-        | list | length > 0 }}
-
-        '
+      value_template: '{{ unknown_devices | selectattr(''entity_id'', ''match'', ''.*_motion_.*|.*_kontaktsensor_.*'') | list | length > 0 }}'
     then:
-    - action: system_log.write
-      data:
-        message: "ZHA permit mode activated for unknown motion/contact sensors (60s)"
-        level: warning
-    - action: zha.permit
-      data:
-        duration: 10
-    - delay: 00:00:02
     - action: homeassistant.update_entity
       target:
-        entity_id: "{{ unknown_devices \n   | selectattr('entity_id', 'match', '.*_motion_.*|.*_kontaktsensor_.*')\
-          \ \n   | map(attribute='entity_id') \n   | list }}\n"
-  - if:
-    - condition: template
-      value_template: '{{ unknown_devices | selectattr(''entity_id'', ''match'', ''light\.alle_.*'')
-        | list | length > 0 }}
-
-        '
-    then:
-    - action: group.reload
-    - delay: 00:00:02
-    - action: light.turn_on
-      target:
-        entity_id: "{{ unknown_devices \n   | selectattr('entity_id', 'match', 'light\\\
-          .alle_.*') \n   | map(attribute='entity_id') \n   | list }}\n"
-      data:
-        brightness: 1
-    - delay: 00:00:01
-    - action: light.turn_off
-      target:
-        entity_id: "{{ unknown_devices \n   | selectattr('entity_id', 'match', 'light\\\
-          .alle_.*') \n   | map(attribute='entity_id') \n   | list }}\n"
+        entity_id: "{{ unknown_devices | selectattr('entity_id', 'match', '.*_motion_.*|.*_kontaktsensor_.*') | map(attribute='entity_id') | list }}"
   - if:
     - condition: template
       value_template: '{{ unknown_devices | selectattr(''domain'', ''eq'', ''cover'')
@@ -135,8 +103,7 @@
     - condition: template
       value_template: "{{ (now() - states.sensor.luftfeuchtigkeit_aussen.last_changed).total_seconds() > 300 }}"
     - condition: template
-      value_template: " {% set last = state_attr('automation.helper_fix_unknown_devices',\
-        \ 'last_triggered') %}\n    {{ last is none or (now() - last).total_seconds()\
+      value_template: " {% set last = this.attributes.last_triggered %}\n    {{ last is none or (now() - last).total_seconds()\
         \ > 3600 }}"
     then:
     - action: system_log.write
@@ -162,10 +129,10 @@
       to: 'on'
       id: door_opened
       trigger: state
-    - entity_id: binary_sensor.aqara_contact_04
+    - entity_id: input_boolean.alle_sind_weg
       from: 'on'
       to: 'off'
-      id: door_closed
+      id: resident_returned
       trigger: state
   conditions: []
   actions:
@@ -194,30 +161,30 @@
                     entity_id: input_datetime.haustur_eingang_zeit
                   data:
                     datetime: "{{ aktueller_zeitstempel }}"
-                - action: input_datetime.set_datetime
-                  target:
-                    entity_id: input_datetime.haustur_letzter_eingang
-                  data:
-                    datetime: "{{ aktueller_zeitstempel }}"
-                - action: script.notify_critical
-                  data:
-                    tag: door_security
-                    group: security_alerts
-                    title: "SICHERHEITSALARM, Haustür geöffnet"
-                    message: >
-                      Die Haustür wurde um {{ formatierte_zeit }} geöffnet,
-                      obwohl niemand zuhause ist!
-                - action: system_log.write
-                  data:
-                    message: >
-                      SECURITY: Haustür geöffnet bei Abwesenheit um {{ aktueller_zeitstempel }}
-                    level: warning
-        - alias: "Tür schließt sich - Besucher verlässt Haus"
+            - action: input_datetime.set_datetime
+              target:
+                entity_id: input_datetime.haustur_letzter_eingang
+              data:
+                datetime: "{{ aktueller_zeitstempel }}"
+            - action: script.notify_critical
+              data:
+                tag: door_security
+                group: security_alerts
+                title: "SICHERHEITSALARM, Haustür geöffnet"
+                message: >
+                  Die Haustür wurde um {{ formatierte_zeit }} geöffnet,
+                  obwohl niemand zuhause ist!
+            - action: system_log.write
+              data:
+                message: >
+                  SECURITY: Haustür geöffnet bei Abwesenheit um {{ aktueller_zeitstempel }}
+                level: warning
+        - alias: "Bewohner kommt zurück - Besuchsüberwachung beenden"
           conditions:
             - condition: trigger
-              id: door_closed
+              id: resident_returned
             - condition: template
-              value_template: "{{ beide_weg and besucher_inside }}"
+              value_template: "{{ besucher_inside }}"
           sequence:
             - variables:
                 eingang_zeit: "{{ states('input_datetime.haustur_eingang_zeit') }}"
@@ -244,7 +211,7 @@
             - action: system_log.write
               data:
                 message: >
-                  SECURITY: Besucher hat Haus verlassen. Dauer: {{ formatierte_dauer }}
+                  SECURITY: Besuchsüberwachung durch Rückkehr eines Bewohners beendet. Dauer seit Türöffnung: {{ formatierte_dauer }}
                 level: info
         - alias: "Tür öffnet sich - jemand kommt nach Hause"
           conditions:
@@ -282,11 +249,7 @@
     for:
       minutes: 30
     trigger: state
-  conditions:
-  - condition: template
-    value_template: >
-      {% set last = state_attr('automation.notification_bewegungsmelder_ausgefallen', 'last_triggered') %}
-      {{ last is none or (now() - last).total_seconds() > 3600 }}
+  conditions: []
   actions:
   - variables:
       sensor_name: '{{ trigger.to_state.name }}'
@@ -315,6 +278,57 @@
       domain: automation
   mode: queued
   max: 10
+- id: '1754557053146'
+  alias: Helper » Bewegungsmelder-Recovery nach Neustart
+  description: Meldet kritische Bewegungsmelder, die beim Start oder Reconcile länger als 30 Minuten nicht verfügbar sind
+  triggers:
+  - trigger: homeassistant
+    event: start
+  - trigger: time_pattern
+    minutes: "/30"
+  variables:
+    stale_sensors: >
+      {% set cutoff = now() - timedelta(minutes=30) %}
+      {{ expand([
+        'binary_sensor.ikea_motion_09',
+        'binary_sensor.ikea_motion_03_occupancy',
+        'binary_sensor.ikea_motion_07',
+        'binary_sensor.ikea_motion_06',
+        'binary_sensor.tuya_motion_03_motion_presence',
+        'binary_sensor.tuya_motion_02_presence',
+        'binary_sensor.tuya_motion_01_presence',
+        'binary_sensor.ikea_motion_02'
+      ]) | selectattr('state', 'in', ['unavailable', 'unknown'])
+         | selectattr('last_changed', 'lt', cutoff)
+         | map(attribute='entity_id') | list }}
+  conditions:
+  - condition: template
+    value_template: "{{ stale_sensors | count > 0 }}"
+  actions:
+  - repeat:
+      for_each: "{{ stale_sensors }}"
+      sequence:
+      - variables:
+          sensor_id: "{{ repeat.item }}"
+          sensor_name: "{{ state_attr(repeat.item, 'friendly_name') or repeat.item }}"
+          duration: "{{ relative_time(states[repeat.item].last_changed) }}"
+      - parallel:
+        - action: script.notify_critical
+          data:
+            tag: motion_sensor_failure
+            group: system_alerts
+            title: "Bewegungsmelder ausgefallen"
+            message: "{{ sensor_name }} ist seit {{ duration }} nicht verfügbar ({{ sensor_id }})"
+        - action: persistent_notification.create
+          data:
+            title: "Bewegungsmelder ausgefallen, {{ sensor_name }}"
+            message: >
+              Sensor: {{ sensor_name }} ({{ sensor_id }})
+              Status: {{ states(repeat.item) }}
+              Ausgefallen seit: {{ duration }}
+              Bitte prüfen: Batterie, Zigbee-Verbindung, Position
+            notification_id: "motion_sensor_{{ sensor_id | replace('.', '_') }}"
+  mode: single
 - id: 'appletv_wohnzimmer_watchdog'
   alias: Helper » AppleTV Wohnzimmer Watchdog
   description: >-
@@ -331,12 +345,19 @@
   - trigger: time_pattern
     minutes: "/30"
     id: check
+  - trigger: homeassistant
+    event: start
+    id: startup
   conditions:
   - condition: state
     entity_id: input_boolean.movie
     state: 'on'
   - condition: template
     value_template: "{{ states('media_player.wohnzimmer') in ['off', 'unavailable', 'unknown'] }}"
+  - condition: template
+    value_template: >
+      {{ trigger.id != 'startup' or
+         as_timestamp(now()) - as_timestamp(states.media_player.wohnzimmer.last_changed, 0) >= 300 }}
   - alias: "Denon spielt vom AppleTV-Eingang"
     condition: template
     value_template: "{{ state_attr('media_player.denon_avr_x3200w', 'source') == 'CBL/SAT' }}"
@@ -353,6 +374,44 @@
       title: "AppleTV Watchdog"
       message: "AppleTV-Wohnzimmer-Verbindung war waehrend Movie-Mode eingefroren und wurde neu geladen."
       notification_id: appletv_watchdog
+  mode: single
+- id: 'homepod_unavailable_recovery'
+  alias: Helper » HomePod-Recovery nach Neustart
+  description: Lädt beim Start oder Reconcile HomePod-Config-Entries neu, die länger als 15 Minuten nicht verfügbar sind
+  triggers:
+  - trigger: homeassistant
+    event: start
+  - trigger: time_pattern
+    minutes: "/15"
+  variables:
+    stale_homepods: >
+      {% set cutoff = now() - timedelta(minutes=15) %}
+      {{ expand([
+        'media_player.homepod_wohnzimmer',
+        'media_player.homepod_badezimmer',
+        'media_player.homepod_kinderzimmer',
+        'media_player.arbeitszimmer',
+        'media_player.schlafzimmer',
+        'media_player.kuche'
+      ]) | selectattr('state', 'eq', 'unavailable')
+         | selectattr('last_changed', 'lt', cutoff)
+         | map(attribute='entity_id') | list }}
+  conditions:
+  - condition: template
+    value_template: "{{ stale_homepods | count > 0 }}"
+  actions:
+  - repeat:
+      for_each: "{{ stale_homepods }}"
+      sequence:
+      - action: homeassistant.reload_config_entry
+        continue_on_error: true
+        target:
+          entity_id: "{{ repeat.item }}"
+      - action: logbook.log
+        data:
+          name: HomePod-Recovery
+          message: "{{ repeat.item }} war beim Start länger als 15 Minuten unavailable, Config-Entry neu geladen."
+          domain: automation
   mode: single
 - id: 'homepod_unavailable_watchdog'
   alias: Helper » HomePod Watchdog

@@ -11,13 +11,21 @@
     - trigger: numeric_state
       entity_id: sensor.einspeisung
       above: 200
+      id: einspeisung-hoch
       for:
         minutes: 5
     - trigger: numeric_state
       entity_id: sensor.stream_ac_pro_3683_power_battery_2
       above: 94
+      id: batterie-voll
       for:
         minutes: 2
+    - trigger: homeassistant
+      event: start
+      id: reconcile
+    - trigger: time_pattern
+      minutes: "/15"
+      id: reconcile
   conditions:
     - condition: numeric_state
       entity_id: sensor.stream_ac_pro_3683_power_battery_2
@@ -34,6 +42,11 @@
     - condition: time
       after: '08:00:00'
       before: '21:00:00'
+    - condition: template
+      value_template: >
+        {{ trigger.id != 'reconcile' or
+           (as_timestamp(now()) - as_timestamp(states.sensor.einspeisung.last_changed, 0) >= 300 and
+            as_timestamp(now()) - as_timestamp(states.sensor.stream_ac_pro_3683_power_battery_2.last_changed, 0) >= 120) }}
     - condition: template
       value_template: >
         {% set last = state_attr('automation.notification_stromuberschuss_gerate_einschalten', 'last_triggered') %}
@@ -94,15 +107,29 @@
     - trigger: numeric_state
       entity_id: sensor.einspeisung
       below: 100
+      id: einspeisung-niedrig
       for:
         minutes: 5
-      id: einspeisung-niedrig
     - trigger: numeric_state
       entity_id: sensor.stream_ac_pro_3683_power_battery_2
       below: 90
+      id: batterie-entladen
       for:
         minutes: 2
-      id: batterie-entladen
+    - trigger: homeassistant
+      event: start
+      id: reconcile
+    - trigger: time_pattern
+      minutes: "/15"
+      id: reconcile
+  conditions:
+    - condition: template
+      value_template: >
+        {{ trigger.id != 'reconcile' or
+           ((states('sensor.einspeisung') | float(0) < 100 and
+             as_timestamp(now()) - as_timestamp(states.sensor.einspeisung.last_changed, 0) >= 300) or
+            (states('sensor.stream_ac_pro_3683_power_battery_2') | float(0) < 90 and
+             as_timestamp(now()) - as_timestamp(states.sensor.stream_ac_pro_3683_power_battery_2.last_changed, 0) >= 120)) }}
   actions:
     - action: persistent_notification.dismiss
       data:

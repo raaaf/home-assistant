@@ -74,6 +74,10 @@
         - conditions:
             - condition: trigger
               id: schlafenszeit-an
+            - alias: Schlafenszeit-Lautstaerke nur ohne aktive Szene setzen
+              condition: state
+              entity_id: binary_sensor.any_scene_active
+              state: 'off'
           sequence:
             - parallel:
                 - action: script.fade_volume
@@ -218,6 +222,10 @@
             - condition: trigger
               id: kochen-aus
           sequence:
+            - condition: template
+              value_template: >
+                {{ is_state('input_boolean.party', 'off') and
+                   is_state('input_boolean.party_wohnzimmer', 'off') }}
             - if:
                 - condition: state
                   entity_id: input_boolean.schlafenszeit
@@ -283,6 +291,10 @@
             - condition: trigger
               id: essen-aus
           sequence:
+            - condition: template
+              value_template: >
+                {{ is_state('input_boolean.party', 'off') and
+                   is_state('input_boolean.party_wohnzimmer', 'off') }}
             - if:
                 - condition: state
                   entity_id: input_boolean.schlafenszeit
@@ -350,6 +362,10 @@
             - condition: trigger
               id: baden-aus
           sequence:
+            - condition: template
+              value_template: >
+                {{ is_state('input_boolean.party', 'off') and
+                   is_state('input_boolean.sauna', 'off') }}
             - if:
                 - condition: state
                   entity_id: input_boolean.schlafenszeit
@@ -416,6 +432,8 @@
             - condition: trigger
               id: sauna-aus
           sequence:
+            - condition: template
+              value_template: "{{ is_state('input_boolean.party', 'off') and is_state('input_boolean.baden', 'off') }}"
             - if:
                 - condition: state
                   entity_id: input_boolean.schlafenszeit
@@ -513,6 +531,8 @@
             - condition: trigger
               id: party-wz-aus
           sequence:
+            - condition: template
+              value_template: "{{ is_state('input_boolean.party', 'off') }}"
             - if:
                 - condition: state
                   entity_id: input_boolean.schlafenszeit
@@ -719,6 +739,8 @@
             - condition: trigger
               id: party-aus
           sequence:
+            - condition: template
+              value_template: "{{ is_state('input_boolean.party_wohnzimmer', 'off') }}"
             - if:
                 - condition: state
                   entity_id: input_boolean.schlafenszeit
@@ -828,5 +850,4 @@
                   data:
                     volume_level: >
                       {{ states('input_number.saved_volume_schlafzimmer') | float(0.30) }}
-  mode: queued
-  max: 4
+  mode: restart

@@ -158,7 +158,9 @@
         - alias: "Deaktiviere Flur-Motion"
           action: automation.turn_off
           target:
-            entity_id: automation.motion_flur_wohnung
+            entity_id:
+            - automation.motion_flur_wohnung
+            - automation.motion_haustur_flur
       - alias: "Leselicht wiederherstellen falls aktiv"
         action: script.restore_leselicht
       - alias: "Ambilight mit Retry einschalten (HyperHDR-Verbindung bricht beim Filmstart oft kurz ab)"
@@ -188,6 +190,14 @@
           entity_id: input_boolean.movie
         data: {}
         action: input_boolean.turn_off
+      - alias: "Keine niedrigere Film-Bereinigung waehrend einer aktiven Szene"
+        condition: template
+        value_template: >-
+          {{ is_state('input_boolean.kochen', 'off') and
+             is_state('input_boolean.abwaschen', 'off') and
+             is_state('input_boolean.essen', 'off') and
+             is_state('input_boolean.party', 'off') and
+             is_state('input_boolean.party_wohnzimmer', 'off') }}
       - alias: "Brightness-Reset, immer, mit dem zur Tageszeit passenden Minimum"
         # Frueher lief dieser Reset nur ausserhalb der Schlafenszeit. Endete ein Film nach
         # 23 Uhr, blieben Wohnzimmer und Kueche auf min_brightness 5 und max_brightness 40
@@ -294,6 +304,11 @@
           action: light.turn_on
       - alias: "Motion-Automationen wiederherstellen"
         action: script.movie_motion_restore
+      - alias: "Haustür-Flur-Motion wiederherstellen"
+        action: script.scene_enable_motion_automations
+        data:
+          automations: "automation.motion_haustur_flur"
+          exclude_scenes: "party,party_wohnzimmer"
   mode: restart
 - id: 'movie_off_motion_restore'
   alias: Wohnzimmer » Film Ende Motion-Wiederherstellung
@@ -308,6 +323,10 @@
     to: 'off'
   actions:
   - action: script.movie_motion_restore
+  - action: script.scene_enable_motion_automations
+    data:
+      automations: "automation.motion_haustur_flur"
+      exclude_scenes: "party,party_wohnzimmer"
   mode: single
 - id: '1671133998236'
   alias: Wohnzimmer » Weihnachtsbaum
@@ -815,6 +834,12 @@
     for:
       minutes: 5
     id: humidity-high
+  - trigger: numeric_state
+    entity_id: sensor.zhimi_vb4_bce4_relative_humidity
+    below: 60
+    for:
+      minutes: 5
+    id: humidity-low
   - trigger: state
     entity_id:
     - binary_sensor.aqara_contact_08
@@ -908,6 +933,21 @@
           below: 65
         - condition: template
           value_template: "{{ not has_value('sensor.zhimi_vb4_bce4_relative_humidity') }}"
+      sequence:
+      - action: fan.turn_off
+        target:
+          entity_id: fan.zhimi_vb4_bce4_air_purifier
+
+    - alias: "Feuchtigkeit wieder normal — ausschalten"
+      conditions:
+      - condition: trigger
+        id: humidity-low
+      - condition: state
+        entity_id: fan.zhimi_vb4_bce4_air_purifier
+        state: 'on'
+      - condition: numeric_state
+        entity_id: sensor.zhimi_vb4_bce4_pm25_density
+        below: 20
       sequence:
       - action: fan.turn_off
         target:

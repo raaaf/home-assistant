@@ -89,6 +89,10 @@
     - conditions:
       - condition: trigger
         id: 'off'
+      - condition: template
+        value_template: >
+          {{ is_state('input_boolean.baden', 'off') and
+             is_state('input_boolean.party', 'off') }}
       sequence:
       - alias: "Hue-Effekt stoppen und Lichter ausschalten"
         action: script.scene_stop_rgb_effect
@@ -160,6 +164,10 @@
     - conditions:
       - condition: trigger
         id: 'off'
+      - condition: template
+        value_template: >
+          {{ is_state('input_boolean.sauna', 'off') and
+             is_state('input_boolean.party', 'off') }}
       sequence:
       - alias: "Hue-Effekt stoppen und Lichter ausschalten"
         action: script.scene_stop_rgb_effect

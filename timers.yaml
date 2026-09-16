@@ -7,13 +7,16 @@ ventilator_override:
   name: "Ventilator Override Timer"
   duration: "02:00:00"
   icon: mdi:timer-outline
+  restore: true
 
 ac_override:
   name: "AC Override Timer"
   duration: "02:00:00"
   icon: mdi:timer-outline
+  restore: true
 
 ac_cleanup:
   name: "AC Reinigungslauf Timer"
   duration: "00:30:00"
   icon: mdi:fan-clock
+  restore: true

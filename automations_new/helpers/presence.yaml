@@ -197,18 +197,6 @@
     to: 'off'
     id: alle-da
   - trigger: state
-    entity_id: lock.nuki_wohnungstur_lock
-    to: locked
-    for: 00:15:00
-    id: locked
-  - trigger: state
-    entity_id: lock.nuki_wohnungstur_lock
-    to: unlocked
-    id: unlocked
-  - trigger: time
-    at: '22:00:00'
-    id: nightmode_lock
-  - trigger: state
     entity_id: timer.timer_fur_automatisches_turverschliessen
     from: active
     to: idle
@@ -654,8 +642,10 @@
         action: script.lock_wohnungstuer_safe
         data:
           context_message: "nach Gast-Modus"
-  mode: single
-  max_exceeded: silent
+  # The welcome flow contains several waits. Queue new triggers so runs stay
+  # serialized while they are not silently discarded.
+  mode: queued
+  max: 10
 - id: 'yeelight_steckdose_einschalten_abfangen'
   alias: Licht » Yeelight nach Steckdose aus
   description: >-

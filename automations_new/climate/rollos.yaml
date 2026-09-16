@@ -13,16 +13,8 @@
     attribute: elevation
     above: 0
   - entity_id: sensor.sun_azimuth
-    above: 135
-    id: sonne-suedost
-    trigger: numeric_state
-  - entity_id: sensor.sun_azimuth
     above: 180
     id: sonne-sued
-    trigger: numeric_state
-  - entity_id: sensor.sun_azimuth
-    above: 225
-    id: sonne-suedwest
     trigger: numeric_state
   - trigger: numeric_state
     entity_id: sun.sun
@@ -33,6 +25,9 @@
     to: 'on'
     id: schlafenszeit
     trigger: state
+  - trigger: homeassistant
+    event: start
+    id: startup
   conditions: []
   actions:
   - variables:
@@ -44,6 +39,52 @@
       # Gaming und AppleTV halten das Schlafzimmer-Rollo zu (entertainment.yaml, schlafzimmer.yaml).
       rollo_01_frei: "{{ is_state('input_boolean.gaming', 'off') and not is_state('media_player.appletv', 'playing') }}"
   - choose:
+    - alias: "Beim Start aktuellen Sonnenstand wiederherstellen"
+      conditions:
+      - condition: trigger
+        id: startup
+      sequence:
+      - choose:
+        - conditions:
+          - condition: template
+            value_template: "{{ is_state('input_boolean.schlafenszeit', 'on') or (state_attr('sun.sun', 'elevation') | float(-90)) < -4 }}"
+          sequence:
+          - action: cover.close_cover
+            target:
+              entity_id:
+              - cover.rollos_sonnenaufgang
+              - cover.aqara_cover_03
+          - action: cover.open_cover
+            target:
+              entity_id:
+              - cover.rollo_balkon
+              - cover.rollo_kueche
+              - cover.aqara_cover_04
+        - conditions:
+          - condition: template
+            value_template: "{{ (state_attr('sun.sun', 'elevation') | float(-90)) > 0 }}"
+          sequence:
+          - action: cover.open_cover
+            target:
+              entity_id:
+              - cover.aqara_cover_02
+          - if:
+            - condition: template
+              value_template: '{{ rollo_01_frei }}'
+            then:
+            - action: cover.open_cover
+              target:
+                entity_id: cover.aqara_cover_01
+          - if:
+            - condition: template
+              value_template: '{{ wird_sehr_heiss or wird_heiss }}'
+            then:
+            - action: cover.set_cover_position
+              data:
+                position: '{{ position_west }}'
+              target:
+                entity_id: cover.aqara_cover_04
+              continue_on_error: true
     # Morgens: Kinderzimmer + Schlafzimmer (= cover.aqara_cover_01, Bett-Raum)
     # voll auf. Das Buero (Alex, = cover.aqara_cover_03) bleibt zu und wird nur
     # noch manuell geoeffnet.
