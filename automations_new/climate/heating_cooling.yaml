@@ -1052,9 +1052,8 @@
     - condition: state
       entity_id: timer.ac_cleanup
       state: idle
-    - condition: state
-      entity_id: climate.ac
-      state: fan_only
+    - condition: template
+      value_template: "{{ has_value('climate.ac') and is_state('climate.ac', 'fan_only') }}"
     then:
     - action: climate.turn_off
       target:
