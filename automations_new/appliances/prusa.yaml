@@ -197,6 +197,8 @@
           - stopped
           - error
           - ready
+          - unavailable
+          - unknown
         then:
         - action: switch.turn_off
           target:

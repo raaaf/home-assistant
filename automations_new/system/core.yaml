@@ -101,7 +101,10 @@
             '
 - id: '1740754575040'
   alias: System » Zentrale Fehlerbehandlung
-  description: Verarbeitet alle Systemfehler zentral und reagiert entsprechend
+  description: >-
+    Schreibt Warnungen und Fehler aus dem System-Log ins Logbuch. Nur Logbuch,
+    keine Pushes. Bekanntes Verbindungsrauschen (Cowboy, Denon, AppleTV, MQTT)
+    wird ausgefiltert.
   triggers:
   - event_type: system_log_event
     trigger: event
@@ -128,51 +131,27 @@
           ) | lower %}
           {{ ('system » zentrale fehlerbehandlung' in details
               or 'automation.system_zentrale_fehlerbehandlung' in details)
-             and ('notify.admin_only' in details or 'logbook.log' in details) }}
+             and 'logbook.log' in details }}
         {% endif %}
-  - condition: template
-    value_template: "{{ not (is_self_generated | bool) }}"
+      ist_rauschen: >-
+        {% if trigger.platform != 'event' %}
+          false
+        {% else %}
+          {% set details = (
+            (trigger.event.data.message | default('') | string) ~ ' ' ~
+            (trigger.event.data.source | default('') | string)
+          ) | lower %}
+          {{ details is search(
+               'cowboy api|denon avr receiver|connection (lost to|was re-established to)|'
+               ~ 'mqtt disconnect|connection reset by peer|is available again') }}
+        {% endif %}
+  - alias: "Eigene Meldungen und bekanntes Verbindungsrauschen ignorieren"
+    condition: template
+    value_template: "{{ not (is_self_generated | bool) and not (ist_rauschen | bool) }}"
   - data:
       name: Systemfehler
       message: '{{ error_severity }}: {{ error_message }} ({{ error_entity }})'
     action: logbook.log
-  - choose:
-      - conditions:
-          - condition: template
-            value_template: "{{ error_severity == 'Kritisch' }}"
-        sequence:
-        - action: notify.admin_only
-          continue_on_error: true
-          data:
-            title: "Kritischer Fehler"
-            message: '{{ error_message }}'
-            data:
-              push:
-                interruption-level: critical
-      - conditions:
-          - condition: template
-            value_template: "{{ error_severity == 'Warnung' }}"
-        sequence:
-        - action: notify.admin_only
-          continue_on_error: true
-          data:
-            title: "System-Warnung"
-            message: '{{ error_message }}'
-            data:
-              push:
-                interruption-level: time-sensitive
-      - conditions:
-          - condition: template
-            value_template: "{{ error_severity == 'Info' }}"
-        sequence:
-        - action: notify.admin_only
-          continue_on_error: true
-          data:
-            title: "System-Info"
-            message: '{{ error_message }}'
-            data:
-              push:
-                interruption-level: passive
   mode: queued
   max: 10
 

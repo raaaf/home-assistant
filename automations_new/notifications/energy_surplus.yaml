@@ -23,9 +23,6 @@
     - trigger: homeassistant
       event: start
       id: reconcile
-    - trigger: time_pattern
-      minutes: "/15"
-      id: reconcile
   conditions:
     - condition: numeric_state
       entity_id: sensor.stream_ac_pro_3683_power_battery_2
@@ -42,11 +39,6 @@
     - condition: time
       after: '08:00:00'
       before: '21:00:00'
-    - condition: template
-      value_template: >
-        {{ trigger.id != 'reconcile' or
-           (as_timestamp(now()) - as_timestamp(states.sensor.einspeisung.last_changed, 0) >= 300 and
-            as_timestamp(now()) - as_timestamp(states.sensor.stream_ac_pro_3683_power_battery_2.last_changed, 0) >= 120) }}
     - condition: template
       value_template: >
         {% set last = state_attr('automation.notification_stromuberschuss_gerate_einschalten', 'last_triggered') %}
@@ -126,10 +118,8 @@
     - condition: template
       value_template: >
         {{ trigger.id != 'reconcile' or
-           ((states('sensor.einspeisung') | float(0) < 100 and
-             as_timestamp(now()) - as_timestamp(states.sensor.einspeisung.last_changed, 0) >= 300) or
-            (states('sensor.stream_ac_pro_3683_power_battery_2') | float(0) < 90 and
-             as_timestamp(now()) - as_timestamp(states.sensor.stream_ac_pro_3683_power_battery_2.last_changed, 0) >= 120)) }}
+           states('sensor.einspeisung') | float(0) < 100 or
+           states('sensor.stream_ac_pro_3683_power_battery_2') | float(0) < 90 }}
   actions:
     - action: persistent_notification.dismiss
       data:
