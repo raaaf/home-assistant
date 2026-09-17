@@ -455,8 +455,8 @@ input_boolean.guest_or_away
 
 ### Input DateTime (Schedules)
 ```yaml
-input_datetime.aufwachzeit_arbeitstag    # Workday wake time
-input_datetime.aufwachzeit_freier_tag    # Weekend wake time
+input_datetime.aufwachzeit_arbeitstag    # Wake time, always 07:00 (rewritten nightly by kinderzimmer.yaml)
+input_datetime.aufwachzeit_freier_tag    # Same, 07:00; no workday/weekend distinction since 2026-09-17
 input_datetime.einschlafzeit_arbeitstag  # Workday sleep time
 input_datetime.einschlafzeit_freier_tag  # Weekend sleep time
 ```

@@ -65,8 +65,9 @@
   - variables:
       basis_einschlaf_schultag: '20:00:00'
       basis_einschlaf_wochenende: '21:00:00'
-      basis_aufwach_schultag: 06:30:00
-      basis_aufwach_wochenende: 07:30:00
+      # Aufwachen immer 07:00, kein Unterschied Schultag/Wochenende (17.09.2026)
+      basis_aufwach_schultag: 07:00:00
+      basis_aufwach_wochenende: 07:00:00
       aktueller_monat: '{{ now().month | int }}'
       aussentemperatur: '{% if has_value(''weather.fuerth_bayern'') %}{{ state_attr(''weather.fuerth_bayern'', ''temperature'')
         | float(20) }}{% else %}20{% endif %}'
@@ -81,9 +82,8 @@
         {% if aktueller_monat | int in [6, 7, 8] %}30
         {% elif aktueller_monat | int in [11, 12, 1, 2] %}-15
         {% else %}0{% endif %}
-      saison_offset_aufwach: >-
-        {% if aktueller_monat | int in [11, 12, 1, 2] %}-15
-        {% else %}0{% endif %}
+      # Kein Saison-Offset mehr beim Aufwachen: immer 07:00
+      saison_offset_aufwach: 0
       # Sonnenuntergang-Offset: Wenn Sonnenuntergang nach 20:30, 15min spaeter einschlafen
       sonnenuntergang_offset: >-
         {% set su = state_attr('sun.sun', 'next_setting') %}

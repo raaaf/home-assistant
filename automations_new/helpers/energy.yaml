@@ -25,6 +25,26 @@
       domain: automation
   mode: restart
 
+- id: cowboy_taeglicher_abruf
+  alias: Helper » Cowboy täglicher Abruf
+  description: >-
+    Polling der Cowboy-Integration ist in den System-Optionen beider Einträge
+    abgeschaltet (1-Minuten-Polling lief jede Nacht in die Internet-Zwangstrennung).
+    Einmal täglich um 07:00 werden Fahrrad- und Fahrten-Daten je Bike aktiv geholt.
+  triggers:
+  - trigger: time
+    at: '07:00:00'
+  actions:
+  - action: homeassistant.update_entity
+    continue_on_error: true
+    target:
+      entity_id:
+      - sensor.rennsemmel_remaining_battery
+      - sensor.rennsemmel_last_trip_distance
+      - sensor.butzabatza_remaining_battery
+      - sensor.butzabatza_last_trip_distance
+  mode: single
+
 - id: '1745924954227'
   alias: Helper » Speichere Solarproduktion gestern
   description: 'Speichert die Tagesproduktion der Solaranlage kurz vor Mitternacht
