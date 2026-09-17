@@ -186,7 +186,7 @@
           data:
             brightness_pct: 1
             transition: 0
-        - alias: "Schlafzimmer und Kinderzimmer über 30 Minuten auf 100% hochfahren"
+        - alias: "Schlafzimmer und Kinderzimmer über 15 Minuten auf 100% hochfahren"
           action: light.turn_on
           continue_on_error: true
           target:
@@ -195,11 +195,11 @@
             - light.alle_kinderzimmer_lichter
           data:
             brightness_pct: 100
-            transition: 1800
+            transition: 900
         # fire-and-forget via script.turn_on: ein pyatv-TimeoutError (kein
         # HomeAssistantError, continue_on_error greift nicht) darf den
         # Wakeup-Lauf nicht mehr abbrechen. Das delay unten wartet ohnehin.
-        - alias: "HomePods über 30 Minuten mitsynchronisieren (fire-and-forget)"
+        - alias: "HomePods über 15 Minuten mitsynchronisieren (fire-and-forget)"
           action: script.turn_on
           target:
             entity_id: script.fade_volume
@@ -207,7 +207,7 @@
             variables:
               target_player: media_player.homepod_wohnzimmer
               target_volume: 0.35
-              duration: 1800
+              duration: 900
               curve: linear
         - action: script.turn_on
           target:
@@ -216,7 +216,7 @@
             variables:
               target_player: media_player.arbeitszimmer
               target_volume: 0.35
-              duration: 1800
+              duration: 900
               curve: linear
         - action: script.turn_on
           target:
@@ -225,7 +225,7 @@
             variables:
               target_player: media_player.kuche
               target_volume: 0.50
-              duration: 1800
+              duration: 900
               curve: linear
         - action: script.turn_on
           target:
@@ -234,7 +234,7 @@
             variables:
               target_player: media_player.homepod_badezimmer
               target_volume: 0.50
-              duration: 1800
+              duration: 900
               curve: linear
         - action: script.turn_on
           target:
@@ -243,7 +243,7 @@
             variables:
               target_player: media_player.homepod_kinderzimmer
               target_volume: 0.50
-              duration: 1800
+              duration: 900
               curve: linear
         - action: script.turn_on
           target:
@@ -252,10 +252,10 @@
             variables:
               target_player: media_player.schlafzimmer
               target_volume: 0.30
-              duration: 1800
+              duration: 900
               curve: linear
-        - alias: "Warten bis Aufwachlicht abgeschlossen (30 Minuten)"
-          delay: "00:30:00"
+        - alias: "Warten bis Aufwachlicht abgeschlossen (15 Minuten)"
+          delay: "00:15:00"
         - alias: "Warte bis 08:00 Uhr"
           delay:
             seconds: >-
@@ -266,11 +266,13 @@
               {% else %}
                 0
               {% endif %}
-        - alias: "08:00 Uhr: Aufwachlichter ausschalten"
+        - alias: "08:00 Uhr: alle Lichter im Schlaf- und Kinderzimmer ausschalten"
+          # light.alle_arbeitszimmer_lichter = "Alle Schlafzimmer Lichter" (physisches
+          # Schlafzimmer, gekreuzte entity_ids nach Room-Swap)
           action: light.turn_off
           target:
             entity_id:
-            - light.alle_schlafzimmer_aufwachlichter
+            - light.alle_arbeitszimmer_lichter
             - light.alle_kinderzimmer_lichter
         - alias: "AL für Wakeup-Räume wieder an (Lichter sind aus, AL adaptiert ab naechstem Einschalten normal)"
           action: switch.turn_on
