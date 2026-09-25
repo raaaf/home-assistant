@@ -53,6 +53,13 @@
         condition: state
         entity_id: input_boolean.schlafenszeit
         state: 'off'
+      # Der 30-Min-Trigger startet oft vor 07:00 (letzte Bewegung im Bett) und
+      # feuerte dann kurz nach dem Wecken, sobald schlafenszeit aus war
+      # (25.09. 07:03). Bis 08:00 gehoert das Licht der Morgenroutine.
+      - alias: Nicht während des Wakeups
+        condition: state
+        entity_id: input_boolean.wakeup_active
+        state: 'off'
       - alias: Keine manuelle Steuerung aktiv (Adaptive Lighting)
         condition: template
         value_template: >-
