@@ -22,7 +22,7 @@ This is a sophisticated German-language Home Assistant configuration for a smart
 ### Environment Constraints
 
 - **No Docker access**: Claude Code has no access to the Docker host. Do not suggest `docker exec` commands for validation, reload, or log viewing.
-- **HA REST API** is available via `$HA_URL` (the HA IP, not `homeassistant.local`: the sandbox proxy cannot resolve mDNS) and `$HA_TOKEN` (exported once per session by the SessionStart hook `~/.claude/hooks/ha-token-env.sh` from 1Password). Inside the Bash sandbox curl must go through the proxy: always pass `--noproxy ''`, otherwise the sandbox `NO_PROXY` for 192.168.0.0/16 forces a direct connect that is blocked.
+- **HA REST API** is available via `$HA_URL` (the HA IP, not `homeassistant.local`: the sandbox proxy cannot resolve mDNS) and `$HA_TOKEN` (exported once per session by the SessionStart hook `~/.claude/hooks/ha-token-env.sh` from 1Password: vault `Bots`, item `ha-token`, field `password`). Inside the Bash sandbox curl must go through the proxy: always pass `--noproxy ''`, otherwise the sandbox `NO_PROXY` for 192.168.0.0/16 forces a direct connect that is blocked.
 - YAML syntax validation can be done locally with `yamllint`.
 
 ### Key Commands
