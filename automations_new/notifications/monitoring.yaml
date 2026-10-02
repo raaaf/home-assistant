@@ -475,3 +475,34 @@
         {{ trigger.event.data.level }} | {{ (trigger.event.data.message | first) | truncate(200, true) }}
   mode: queued
   max: 50
+- id: '1759399200000'
+  alias: Notification » Solar-Wechselrichter liefert keine Daten
+  description: >-
+    Meldet, wenn der Hoymiles-DTU bis 15 Uhr keinen Tagesertrag hat. Vom 21. bis 30.09.2026
+    hing die Funkverbindung DTU zu Wechselrichter, die Sensoren froren auf 0 ein und der
+    Monatsbericht unterschlug rund 20 kWh Solar. Ein State-Trigger greift dabei nicht, weil
+    eingefrorene Sensoren keinen Zustandswechsel mehr melden.
+  triggers:
+  - trigger: time
+    at: '15:00:00'
+  conditions:
+  - condition: template
+    value_template: "{{ states('sensor.dtu_ac_daily_energy') | float(0) <= 0 }}"
+  actions:
+  - action: notify.rafael
+    data:
+      title: "Solar: keine Daten"
+      message: >-
+        Der Hoymiles-DTU meldet heute bis 15 Uhr 0 Wh. DTU neu starten und
+        hoymiles_wifi neu laden; hilft das nicht, Funkverbindung zum Wechselrichter prüfen
+        (oder Module mit Schnee bedeckt).
+      data:
+        tag: solar_dtu_keine_daten
+  - action: persistent_notification.create
+    data:
+      title: "Solar-Wechselrichter liefert keine Daten"
+      message: >-
+        sensor.dtu_ac_daily_energy steht am {{ now().strftime('%d.%m.%Y') }} um 15 Uhr auf
+        {{ states('sensor.dtu_ac_daily_energy') }}. Solar fehlt sonst in Tages- und Monatsbericht.
+      notification_id: solar_dtu_keine_daten
+  mode: single

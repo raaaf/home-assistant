@@ -106,7 +106,7 @@
   mode: single
 - id: '1740960000000'
   alias: Notification » Monatlicher Energiebericht
-  description: Sendet am 1. jeden Monats einen HTML-Energiebericht des Vormonats per E-Mail und Push-Benachrichtigung
+  description: Sendet am 1. jeden Monats den Energiebericht des Vormonats als Push und Persistent Notification
   triggers:
   - at: '00:15:00'
     trigger: time
