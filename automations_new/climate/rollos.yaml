@@ -53,7 +53,6 @@
             target:
               entity_id:
               - cover.rollos_sonnenaufgang
-              - cover.aqara_cover_03
           - action: cover.open_cover
             target:
               entity_id:
@@ -86,8 +85,8 @@
                 entity_id: cover.aqara_cover_04
               continue_on_error: true
     # Morgens: Kinderzimmer + Schlafzimmer (= cover.aqara_cover_01, Bett-Raum)
-    # voll auf. Das Buero (Alex, = cover.aqara_cover_03) bleibt zu und wird nur
-    # noch manuell geoeffnet.
+    # voll auf. Das Buero (Alex, = cover.aqara_cover_03) steuert keine Automation
+    # mehr, Alex bedient es nur manuell.
     - conditions:
       - condition: trigger
         id: morgens
@@ -106,7 +105,7 @@
       - action: logbook.log
         data:
           name: Rollos Morgen
-          message: 'KZ + Schlafzimmer voll offen. Buero (Alex) bleibt zu, nur manuell.'
+          message: 'KZ + Schlafzimmer voll offen. Buero (Alex) nur manuell.'
           domain: cover
     - conditions:
       - condition: trigger
@@ -145,7 +144,6 @@
         target:
           entity_id:
           - cover.rollos_sonnenaufgang
-          - cover.aqara_cover_03
         data: {}
       - action: cover.open_cover
         target:
