@@ -162,6 +162,7 @@
             - automation.motion_schlafzimmer
             - automation.arbeitszimmer_motion
             - automation.kinderzimmer_motion
+            - automation.motion_badezimmer_gross
           data:
             stop_actions: true
         # fire-and-forget: continue_on_error faengt den pyatv-TimeoutError nicht
@@ -177,6 +178,7 @@
             entity_id:
             - switch.adaptive_lighting_arbeitszimmer
             - switch.adaptive_lighting_kinderzimmer
+            - switch.adaptive_lighting_badezimmer
         # Das Rollo hing bisher am Sonnenaufgang-Trigger in rollos.yaml. Der
         # rutscht pro Tag gut eine Minute nach hinten (11.09. 06:48, 18.09.
         # 06:58) und liegt ab Ende September hinter der 07:00-Weckzeit, im
@@ -188,13 +190,14 @@
           continue_on_error: true
           target:
             entity_id: cover.aqara_cover_01
-        - alias: "Schlafzimmer und Kinderzimmer sofort auf 100%"
+        - alias: "Schlafzimmer, Kinderzimmer und Badezimmer sofort auf 100%"
           action: light.turn_on
           continue_on_error: true
           target:
             entity_id:
             - light.alle_schlafzimmer_aufwachlichter
             - light.alle_kinderzimmer_lichter
+            - light.alle_badezimmer_lichter
           data:
             brightness_pct: 100
             transition: 0
@@ -266,7 +269,7 @@
               {% else %}
                 0
               {% endif %}
-        - alias: "08:00 Uhr: alle Lichter im Schlaf- und Kinderzimmer ausschalten"
+        - alias: "08:00 Uhr: alle Lichter im Schlaf-, Kinder- und Badezimmer ausschalten"
           # light.alle_arbeitszimmer_lichter = "Alle Schlafzimmer Lichter" (physisches
           # Schlafzimmer, gekreuzte entity_ids nach Room-Swap)
           action: light.turn_off
@@ -274,12 +277,14 @@
             entity_id:
             - light.alle_arbeitszimmer_lichter
             - light.alle_kinderzimmer_lichter
+            - light.alle_badezimmer_lichter
         - alias: "AL für Wakeup-Räume wieder an (Lichter sind aus, AL adaptiert ab naechstem Einschalten normal)"
           action: switch.turn_on
           target:
             entity_id:
             - switch.adaptive_lighting_arbeitszimmer
             - switch.adaptive_lighting_kinderzimmer
+            - switch.adaptive_lighting_badezimmer
         - alias: Motion-Automationen für Wake-Up Räume wieder aktivieren
           action: automation.turn_on
           target:
@@ -294,6 +299,11 @@
             automations: "automation.motion_schlafzimmer"
             exclude_scenes: "movie,party,party_wohnzimmer"
             exclude_players: "media_player.appletv"
+        - alias: Badezimmer-Motion wieder an, ausser bei laufender Sauna
+          action: script.scene_enable_motion_automations
+          data:
+            automations: "automation.motion_badezimmer_gross"
+            exclude_scenes: "sauna"
         - alias: "08:00 Uhr: Musik auf Taglautstärke setzen (nur spielende HomePods)"
           parallel:
             - if:
