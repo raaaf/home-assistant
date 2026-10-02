@@ -53,10 +53,9 @@
       - binary_sensor.kinderzimmer_manual_control
 - id: '1722519561150'
   alias: Helper » Dynamische Kinder-Schlafzeiten
-  description: 'Berechnet täglich optimale Schlafzeiten für Kinder basierend auf:
-    - Jahreszeit und Monat - Sonnenuntergang - Wetter und Helligkeit - Temperatur
-
-    '
+  description: >-
+    Setzt täglich die Einschlafzeit: Ende der bürgerlichen Dämmerung, frühestens 19:00,
+    spätestens 20:00 (vor freien Tagen 21:00). Aufwachen immer 07:00.
   triggers:
   - at: 00:10:00
     trigger: time
@@ -68,45 +67,28 @@
       # Aufwachen immer 07:00, kein Unterschied Schultag/Wochenende (17.09.2026)
       basis_aufwach_schultag: 07:00:00
       basis_aufwach_wochenende: 07:00:00
-      aktueller_monat: '{{ now().month | int }}'
-      aussentemperatur: '{% if has_value(''weather.fuerth_bayern'') %}{{ state_attr(''weather.fuerth_bayern'', ''temperature'')
-        | float(20) }}{% else %}20{% endif %}'
       helligkeit_draussen: '{% if has_value(''sensor.ikea_motion_03_illuminance'') %}{{ states(''sensor.ikea_motion_03_illuminance'') | float(100)
         }}{% else %}100{% endif %}'
       wetter: '{% if has_value(''weather.fuerth_bayern'') %}{{ states(''weather.fuerth_bayern'') }}{% else %}sunny{% endif %}'
       sonnenuntergang_zeit: "{% set su = state_attr('sun.sun', 'next_setting') %}\
         \ {% if su %}\n  {{ (su | as_datetime | as_local).strftime('%H:%M') }}\n{%\
         \ else %}\n  20:00\n{% endif %}\n"
-      # Saison-Offset: Im Sommer (Jun-Aug) 30min spaeter einschlafen, im Winter (Nov-Feb) 15min frueher aufwachen
-      saison_offset_einschlaf: >-
-        {% if aktueller_monat | int in [6, 7, 8] %}30
-        {% elif aktueller_monat | int in [11, 12, 1, 2] %}-15
-        {% else %}0{% endif %}
       # Kein Saison-Offset mehr beim Aufwachen: immer 07:00
       saison_offset_aufwach: 0
-      # Sonnenuntergang-Offset: Wenn Sonnenuntergang nach 20:30, 15min spaeter einschlafen
-      sonnenuntergang_offset: >-
-        {% set su = state_attr('sun.sun', 'next_setting') %}
-        {% if su %}
-          {% set su_hour = (su | as_datetime | as_local).hour %}
-          {% set su_min = (su | as_datetime | as_local).minute %}
-          {{ 15 if (su_hour > 20 or (su_hour == 20 and su_min >= 30)) else 0 }}
-        {% else %}0{% endif %}
-      # Temperatur-Offset: Bei Hitze (>28°C) 15min spaeter einschlafen (Kinder schlafen schwerer ein)
-      temp_offset: >-
-        {{ 15 if aussentemperatur | float(20) > 28 else 0 }}
       # Gesamt-Offsets berechnen (in Minuten)
-      gesamt_offset_einschlaf: >-
-        {{ (saison_offset_einschlaf | int(0)) + (sonnenuntergang_offset | int(0)) + (temp_offset | int(0)) }}
       gesamt_offset_aufwach: >-
         {{ saison_offset_aufwach | int(0) }}
       # Finale Zeiten berechnen
+      # Einschlafen, sobald es dunkel ist (Ende der buergerlichen Daemmerung), aber nicht
+      # vor 19:00 und nicht nach der Basiszeit. Um 00:10 ist next_dusk die Daemmerung von heute.
+      # Ersetzt am 02.10.2026 die festen Saison-, Sonnenuntergangs- und Temperatur-Offsets.
+      daemmerung_heute: >-
+        {% set d = state_attr('sun.sun', 'next_dusk') %}
+        {{ (d | as_datetime | as_local).strftime('%H:%M:%S') if d else basis_einschlaf_schultag }}
       einschlaf_schultag_final: >-
-        {% set base = today_at(basis_einschlaf_schultag) %}
-        {{ (base + timedelta(minutes=gesamt_offset_einschlaf | int(0))).strftime('%H:%M:%S') }}
+        {{ [[daemmerung_heute, '19:00:00'] | max, basis_einschlaf_schultag] | min }}
       einschlaf_wochenende_final: >-
-        {% set base = today_at(basis_einschlaf_wochenende) %}
-        {{ (base + timedelta(minutes=gesamt_offset_einschlaf | int(0))).strftime('%H:%M:%S') }}
+        {{ [[daemmerung_heute, '19:00:00'] | max, basis_einschlaf_wochenende] | min }}
       aufwach_schultag_final: >-
         {% set base = today_at(basis_aufwach_schultag) %}
         {{ (base + timedelta(minutes=gesamt_offset_aufwach | int(0))).strftime('%H:%M:%S') }}
