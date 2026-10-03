@@ -350,6 +350,8 @@ Managed via `input_boolean` helpers:
 | Arbeit | `input_boolean.arbeit` | Work mode |
 | Gaming | `input_boolean.gaming` | Gaming mode |
 
+**Film mode and HyperHDR** (Pi 2, 192.168.178.100): instance 0 "Around Beamer" drives the LED strip via `light.hyperhdr`. Instance 1 "Ambient Hue" drives Wohnzimmer Schrank 1-3 and Flur Schrank 2 through HyperHDR's own zigbee2mqtt driver; `Wohnzimmer » Film` starts and stops it via MQTT (`HyperHDR/JsonAPI`) and holds the four lamps in AL `manual_control` meanwhile. Instance 1 config lives in HyperHDR, not in this repo, and smoothing must stay off there: it forces 50 Hz and zigbee2mqtt queues thousands of commands (2026-10-03). Denon reports the AppleTV input as `SAT/CBL`, older code expected `CBL/SAT`; match both.
+
 ### Scene Tracking Sensors
 
 ```yaml

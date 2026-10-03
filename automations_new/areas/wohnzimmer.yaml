@@ -34,7 +34,9 @@
   - entity_id:
     - media_player.denon_avr_x3200w
     attribute: source
-    to: CBL/SAT
+    to:
+    - CBL/SAT
+    - SAT/CBL
     id: movie-on
     trigger: state
   - entity_id:
@@ -161,6 +163,29 @@
             entity_id:
             - automation.motion_flur_wohnung
             - automation.motion_haustur_flur
+      - alias: "Ambient-Hue-Lampen vor Adaptive Lighting schuetzen"
+        # HyperHDR setzt ihre Farben ueber MQTT, also an HA vorbei. Ohne manual_control
+        # ueberschreibt AL sie alle 5 min mit Farbtemperatur und Film-Helligkeit.
+        action: adaptive_lighting.set_manual_control
+        data:
+          entity_id: switch.adaptive_lighting_wohnzimmer
+          lights:
+          - light.philips_light_21_schrank_1
+          - light.philips_light_22_schrank_2
+          - light.philips_light_23_schrank_3
+          manual_control: true
+      - action: adaptive_lighting.set_manual_control
+        data:
+          entity_id: switch.adaptive_lighting_flur
+          lights: light.philips_light_09_2
+          manual_control: true
+      - alias: "Ambient Hue starten (nach den Turn-offs, sonst blendet die 6-s-Transition sie wieder aus)"
+        # HyperHDR-Instanz 1, zigbee2mqtt-Treiber. Glaettung muss in der Instanz aus bleiben:
+        # sie erzwingt sonst 50 Hz und zigbee2mqtt staut tausende Befehle auf (03.10.2026).
+        action: mqtt.publish
+        data:
+          topic: HyperHDR/JsonAPI
+          payload: '{"command":"instance","subcommand":"startInstance","instance":1}'
       - alias: "Leselicht wiederherstellen falls aktiv"
         action: script.restore_leselicht
       - alias: "Ambilight mit Retry einschalten (HyperHDR-Verbindung bricht beim Filmstart oft kurz ab)"
@@ -190,6 +215,36 @@
           entity_id: input_boolean.movie
         data: {}
         action: input_boolean.turn_off
+      - alias: "Ambient Hue stoppen"
+        action: mqtt.publish
+        data:
+          topic: HyperHDR/JsonAPI
+          payload: '{"command":"instance","subcommand":"stopInstance","instance":1}'
+      - alias: "Warten, bis HyperHDR keine Farben mehr sendet (Stoppen dauert auf dem Pi 2 einige Sekunden)"
+        delay: '00:00:20'
+      - alias: "Ambient-Hue-Lampen aus und an Adaptive Lighting zurueckgeben"
+        # Ohne turn_off bliebe Flur Schrank 2 in der letzten Filmfarbe an, die Flur-Gruppen
+        # werden am Filmende nicht ausgeschaltet.
+        action: light.turn_off
+        target:
+          entity_id:
+          - light.philips_light_21_schrank_1
+          - light.philips_light_22_schrank_2
+          - light.philips_light_23_schrank_3
+          - light.philips_light_09_2
+      - action: adaptive_lighting.set_manual_control
+        data:
+          entity_id: switch.adaptive_lighting_wohnzimmer
+          lights:
+          - light.philips_light_21_schrank_1
+          - light.philips_light_22_schrank_2
+          - light.philips_light_23_schrank_3
+          manual_control: false
+      - action: adaptive_lighting.set_manual_control
+        data:
+          entity_id: switch.adaptive_lighting_flur
+          lights: light.philips_light_09_2
+          manual_control: false
       - alias: "Keine niedrigere Film-Bereinigung waehrend einer aktiven Szene"
         condition: template
         value_template: >-
@@ -275,6 +330,7 @@
           entity_id: light.hyperhdr
         data:
           effect: Cinema dim lights
+          brightness_pct: 30
         action: light.turn_on
       - alias: "Wohnzimmer Wand 1-6 + Kindertisch einschalten (AL regelt Helligkeit/Farbe)"
         action: light.turn_on
