@@ -15,31 +15,13 @@ homeassistant:
 
   # Authentication providers
   auth_providers:
-    - type: trusted_networks
-      trusted_networks:
-        - 192.168.178.0/24
-        - 127.0.0.1
-        - ::1
-      allow_bypass_login: false
     - type: homeassistant
 
 # ============================================================================
 # NETWORK & SECURITY
 # ============================================================================
 
-http:
-  use_x_forwarded_for: true
-  trusted_proxies:
-    - 172.30.33.0/24
-    - 127.0.0.1
-    - 192.168.178.72
-    - 192.168.188.118
-    - ::1
-  ip_ban_enabled: false
-  login_attempts_threshold: 5
-  # SSL certificates (uncomment when using)
-  # ssl_certificate: /ssl/fullchain.pem
-  # ssl_key: /ssl/privkey.pem
+# http: settings live in the UI (Settings > System > Network), migrated to .storage/http
 
 # ============================================================================
 # LOGGING & MONITORING
@@ -157,8 +139,6 @@ notify: !include notifies.yaml
 # telegram_bot:
 #   - platform: polling
 #     api_key: !secret telegram_api_key
-#     allowed_chat_ids:
-#       - 6310607652
 
 # ============================================================================
 # USER INTERFACE

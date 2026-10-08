@@ -51,3 +51,11 @@ home-assistant.*
 abodepy_cache.pickle
 .pc-session
 .claude/audits/cache.json
+
+# Never track keys, env files, backups, databases, quarantine
+_quarantine*/
+**/*.pem
+**/*.key
+**/.env*
+**/*.bak
+**/*.db
