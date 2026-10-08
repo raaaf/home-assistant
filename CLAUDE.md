@@ -77,10 +77,10 @@ PYEOF
 |------|---------|
 | `configuration.yaml` | Main entry point |
 | `automations_new/` | All automations (34 files) |
-| `custom_components/` | 24 custom integrations |
-| `blueprints/` | 162 blueprints (5 automation + 157 switch_manager) |
+| `custom_components/` | Custom integrations |
+| `blueprints/` | Blueprints (mostly switch_manager) |
 | `scripts.yaml` | Reusable scripts |
-| `themes/` | 6 UI themes |
+| `themes/` | UI theme (Linear) |
 | `secrets.yaml` | Sensitive data (never commit) |
 
 ---
@@ -104,7 +104,6 @@ configuration.yaml
 │
 ├── automation: !include_dir_merge_list automations_new/
 ├── script: !include scripts.yaml
-├── scene: !include scenes.yaml
 ├── sensor: !include sensors.yaml
 ├── binary_sensor: !include binary_sensors.yaml
 ├── light: !include lights.yaml
@@ -224,13 +223,13 @@ Examples:
 
 | Protocol | Usage | Components |
 |----------|-------|------------|
-| **Zigbee (ZHA)** | Lights, switches, sensors | Native ZHA integration |
+| **Zigbee (Zigbee2MQTT)** | Lights, switches, sensors | Via MQTT; ZHA is not used |
 | **MQTT** | Device communication | Meross, Shelly, Qingping, Ecoflow |
-| **Local HTTP/UDP** | Smart devices | Meross LAN, Govee LAN, TP-Link |
+| **Local HTTP/UDP** | Smart devices | Meross LAN, Govee (core govee_light_local), TP-Link |
 | **HomeKit** | Apple ecosystem | HomeKit Controller |
 | **Matter** | Modern devices | Native Matter support |
 
-### Key Custom Components (24 total)
+### Key Custom Components
 
 **Heavily Used**:
 - `powercalc` - Energy calculation for all devices
@@ -239,10 +238,8 @@ Examples:
 
 **Active Integrations**:
 - `waste_collection_schedule` - Garbage collection (Fürth)
-- `dual_smart_thermostat` - Climate control
 - `nuki_ng` - Nuki smart lock
 - `dwd` - German weather service
-- `govee_lan` - Govee LED lights (local)
 - `midea_ac` - Midea air conditioning
 - `ecoflow_cloud` - EcoFlow power stations
 - `hoymiles_wifi` - Solar inverter monitoring
@@ -420,7 +417,7 @@ The AC sits in the Arbeitszimmer (office) and is steered by **"Helper » AC manu
 
 ### Heating
 
-`switch.heizung_*` floor heating is predictive (morning/afternoon boost from forecast) with a boost timer, a 2h safety watchdog, and restart recovery. Heating uses forecast (`weather.fuerth_bayern` / `sensor.fuerth_daily`), not room temperature.
+`switch.sonoff_switch_03`, `_04`, `_05` floor heating is predictive (morning/afternoon boost from forecast) with a boost timer, a 2h safety watchdog, and restart recovery. Heating uses forecast (`weather.fuerth_bayern` / `sensor.fuerth_daily`), not room temperature.
 
 ---
 
@@ -434,7 +431,7 @@ The AC sits in the Arbeitszimmer (office) and is steered by **"Helper » AC manu
 
 2. **Solar Production**: Hoymiles WiFi inverter
    - DTU data via `hoymiles_wifi` component
-   - Daily tracking: `sensor.ac_energy_daily`
+   - Daily tracking: `sensor.dtu_ac_daily_energy`
 
 3. **Device Power**: Powercalc integration
    - Automatic calculation for all lights
@@ -613,7 +610,6 @@ The recorder is configured to:
 
 ### Health Check Locations
 
-- **Watchman**: Reports unavailable entities and config issues
 - **System automations**: `automations_new/system/core.yaml`
 - **Monitoring**: `automations_new/notifications/monitoring.yaml`
 
@@ -633,9 +629,9 @@ The recorder is configured to:
 
 ### Notification Strategy
 
-E-Mail-Notifications (SMTP) wurden vollstaendig entfernt und ersetzt durch:
-- **Push** (`notify.rafael` / `notify.alex`) fuer sofortige Aufmerksamkeit
-- **Persistent Notification** (`persistent_notification.create`) als Erinnerung in der HA-Oberflaeche
+E-Mail-Notifications (SMTP) wurden vollständig entfernt und ersetzt durch:
+- **Push** (`notify.rafael` / `notify.alex`) für sofortige Aufmerksamkeit
+- **Persistent Notification** (`persistent_notification.create`) als Erinnerung in der HA-Oberfläche
 
 Jede Persistent Notification hat eine eindeutige `notification_id` (z.B. `robbi_hauptbuerste`, `waschmaschine_fertig`), damit sie nicht doppelt erscheint und manuell weggeklickt werden kann.
 
@@ -670,9 +666,9 @@ removed (audit 2026-08-19). Run `wc -l` when you need one.
 | Directory | Purpose |
 |-----------|---------|
 | `.storage/` | HA internal storage (do not edit) |
-| `blueprints/` | 162 blueprints (5 automation + 157 switch_manager) |
-| `custom_components/` | 24 custom integrations |
-| `themes/` | 6 UI themes |
+| `blueprints/` | Blueprints (mostly switch_manager) |
+| `custom_components/` | Custom integrations |
+| `themes/` | UI theme (Linear) |
 | `www/` | Static web assets |
 | `esphome/` | ESPHome device configs |
 | `backups/` | Configuration backups |
@@ -690,14 +686,17 @@ removed (audit 2026-08-19). Run `wc -l` when you need one.
   `nas_webhook_id` (Synology Hyper Backup, `notifications/alerts.yaml`). There is no
   `secrets.yaml.example`, so a fresh checkout fails on the missing key rather than silently.
 - **`local_only: true` is not a second factor.** It resolves the client IP through
-  `use_x_forwarded_for` + `trusted_proxies` in `configuration.yaml`. If a reverse proxy or tunnel
-  host is missing from `trusted_proxies`, every request looks local.
+  `use_x_forwarded_for` + `trusted_proxies`. These `http:` settings are no longer in YAML: HA
+  migrated them to `.storage/http`, edit them in the UI (Settings > System > Network). If a reverse
+  proxy or tunnel host is missing from `trusted_proxies`, every request looks local.
 - **Webhook payloads are attacker-controlled.** Never pass `trigger.json.*` as a bare `message` to
   `notify.*`: the mobile_app platform reads certain exact message values as device commands. Embed
   the text in a fixed sentence and cap its length.
 - **Review `manifest.json`** permissions for custom components
-- **IP bans managed** in `ip_bans.yaml`
-- **Trusted networks** configured in `configuration.yaml`
+- **IP bans** (`ip_ban`) are set in the UI together with the other `http:` settings, not in YAML
+- **Login is password only** (`homeassistant` auth provider); the `trusted_networks` provider was removed 2026-10-08
+- **go2rtc** (own instance, `go2rtc.yaml` with credentials) was removed 2026-10-08
+- **`.gitignore`** denies `*.pem`, `*.key`, `.env*`, `*.bak`, `*.db` and `_quarantine*/`
 
 ---
 
@@ -747,12 +746,15 @@ AL reads its config from **Config Entries**, which the YAML seeds once and then 
 1. Check `switch.adaptive_lighting_{room}` is on
 2. Check `binary_sensor.{room}_manual_control` - manual control pauses AL
 3. Check `binary_sensor.any_scene_active` - scenes may disable AL
-4. Verify light is in AL config: `adaptive_lighting.yaml` (the `lights:` lists)
+4. Verify light is in AL config: the live `lights:` lists are in the AL config entries (Settings > Devices & Services > Adaptive Lighting); the YAML only seeds them
 
 **Automations not triggering**:
 1. Check if automation is enabled: `automation.{name}` state
 2. Verify entity availability in Developer Tools > States
 3. Check logs for errors via WebSocket `system_log/list` (see Key Commands)
+
+**Config entries with `source: ignore`** (e.g. dlna_dmr, hue, tradfri, zha, nuki) are discovery
+"ignore" markers, not broken integrations. Deleting them makes the discovery prompts reappear.
 
 **Scene conflicts**:
 1. Check `binary_sensor.scene_conflict_detected`
