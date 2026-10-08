@@ -507,3 +507,35 @@
         {{ states('sensor.dtu_ac_daily_energy') }}. Solar fehlt sonst in Tages- und Monatsbericht.
       notification_id: solar_dtu_keine_daten
   mode: single
+- id: motion_al_sollzustand_watchdog
+  alias: Benachrichtigung » Sollzustand-Abgleicher gestört
+  description: >-
+    Meldet dem Admin, wenn der Motion/AL-Sollzustand-Abgleicher länger als 10 Minuten
+    ausgeschaltet ist oder einen Fehler ins System-Log schreibt.
+  triggers:
+  - trigger: state
+    entity_id: automation.helper_motion_al_sollzustand
+    to: 'off'
+    for: '00:10:00'
+    id: 'off'
+  - trigger: event
+    event_type: system_log_event
+    id: error
+  conditions:
+  - condition: template
+    value_template: >-
+      {{ trigger.id == 'off' or
+         ('motion_al_sollzustand' in (trigger.event.data.name | string)
+          and trigger.event.data.level == 'ERROR') }}
+  actions:
+  - action: notify.admin_only
+    data:
+      title: "Sollzustand-Abgleicher gestört"
+      message: >-
+        {{ 'Die Automation "Motion/AL Sollzustand" ist seit über 10 Minuten ausgeschaltet.'
+           if trigger.id == 'off' else
+           'Die Automation "Motion/AL Sollzustand" hat einen Fehler gemeldet, bitte das System-Log prüfen.' }}
+      data:
+        tag: motion_al_sollzustand_watchdog
+  mode: single
+  max_exceeded: silent

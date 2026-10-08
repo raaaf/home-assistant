@@ -1,0 +1,161 @@
+# Helpers - Room Policy
+# Reconciler for motion automations and Adaptive Lighting main switches.
+# Part of Home Assistant configuration
+
+- id: motion_al_sollzustand
+  alias: Helper » Motion/AL Sollzustand
+  description: >-
+    Berechnet aus einer Regeltabelle, welche Bewegungsautomationen und Adaptive-Lighting-Schalter
+    gerade aus sein sollen, und gleicht sie mit dem Ist-Zustand ab. Läuft im Schattenmodus:
+    Solange die Liste "acting" leer ist, schaltet nichts, es gibt nur einen Logbucheintrag,
+    wenn Soll und Ist abweichen. Die Tabelle steht genau einmal in der Variable "blocked"
+    unten. Die Szenen schalten sich beim Start weiterhin selbst aus.
+  triggers:
+  - trigger: state
+    entity_id: input_boolean.movie
+    to: null
+  - trigger: state
+    entity_id: input_boolean.party
+    to: null
+  - trigger: state
+    entity_id: input_boolean.party_wohnzimmer
+    to: null
+  - trigger: state
+    entity_id: input_boolean.kochen
+    to: null
+  - trigger: state
+    entity_id: input_boolean.abwaschen
+    to: null
+  - trigger: state
+    entity_id: input_boolean.essen
+    to: null
+  - trigger: state
+    entity_id: input_boolean.baden
+    to: null
+  - trigger: state
+    entity_id: input_boolean.sauna
+    to: null
+  - trigger: state
+    entity_id: input_boolean.gaming
+    to: null
+  - trigger: state
+    entity_id: input_boolean.schlafenszeit
+    to: null
+  - trigger: state
+    entity_id: input_boolean.wakeup_active
+    to: null
+  - trigger: state
+    entity_id: input_boolean.alle_sind_weg
+    to: null
+  - trigger: state
+    entity_id: media_player.appletv
+    to: null
+  - trigger: homeassistant
+    event: start
+    id: start
+  - trigger: time
+    at: '08:15:30'
+    id: wu_end
+  - trigger: time_pattern
+    minutes: 7
+    id: hourly
+  conditions: []
+  mode: restart
+  variables:
+    # Entities that may really be switched. EMPTY = full shadow mode (log only).
+    # Rollout per room: add its motion automation and AL switch ids here one room at a time.
+    acting: []
+  actions:
+  # After a restart wait until the AL startup automation has finished re-applying its settings
+  - if:
+    - condition: trigger
+      id: start
+    then:
+    - delay:
+        seconds: 35
+    - wait_template: >-
+        {{ state_attr('automation.system_adaptive_lighting_settings_nach_neustart', 'current') | int(0) == 0 }}
+      timeout: '00:05:00'
+      continue_on_timeout: true
+  # 'off' = block direction (immediate), 'on' = unblock direction (debounced by 2 s)
+  - repeat:
+      for_each:
+      - 'off'
+      - 'on'
+      sequence:
+      - variables:
+          direction: "{{ repeat.item }}"
+      - if:
+        - condition: template
+          value_template: "{{ direction == 'on' }}"
+        then:
+        - delay:
+            seconds: 2
+      - variables:
+          # Single source of the motion/AL rule table, see docs/plans/2026-10-08-phase5-packages-volume-reconciler.md
+          blocked: >-
+            {% set movie = is_state('input_boolean.movie', 'on') %}
+            {% set party = is_state('input_boolean.party', 'on') %}
+            {% set pw = is_state('input_boolean.party_wohnzimmer', 'on') %}
+            {% set kochen = is_state('input_boolean.kochen', 'on') %}
+            {% set abwaschen = is_state('input_boolean.abwaschen', 'on') %}
+            {% set essen = is_state('input_boolean.essen', 'on') %}
+            {% set baden = is_state('input_boolean.baden', 'on') %}
+            {% set sauna = is_state('input_boolean.sauna', 'on') %}
+            {% set gaming = is_state('input_boolean.gaming', 'on') %}
+            {% set schlaf = is_state('input_boolean.schlafenszeit', 'on') %}
+            {% set film = movie and not (kochen or abwaschen) %}
+            {% set wu = is_state('input_boolean.wakeup_active', 'on') and now() < today_at('08:15') and is_state('input_boolean.alle_sind_weg', 'off') %}
+            {% set at = states('media_player.appletv') in ['playing', 'paused'] %}
+            {{ {
+              'automation.motion_kuche_2': kochen or abwaschen or party or pw or film,
+              'automation.motion_esstisch': essen or movie or party or pw,
+              'automation.motion_spieletisch': movie or party or pw,
+              'automation.motion_flur_wohnung': party or pw or film,
+              'automation.motion_haustur_flur': party or film,
+              'automation.motion_badezimmer_gross': sauna or baden or party or wu,
+              'automation.kinderzimmer_motion': schlaf or party or wu,
+              'automation.arbeitszimmer_motion': party or wu,
+              'automation.motion_schlafzimmer': gaming or party or wu or at,
+              'switch.adaptive_lighting_wohnzimmer': party or pw,
+              'switch.adaptive_lighting_kueche': party or pw,
+              'switch.adaptive_lighting_badezimmer': sauna or baden or party or wu,
+              'switch.adaptive_lighting_kinderzimmer': party or wu,
+              'switch.adaptive_lighting_arbeitszimmer': gaming or party or wu,
+              'switch.adaptive_lighting_schlafzimmer': gaming or party,
+              'switch.adaptive_lighting_flur': party,
+              'switch.adaptive_lighting_waschzimmer': party,
+              'switch.adaptive_lighting_balkon': party,
+            } }}
+      - repeat:
+          for_each: >-
+            {% set want_blocked = direction == 'off' %}
+            {% set live = 'on' if want_blocked else 'off' %}
+            {{ blocked.items() | selectattr('1', 'eq', want_blocked) | map(attribute='0')
+               | select('is_state', live) | list }}
+          sequence:
+          - if:
+            - condition: template
+              value_template: "{{ repeat.item in acting }}"
+            then:
+            - choose:
+              - conditions:
+                - condition: template
+                  value_template: "{{ repeat.item.startswith('automation.') }}"
+                sequence:
+                - action: "automation.turn_{{ direction }}"
+                  target:
+                    entity_id: "{{ repeat.item }}"
+                  data: "{{ {'stop_actions': true} if direction == 'off' else {} }}"
+                  continue_on_error: true
+              default:
+              - action: "switch.turn_{{ direction }}"
+                target:
+                  entity_id: "{{ repeat.item }}"
+                continue_on_error: true
+            else:
+            - action: logbook.log
+              data:
+                name: Sollzustand
+                message: >-
+                  Schatten: würde {{ repeat.item }} {{ 'ausschalten' if direction == 'off' else 'einschalten' }} ({{ trigger.id | default('state') }})
