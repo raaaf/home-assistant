@@ -53,17 +53,9 @@
           - switch.kuchengerate
         action: switch.turn_on
     - conditions:
-      - condition: or
-        conditions:
-        - condition: trigger
-          id: gäste-aus
-        - condition: and
-          conditions:
-          - condition: trigger
-            id: reconcile
-          - condition: state
-            entity_id: input_boolean.guest_or_away
-            state: 'off'
+      # Only the real state change; the start/reconcile trigger must not run this
+      - condition: trigger
+        id: gäste-aus
       sequence:
       - target:
           entity_id:
@@ -210,28 +202,26 @@
     - conditions:
       - condition: trigger
         id: 'off'
-      - condition: state
-        entity_id: input_boolean.party_wohnzimmer
-        state: 'off'
       sequence:
+      # Wohnzimmer/Küche stay with Party Wohnzimmer while it is still on
+      - variables:
+          wz_frei: "{{ is_state('input_boolean.party_wohnzimmer', 'off') }}"
+          rgb_aus: >-
+            {{ (['light.alle_wohnzimmer_rgb_lichter', 'light.alle_kuche_rgb_lichter'] if wz_frei else [])
+               + ['light.alle_flur_rgb_lichter', 'light.alle_schlafzimmer_rgb_lichter',
+                  'light.alle_badezimmer_rgb_lichter', 'light.alle_kinderzimmer_rgb_lichter'] }}
+          lichter_aus: >-
+            {{ (['light.alle_wohnzimmer_lichter', 'light.alle_kuche_lichter'] if wz_frei else [])
+               + ['light.alle_flur_lichter', 'light.alle_schlafzimmer_lichter',
+                  'light.alle_ankleide_lichter', 'light.alle_badezimmer_lichter',
+                  'light.alle_kinderzimmer_lichter'] }}
+          raeume_frei: >-
+            {{ party_raeume if wz_frei else party_raeume | reject('in', ['wohnzimmer', 'kueche']) | list }}
       - alias: "Hue-Effekt stoppen und Lichter ausschalten"
         action: script.scene_stop_rgb_effect
         data:
-          rgb_lights:
-          - light.alle_wohnzimmer_rgb_lichter
-          - light.alle_kuche_rgb_lichter
-          - light.alle_flur_rgb_lichter
-          - light.alle_schlafzimmer_rgb_lichter
-          - light.alle_badezimmer_rgb_lichter
-          - light.alle_kinderzimmer_rgb_lichter
-          off_lights:
-          - light.alle_wohnzimmer_lichter
-          - light.alle_kuche_lichter
-          - light.alle_flur_lichter
-          - light.alle_schlafzimmer_lichter
-          - light.alle_ankleide_lichter
-          - light.alle_badezimmer_lichter
-          - light.alle_kinderzimmer_lichter
+          rgb_lights: "{{ rgb_aus }}"
+          off_lights: "{{ lichter_aus }}"
       - delay:
           seconds: 6
       # Clear manual control flags before re-enabling AL
@@ -239,7 +229,7 @@
         action: script.al_set_manual_control
         data:
           manual_control: false
-          rooms: "{{ party_raeume }}"
+          rooms: "{{ raeume_frei }}"
       - alias: "Adaptive Lighting mit Konflikt-Pruefung reaktivieren"
         parallel:
         - action: script.scene_enable_adaptive_lighting

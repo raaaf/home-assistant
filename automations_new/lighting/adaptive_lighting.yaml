@@ -69,6 +69,8 @@
             'kuche': 'binary_sensor.kuche_manual_control',
             'kueche': 'binary_sensor.kuche_manual_control',
             'badezimmer': 'binary_sensor.badezimmer_manual_control',
+            'badezimmer_gross': 'binary_sensor.badezimmer_manual_control',
+            'badezimmer_klein': 'binary_sensor.waschzimmer_manual_control',
             'waschzimmer': 'binary_sensor.waschzimmer_manual_control',
             'kinderzimmer': 'binary_sensor.kinderzimmer_manual_control',
             'arbeitszimmer': 'binary_sensor.arbeitszimmer_manual_control',
@@ -77,6 +79,18 @@
           } %}
           {% set sensor = area_to_sensor.get(motion_area, none) %}
           {{ sensor is none or is_state(sensor, 'off') }}
+      - alias: Keine aktive Szene im Raum (Arbeit, Gaming, Party, Sauna, Baden)
+        condition: template
+        value_template: >-
+          {% set szene_aktiv = {
+            'arbeitszimmer': is_state('input_boolean.arbeit', 'on') or is_state('input_boolean.gaming', 'on'),
+            'wohnzimmer': is_state('input_boolean.party_wohnzimmer', 'on'),
+            'kuche': is_state('input_boolean.party_wohnzimmer', 'on'),
+            'arbeitszimmer_alex': is_state('input_boolean.arbeit', 'on'),
+            'badezimmer_gross': is_state('input_boolean.sauna', 'on') or is_state('input_boolean.baden', 'on')
+          } %}
+          {# Global party effect lights span all rooms #}
+          {{ is_state('input_boolean.party', 'off') and not szene_aktiv.get(motion_area, false) }}
       sequence:
       - alias: Lichter in Area ausschalten
         action: light.turn_off

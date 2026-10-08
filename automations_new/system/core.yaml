@@ -32,8 +32,8 @@
       is_bad_weather: "{{ states('weather.fuerth_bayern') in ['rainy', 'snowy', 'windy']\
         \ or \n   states('sensor.luftfeuchtigkeit_aussen') | float(50) > 85 }}\n"
       heating_active: '{{ (has_value(''climate.ac'') and is_state(''climate.ac'', ''heat''))
-        or (states.switch | selectattr(''entity_id'', ''match'', ''switch.heizung_'')
-        | selectattr(''state'', ''eq'', ''on'') | list | count > 0) }}
+        or ([''switch.sonoff_switch_03'', ''switch.sonoff_switch_04'', ''switch.sonoff_switch_05'']
+        | select(''is_state'', ''on'') | list | count > 0) }}
 
         '
       is_critical_situation: '{{ is_cold_outside or (is_bad_weather and heating_active)

@@ -192,6 +192,12 @@
           entity_id: input_boolean.movie
         data: {}
         action: input_boolean.turn_off
+      # Ambilight must go off on every film end, even when another scene is active
+      - alias: "HyperHDR nach Film ausschalten"
+        action: light.turn_off
+        target:
+          entity_id: light.hyperhdr
+        data: {}
       - alias: "Keine niedrigere Film-Bereinigung waehrend einer aktiven Szene"
         condition: template
         value_template: >-
@@ -231,7 +237,6 @@
           exclude_scenes: "kochen,abwaschen,party,party_wohnzimmer"
       - target:
           entity_id:
-          - light.hyperhdr
           - light.alle_kuche_nachtlichter
           - light.alle_wohnzimmer_nachtlichter
         data: {}
@@ -351,12 +356,13 @@
     id: coming_home
     trigger: state
   conditions:
+  # Midnight turn-off is exempt: at 00:00 on 7 Jan the season is already over
   - condition: template
     value_template: >-
       {% set today = now().strftime('%m-%d') %}
       {% set start = '11-24' %}
       {% set end = '01-06' %}
-      {{ (today >= start) or (today <= end) }}
+      {{ trigger.id == 'midnight' or (today >= start) or (today <= end) }}
   actions:
   - choose:
     - conditions:
@@ -556,6 +562,10 @@
     - conditions:
       - condition: trigger
         id: 'off'
+      # Global party still owns Wohnzimmer/Küche; its off path restores them
+      - condition: state
+        entity_id: input_boolean.party
+        state: 'off'
       sequence:
       - alias: "Hue-Effekt stoppen und Lichter ausschalten"
         action: script.scene_stop_rgb_effect
