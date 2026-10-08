@@ -670,10 +670,8 @@ homepods_mute:
   description: >-
     Setzt alle HomePods auf 0%. Jedes Gerät wird einzeln über
     script.homepod_mute_one angesprochen, damit ein hängendes Gerät die
-    anderen nicht blockiert. Nach 20 Sekunden werden alle, die noch hörbar
-    sind, ein zweites Mal angesprochen (pyatv baut die Verbindung meist
-    innerhalb weniger Sekunden neu auf). Immer per script.turn_on
-    (fire-and-forget) aufrufen.
+    anderen nicht blockiert. Immer per script.turn_on (fire-and-forget)
+    aufrufen.
   icon: mdi:volume-mute
   mode: restart
   sequence:
@@ -687,21 +685,6 @@ homepods_mute:
       - media_player.schlafzimmer
   - repeat:
       for_each: "{{ players }}"
-      sequence:
-      - action: script.turn_on
-        target:
-          entity_id: script.homepod_mute_one
-        data:
-          variables:
-            player: "{{ repeat.item }}"
-  - delay: "00:00:20"
-  # Retry only players that are still audible
-  - repeat:
-      for_each: >-
-        {{ expand(players)
-           | selectattr('attributes.volume_level', 'defined')
-           | selectattr('attributes.volume_level', 'gt', 0.01)
-           | map(attribute='entity_id') | list }}
       sequence:
       - action: script.turn_on
         target:

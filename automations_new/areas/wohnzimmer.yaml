@@ -356,13 +356,13 @@
     id: coming_home
     trigger: state
   conditions:
-  # Midnight turn-off is exempt: at 00:00 on 7 Jan the season is already over
+  # The midnight run is exempt from the season window only on the night into 7 Jan, when the season has just ended
   - condition: template
     value_template: >-
       {% set today = now().strftime('%m-%d') %}
       {% set start = '11-24' %}
       {% set end = '01-06' %}
-      {{ trigger.id == 'midnight' or (today >= start) or (today <= end) }}
+      {{ (trigger.id == 'midnight' and today == '01-07') or (today >= start) or (today <= end) }}
   actions:
   - choose:
     - conditions:
