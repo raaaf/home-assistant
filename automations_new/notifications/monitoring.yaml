@@ -377,12 +377,13 @@
   mode: single
 - id: 'homepod_unavailable_recovery'
   alias: Helper » HomePod-Recovery nach Neustart
-  description: Lädt beim Start oder Reconcile HomePod-Config-Entries neu, die länger als 15 Minuten nicht verfügbar sind
+  description: >-
+    Lädt beim HA-Start HomePod-Config-Entries neu, die länger als 15 Minuten
+    nicht verfügbar sind. Läuft nur beim Start, der laufende Betrieb ist durch
+    den HomePod Watchdog abgedeckt.
   triggers:
   - trigger: homeassistant
     event: start
-  - trigger: time_pattern
-    minutes: "/15"
   variables:
     stale_homepods: >
       {% set cutoff = now() - timedelta(minutes=15) %}

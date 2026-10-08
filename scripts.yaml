@@ -668,50 +668,76 @@ lock_wohnungstuer_safe:
 homepods_mute:
   alias: HomePods stummschalten
   description: >-
-    Setzt alle HomePods auf 0%. Jedes Geraet wird einzeln und parallel
-    angesprochen, damit ein haengendes Geraet die anderen nicht blockiert.
-    Immer per script.turn_on (fire-and-forget) aufrufen: pyatv wirft bei
-    toter Verbindung einen TimeoutError, den continue_on_error nicht faengt.
+    Setzt alle HomePods auf 0%. Jedes Gerät wird einzeln über
+    script.homepod_mute_one angesprochen, damit ein hängendes Gerät die
+    anderen nicht blockiert. Nach 20 Sekunden werden alle, die noch hörbar
+    sind, ein zweites Mal angesprochen (pyatv baut die Verbindung meist
+    innerhalb weniger Sekunden neu auf). Immer per script.turn_on
+    (fire-and-forget) aufrufen.
   icon: mdi:volume-mute
   mode: restart
   sequence:
-  - parallel:
-    - action: media_player.volume_set
-      continue_on_error: true
-      target:
-        entity_id: media_player.homepod_wohnzimmer
-      data:
-        volume_level: 0.0
-    - action: media_player.volume_set
-      continue_on_error: true
-      target:
-        entity_id: media_player.arbeitszimmer
-      data:
-        volume_level: 0.0
-    - action: media_player.volume_set
-      continue_on_error: true
-      target:
-        entity_id: media_player.kuche
-      data:
-        volume_level: 0.0
-    - action: media_player.volume_set
-      continue_on_error: true
-      target:
-        entity_id: media_player.homepod_badezimmer
-      data:
-        volume_level: 0.0
-    - action: media_player.volume_set
-      continue_on_error: true
-      target:
-        entity_id: media_player.homepod_kinderzimmer
-      data:
-        volume_level: 0.0
-    - action: media_player.volume_set
-      continue_on_error: true
-      target:
-        entity_id: media_player.schlafzimmer
-      data:
-        volume_level: 0.0
+  - variables:
+      players:
+      - media_player.homepod_wohnzimmer
+      - media_player.arbeitszimmer
+      - media_player.kuche
+      - media_player.homepod_badezimmer
+      - media_player.homepod_kinderzimmer
+      - media_player.schlafzimmer
+  - repeat:
+      for_each: "{{ players }}"
+      sequence:
+      - action: script.turn_on
+        target:
+          entity_id: script.homepod_mute_one
+        data:
+          variables:
+            player: "{{ repeat.item }}"
+  - delay: "00:00:20"
+  # Retry only players that are still audible
+  - repeat:
+      for_each: >-
+        {{ expand(players)
+           | selectattr('attributes.volume_level', 'defined')
+           | selectattr('attributes.volume_level', 'gt', 0.01)
+           | map(attribute='entity_id') | list }}
+      sequence:
+      - action: script.turn_on
+        target:
+          entity_id: script.homepod_mute_one
+        data:
+          variables:
+            player: "{{ repeat.item }}"
+
+homepod_mute_one:
+  alias: HomePod stummschalten (einzeln)
+  description: >-
+    Setzt einen einzelnen HomePod auf 0%. Immer per script.turn_on
+    (fire-and-forget) aufrufen: pyatv wirft bei toter Verbindung einen
+    TimeoutError, den continue_on_error nicht fängt, und so stirbt nur dieser
+    Lauf.
+  icon: mdi:volume-mute
+  mode: parallel
+  max: 12
+  fields:
+    player:
+      name: Player
+      description: HomePod, der stummgeschaltet wird.
+      required: true
+      example: media_player.kuche
+      selector:
+        entity:
+          domain: media_player
+  sequence:
+  - condition: template
+    value_template: "{{ states(player) not in ['unavailable', 'unknown'] }}"
+  - action: media_player.volume_set
+    continue_on_error: true
+    target:
+      entity_id: "{{ player }}"
+    data:
+      volume_level: 0.0
 
 homepod_wake:
   alias: HomePod aufwecken
