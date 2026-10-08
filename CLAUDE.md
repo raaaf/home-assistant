@@ -80,6 +80,7 @@ PYEOF
 | `custom_components/` | Custom integrations |
 | `blueprints/` | Blueprints (mostly switch_manager) |
 | `scripts.yaml` | Reusable scripts |
+| `packages/` | Template sensors, utility meters and YAML helpers by concern |
 | `themes/` | UI theme (Linear) |
 | `secrets.yaml` | Sensitive data (never commit) |
 
@@ -98,9 +99,7 @@ configuration.yaml
 ├── recorder:                # Database (14-day retention)
 ├── logger:                  # Log levels
 │
-├── [Inline Templates]       # 450+ lines of template sensors
-├── [Input Helpers]          # input_boolean, input_datetime, etc.
-├── [Utility Meters]         # Energy tracking
+├── packages: !include_dir_named packages   # templates, meters, YAML helpers
 │
 ├── automation: !include_dir_merge_list automations_new/
 ├── script: !include scripts.yaml
@@ -368,11 +367,14 @@ script.al_set_manual_control            # Mark/clear AL manual control per room 
 script.scene_stop_rgb_effect            # Stop a Hue effect, reset to color_temp, turn lights off
 script.restore_leselicht                # Restore the reading light if input_boolean.leselicht is on
 script.movie_motion_restore             # Re-enable motion automations when the movie scene ends
+script.homepod_volume_apply             # Apply HomePod volume levels from the single table
 ```
 
 The four `scene_*` scripts take an `exclude_scenes` list of `input_boolean` names and do nothing
 while one of them is on. That check only sees input_booleans. A gate on a media_player (e.g. the
 AppleTV guard around `automation.motion_schlafzimmer`) still has to sit at the call site.
+
+`automations_new/helpers/room_policy.yaml` holds the motion/AL reconciler, currently in shadow mode (it only logs what it would switch).
 
 ---
 
@@ -462,7 +464,7 @@ input_datetime.einschlafzeit_freier_tag  # Same before a free day, clamped to 19
 
 ### Input Number
 ```yaml
-input_number.saved_volume_*          # Volume before a scene, restored afterwards
+# HomePod volumes come from script.homepod_volume_apply (single table)
 input_number.al_tagesmax_helligkeit  # Daytime ceiling for Adaptive Lighting
 ```
 

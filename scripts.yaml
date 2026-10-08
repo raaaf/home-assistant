@@ -94,7 +94,9 @@ fade_volume:
             {% else %}
               {% set prev = sv + progress * vd %}
             {% endif %}
-            {{ ((state_attr(target_player, 'volume_level') | float(-1)) - prev) | abs <= 0.02 }}
+            {# A missing or non-numeric volume_level (idle HomePod) is no information: continue #}
+            {% set cur = state_attr(target_player, 'volume_level') %}
+            {{ not (cur is number) or ((cur - prev) | abs <= 0.02) }}
           {% else %}
             true
           {% endif %}

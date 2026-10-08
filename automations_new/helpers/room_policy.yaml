@@ -158,4 +158,4 @@
               data:
                 name: Sollzustand
                 message: >-
-                  Schatten: würde {{ repeat.item }} {{ 'ausschalten' if direction == 'off' else 'einschalten' }} ({{ trigger.id | default('state') }})
+                  Schatten: würde {{ repeat.item }} {{ 'ausschalten' if direction == 'off' else 'einschalten' }} ({{ trigger.entity_id | default(trigger.id) }})
