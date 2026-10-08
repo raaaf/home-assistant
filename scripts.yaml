@@ -78,6 +78,26 @@ fade_volume:
         value_template: >-
           {{ repeat.index <= total_steps and
              states(target_player) not in ['unavailable', 'unknown'] }}
+      # Supersede rule: if the player's volume differs from what the previous
+      # step set, another writer changed it, so this fade stops. The previous
+      # value uses the same formula as the volume_set below, for index - 1.
+      - condition: template
+        value_template: >-
+          {% if repeat.index > 1 %}
+            {% set sv = start_volume | float(0) %}
+            {% set vd = volume_diff | float(0) %}
+            {% set progress = (repeat.index - 1) / total_steps %}
+            {% if curve == 'logarithmic' %}
+              {% set prev = sv + (progress * progress * progress) * vd %}
+            {% elif curve == 'bezier' %}
+              {% set prev = sv + (progress * progress * (3 - 2 * progress)) * vd %}
+            {% else %}
+              {% set prev = sv + progress * vd %}
+            {% endif %}
+            {{ ((state_attr(target_player, 'volume_level') | float(-1)) - prev) | abs <= 0.02 }}
+          {% else %}
+            true
+          {% endif %}
       sequence:
       - action: media_player.volume_set
         continue_on_error: true
@@ -101,12 +121,6 @@ fade_volume:
             {% endif %}
       - delay:
           milliseconds: '{{ ((duration * 1000) / total_steps) | int }}'
-  - action: media_player.volume_set
-    continue_on_error: true
-    target:
-      entity_id: '{{ target_player }}'
-    data:
-      volume_level: '{{ target_volume }}'
   - action: system_log.write
     data:
       message: 'Fade completed: {{ target_player }}  from {{ start_volume }} to {{
@@ -669,7 +683,7 @@ homepods_mute:
   alias: HomePods stummschalten
   description: >-
     Setzt alle HomePods auf 0%. Jedes Gerät wird einzeln über
-    script.homepod_mute_one angesprochen, damit ein hängendes Gerät die
+    script.homepod_set_volume_one angesprochen, damit ein hängendes Gerät die
     anderen nicht blockiert. Immer per script.turn_on (fire-and-forget)
     aufrufen.
   icon: mdi:volume-mute
@@ -688,30 +702,49 @@ homepods_mute:
       sequence:
       - action: script.turn_on
         target:
-          entity_id: script.homepod_mute_one
+          entity_id: script.homepod_set_volume_one
         data:
           variables:
             player: "{{ repeat.item }}"
+            volume: 0
 
-homepod_mute_one:
-  alias: HomePod stummschalten (einzeln)
+homepod_set_volume_one:
+  alias: HomePod Lautstärke setzen (einzeln)
   description: >-
-    Setzt einen einzelnen HomePod auf 0%. Immer per script.turn_on
-    (fire-and-forget) aufrufen: pyatv wirft bei toter Verbindung einen
-    TimeoutError, den continue_on_error nicht fängt, und so stirbt nur dieser
-    Lauf.
-  icon: mdi:volume-mute
+    Setzt einen einzelnen HomePod auf eine Lautstärke und stoppt ihn optional.
+    Immer per script.turn_on (fire-and-forget) aufrufen: pyatv wirft bei toter
+    Verbindung einen TimeoutError, den continue_on_error nicht fängt, und so
+    stirbt nur dieser Lauf.
+  icon: mdi:volume-medium
   mode: parallel
   max: 12
   fields:
     player:
       name: Player
-      description: HomePod, der stummgeschaltet wird.
+      description: HomePod, dessen Lautstärke gesetzt wird.
       required: true
       example: media_player.kuche
       selector:
         entity:
           domain: media_player
+    volume:
+      name: Lautstärke
+      description: Zielwert zwischen 0 und 1.
+      required: true
+      example: '0.4'
+      selector:
+        number:
+          min: 0
+          max: 1
+          step: 0.01
+          mode: slider
+    stop:
+      name: Danach stoppen
+      description: Wiedergabe nach dem Setzen stoppen.
+      required: false
+      default: false
+      selector:
+        boolean:
   sequence:
   - condition: template
     value_template: "{{ states(player) not in ['unavailable', 'unknown'] }}"
@@ -720,7 +753,154 @@ homepod_mute_one:
     target:
       entity_id: "{{ player }}"
     data:
-      volume_level: 0.0
+      volume_level: "{{ volume }}"
+  - if:
+    - condition: template
+      value_template: "{{ stop | default(false) | bool(false) }}"
+    then:
+    - action: media_player.media_stop
+      continue_on_error: true
+      target:
+        entity_id: "{{ player }}"
+
+homepod_volume_apply:
+  alias: HomePod Lautstärke anwenden
+  # Single source of the HomePod volume table, see docs/plans/2026-10-08-...
+  description: >-
+    Einzige Stelle mit der HomePod-Lautstärketabelle. Das Ziel je Player wird
+    bei jedem Aufruf aus dem aktuellen Zustand berechnet. Basis: Schlafenszeit
+    an = Nacht (WZ 35, Küche/Bad/Kinderzimmer 40, Arbeitszimmer 35,
+    Schlafzimmer 30 %), sonst Tag (WZ 35, Küche/Bad/Kinderzimmer 50,
+    Arbeitszimmer 35, Schlafzimmer 30 %). Überschreibungen, die erste Regel
+    gewinnt: Party (WZ 55 oder 30 bei Essen, Küche 50, Bad 35 bei
+    Baden/Sauna sonst 50, Kinderzimmer 50, Arbeitszimmer 50, Schlafzimmer 55 %),
+    Party Wohnzimmer (WZ 55 oder 30 bei Essen, Küche 50), danach die
+    Einzelszenen (Essen WZ 30, Kochen Küche 50, Baden/Sauna Bad 35 %).
+    Immer per script.turn_on (fire-and-forget) aufrufen.
+  icon: mdi:volume-high
+  mode: parallel
+  max: 10
+  fields:
+    players:
+      name: Player
+      description: HomePods, die angepasst werden.
+      required: false
+      default:
+      - media_player.homepod_wohnzimmer
+      - media_player.kuche
+      - media_player.homepod_badezimmer
+      - media_player.homepod_kinderzimmer
+      - media_player.arbeitszimmer
+      - media_player.schlafzimmer
+      selector:
+        entity:
+          domain: media_player
+          multiple: true
+    fade:
+      name: Fade-Dauer
+      description: Sekunden; 0 setzt die Lautstärke sofort.
+      required: false
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 600
+          unit_of_measurement: s
+          mode: box
+    only_if_playing:
+      name: Nur spielende Player
+      description: Player, die nicht spielen, überspringen.
+      required: false
+      default: true
+      selector:
+        boolean:
+    stop_at_night:
+      name: Nachts stoppen
+      description: Bei Schlafenszeit Player ohne Überschreibung nach dem Setzen stoppen.
+      required: false
+      default: false
+      selector:
+        boolean:
+  variables:
+    apply_players: >-
+      {% if players is defined and players %}
+        {{ players }}
+      {% else %}
+        {{ ['media_player.homepod_wohnzimmer', 'media_player.kuche',
+            'media_player.homepod_badezimmer', 'media_player.homepod_kinderzimmer',
+            'media_player.arbeitszimmer', 'media_player.schlafzimmer'] }}
+      {% endif %}
+    apply_fade: "{{ fade | default(0) | float(0) }}"
+    apply_only_if_playing: "{{ only_if_playing | default(true) | bool(true) }}"
+    apply_stop_at_night: "{{ stop_at_night | default(false) | bool(false) }}"
+    night: "{{ is_state('input_boolean.schlafenszeit', 'on') }}"
+    base_table:
+      media_player.homepod_wohnzimmer: {day: 0.35, night: 0.35}
+      media_player.kuche: {day: 0.50, night: 0.40}
+      media_player.homepod_badezimmer: {day: 0.50, night: 0.40}
+      media_player.homepod_kinderzimmer: {day: 0.50, night: 0.40}
+      media_player.arbeitszimmer: {day: 0.35, night: 0.35}
+      media_player.schlafzimmer: {day: 0.30, night: 0.30}
+  sequence:
+  - repeat:
+      for_each: "{{ apply_players }}"
+      sequence:
+      - variables:
+          # Override level of the first matching rule, empty when none matches.
+          override: >-
+            {% set p = repeat.item %}
+            {% set party = is_state('input_boolean.party', 'on') %}
+            {% set party_wz = is_state('input_boolean.party_wohnzimmer', 'on') %}
+            {% set essen = is_state('input_boolean.essen', 'on') %}
+            {% set kochen = is_state('input_boolean.kochen', 'on') %}
+            {% set bad = is_state('input_boolean.baden', 'on') or is_state('input_boolean.sauna', 'on') %}
+            {% if p == 'media_player.homepod_wohnzimmer' %}
+              {% if party or party_wz %}{{ 0.30 if essen else 0.55 }}{% elif essen %}0.30{% endif %}
+            {% elif p == 'media_player.kuche' %}
+              {% if party or party_wz or kochen %}0.50{% endif %}
+            {% elif p == 'media_player.homepod_badezimmer' %}
+              {% if party %}{{ 0.35 if bad else 0.50 }}{% elif bad %}0.35{% endif %}
+            {% elif p == 'media_player.homepod_kinderzimmer' or p == 'media_player.arbeitszimmer' %}
+              {% if party %}0.50{% endif %}
+            {% elif p == 'media_player.schlafzimmer' %}
+              {% if party %}0.55{% endif %}
+            {% endif %}
+      - variables:
+          has_override: "{{ (override | string | trim) != '' }}"
+          target: >-
+            {% if has_override %}
+              {{ override | float(0) }}
+            {% else %}
+              {{ base_table[repeat.item]['night' if night else 'day'] }}
+            {% endif %}
+      - if:
+        - condition: template
+          value_template: >-
+            {{ has_value(repeat.item) and
+               (not apply_only_if_playing or is_state(repeat.item, 'playing')) }}
+        then:
+        - if:
+          - condition: template
+            value_template: "{{ apply_fade > 0 }}"
+          then:
+          - action: script.turn_on
+            target:
+              entity_id: script.fade_volume
+            data:
+              variables:
+                target_player: "{{ repeat.item }}"
+                target_volume: "{{ target | float(0) }}"
+                duration: "{{ apply_fade }}"
+                curve: linear
+          else:
+          - action: script.turn_on
+            target:
+              entity_id: script.homepod_set_volume_one
+            data:
+              variables:
+                player: "{{ repeat.item }}"
+                volume: "{{ target | float(0) }}"
+                stop: "{{ apply_stop_at_night and night and not has_override }}"
 
 homepod_wake:
   alias: HomePod aufwecken
