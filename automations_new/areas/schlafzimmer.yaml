@@ -54,13 +54,15 @@
       - input_boolean.arbeit  # Keep bedroom work lighting on while working
 - id: 'schlafzimmer_appletv_ambilight'
   alias: 'Licht » Schlafzimmer TV Ambilight'
-  description: Schaltet Ambilight ein und Rollo zu wenn Apple TV abspielt, deaktiviert Motion-Automation
+  description: Schaltet Ambilight ein und Rollo zu wenn Apple TV abspielt, deaktiviert Motion-Automation.
+    Das Ende reagiert erst nach 2 Minuten ohne Wiedergabe.
   triggers:
   - trigger: state
     entity_id: media_player.appletv
     to: playing
     id: playing
-  # Pause ist kein Stopp: Rollo und Ambilight bleiben, bis wirklich aus.
+  # Pause is not a stop.
+  # A stop counts only after 2 minutes without playback, so the gap between two episodes does not open the blind.
   - trigger: state
     entity_id: media_player.appletv
     from:
@@ -70,6 +72,8 @@
     - idle
     - standby
     - 'off'
+    for:
+      minutes: 2
     id: stopped
   - trigger: time_pattern
     minutes: "/5"
