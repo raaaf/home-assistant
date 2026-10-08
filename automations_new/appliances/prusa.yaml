@@ -81,10 +81,12 @@
 # ============================================================================
 
 - id: 'prusa_steckdose_aus_kuehl'
-  alias: "Prusa » Steckdose aus wenn kuehl"
+  alias: "Prusa » Steckdose aus wenn kühl"
   description: >-
-    Schaltet die Drucker-Steckdose ab sobald nicht gedruckt wird und die Duese
-    unter 40 Grad abgekuehlt ist.
+    Schaltet die Drucker-Steckdose ab, sobald die Steckdose seit mindestens
+    30 Minuten an ist (Karenzzeit nach dem Einschalten), der Drucker 30 Minuten
+    lang nicht gedruckt hat und die Düse unter 40 Grad abgekühlt ist. Beides
+    muss gelten: 30 Minuten kein Druck und Düse unter 40 Grad.
   triggers:
   - trigger: numeric_state
     entity_id: sensor.prusa_mk4_nozzle_temperature
@@ -100,7 +102,13 @@
     - error
     - ready
     for:
-      seconds: 30
+      minutes: 30
+  # Retrigger after the grace period: the idle trigger may fire a moment before the socket-on condition turns true
+  - trigger: state
+    entity_id: switch.arbeitszimmer_prusa_mk4_pc_rafael
+    to: 'on'
+    for:
+      minutes: 31
   conditions:
   - alias: "Drucker druckt nicht"
     condition: state
@@ -111,10 +119,17 @@
     - stopped
     - error
     - ready
-  - alias: "Steckdose ist an"
+  - alias: "Düse unter 40 Grad"
+    condition: numeric_state
+    entity_id: sensor.prusa_mk4_nozzle_temperature
+    below: 40
+  # Grace period to slice and start a print after power-on
+  - alias: "Steckdose seit mindestens 30 Minuten an"
     condition: state
     entity_id: switch.arbeitszimmer_prusa_mk4_pc_rafael
     state: 'on'
+    for:
+      minutes: 30
   actions:
   - action: switch.turn_off
     target:
