@@ -1,0 +1,157 @@
+# Scene status sensors and YAML scene flags (other scene flags are UI helpers in .storage)
+
+template:
+  # Scene status sensors
+  - sensor:
+      - name: "Active Scenes"
+        unique_id: active_scenes
+        state: >
+          {% set scenes = [
+            'Film' if is_state('input_boolean.movie', 'on') else none,
+            'Party' if is_state('input_boolean.party', 'on') else none,
+            'Kochen' if is_state('input_boolean.kochen', 'on') else none,
+            'Essen' if is_state('input_boolean.essen', 'on') else none,
+            'Baden' if is_state('input_boolean.baden', 'on') else none,
+            'Sauna' if is_state('input_boolean.sauna', 'on') else none,
+            'Arbeit' if is_state('input_boolean.arbeit', 'on') else none,
+            'Gaming' if is_state('input_boolean.gaming', 'on') else none
+          ] | reject('none') | list %}
+          {% if scenes | length > 0 %}
+            {{ scenes | join(', ') }}
+          {% else %}
+            Keine
+          {% endif %}
+        icon: mdi:play-circle
+        attributes:
+          scene_count: >
+            {{ [
+              is_state('input_boolean.movie', 'on'),
+              is_state('input_boolean.party', 'on'),
+              is_state('input_boolean.kochen', 'on'),
+              is_state('input_boolean.essen', 'on'),
+              is_state('input_boolean.baden', 'on'),
+              is_state('input_boolean.sauna', 'on'),
+              is_state('input_boolean.arbeit', 'on'),
+              is_state('input_boolean.gaming', 'on')
+            ] | select('true') | list | length }}
+          scene_list: >
+            {{ [
+              'Film' if is_state('input_boolean.movie', 'on') else none,
+              'Party' if is_state('input_boolean.party', 'on') else none,
+              'Kochen' if is_state('input_boolean.kochen', 'on') else none,
+              'Essen' if is_state('input_boolean.essen', 'on') else none,
+              'Baden' if is_state('input_boolean.baden', 'on') else none,
+              'Sauna' if is_state('input_boolean.sauna', 'on') else none,
+              'Arbeit' if is_state('input_boolean.arbeit', 'on') else none,
+              'Gaming' if is_state('input_boolean.gaming', 'on') else none
+            ] | reject('none') | list }}
+
+  # Scene status binary sensors
+  - binary_sensor:
+      - name: "Any Scene Active"
+        unique_id: any_scene_active
+        device_class: running
+        state: >
+          {{ [
+            is_state('input_boolean.movie', 'on'),
+            is_state('input_boolean.party', 'on'),
+            is_state('input_boolean.kochen', 'on'),
+            is_state('input_boolean.essen', 'on'),
+            is_state('input_boolean.baden', 'on'),
+            is_state('input_boolean.sauna', 'on'),
+            is_state('input_boolean.arbeit', 'on'),
+            is_state('input_boolean.gaming', 'on')
+          ] | select('true') | list | length > 0 }}
+        availability: >
+          {{ expand(['input_boolean.movie', 'input_boolean.party',
+                     'input_boolean.kochen', 'input_boolean.essen',
+                     'input_boolean.baden', 'input_boolean.sauna',
+                     'input_boolean.arbeit', 'input_boolean.gaming'])
+             | selectattr('state', 'defined') | list | length == 8 }}
+        icon: >
+          {% if this.state == 'on' %}
+            mdi:play-circle
+          {% else %}
+            mdi:play-circle-outline
+          {% endif %}
+        attributes:
+          active_scenes: "{{ states('sensor.active_scenes') }}"
+          scene_count: "{{ state_attr('sensor.active_scenes', 'scene_count') }}"
+
+      - name: "Scene Conflict Detected"
+        unique_id: scene_conflict_detected
+        device_class: problem
+        state: >
+          {% set party = is_state('input_boolean.party', 'on') %}
+          {% set arbeit = is_state('input_boolean.arbeit', 'on') %}
+          {% set gaming = is_state('input_boolean.gaming', 'on') %}
+          {% set other_scenes = [
+            is_state('input_boolean.movie', 'on'),
+            is_state('input_boolean.kochen', 'on'),
+            is_state('input_boolean.essen', 'on'),
+            is_state('input_boolean.baden', 'on'),
+            is_state('input_boolean.sauna', 'on')
+          ] | select('true') | list | length > 0 %}
+          {% set conflict = false %}
+          {# Party conflicts with any other scene #}
+          {% if party and (arbeit or gaming or other_scenes) %}
+            {% set conflict = true %}
+          {% endif %}
+          {# Rafael kann im Schlafraum nicht gleichzeitig gamen und arbeiten (Alex sitzt im Buero) #}
+          {% if gaming and is_state('binary_sensor.macbook_pro_rafael_active_2', 'on') %}
+            {% set conflict = true %}
+          {% endif %}
+          {{ conflict }}
+        availability: >
+          {{ expand(['input_boolean.movie', 'input_boolean.party',
+                     'input_boolean.kochen', 'input_boolean.essen',
+                     'input_boolean.baden', 'input_boolean.sauna',
+                     'input_boolean.arbeit', 'input_boolean.gaming'])
+             | selectattr('state', 'defined') | list | length == 8 }}
+        icon: >
+          {% if this.state == 'on' %}
+            mdi:alert-circle
+          {% else %}
+            mdi:check-circle
+          {% endif %}
+        attributes:
+          active_scenes: "{{ states('sensor.active_scenes') }}"
+          conflict_reason: >
+            {% set party = is_state('input_boolean.party', 'on') %}
+            {% set arbeit = is_state('input_boolean.arbeit', 'on') %}
+            {% set gaming = is_state('input_boolean.gaming', 'on') %}
+            {% set other_scenes = [
+              is_state('input_boolean.movie', 'on'),
+              is_state('input_boolean.kochen', 'on'),
+              is_state('input_boolean.essen', 'on'),
+              is_state('input_boolean.baden', 'on'),
+              is_state('input_boolean.sauna', 'on')
+            ] | select('true') | list | length > 0 %}
+            {% if party and (arbeit or gaming or other_scenes) %}
+              Party-Modus kann nicht mit anderen Szenen kombiniert werden
+            {% elif gaming and is_state('binary_sensor.macbook_pro_rafael_active_2', 'on') %}
+              Rafael kann im Schlafraum nicht gleichzeitig gamen und arbeiten
+            {% else %}
+              Kein Konflikt
+            {% endif %}
+
+input_boolean:
+  gaming:
+    name: "Gaming Mode"
+    icon: mdi:gamepad-variant
+    initial: false
+  abwaschen:
+    name: "Abwaschen"
+    icon: mdi:dishwasher
+    initial: false
+  leselicht:
+    name: "Leselicht"
+    icon: mdi:book-open-page-variant
+    initial: false
+  bedtime_reminder_active:
+    name: "Bedtime Reminder aktiv"
+    icon: mdi:bed-clock
+    initial: false
+  wakeup_active:
+    name: "Aufwachroutine aktiv"
+    icon: mdi:weather-sunset-up

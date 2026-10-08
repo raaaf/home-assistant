@@ -1,0 +1,138 @@
+# Light state: manual control sensors, light counter and Adaptive Lighting daytime ceiling
+
+template:
+  # Manual Control Sensors for Motion Bypass
+  # These track when lights have been manually controlled (via Siri, app, switch)
+  # Used to bypass motion-based turn-off automations
+  - binary_sensor:
+      - name: "Wohnzimmer Manual Control"
+        unique_id: wohnzimmer_manual_control
+        state: >-
+          {{ (state_attr('switch.adaptive_lighting_wohnzimmer', 'manual_control') or []) | length > 0 }}
+        icon: mdi:hand-back-right
+
+      - name: "Küche Manual Control"
+        unique_id: kueche_manual_control
+        state: >-
+          {{ (state_attr('switch.adaptive_lighting_kueche', 'manual_control') or []) | length > 0 }}
+        icon: mdi:hand-back-right
+
+      - name: "Schlafzimmer Manual Control"
+        unique_id: schlafzimmer_manual_control
+        state: >-
+          {{ (state_attr('switch.adaptive_lighting_schlafzimmer', 'manual_control') or []) | length > 0 }}
+        icon: mdi:hand-back-right
+
+      - name: "Kinderzimmer Manual Control"
+        unique_id: kinderzimmer_manual_control
+        state: >-
+          {{ (state_attr('switch.adaptive_lighting_kinderzimmer', 'manual_control') or []) | length > 0 }}
+        icon: mdi:hand-back-right
+
+      - name: "Badezimmer Manual Control"
+        unique_id: badezimmer_manual_control
+        state: >-
+          {{ (state_attr('switch.adaptive_lighting_badezimmer', 'manual_control') or []) | length > 0 }}
+        icon: mdi:hand-back-right
+
+      - name: "Waschzimmer Manual Control"
+        unique_id: waschzimmer_manual_control
+        state: >-
+          {{ (state_attr('switch.adaptive_lighting_waschzimmer', 'manual_control') or []) | length > 0 }}
+        icon: mdi:hand-back-right
+
+      - name: "Arbeitszimmer Manual Control"
+        unique_id: arbeitszimmer_manual_control
+        state: >-
+          {{ (state_attr('switch.adaptive_lighting_arbeitszimmer', 'manual_control') or []) | length > 0 }}
+        icon: mdi:hand-back-right
+
+      - name: "Ankleide Manual Control"
+        unique_id: ankleide_manual_control
+        state: >-
+          {{ (state_attr('switch.adaptive_lighting_ankleide', 'manual_control') or []) | length > 0 }}
+        icon: mdi:hand-back-right
+
+      - name: "Flur Manual Control"
+        unique_id: flur_manual_control
+        state: >-
+          {{ (state_attr('switch.adaptive_lighting_flur', 'manual_control') or []) | length > 0 }}
+        icon: mdi:hand-back-right
+
+      - name: "Balkon Manual Control"
+        unique_id: balkon_manual_control
+        state: >-
+          {{ (state_attr('switch.adaptive_lighting_balkon', 'manual_control') or []) | length > 0 }}
+        icon: mdi:hand-back-right
+
+      # Fenster/Tueren ohne Arbeitszimmer: dort haengt dauerhaft der AC-Abluftschlauch
+      # im offenen Fenster. Gate fuer die AC-Steuerung, damit AZ-Fenster die AC nicht blockt.
+      - name: "Fenster Tueren ohne Arbeitszimmer"
+        unique_id: fenster_tueren_ohne_az
+        device_class: opening
+        state: >-
+          {{ expand([
+               'binary_sensor.aqara_contact_02',
+               'binary_sensor.aqara_contact_04',
+               'binary_sensor.aqara_contact_05',
+               'binary_sensor.aqara_contact_06',
+               'binary_sensor.aqara_contact_07',
+               'binary_sensor.aqara_contact_08'
+             ]) | selectattr('state', 'eq', 'on') | list | length > 0 }}
+        icon: mdi:window-open-variant
+
+      - name: "Motion Automations Disabled"
+        unique_id: motion_automations_disabled
+        device_class: problem
+        state: >
+          {{ is_state('automation.motion_kuche_2', 'off') or
+             is_state('automation.motion_esstisch', 'off') or
+             is_state('automation.motion_badezimmer_gross', 'off') or
+             is_state('automation.arbeitszimmer_motion', 'off') }}
+        availability: >
+          {{ expand(['automation.motion_kuche_2', 'automation.motion_esstisch',
+                     'automation.motion_badezimmer_gross', 'automation.arbeitszimmer_motion'])
+             | selectattr('state', 'defined') | list | length == 4 }}
+        icon: >
+          {% if this.state == 'on' %}
+            mdi:motion-sensor-off
+          {% else %}
+            mdi:motion-sensor
+          {% endif %}
+        attributes:
+          disabled_count: >
+            {{ [
+              is_state('automation.motion_kuche_2', 'off'),
+              is_state('automation.motion_esstisch', 'off'),
+              is_state('automation.motion_badezimmer_gross', 'off'),
+              is_state('automation.arbeitszimmer_motion', 'off')
+            ] | select('true') | list | length }}
+          disabled_automations: >
+            {{ [
+              'Küche' if is_state('automation.motion_kuche_2', 'off') else none,
+              'Esstisch' if is_state('automation.motion_esstisch', 'off') else none,
+              'Badezimmer' if is_state('automation.motion_badezimmer_gross', 'off') else none,
+              'Arbeitszimmer' if is_state('automation.arbeitszimmer_motion', 'off') else none
+            ] | reject('none') | list | join(', ') }}
+
+  - sensor:
+      # Smart Home Status
+      - name: "Count Lights On"
+        unique_id: count_lights_on
+        icon: mdi:ceiling-light
+        unit_of_measurement: "Lichter"
+        state: >
+          {{ states.light | selectattr('state', 'eq', 'on') | list | count }}
+
+input_number:
+  # Tages-Obergrenze der Adaptive-Lighting-Helligkeit, gesetzt von
+  # "Licht » Tageshelligkeit nach Aussenlicht". Einzige Quelle der Wahrheit:
+  # die Szenen-Resets (Film, Kochen, Essen) lesen diesen Wert, statt hart auf
+  # 100 zurueckzufallen, sonst wuerden sie die Aussenlicht-Modulation ueberschreiben.
+  al_tagesmax_helligkeit:
+    name: "AL Tagesmaximum Helligkeit"
+    min: 10
+    max: 100
+    step: 5
+    unit_of_measurement: "%"
+    icon: mdi:brightness-percent

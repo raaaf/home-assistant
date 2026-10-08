@@ -1,0 +1,189 @@
+# General: time sensors, device status binary sensors, visitor helpers and saved HomePod volumes
+
+template:
+  # Time-based sensors
+  - sensor:
+      - name: "WakeUp Light Timestamp"
+        unique_id: wakeup_light_timestamp
+        device_class: timestamp
+        state: >
+          {% set target = 'input_datetime.aufwachzeit_arbeitstag' if is_state("binary_sensor.workday_sensor", "on") else 'input_datetime.aufwachzeit_freier_tag' %}
+          {% set raw = states(target) %}
+          {% if raw in ['unknown', 'unavailable', ''] %}
+            {{ none }}
+          {% else %}
+            {% set parsed = as_datetime(raw, default=None) %}
+            {% set time_str = parsed.strftime('%H:%M:%S') if parsed is not none else raw %}
+            {{ today_at(time_str) }}
+          {% endif %}
+        availability: >
+          {{ states('binary_sensor.workday_sensor') not in ['unknown', 'unavailable'] and
+             states('input_datetime.aufwachzeit_arbeitstag') not in ['unknown', 'unavailable'] and
+             states('input_datetime.aufwachzeit_freier_tag') not in ['unknown', 'unavailable'] }}
+
+      - name: "Einschlafzeit Timestamp"
+        unique_id: einschlafzeit_timestamp
+        device_class: timestamp
+        state: >
+          {% set target = 'input_datetime.einschlafzeit_arbeitstag' if is_state("binary_sensor.tomorrow_workday_sensor", "on") else 'input_datetime.einschlafzeit_freier_tag' %}
+          {% set raw = states(target) %}
+          {% if raw in ['unknown', 'unavailable', ''] %}
+            {{ none }}
+          {% else %}
+            {% set parsed = as_datetime(raw, default=None) %}
+            {% set time_str = parsed.strftime('%H:%M:%S') if parsed is not none else raw %}
+            {{ today_at(time_str) }}
+          {% endif %}
+        availability: >
+          {{ states('binary_sensor.tomorrow_workday_sensor') not in ['unknown', 'unavailable'] and
+             states('input_datetime.einschlafzeit_arbeitstag') not in ['unknown', 'unavailable'] and
+             states('input_datetime.einschlafzeit_freier_tag') not in ['unknown', 'unavailable'] }}
+
+  - binary_sensor:
+      # Netzwerk-Infrastruktur
+      - name: "Fritzbox 7590 AX Running"
+        unique_id: fritzbox_7590_ax_running
+        state: "on"
+        device_class: running
+        icon: mdi:router-wireless
+
+      - name: "Fritzrepeater 1200 AX Running"
+        unique_id: fritzrepeater_1200_ax_running
+        state: "on"
+        device_class: running
+        icon: mdi:wifi-strength-4
+
+      - name: "Fritzrepeater 2400 Running"
+        unique_id: fritzrepeater_2400_running
+        state: "on"
+        device_class: running
+        icon: mdi:wifi-strength-4
+
+      # Smart Home Zentrale
+      - name: "Synology DS720 Running"
+        unique_id: synology_ds720_running
+        state: "on"
+        device_class: running
+        icon: mdi:nas
+
+      - name: "Nuki Bridge Running"
+        unique_id: nuki_bridge_running
+        state: "on"
+        device_class: running
+        icon: mdi:bridge
+
+      - name: "HyperHDR Pi Running"
+        unique_id: hyperhdr_pi_running
+        state: "on"
+        device_class: running
+        icon: mdi:raspberry-pi
+
+      # Überwachung
+      - name: "Camera Schlafzimmer Running"
+        unique_id: camera_schlafzimmer_running
+        state: "on"
+        device_class: running
+        icon: mdi:camera
+
+      - name: "Camera Wohnzimmer Running"
+        unique_id: camera_wohnzimmer_running
+        state: "on"
+        device_class: running
+        icon: mdi:camera
+
+      # Haushaltsgeräte
+      - name: "Wasserspender Running"
+        unique_id: wasserspender_running
+        state: "on"
+        device_class: running
+        icon: mdi:water-pump
+
+      - name: "Futterspender Running"
+        unique_id: futterspender_running
+        state: "on"
+        device_class: running
+        icon: mdi:bowl-mix
+
+      - name: "Kuehlschrank Running"
+        unique_id: kuehlschrank_running
+        state: "on"
+        device_class: running
+        icon: mdi:fridge
+
+      # Zustandsabhängige Geräte
+      - name: "Luefter Waschzimmer Active"
+        unique_id: luefter_waschzimmer_active
+        state: "{{ has_value('input_select.trockner') and is_state('input_select.trockner', 'Arbeitet') }}"
+        device_class: running
+        icon: mdi:fan
+        availability: "{{ states('input_select.trockner') not in ['unknown', 'unavailable'] }}"
+
+input_boolean:
+  haustur_besucher_inside:
+    name: "Besucher ist im Haus"
+
+input_datetime:
+  tv_auto_off_time:
+    name: "TV Auto-Off Zeitpunkt"
+    has_date: true
+    has_time: true
+
+  haustur_eingang_zeit:
+    name: "Eingangszeit Besucher"
+    has_date: true
+    has_time: true
+
+  haustur_letzter_eingang:
+    name: "Letzter Eingang über Haustür"
+    has_date: true
+    has_time: true
+
+  party_start_time:
+    name: "Party-Modus Startzeit"
+    has_date: true
+    has_time: true
+
+input_text:
+  haustur_besucher_dauer:
+    name: "Besuchsdauer"
+    initial: ""
+    max: 100
+
+input_number:
+  # Saved HomePod volumes for scene-based volume control
+  saved_volume_wohnzimmer:
+    name: "Gespeicherte Lautstärke Wohnzimmer"
+    min: 0
+    max: 1
+    step: 0.01
+    icon: mdi:volume-high
+  saved_volume_kueche:
+    name: "Gespeicherte Lautstärke Küche"
+    min: 0
+    max: 1
+    step: 0.01
+    icon: mdi:volume-high
+  saved_volume_badezimmer:
+    name: "Gespeicherte Lautstärke Badezimmer"
+    min: 0
+    max: 1
+    step: 0.01
+    icon: mdi:volume-high
+  saved_volume_kinderzimmer:
+    name: "Gespeicherte Lautstärke Kinderzimmer"
+    min: 0
+    max: 1
+    step: 0.01
+    icon: mdi:volume-high
+  saved_volume_arbeitszimmer:
+    name: "Gespeicherte Lautstärke Arbeitszimmer"
+    min: 0
+    max: 1
+    step: 0.01
+    icon: mdi:volume-high
+  saved_volume_schlafzimmer:
+    name: "Gespeicherte Lautstärke Schlafzimmer"
+    min: 0
+    max: 1
+    step: 0.01
+    icon: mdi:volume-high

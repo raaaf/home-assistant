@@ -1,0 +1,256 @@
+# Climate and weather: fan speed, forecast, sun/illuminance sensors, overrides and humidifier thresholds
+
+template:
+  # Fan speed calculation sensors
+  - sensor:
+      - name: "Fan Speed Schlafzimmer CO2 Calculated"
+        unique_id: fan_speed_schlafzimmer_co2_calculated
+        icon: mdi:fan
+        unit_of_measurement: "%"
+        state: >-
+          {% set co2 = states('sensor.qingping_air_monitor_lite_co2_carbon_dioxide') | float(0) %}
+          {% set current = this.state | int(0) %}
+          {% if co2 >= 2000 %} 75
+          {% elif co2 >= 1500 %}
+            {% if current >= 75 and co2 >= 1900 %} 75
+            {% else %} 50
+            {% endif %}
+          {% elif co2 >= 800 %}
+            {% if current >= 50 and co2 >= 1400 %} 50
+            {% else %} 25
+            {% endif %}
+          {% elif co2 < 700 %} 0
+          {% else %} {{ current }}
+          {% endif %}
+        availability: >-
+          {{ states('sensor.qingping_air_monitor_lite_co2_carbon_dioxide') not in ['unknown', 'unavailable'] }}
+
+      - name: "Room Temperature Average"
+        unique_id: room_temperature_average
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state: >
+          {% set temps = [
+            states('sensor.arbeitszimmer_temperatur'),
+            states('sensor.aqara_climate_03_temperature'),
+            states('sensor.aqara_climate_02_temperature'),
+            states('sensor.qingping_air_monitor_lite_temperature')
+          ] | reject('in', ['unknown', 'unavailable']) | map('float', 0) | select('>', 0) | list %}
+          {% if temps | length > 0 %}
+            {{ (temps | sum / temps | length) | round(1) }}
+          {% else %}
+            unavailable
+          {% endif %}
+        availability: >
+          {{ expand(['sensor.arbeitszimmer_temperatur',
+                     'sensor.aqara_climate_03_temperature',
+                     'sensor.aqara_climate_02_temperature',
+                     'sensor.qingping_air_monitor_lite_temperature'])
+             | rejectattr('state', 'in', ['unknown', 'unavailable'])
+             | list | length > 0 }}
+        attributes:
+          room_count: >
+            {{ expand(['sensor.arbeitszimmer_temperatur',
+                       'sensor.aqara_climate_03_temperature',
+                       'sensor.aqara_climate_02_temperature',
+                       'sensor.qingping_air_monitor_lite_temperature'])
+               | rejectattr('state', 'in', ['unknown', 'unavailable'])
+               | list | length }}
+
+  # Weather forecast sensor with trigger
+  - trigger:
+      - platform: time_pattern
+        minutes: "/30" # Every 30 minutes instead of every minute
+      - platform: homeassistant
+        event: start
+      - platform: event
+        event_type: event_template_reloaded
+    action:
+      - action: weather.get_forecasts
+        target:
+          entity_id: weather.fuerth_bayern
+        data:
+          type: daily
+        response_variable: daily_forecast
+    sensor:
+      - name: "Fürth Daily Forecast"
+        unique_id: fuerth_bayern_daily
+        state: "{{ states('weather.fuerth_bayern') }}"
+        attributes:
+          temperature: "{{ state_attr('weather.fuerth_bayern', 'temperature') }}"
+          dew_point: "{{ state_attr('weather.fuerth_bayern', 'dew_point') }}"
+          temperature_unit: "{{ state_attr('weather.fuerth_bayern', 'temperature_unit') }}"
+          humidity: "{{ state_attr('weather.fuerth_bayern', 'humidity') }}"
+          cloud_coverage: "{{ state_attr('weather.fuerth_bayern', 'cloud_coverage') }}"
+          pressure: "{{ state_attr('weather.fuerth_bayern', 'pressure') }}"
+          pressure_unit: "{{ state_attr('weather.fuerth_bayern', 'pressure_unit') }}"
+          wind_bearing: "{{ state_attr('weather.fuerth_bayern', 'wind_bearing') }}"
+          wind_gust_speed: "{{ state_attr('weather.fuerth_bayern', 'wind_gust_speed') }}"
+          wind_speed: "{{ state_attr('weather.fuerth_bayern', 'wind_speed') }}"
+          wind_speed_unit: "{{ state_attr('weather.fuerth_bayern', 'wind_speed_unit') }}"
+          visibility: "{{ state_attr('weather.fuerth_bayern', 'visibility') }}"
+          visibility_unit: "{{ state_attr('weather.fuerth_bayern', 'visibility_unit') }}"
+          precipitation: "{{ state_attr('weather.fuerth_bayern', 'precipitation') }}"
+          precipitation_unit: "{{ state_attr('weather.fuerth_bayern', 'precipitation_unit') }}"
+          forecast: "{{ daily_forecast['weather.fuerth_bayern'].forecast[:5] }}"
+
+  - sensor:
+      # Astronomie und Wetter
+      - name: "Sun Azimuth"
+        unique_id: sun_azimuth
+        unit_of_measurement: "°"
+        icon: mdi:sun-angle
+        state: "{{ (state_attr('sun.sun', 'azimuth') | float(0) - 10) | round(0) }}"
+
+      - name: "Sunlight Pct"
+        unique_id: sunlight_pct
+        unit_of_measurement: "%"
+        icon: mdi:weather-sunny
+        state: >-
+          {% set elevation = state_attr('sun.sun', 'elevation') | float(0) %}
+          {% set cloud_coverage = state_attr('weather.fuerth_bayern', 'cloud_coverage') | float(0) %}
+          {# Base brightness: 0° = 0%, 15°+ = 100% (sunny day = 100%) #}
+          {% set base = [[(elevation / 15) * 100, 0] | max, 100] | min %}
+          {# Only heavy clouds (>80%) reduce brightness, max 50% reduction #}
+          {% if cloud_coverage > 80 %}
+            {% set cloud_factor = 1 - (0.5 * (cloud_coverage - 80) / 20) %}
+          {% else %}
+            {% set cloud_factor = 1 %}
+          {% endif %}
+          {% set brightness = base * cloud_factor %}
+          {{ brightness | round }}
+
+      - name: "Night State"
+        unique_id: night_state
+        icon: mdi:weather-night
+        state: "{{ 1 if (has_value('sun.sun') and is_state('sun.sun', 'below_horizon')) else 0 }}"
+
+      # Wetter und Kleidung
+      - name: "What To Wear Outside"
+        unique_id: what_to_wear_outside
+        icon: mdi:hanger
+        state: >-
+          {% set temp = state_attr('weather.fuerth_bayern', 'temperature') | float(20) %}
+          {% if temp <= 5 %}
+            Winterjacke + Handschuhe
+          {% elif temp <= 14 %}
+            Pullover
+          {% elif temp <= 18 %}
+            Dünne Jacke
+          {% else %}
+            T-Shirt
+          {% endif %}
+
+      - name: "Balkon Motion Illuminance (Safe)"
+        unique_id: balkon_motion_illuminance_safe
+        unit_of_measurement: "lx"
+        device_class: illuminance
+        icon: mdi:brightness-6
+        state: >-
+          {# now() erzwingt ein Re-Render pro Minute. Ohne das wuerde ein stehender #}
+          {# Sensor nie neu bewertet, weil kein State-Change ihn ausloest. #}
+          {% set src = states.sensor.ikea_motion_03_illuminance %}
+          {% set fresh = src is not none
+                         and src.state not in ['unknown', 'unavailable']
+                         and (now() - src.last_updated).total_seconds() < 21600 %}
+          {# float(-1) statt float(0): ein nicht-numerischer Zustand wuerde sonst als #}
+          {# 0 lx durchgehen und "stockdunkel" bedeuten, also faelschlich Licht ausloesen. #}
+          {% if fresh and src.state | float(-1) >= 0 %}
+            {{ src.state | float(0) | round(0) }}
+          {% else %}
+            {# Balkon-Sensor liefert keinen Wert oder haengt fest (12.-18.08.2026: #}
+            {# 6 Tage bei 1334 lx eingefroren, Z2M-Availability hat es nicht bemerkt, #}
+            {# weil das Geraet eingebucht blieb). Fallback sonnenstandsabhaengig: #}
+            {# tagsueber hell (ueber Motion-Schwelle, kein Fehltrigger), nachts dunkel. #}
+            {{ 2000 if state_attr('sun.sun', 'elevation') | float(-90) > 3 else 5 }}
+          {% endif %}
+
+      - name: "Flur Illuminance (Safe)"
+        unique_id: flur_illuminance_safe
+        unit_of_measurement: "lx"
+        device_class: illuminance
+        icon: mdi:brightness-6
+        state: >-
+          {# Der Flur hat drei Melder mit sehr unterschiedlicher Sicht (7-Tage-Mittel #}
+          {# mittags 48 / 10 / 71 lx). Das Maximum entscheidet, sonst wuerde der #}
+          {# dunkelste Winkel das ganze Stockwerk beleuchten lassen. #}
+          {# now() erzwingt ein Re-Render pro Minute, wie beim Balkon-Sensor: die #}
+          {# Melder senden Lux nur bei Bewegung, ein stehender Wert loest nichts aus. #}
+          {% set quellen = ['sensor.ikea_motion_04_illuminance',
+                            'sensor.ikea_motion_05_illuminance',
+                            'sensor.philips_motion_01_motion_1_illuminance'] %}
+          {% set ns = namespace(werte=[]) %}
+          {% for q in quellen %}
+            {% set src = states[q] %}
+            {% set wert = src.state | float(-1) if src is not none else -1 %}
+            {% if src is not none
+                  and src.state not in ['unknown', 'unavailable']
+                  and (now() - src.last_updated).total_seconds() < 21600
+                  and wert >= 0 %}
+              {% set ns.werte = ns.werte + [wert] %}
+            {% endif %}
+          {% endfor %}
+          {% if ns.werte | length > 0 %}
+            {{ ns.werte | max | round(0) }}
+          {% else %}
+            {# Alle drei tot oder eingefroren: gleicher sonnenstandsabhaengiger #}
+            {# Fallback wie beim Balkon, damit kein Dauerlicht entsteht. #}
+            {{ 2000 if state_attr('sun.sun', 'elevation') | float(-90) > 3 else 5 }}
+          {% endif %}
+
+      - name: "Kinderzimmer Illuminance (Safe)"
+        unique_id: kinderzimmer_illuminance_safe
+        unit_of_measurement: "lx"
+        device_class: illuminance
+        icon: mdi:brightness-6
+        state: >-
+          {% set src = states.sensor.tuya_motion_02_illuminance %}
+          {% set fresh = src is not none
+                         and src.state not in ['unknown', 'unavailable']
+                         and (now() - src.last_updated).total_seconds() < 21600 %}
+          {% if fresh and src.state | float(-1) >= 0 %}
+            {{ src.state | float(0) | round(0) }}
+          {% else %}
+            {{ 2000 if state_attr('sun.sun', 'elevation') | float(-90) > 3 else 5 }}
+          {% endif %}
+
+input_boolean:
+  frost_warning_sent:
+    name: "Frostwarnung gesendet"
+    icon: mdi:snowflake-alert
+    initial: false
+  ventilator_schlafzimmer_override:
+    name: "Ventilator Schlafzimmer Override"
+    icon: mdi:fan-off
+    initial: false
+  ac_override:
+    name: "AC Override (manuell)"
+    icon: mdi:air-conditioner
+    initial: false
+
+input_number:
+  # Air quality thresholds
+  luftwascher_ziel_einschalten:
+    name: "Luftwäscher: Ziel-Feuchtigkeit Einschalten"
+    min: 20
+    max: 50
+    step: 1
+    unit_of_measurement: "%"
+    icon: mdi:water-percent
+    initial: 40
+  luftwascher_ziel_ausschalten:
+    name: "Luftwäscher: Ziel-Feuchtigkeit Ausschalten"
+    min: 25
+    max: 60
+    step: 1
+    unit_of_measurement: "%"
+    icon: mdi:water-percent
+    initial: 55
+  luftwascher_leer_schwelle:
+    name: "Luftwäscher: Watt-Schwelle kein Wasser"
+    min: 0.5
+    max: 5
+    step: 0.1
+    unit_of_measurement: "W"
+    icon: mdi:flash-alert
+    initial: 1.0

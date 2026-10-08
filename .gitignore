@@ -12,6 +12,10 @@
 !automations_new/
 !automations_new/**
 
+# Allow packages directory and all its contents
+!packages/
+!packages/**
+
 # BUT exclude sensitive files even if they match allowed patterns
 secrets.yaml
 known_devices.yaml
