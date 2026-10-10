@@ -7,9 +7,7 @@
   description: >-
     Berechnet aus einer Regeltabelle, welche Bewegungsautomationen und Adaptive-Lighting-Schalter
     gerade aus sein sollen, und gleicht sie mit dem Ist-Zustand ab. Schaltet alle Räume
-    selbst, auch beim Neustart. Nur das physische Schlafzimmer (motion_schlafzimmer und
-    Adaptive Beleuchtung Arbeitszimmer) läuft noch im Schattenmodus: Es gibt nur einen
-    Logbucheintrag, wenn Soll und Ist abweichen. Die Tabelle steht genau einmal in der
+    selbst, auch beim Neustart. Die Tabelle steht genau einmal in der
     Variable "blocked" unten. Die Szenen schalten sich beim Start weiterhin selbst aus.
   triggers:
   - trigger: state
@@ -51,6 +49,13 @@
   - trigger: state
     entity_id: media_player.appletv
     to: null
+  - trigger: state
+    entity_id: media_player.appletv
+    to: null
+    for:
+      minutes: 2
+      seconds: 5
+    id: appletv_settled
   - trigger: homeassistant
     event: start
     id: start
@@ -63,9 +68,7 @@
   conditions: []
   mode: restart
   variables:
-    # Entities that are really switched. All rooms are live except the physical bedroom pair
-    # (automation.motion_schlafzimmer, switch.adaptive_lighting_arbeitszimmer), which stays in
-    # shadow mode (log only) and is still handled by the scenes and the restart sync.
+    # All entities in the rule table are switched for real.
     acting:
     - automation.motion_kuche_2
     - automation.motion_esstisch
@@ -75,10 +78,12 @@
     - automation.motion_badezimmer_gross
     - automation.kinderzimmer_motion
     - automation.arbeitszimmer_motion
+    - automation.motion_schlafzimmer
     - switch.adaptive_lighting_wohnzimmer
     - switch.adaptive_lighting_kueche
     - switch.adaptive_lighting_badezimmer
     - switch.adaptive_lighting_kinderzimmer
+    - switch.adaptive_lighting_arbeitszimmer
     - switch.adaptive_lighting_schlafzimmer
     - switch.adaptive_lighting_flur
     - switch.adaptive_lighting_waschzimmer
@@ -124,7 +129,7 @@
             {% set schlaf = is_state('input_boolean.schlafenszeit', 'on') %}
             {% set film = movie and not (kochen or abwaschen) %}
             {% set wu = is_state('input_boolean.wakeup_active', 'on') and now() < today_at('08:15') and is_state('input_boolean.alle_sind_weg', 'off') %}
-            {% set at = states('media_player.appletv') in ['playing', 'paused'] %}
+            {% set at = states('media_player.appletv') in ['playing', 'paused'] or (has_value('media_player.appletv') and now() - states.media_player.appletv.last_changed < timedelta(minutes=2)) %}
             {{ {
               'automation.motion_kuche_2': kochen or abwaschen or party or pw or film,
               'automation.motion_esstisch': essen or movie or party or pw,

@@ -104,11 +104,6 @@
         - playing
         - poll-check
       sequence:
-      - action: automation.turn_off
-        target:
-          entity_id: automation.motion_schlafzimmer
-        data:
-          stop_actions: true
       - action: switch.turn_off
         target:
           entity_id: switch.adaptive_lighting_adapt_brightness_arbeitszimmer
@@ -162,7 +157,4 @@
       - action: switch.turn_on
         target:
           entity_id: switch.adaptive_lighting_adapt_brightness_arbeitszimmer
-      - action: automation.turn_on
-        target:
-          entity_id: automation.motion_schlafzimmer
   mode: restart

@@ -76,7 +76,7 @@ PYEOF
 | Path | Purpose |
 |------|---------|
 | `configuration.yaml` | Main entry point |
-| `automations_new/` | All automations (34 files) |
+| `automations_new/` | All automations (33 files) |
 | `custom_components/` | Custom integrations |
 | `blueprints/` | Blueprints (mostly switch_manager) |
 | `scripts.yaml` | Reusable scripts |
@@ -116,7 +116,7 @@ configuration.yaml
 ### Automations Directory Structure
 
 ```
-automations_new/                # 34 files
+automations_new/                # 33 files
 ├── areas/                    # 9 room files
 │   ├── arbeitszimmer.yaml   # Office
 │   ├── badezimmer.yaml      # Bathroom
@@ -145,10 +145,9 @@ automations_new/                # 34 files
 │   ├── other.yaml           # Misc devices
 │   └── prusa.yaml           # 3D printer
 │
-├── helpers/                  # 5 helper files
+├── helpers/                  # 4 helper files
 │   ├── automation.yaml      # Automation management, wakeup music
 │   ├── energy.yaml          # Energy tracking
-│   ├── motion_sync_on_restart.yaml
 │   ├── presence.yaml        # Presence detection
 │   └── system.yaml          # System checks
 │
@@ -359,22 +358,18 @@ binary_sensor.scene_conflict_detected  # Conflict warning
 ### Scene Scripts
 
 ```yaml
-script.scene_enable_adaptive_lighting   # Enable circadian for room (with scene conflict check)
 script.scene_disable_adaptive_lighting  # Disable circadian
-script.scene_enable_motion_automations  # Re-enable motion triggers (with scene conflict check)
 script.scene_disable_motion_automations # Disable motion triggers
 script.al_set_manual_control            # Mark/clear AL manual control per room (mapping lives here)
 script.scene_stop_rgb_effect            # Stop a Hue effect, reset to color_temp, turn lights off
 script.restore_leselicht                # Restore the reading light if input_boolean.leselicht is on
-script.movie_motion_restore             # Re-enable motion automations when the movie scene ends
 script.homepod_volume_apply             # Apply HomePod volume levels from the single table
 ```
 
-The four `scene_*` scripts take an `exclude_scenes` list of `input_boolean` names and do nothing
-while one of them is on. That check only sees input_booleans. A gate on a media_player (e.g. the
-AppleTV guard around `automation.motion_schlafzimmer`) still has to sit at the call site.
+The two `scene_disable_*` scripts take an `exclude_scenes` list of `input_boolean` names and do nothing
+while one of them is on. That check only sees input_booleans.
 
-`automations_new/helpers/room_policy.yaml` holds the motion/AL reconciler, currently in shadow mode (it only logs what it would switch).
+`automations_new/helpers/room_policy.yaml` holds the motion/AL reconciler. It is the only place that turns motion automations and AL main switches back on; scenes may only turn them off. Its rule table is the single source for when each is blocked.
 
 ---
 

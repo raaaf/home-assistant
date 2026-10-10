@@ -44,18 +44,6 @@
       - condition: trigger
         id: gaming-off
       sequence:
-      - alias: Re-enable adaptive lighting
-        action: switch.turn_on
-        target:
-          entity_id:
-          - switch.adaptive_lighting_arbeitszimmer
-      # Note: Office motion handled by blueprint bypass (input_boolean.gaming)
-      - alias: Re-enable bedroom motion sensor if conditions are met
-        action: script.scene_enable_motion_automations
-        data:
-          automations: "automation.motion_schlafzimmer"
-          exclude_scenes: "party,schlafenszeit,movie"
-          exclude_players: "media_player.appletv"
       - alias: Open office shutters if daytime and not sleeping
         choose:
         - conditions:

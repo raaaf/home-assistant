@@ -310,17 +310,6 @@
         - action: input_boolean.turn_off
           target:
             entity_id: input_boolean.arbeit
-        - delay:
-            seconds: 3
-        - action: script.scene_enable_adaptive_lighting
-          data:
-            room: "arbeitszimmer"
-            exclude_scenes: ""
-        - action: script.scene_enable_motion_automations
-          data:
-            automations: "automation.motion_schlafzimmer"
-            exclude_scenes: "party"
-            exclude_players: "media_player.appletv"
     - alias: Gaming einschalten
       conditions:
       - condition: trigger
@@ -437,18 +426,12 @@
                 data:
                   transition: 2
         default:
-        - alias: "Niemand arbeitet - Decke aus + AL reaktivieren"
+        - alias: "Niemand arbeitet - Decke aus"
           action: light.turn_off
           target:
             entity_id: light.ikea_light_03
           data:
             transition: 2
-        - delay:
-            seconds: 3
-        - action: script.scene_enable_adaptive_lighting
-          data:
-            room: "arbeitszimmer"
-            exclude_scenes: ""
   mode: restart
 - id: '1730279567232'
   alias: Motion » Arbeitszimmer

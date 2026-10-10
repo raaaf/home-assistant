@@ -225,19 +225,6 @@
             - light.alle_arbeitszimmer_lichter
             - light.alle_kinderzimmer_lichter
             - light.alle_badezimmer_lichter
-        - alias: "AL für Wakeup-Räume wieder an (Lichter sind aus, AL adaptiert ab naechstem Einschalten normal)"
-          action: switch.turn_on
-          target:
-            entity_id:
-            - switch.adaptive_lighting_arbeitszimmer
-        # Nicht bei laufendem AppleTV, sonst schaltet
-        # "Licht » Schlafzimmer TV Ambilight" die Automation gleich wieder ab.
-        - alias: Schlafzimmer-Motion mit Szenen- und AppleTV-Pruefung
-          action: script.scene_enable_motion_automations
-          data:
-            automations: "automation.motion_schlafzimmer"
-            exclude_scenes: "movie,party,party_wohnzimmer"
-            exclude_players: "media_player.appletv"
         - alias: "08:00 Uhr: Musik auf Taglautstärke setzen (nur spielende HomePods)"
           action: script.turn_on
           target:
