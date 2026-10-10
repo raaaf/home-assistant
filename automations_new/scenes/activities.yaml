@@ -386,3 +386,38 @@
           message: "Automatisch deaktiviert nach 3 Stunden 15 Minuten."
           data:
             tag: party_timer
+
+# Safety net for scene flags that are switched on by hand and forgotten.
+# A restart resets the 'for' timers, so a flag can stay on longer after a restart.
+- id: scene_flag_auto_off
+  alias: Scenen » Szenen-Flags Auto-Aus
+  description: >-
+    Schaltet vergessene Szenen aus: Abwaschen und Essen nach 2 Stunden, Kochen und Baden nach
+    3 Stunden, Sauna nach 4 Stunden. Das Ausschalten löst die normale Szenen-Ende-Logik aus.
+  mode: queued
+  triggers:
+  - trigger: state
+    entity_id:
+    - input_boolean.abwaschen
+    - input_boolean.essen
+    to: 'on'
+    for: "02:00:00"
+  - trigger: state
+    entity_id:
+    - input_boolean.kochen
+    - input_boolean.baden
+    to: 'on'
+    for: "03:00:00"
+  - trigger: state
+    entity_id: input_boolean.sauna
+    to: 'on'
+    for: "04:00:00"
+  conditions: []
+  actions:
+  - action: input_boolean.turn_off
+    target:
+      entity_id: "{{ trigger.entity_id }}"
+  - action: logbook.log
+    data:
+      name: Szenen-Flags
+      message: "{{ trigger.entity_id }} nach {{ trigger.for }} automatisch ausgeschaltet"
