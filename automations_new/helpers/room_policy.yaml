@@ -6,10 +6,11 @@
   alias: Helper » Motion/AL Sollzustand
   description: >-
     Berechnet aus einer Regeltabelle, welche Bewegungsautomationen und Adaptive-Lighting-Schalter
-    gerade aus sein sollen, und gleicht sie mit dem Ist-Zustand ab. Läuft im Schattenmodus:
-    Solange die Liste "acting" leer ist, schaltet nichts, es gibt nur einen Logbucheintrag,
-    wenn Soll und Ist abweichen. Die Tabelle steht genau einmal in der Variable "blocked"
-    unten. Die Szenen schalten sich beim Start weiterhin selbst aus.
+    gerade aus sein sollen, und gleicht sie mit dem Ist-Zustand ab. Schaltet alle Räume
+    selbst, auch beim Neustart. Nur das physische Schlafzimmer (motion_schlafzimmer und
+    Adaptive Beleuchtung Arbeitszimmer) läuft noch im Schattenmodus: Es gibt nur einen
+    Logbucheintrag, wenn Soll und Ist abweichen. Die Tabelle steht genau einmal in der
+    Variable "blocked" unten. Die Szenen schalten sich beim Start weiterhin selbst aus.
   triggers:
   - trigger: state
     entity_id: input_boolean.movie
@@ -62,9 +63,26 @@
   conditions: []
   mode: restart
   variables:
-    # Entities that may really be switched. EMPTY = full shadow mode (log only).
-    # Rollout per room: add its motion automation and AL switch ids here one room at a time.
-    acting: []
+    # Entities that are really switched. All rooms are live except the physical bedroom pair
+    # (automation.motion_schlafzimmer, switch.adaptive_lighting_arbeitszimmer), which stays in
+    # shadow mode (log only) and is still handled by the scenes and the restart sync.
+    acting:
+    - automation.motion_kuche_2
+    - automation.motion_esstisch
+    - automation.motion_spieletisch
+    - automation.motion_flur_wohnung
+    - automation.motion_haustur_flur
+    - automation.motion_badezimmer_gross
+    - automation.kinderzimmer_motion
+    - automation.arbeitszimmer_motion
+    - switch.adaptive_lighting_wohnzimmer
+    - switch.adaptive_lighting_kueche
+    - switch.adaptive_lighting_badezimmer
+    - switch.adaptive_lighting_kinderzimmer
+    - switch.adaptive_lighting_schlafzimmer
+    - switch.adaptive_lighting_flur
+    - switch.adaptive_lighting_waschzimmer
+    - switch.adaptive_lighting_balkon
   actions:
   # After a restart wait until the AL startup automation has finished re-applying its settings
   - if:

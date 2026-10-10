@@ -1,10 +1,11 @@
 # Helpers - Motion Sync On Restart.Yaml
-# Syncs motion automation and adaptive lighting states with scene booleans after HA restart
+# Syncs the physical bedroom pair (motion_schlafzimmer, AL arbeitszimmer) with scene booleans after HA restart.
+# All other rooms are handled by Helper » Motion/AL Sollzustand (room_policy.yaml).
 # Part of Home Assistant configuration
 
 - id: '1738000000001'
   alias: Helper » Sync Motion & Adaptive Lighting After Restart
-  description: 'Re-applies scene-based motion automation and adaptive lighting disables after HA restart to maintain consistency'
+  description: 'Deckt nach einem Neustart nur noch das physische Schlafzimmer ab (Schlafzimmer-Bewegungsmelder und Adaptive Beleuchtung Arbeitszimmer). Alle übrigen Räume erledigt Helper » Motion/AL Sollzustand.'
   triggers:
   - event: start
     trigger: homeassistant
@@ -13,58 +14,7 @@
   - delay:
       seconds: 30
   # ADAPTIVE LIGHTING SYNC
-  - alias: "Disable living room adaptive lighting if party/party_wohnzimmer active"
-    choose:
-    - conditions:
-      - condition: or
-        conditions:
-        - condition: state
-          entity_id: input_boolean.party
-          state: 'on'
-        - condition: state
-          entity_id: input_boolean.party_wohnzimmer
-          state: 'on'
-      sequence:
-      - action: switch.turn_off
-        target:
-          entity_id: switch.adaptive_lighting_wohnzimmer
-  - alias: "Disable kitchen adaptive lighting if kochen/party/party_wohnzimmer active"
-    choose:
-    - conditions:
-      - condition: or
-        conditions:
-        - condition: state
-          entity_id: input_boolean.kochen
-          state: 'on'
-        - condition: state
-          entity_id: input_boolean.party
-          state: 'on'
-        - condition: state
-          entity_id: input_boolean.party_wohnzimmer
-          state: 'on'
-      sequence:
-      - action: switch.turn_off
-        target:
-          entity_id: switch.adaptive_lighting_kueche
-  - alias: "Disable bathroom adaptive lighting if sauna/baden/party active"
-    choose:
-    - conditions:
-      - condition: or
-        conditions:
-        - condition: state
-          entity_id: input_boolean.sauna
-          state: 'on'
-        - condition: state
-          entity_id: input_boolean.baden
-          state: 'on'
-        - condition: state
-          entity_id: input_boolean.party
-          state: 'on'
-      sequence:
-      - action: switch.turn_off
-        target:
-          entity_id: switch.adaptive_lighting_badezimmer
-  - alias: "Disable office/bedroom adaptive lighting if gaming active"
+  - alias: "Disable office adaptive lighting if gaming active"
     choose:
     - conditions:
       - condition: state
@@ -73,67 +23,8 @@
       sequence:
       - action: switch.turn_off
         target:
-          entity_id:
-          - switch.adaptive_lighting_schlafzimmer
-          - switch.adaptive_lighting_arbeitszimmer
+          entity_id: switch.adaptive_lighting_arbeitszimmer
   # MOTION AUTOMATION SYNC
-  - alias: "Disable kitchen motion if any conflicting scene is active"
-    choose:
-    - conditions:
-      - condition: or
-        conditions:
-        - condition: state
-          entity_id: input_boolean.kochen
-          state: 'on'
-        - condition: state
-          entity_id: input_boolean.essen
-          state: 'on'
-        - condition: state
-          entity_id: input_boolean.party
-          state: 'on'
-        - condition: state
-          entity_id: input_boolean.party_wohnzimmer
-          state: 'on'
-      sequence:
-      - action: automation.turn_off
-        target:
-          entity_id: automation.motion_kuche_2  # Motion » Küche
-        data: {}
-  - alias: "Disable hallway motion if party mode is active"
-    choose:
-    - conditions:
-      - condition: or
-        conditions:
-        - condition: state
-          entity_id: input_boolean.party
-          state: 'on'
-        - condition: state
-          entity_id: input_boolean.party_wohnzimmer
-          state: 'on'
-      sequence:
-      - action: automation.turn_off
-        target:
-          entity_id: automation.motion_flur_wohnung  # Hallway motion
-        data: {}
-  - alias: "Disable office motion if work, gaming, or party mode is active"
-    choose:
-    - conditions:
-      - condition: or
-        conditions:
-        - condition: state
-          entity_id: input_boolean.arbeit
-          state: 'on'
-        - condition: state
-          entity_id: input_boolean.gaming
-          state: 'on'
-        - condition: state
-          entity_id: input_boolean.party
-          state: 'on'
-      sequence:
-      - action: automation.turn_off
-        target:
-          entity_id: automation.arbeitszimmer_motion  # Office motion
-        data: {}
   - alias: "Disable bedroom motion if gaming mode is active"
     choose:
     - conditions:
@@ -145,35 +36,7 @@
         target:
           entity_id: automation.motion_schlafzimmer  # Bedroom motion
         data: {}
-  - alias: "Disable bathroom motion if sauna or bath mode is active"
-    choose:
-    - conditions:
-      - condition: or
-        conditions:
-        - condition: state
-          entity_id: input_boolean.sauna
-          state: 'on'
-        - condition: state
-          entity_id: input_boolean.baden
-          state: 'on'
-      sequence:
-      - action: automation.turn_off
-        target:
-          entity_id: automation.motion_badezimmer_gross  # Motion » Badezimmer Gross
-        data: {}
-  - alias: "Disable dining table motion if eating mode is active"
-    choose:
-    - conditions:
-      - condition: state
-        entity_id: input_boolean.essen
-        state: 'on'
-      sequence:
-      - action: automation.turn_off
-        target:
-          entity_id: automation.motion_esstisch  # Motion » Esstisch
-        data: {}
-  # Note: kinderzimmer_motion handled by "all motions" block below
-  - alias: "Disable all motions if party mode is active"
+  - alias: "Disable bedroom motion if party mode is active"
     choose:
     - conditions:
       - condition: state
@@ -182,14 +45,6 @@
       sequence:
       - action: automation.turn_off
         target:
-          entity_id:
-          - automation.motion_kuche_2  # Kitchen motion
-          - automation.motion_flur_wohnung  # Hallway motion
-          - automation.arbeitszimmer_motion  # Office motion
-          - automation.motion_schlafzimmer  # Bedroom motion
-          - automation.motion_badezimmer_gross  # Bathroom motion
-          - automation.motion_esstisch  # Dining table motion
-          - automation.kinderzimmer_motion  # Kids room motion
-          - automation.motion_haustur_flur  # Front door motion
+          entity_id: automation.motion_schlafzimmer  # Bedroom motion
         data: {}
   mode: single

@@ -110,16 +110,6 @@
           position: 100
       - delay:
           seconds: 6
-      - alias: "Reaktiviere adaptive Beleuchtung mit Konflikt-Prüfung"
-        action: script.scene_enable_adaptive_lighting
-        data:
-          room: "badezimmer"
-          exclude_scenes: "baden,party"
-      - alias: "Reaktiviere Motion-Automationen mit Konflikt-Prüfung"
-        action: script.scene_enable_motion_automations
-        data:
-          automations: "automation.motion_badezimmer_gross"
-          exclude_scenes: "baden"
     default: []
   mode: restart
 - id: '1662822489094'
@@ -180,16 +170,6 @@
           - light.alle_badezimmer_nachtlichter
       - delay:
           seconds: 6
-      - alias: "Reaktiviere adaptive Beleuchtung mit Konflikt-Prüfung"
-        action: script.scene_enable_adaptive_lighting
-        data:
-          room: "badezimmer"
-          exclude_scenes: "sauna,party"
-      - alias: "Reaktiviere Motion-Automationen mit Konflikt-Prüfung"
-        action: script.scene_enable_motion_automations
-        data:
-          automations: "automation.motion_badezimmer_gross"
-          exclude_scenes: "sauna"
     default: []
   mode: restart
 - id: '1672929418223'
