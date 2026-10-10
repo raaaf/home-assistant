@@ -1,7 +1,7 @@
 # Export der Live-Config aus .storage/lovelace.lovelace (Storage-Mode).
 # Diese Datei wird von HA NICHT geladen, sie dient dem Upload per Raw-Editor.
 views:
-- theme: Backend-selected
+- theme: Linear
   title: Home
   id: home
   type: custom:layout-card
@@ -9,9 +9,8 @@ views:
   layout_options:
     grid-template-columns: 10% 80% 10%
     grid-template-rows: auto
-    grid-template-areas: '"left middle right"
-
-      '
+    grid-template-areas: |
+      "left middle right"
     mediaquery:
       '(max-width: 1023px)':
         grid-template-columns: 0 100% 0
@@ -30,7 +29,17 @@ views:
     cards:
     - type: custom:mushroom-title-card
       alignment: center
-      title: "{% set time = now().hour %}\n{% if (time >= 18) %}\n Guten Abend, {{user}}!\n{% elif (time >= 12) %}\n Guten Nachmittag, {{user}}!\n{% elif (time >= 5) %}\n Guten Morgen, {{user}}!\n{% else %}\n Hallo, {{user}}\n{% endif %}"
+      title: |-
+        {% set time = now().hour %}
+        {% if (time >= 18) %}
+         Guten Abend, {{user}}!
+        {% elif (time >= 12) %}
+         Guten Nachmittag, {{user}}!
+        {% elif (time >= 5) %}
+         Guten Morgen, {{user}}!
+        {% else %}
+         Hallo, {{user}}
+        {% endif %}
       subtitle: Batzabutza
     - type: custom:mushroom-chips-card
       alignment: center
@@ -62,39 +71,12 @@ views:
         entity: sensor.count_lights_on
       - type: conditional
         conditions:
-        - entity: sensor.stromzahler_saldiert
-          state_not: unavailable
-        - entity: sensor.stromzahler_saldiert
-          state_not: unknown
-        chip:
-          type: template
-          entity: sensor.stromzahler_saldiert
-          icon: "{% set s = states('sensor.stromzahler_saldiert') | float(0) %} {% if s < -50 %}\n  mdi:transmission-tower-export\n{% elif s > 50 %}\n  mdi:transmission-tower-import\n{% else %}\n  mdi:transmission-tower\n{% endif %}"
-          icon_color: "{% set s = states('sensor.stromzahler_saldiert') | float(0) %} {% if s < -50 %}\n  green\n{% elif s > 2000 %}\n  red\n{% elif s > 500 %}\n  amber\n{% else %}\n  grey\n{% endif %}"
-          content: "{% set s = states('sensor.stromzahler_saldiert') | float(0) %} {% if s < -50 %}\n  ↑ {{ (s | abs) | round(0) }} W\n{% elif s > 50 %}\n  ↓ {{ s | round(0) }} W\n{% else %}\n  {{ s | round(0) }} W\n{% endif %}"
-      - type: conditional
-        conditions:
-        - entity: sensor.aqara_plug_02_power
-          state_not: unavailable
-        - entity: sensor.aqara_plug_02_power
-          state_not: unknown
-        - condition: template
-          value: '{{ states(''sensor.aqara_plug_02_power'') | float(0) > 5 }}'
-        chip:
-          type: template
-          entity: sensor.aqara_plug_02_power
-          icon: mdi:solar-power
-          icon_color: "{% set pv = states('sensor.aqara_plug_02_power') | float(0) %} {% if pv > 150 %}\n  amber\n{% else %}\n  blue\n{% endif %}"
-          content: '{{ states(''sensor.aqara_plug_02_power'') | float(0) | round(0) }} W'
-      - type: conditional
-        conditions:
         - condition: numeric_state
           entity: sensor.qingping_air_monitor_lite_co2_carbon_dioxide
           above: 1200
         chip:
           type: template
           icon: mdi:molecule-co2
-          icon_color: red
           content: '{{states(''sensor.qingping_air_monitor_lite_co2_carbon_dioxide'')}}'
           entity: sensor.qingping_air_monitor_lite_co2_carbon_dioxide
       - type: conditional
@@ -104,7 +86,6 @@ views:
         chip:
           type: template
           icon: mdi:heating-coil
-          icon_color: red
           content: Badezimmer
           entity: switch.sonoff_switch_01
       - type: conditional
@@ -118,7 +99,6 @@ views:
         chip:
           type: template
           icon: mdi:tailwind
-          icon_color: blue
           content: Klimaanlage
           entity: climate.ac
       - type: conditional
@@ -128,7 +108,6 @@ views:
         chip:
           type: template
           icon: mdi:heating-coil
-          icon_color: red
           content: Schlafzimmer
           entity: switch.sonoff_switch_04
       - type: conditional
@@ -138,7 +117,6 @@ views:
         chip:
           type: template
           icon: mdi:heating-coil
-          icon_color: red
           content: Wohnzimmer
           entity: switch.sonoff_switch_05
       - type: conditional
@@ -148,7 +126,6 @@ views:
         chip:
           type: template
           icon: mdi:heating-coil
-          icon_color: red
           content: Flur
           entity: switch.sonoff_switch_02
       - type: conditional
@@ -158,7 +135,6 @@ views:
         chip:
           type: template
           icon: mdi:heating-coil
-          icon_color: red
           content: Kinderzimmer
           entity: switch.sonoff_switch_03
       - type: conditional
@@ -212,7 +188,6 @@ views:
         chip:
           type: template
           icon: mdi:door-open
-          icon_color: yellow
           content: Wohnungstür aufgeschlossen
           entity: lock.nuki_wohnungstur_lock
       - type: conditional
@@ -222,7 +197,6 @@ views:
         chip:
           type: template
           icon: mdi:door-open
-          icon_color: yellow
           content: Büro
       - type: conditional
         conditions:
@@ -231,7 +205,6 @@ views:
         chip:
           type: template
           icon: mdi:door-open
-          icon_color: yellow
           content: Wohnzimmer
       - type: conditional
         conditions:
@@ -240,7 +213,6 @@ views:
         chip:
           type: template
           icon: mdi:door-open
-          icon_color: yellow
           content: Küche
       - type: conditional
         conditions:
@@ -249,7 +221,6 @@ views:
         chip:
           type: template
           icon: mdi:door-open
-          icon_color: yellow
           content: Balkon
       - type: conditional
         conditions:
@@ -258,7 +229,6 @@ views:
         chip:
           type: template
           icon: mdi:door-open
-          icon_color: red
           content: Wohnungstür ist offen!
       - type: conditional
         conditions:
@@ -267,7 +237,6 @@ views:
         chip:
           type: template
           icon: mdi:door-open
-          icon_color: yellow
           content: Schlafzimmer
       - type: conditional
         conditions:
@@ -276,7 +245,6 @@ views:
         chip:
           type: template
           icon: mdi:door-open
-          icon_color: yellow
           content: Kinderzimmer
       - type: conditional
         conditions:
@@ -323,7 +291,6 @@ views:
           type: template
           entity: sensor.192_168_178_118_speed
           icon: mdi:download
-          icon_color: amber
           content: '{{ states(''sensor.192_168_178_118_speed'') }} MB/s'
   - type: custom:gap-card
     view_layout:
@@ -351,17 +318,17 @@ views:
         type: grid
         title: Müllabfuhr
         cards:
-        - type: entity
+        - type: custom:mushroom-entity-card
           entity: sensor.restmuell
           state_color: true
-        - type: entity
+        - type: custom:mushroom-entity-card
           entity: sensor.bioabfall
           state_color: true
-        - type: entity
+        - type: custom:mushroom-entity-card
           entity: sensor.altpapier
           state_color: true
           icon: mdi:delete-empty
-        - type: entity
+        - type: custom:mushroom-entity-card
           entity: sensor.gelbersack
           state_color: true
           icon: mdi:delete-variant
@@ -385,70 +352,47 @@ views:
         - type: custom:mushroom-entity-card
           entity: switch.trockner
           layout: vertical
-      - type: grid
-        title: Energiekosten
-        square: false
-        columns: 3
+      - type: vertical-stack
         cards:
-        - type: custom:mushroom-entity-card
-          entity: sensor.stromkosten_heute
-          name: Heute
-          icon_color: amber
-          layout: vertical
-        - type: custom:mushroom-entity-card
-          entity: sensor.solar_ersparnis_heute
-          name: Solar-Ersparnis
-          icon_color: green
-          layout: vertical
-        - type: custom:mushroom-entity-card
-          entity: sensor.stromkosten_monat_geschatzt
-          name: Monat (geschätzt)
-          icon_color: deep-orange
-          layout: vertical
-      - type: grid
-        title: Heizung
-        square: false
-        columns: 2
-        cards:
+        - type: custom:mushroom-title-card
+          title: Heizung
         - type: custom:mushroom-template-card
           primary: Heizung Boost
           secondary: '{{ ''Aktiv'' if is_state(''timer.heizung_boost'', ''active'') else ''1,5h Boost starten'' }}'
           icon: mdi:radiator
-          icon_color: '{{ ''red'' if is_state(''timer.heizung_boost'', ''active'') else ''grey'' }}'
           tap_action:
             action: perform-action
             perform_action: script.heizung_boost
           layout: horizontal
-        - type: custom:mushroom-entity-card
-          entity: switch.sonoff_switch_03
-          name: Kinderzimmer
-          layout: horizontal
-          icon: mdi:heating-coil
-          icon_color: red
-        - type: custom:mushroom-entity-card
-          entity: switch.sonoff_switch_04
-          name: Schlafzimmer
-          layout: horizontal
-          icon: mdi:heating-coil
-          icon_color: red
-        - type: custom:mushroom-entity-card
-          entity: switch.sonoff_switch_05
-          name: Wohnzimmer
-          layout: horizontal
-          icon: mdi:heating-coil
-          icon_color: red
-        - type: custom:mushroom-entity-card
-          entity: switch.sonoff_switch_02
-          name: Flur
-          layout: horizontal
-          icon: mdi:heating-coil
-          icon_color: red
-        - type: custom:mushroom-entity-card
-          entity: switch.sonoff_switch_01
-          name: Badezimmer
-          layout: horizontal
-          icon: mdi:heating-coil
-          icon_color: red
+        - type: grid
+          columns: 2
+          square: false
+          cards:
+          - type: custom:mushroom-entity-card
+            entity: switch.sonoff_switch_03
+            name: Kinderzimmer
+            layout: horizontal
+            icon: mdi:heating-coil
+          - type: custom:mushroom-entity-card
+            entity: switch.sonoff_switch_04
+            name: Schlafzimmer
+            layout: horizontal
+            icon: mdi:heating-coil
+          - type: custom:mushroom-entity-card
+            entity: switch.sonoff_switch_05
+            name: Wohnzimmer
+            layout: horizontal
+            icon: mdi:heating-coil
+          - type: custom:mushroom-entity-card
+            entity: switch.sonoff_switch_02
+            name: Flur
+            layout: horizontal
+            icon: mdi:heating-coil
+          - type: custom:mushroom-entity-card
+            entity: switch.sonoff_switch_01
+            name: Badezimmer
+            layout: horizontal
+            icon: mdi:heating-coil
       - type: grid
         title: Fenster / Türen
         square: false
@@ -496,11 +440,11 @@ views:
         cards:
         - type: custom:mushroom-entity-card
           entity: switch.wohnzimmer_steckdose
-          name: Wohnzimmer TV
+          name: TV Wohnzimmer
           layout: horizontal
         - type: custom:mushroom-entity-card
           entity: switch.steckdose_kuechengeraete
-          name: Thermomix
+          name: Thermomix Licht
           layout: horizontal
         - type: custom:mushroom-entity-card
           entity: switch.aqara_plug_01
@@ -512,7 +456,7 @@ views:
           layout: horizontal
         - type: custom:mushroom-entity-card
           entity: switch.neo_plug_01
-          name: TV Schlafzimmer (Bett)
+          name: TV Schlafzimmer
         - type: custom:mushroom-entity-card
           entity: switch.steckdose_avr
           name: Balkon Musik
@@ -558,16 +502,15 @@ views:
   - type: custom:gap-card
     view_layout:
       grid:area: right
-- title: Lichter
-  theme: Backend-selected
+- title: Licht
+  theme: Linear
   type: custom:layout-card
   layout_type: custom:grid-layout
   layout_options:
     grid-template-columns: 10% 80% 10%
     grid-template-rows: auto
-    grid-template-areas: '"left middle right"
-
-      '
+    grid-template-areas: |
+      "left middle right"
     mediaquery:
       '(max-width: 1023px)':
         grid-template-columns: 0 100% 0
@@ -582,14 +525,13 @@ views:
     cards:
     - type: custom:mushroom-title-card
       alignment: center
-      title: Lichter
+      title: Licht
     - type: custom:mushroom-chips-card
       alignment: center
       chips:
       - type: template
         content: '{{ states(''sensor.count_lights_on'') }} an'
         icon: mdi:lightbulb-group
-        icon_color: amber
         entity: sensor.count_lights_on
       - type: conditional
         conditions:
@@ -687,598 +629,332 @@ views:
       - type: template
         entity: binary_sensor.ikea_motion_01_occupancy
         icon: mdi:motion-sensor
-        icon_color: '{{ ''red'' if is_state(''binary_sensor.ikea_motion_01_occupancy'',''on'') else ''disabled'' }}'
         content: Ankleide
         tap_action:
           action: more-info
       - type: template
         entity: binary_sensor.tuya_motion_01_presence
         icon: mdi:motion-sensor
-        icon_color: '{{ ''red'' if is_state(''binary_sensor.tuya_motion_01_presence'',''on'') else ''disabled'' }}'
         content: Bad
         tap_action:
           action: more-info
       - type: template
         entity: binary_sensor.ikea_motion_03_occupancy
         icon: mdi:motion-sensor
-        icon_color: '{{ ''red'' if is_state(''binary_sensor.ikea_motion_03_occupancy'',''on'') else ''disabled'' }}'
         content: Balkon
         tap_action:
           action: more-info
       - type: template
         entity: binary_sensor.flur_motion
         icon: mdi:motion-sensor
-        icon_color: '{{ ''red'' if is_state(''binary_sensor.flur_motion'',''on'') else ''disabled'' }}'
         content: Flur
         tap_action:
           action: more-info
       - type: template
         entity: binary_sensor.tuya_motion_03_motion_presence
         icon: mdi:motion-sensor
-        icon_color: '{{ ''red'' if is_state(''binary_sensor.tuya_motion_03_motion_presence'',''on'') else ''disabled'' }}'
         content: Wasch
         tap_action:
           action: more-info
       - type: template
         entity: binary_sensor.ikea_motion_06
         icon: mdi:motion-sensor
-        icon_color: '{{ ''red'' if is_state(''binary_sensor.ikea_motion_06'',''on'') else ''disabled'' }}'
         content: Haustür
         tap_action:
           action: more-info
       - type: template
         entity: binary_sensor.ikea_motion_07
         icon: mdi:motion-sensor
-        icon_color: '{{ ''red'' if is_state(''binary_sensor.ikea_motion_07'',''on'') else ''disabled'' }}'
         content: Küche
         tap_action:
           action: more-info
       - type: template
         entity: binary_sensor.ikea_motion_02
         icon: mdi:motion-sensor
-        icon_color: '{{ ''red'' if is_state(''binary_sensor.ikea_motion_02'',''on'') else ''disabled'' }}'
         content: Büro
         tap_action:
           action: more-info
       - type: template
         entity: binary_sensor.tuya_motion_02_presence
         icon: mdi:motion-sensor
-        icon_color: '{{ ''red'' if is_state(''binary_sensor.tuya_motion_02_presence'',''on'') else ''disabled'' }}'
         content: Kinderzimmer
         tap_action:
           action: more-info
       - type: template
         entity: binary_sensor.ikea_motion_09
         icon: mdi:motion-sensor
-        icon_color: '{{ ''red'' if is_state(''binary_sensor.ikea_motion_09'',''on'') else ''disabled'' }}'
         content: Schlafzimmer
         tap_action:
           action: more-info
       - type: template
         entity: binary_sensor.ikea_motion_08
         icon: mdi:motion-sensor
-        icon_color: '{{ ''red'' if is_state(''binary_sensor.ikea_motion_08'',''on'') else ''disabled'' }}'
         content: Dusche
         tap_action:
           action: more-info
       - type: template
         entity: binary_sensor.aqara_vibration_01_vibration
         icon: mdi:motion-sensor
-        icon_color: '{{ ''red'' if is_state(''binary_sensor.aqara_vibration_01_vibration'',''on'') else ''disabled'' }}'
         content: Spieletisch
         tap_action:
           action: more-info
       - type: template
         entity: binary_sensor.aqara_vibration_02_vibration
         icon: mdi:motion-sensor
-        icon_color: '{{ ''red'' if is_state(''binary_sensor.aqara_vibration_02_vibration'',''on'') else ''disabled'' }}'
         content: Esstisch
         tap_action:
           action: more-info
-    - type: grid
-      square: false
-      columns: 3
+    - type: custom:mushroom-title-card
+      title: Szenen
+    - type: custom:layout-card
+      layout_type: custom:grid-layout
+      layout_options:
+        grid-template-columns: repeat(auto-fit, minmax(155px, 1fr))
+        grid-gap: 8px
       cards:
       - type: custom:mushroom-entity-card
         entity: input_boolean.baden
         name: Baden
         layout: horizontal
         icon: mdi:bathtub
-        icon_color: amber
       - type: custom:mushroom-entity-card
         entity: input_boolean.kochen
         name: Kochen
         layout: horizontal
         icon: mdi:pot-steam
-        icon_color: amber
       - type: custom:mushroom-entity-card
         entity: input_boolean.sauna
         name: Sauna
         layout: horizontal
         icon: mdi:radiator
-        icon_color: amber
       - type: custom:mushroom-entity-card
         entity: input_boolean.schlafenszeit
         name: Schlafenszeit
         layout: horizontal
         icon: mdi:bed
-        icon_color: amber
       - type: custom:mushroom-entity-card
         entity: input_boolean.arbeit
         name: Arbeit
         layout: horizontal
         icon: mdi:briefcase
-        icon_color: amber
       - type: custom:mushroom-entity-card
         entity: input_boolean.gaming
         name: Gaming
         layout: horizontal
         icon: mdi:controller-classic
-        icon_color: amber
       - type: custom:mushroom-entity-card
         entity: input_boolean.movie
         name: Film
         layout: horizontal
         icon: mdi:movie-open
-        icon_color: amber
       - type: custom:mushroom-entity-card
         entity: input_boolean.party
         name: Party
         layout: horizontal
         icon: mdi:party-popper
-        icon_color: amber
       - type: custom:mushroom-entity-card
         entity: input_boolean.party_wohnzimmer
         name: Party WZ
         layout: horizontal
         icon: mdi:party-popper
-        icon_color: amber
       - type: custom:mushroom-entity-card
         entity: input_boolean.essen
         name: Essen
         layout: horizontal
         icon: mdi:silverware-fork-knife
-        icon_color: amber
       - type: custom:mushroom-entity-card
         entity: input_boolean.es_ist_dunkel
         name: Dunkel
         layout: horizontal
         icon: mdi:weather-night
-        icon_color: amber
       - type: custom:mushroom-entity-card
         entity: input_boolean.abwaschen
         name: Abwaschen
         layout: horizontal
         icon: mdi:dishwasher
-        icon_color: amber
       - type: custom:mushroom-entity-card
         entity: input_boolean.leselicht
         name: Leselicht
         layout: horizontal
         icon: mdi:book-open-page-variant
-        icon_color: amber
-      title: Schalter
-    - type: custom:auto-entities
-      card:
-        type: entities
-        title: Wohnzimmer
-        state_color: true
-      filter:
-        include:
-        - domain: light
-          area: Wohnzimmer
-        exclude:
-        - entity_id: '*_indicator_light'
-        - entity_id: light.smart_humidifier_*
-      sort:
-        method: friendly_name
-    - type: custom:auto-entities
-      card:
-        type: entities
-        title: Arbeitszimmer Alex
-        state_color: true
-      filter:
-        include:
-        - domain: light
-          area: Arbeitszimmer Alex
-        exclude:
-        - entity_id: '*_indicator_light'
-        - entity_id: light.smart_humidifier_*
-      sort:
-        method: friendly_name
-    - type: custom:auto-entities
-      card:
-        type: entities
-        title: Schlafzimmer
-        state_color: true
-      filter:
-        include:
-        - domain: light
-          area: Schlafzimmer
-        exclude:
-        - entity_id: '*_indicator_light'
-        - entity_id: light.smart_humidifier_*
-      sort:
-        method: friendly_name
-    - type: custom:auto-entities
-      card:
-        type: entities
-        title: Kinderzimmer
-        state_color: true
-      filter:
-        include:
-        - domain: light
-          area: Kinderzimmer
-        exclude:
-        - entity_id: '*_indicator_light'
-        - entity_id: light.smart_humidifier_*
-      sort:
-        method: friendly_name
-    - type: custom:auto-entities
-      card:
-        type: entities
-        title: Küche
-        state_color: true
-      filter:
-        include:
-        - domain: light
-          area: Küche
-        exclude:
-        - entity_id: '*_indicator_light'
-        - entity_id: light.smart_humidifier_*
-      sort:
-        method: friendly_name
-    - type: custom:auto-entities
-      card:
-        type: entities
-        title: Badezimmer
-        state_color: true
-      filter:
-        include:
-        - domain: light
-          area: Badezimmer
-        exclude:
-        - entity_id: '*_indicator_light'
-        - entity_id: light.smart_humidifier_*
-      sort:
-        method: friendly_name
-    - type: custom:auto-entities
-      card:
-        type: entities
-        title: Flur
-        state_color: true
-      filter:
-        include:
-        - domain: light
-          area: Flur
-        exclude:
-        - entity_id: '*_indicator_light'
-        - entity_id: light.smart_humidifier_*
-      sort:
-        method: friendly_name
-    - type: custom:auto-entities
-      card:
-        type: entities
-        title: Ankleide
-        state_color: true
-      filter:
-        include:
-        - domain: light
-          area: Ankleide
-        exclude:
-        - entity_id: '*_indicator_light'
-        - entity_id: light.smart_humidifier_*
-      sort:
-        method: friendly_name
-    - type: custom:auto-entities
-      card:
-        type: entities
-        title: Balkon
-        state_color: true
-      filter:
-        include:
-        - domain: light
-          area: Balkon
-        exclude:
-        - entity_id: '*_indicator_light'
-        - entity_id: light.smart_humidifier_*
-      sort:
-        method: friendly_name
-    - type: custom:auto-entities
-      card:
-        type: entities
-        title: Waschzimmer
-        state_color: true
-      filter:
-        include:
-        - domain: light
-          area: Waschzimmer
-        exclude:
-        - entity_id: '*_indicator_light'
-        - entity_id: light.smart_humidifier_*
-      sort:
-        method: friendly_name
-  - type: custom:gap-card
-    view_layout:
-      grid:area: right
-- title: Statistik
-  path: graphs
-  theme: Backend-selected
-  type: custom:layout-card
-  layout_type: custom:grid-layout
-  layout_options:
-    grid-template-columns: 10% 80% 10%
-    grid-template-rows: auto
-    grid-template-areas: '"left middle right"
-
-      '
-    mediaquery:
-      '(max-width: 1023px)':
-        grid-template-columns: 0 100% 0
-  badges: []
-  cards:
-  - type: custom:gap-card
-    view_layout:
-      grid:area: left
-  - type: vertical-stack
-    view_layout:
-      grid:area: middle
-    cards:
     - type: custom:mushroom-title-card
-      alignment: center
-      title: Statistik
-    - type: custom:mushroom-chips-card
-      alignment: center
-      chips:
-      - type: template
-        content: '{% set s = states(''sensor.stromzahler_saldiert'')|float(0) %}{% if s<-50 %}↑ {{(s|abs)|round(0)}} W{% elif s>50 %}↓ {{s|round(0)}} W{% else %}{{s|round(0)}} W{% endif %}'
-        icon: '{% set s = states(''sensor.stromzahler_saldiert'')|float(0) %}{% if s<-50 %}mdi:transmission-tower-export{% elif s>50 %}mdi:transmission-tower-import{% else %}mdi:transmission-tower{% endif %}'
-        icon_color: '{% set s = states(''sensor.stromzahler_saldiert'')|float(0) %}{% if s<-50 %}green{% elif s>2000 %}red{% elif s>500 %}amber{% else %}grey{% endif %}'
-        entity: sensor.stromzahler_saldiert
-      - type: template
-        content: '{{ states(''sensor.aqara_plug_02_power'')|float(0)|round(0) }} W'
-        icon: mdi:solar-power
-        icon_color: amber
-        entity: sensor.aqara_plug_02_power
-      - type: template
-        content: '{{ states(''sensor.hausverbrauch_gesamt'')|float(0)|round(0) }} W'
-        icon: mdi:home-lightning-bolt
-        icon_color: blue
-        entity: sensor.hausverbrauch_gesamt
-    - type: custom:mushroom-title-card
-      title: Strom
-      alignment: center
-    - type: grid
-      square: false
-      columns: 2
+      title: Räume
+    - type: custom:layout-card
+      layout_type: custom:grid-layout
+      layout_options:
+        grid-template-columns: repeat(auto-fit, minmax(155px, 1fr))
+        grid-gap: 8px
       cards:
-      - type: custom:mini-graph-card
-        name: Erzeugung
-        icon: mdi:solar-power
-        hours_to_show: 24
-        points_per_hour: 2
-        line_width: 2
-        entities:
-        - entity: sensor.inverter_port_1_dc_power
-          name: Panel 1
-          color: '#f9a825'
-        - entity: sensor.inverter_port_2_dc_power
-          name: Panel 2
-          color: '#fbc02d'
-        - entity: sensor.aqara_plug_02_power
-          name: BKK
-          color: '#43a047'
-        show:
-          legend: true
-      - type: custom:mini-graph-card
-        name: Netz
-        icon: mdi:transmission-tower
-        hours_to_show: 24
-        points_per_hour: 2
-        line_width: 2
-        entities:
-        - entity: sensor.stromzahler_saldiert
-          name: Saldiert
-          color: '#90a4ae'
-        - entity: sensor.netzbezug
-          name: Bezug
-          color: '#e53935'
-        - entity: sensor.einspeisung
-          name: Einspeisung
-          color: '#43a047'
-        show:
-          legend: true
-    - type: custom:mini-graph-card
-      name: Hausverbrauch & Phasen
-      icon: mdi:home-lightning-bolt
-      hours_to_show: 24
-      points_per_hour: 2
-      line_width: 2
-      entities:
-      - entity: sensor.hausverbrauch_gesamt
-        name: Gesamt
-        color: '#1e88e5'
-      - entity: sensor.strommesser_phase_a_active_power
-        name: Phase 1
-      - entity: sensor.strommesser_phase_b_active_power
-        name: Phase 2
-      - entity: sensor.strommesser_phase_c_active_power
-        name: Phase 3
-      show:
-        legend: true
-    - type: custom:mini-graph-card
-      name: Geräte
-      icon: mdi:power-plug
-      hours_to_show: 24
-      points_per_hour: 2
-      line_width: 2
-      entities:
-      - entity: sensor.aqara_plug_01_power
-        name: Rafael
-      - entity: sensor.neo_plug_01_device_power
-        name: Alex
-      - entity: sensor.trockner_current_consumption
-        name: Trockner
-      - entity: sensor.wohnzimmer_steckdose_power
+      - type: custom:mushroom-light-card
+        entity: light.alle_wohnzimmer_lichter
         name: Wohnzimmer
-      - entity: sensor.steckdose_kuechengeraete_power
+        icon: mdi:sofa
+        show_brightness_control: true
+        use_light_color: false
+        collapsible_controls: true
+        tap_action:
+          action: toggle
+        hold_action:
+          action: navigate
+          navigation_path: /lovelace/licht-wohnzimmer
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.alle_kuche_lichter
         name: Küche
-      - entity: sensor.steckdose_waschmaschine_power
-        name: Waschm.
-      - entity: sensor.neo_plug_02_power
-        name: Kinderzimmer
-      show:
-        legend: true
-    - type: grid
-      square: false
-      columns: 2
-      cards:
-      - type: custom:mushroom-entity-card
-        entity: sensor.inverter_port_1_dc_daily_energy
-        name: Panel 1 heute
-        icon: mdi:solar-power
-        icon_color: amber
-        layout: horizontal
-      - type: custom:mushroom-entity-card
-        entity: sensor.inverter_port_2_dc_daily_energy
-        name: Panel 2 heute
-        icon: mdi:solar-power
-        icon_color: amber
-        layout: horizontal
-      title: Solar heute
-    - type: custom:mushroom-title-card
-      title: Temperatur und Luftfeuchtigkeit
-      alignment: center
-    - type: grid
-      columns: 2
-      square: false
-      cards:
-      - type: custom:mushroom-template-card
-        primary: Aussen
-        secondary: '{{ states(''sensor.temperatur_aussen'') | float(0) | round(1) }} °C · {{ states(''sensor.luftfeuchtigkeit_aussen'') | float(0) | round(0) }} %'
-        icon: mdi:sun-thermometer-outline
-        icon_color: blue
-      - type: custom:mushroom-template-card
-        primary: Wohnzimmer
-        secondary: '{{ states(''sensor.wohnzimmer_temperatur'') | float(0) | round(1) }} °C · {{ states(''sensor.wohnzimmer_luftfeuchtigkeit'') | float(0) | round(0) }} %'
-        icon: mdi:sofa-outline
-        icon_color: orange
-      - type: custom:mushroom-template-card
-        primary: Schlafzimmer
-        secondary: '{{ states(''sensor.aqara_climate_04_temperature'') | float(0) | round(1) }} °C · {{ states(''sensor.aqara_climate_04_humidity'') | float(0) | round(0) }} %'
-        icon: mdi:bed-outline
-        icon_color: indigo
-      - type: custom:mushroom-template-card
-        primary: Arbeitszimmer Alex
-        secondary: '{{ states(''sensor.aqara_climate_01_temperature'') | float(0) | round(1) }} °C · {{ states(''sensor.aqara_climate_01_humidity'') | float(0) | round(0) }} %'
-        icon: mdi:desk
-        icon_color: green
-      - type: custom:mushroom-template-card
-        primary: Kinderzimmer
-        secondary: '{{ states(''sensor.aqara_climate_03_temperature'') | float(0) | round(1) }} °C · {{ states(''sensor.aqara_climate_03_humidity'') | float(0) | round(0) }} %'
-        icon: mdi:teddy-bear
-        icon_color: pink
-      - type: custom:mushroom-template-card
-        primary: Badezimmer
-        secondary: '{{ states(''sensor.aqara_climate_02_temperature'') | float(0) | round(1) }} °C · {{ states(''sensor.aqara_climate_02_humidity'') | float(0) | round(0) }} %'
-        icon: mdi:shower
-        icon_color: cyan
-    - type: custom:mushroom-title-card
-      title: Heizung
-      alignment: center
-    - type: grid
-      square: false
-      columns: 2
-      cards:
-      - type: custom:mushroom-entity-card
-        entity: sensor.heizung_wohnzimmer_an
-        name: Wohnzimmer
-        layout: horizontal
-        icon: mdi:radiator
-        icon_color: red
-      - type: custom:mushroom-entity-card
-        entity: sensor.heizung_flur_an
-        name: Flur
-        layout: horizontal
-        icon: mdi:radiator
-        icon_color: red
-      - type: custom:mushroom-entity-card
-        entity: sensor.heizung_kinderzimmer_an
-        name: Kinderzimmer
-        layout: horizontal
-        icon: mdi:radiator
-        icon_color: red
-      - type: custom:mushroom-entity-card
-        entity: sensor.heizung_schlafzimmer_an
+        icon: mdi:silverware-fork-knife
+        show_brightness_control: true
+        use_light_color: false
+        collapsible_controls: true
+        tap_action:
+          action: toggle
+        hold_action:
+          action: navigate
+          navigation_path: /lovelace/licht-kueche
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.alle_arbeitszimmer_lichter
         name: Schlafzimmer
-        layout: horizontal
-        icon: mdi:radiator
-        icon_color: red
-      - type: custom:mushroom-entity-card
-        entity: sensor.heizung_badezimmer_an
+        icon: mdi:bed
+        show_brightness_control: true
+        use_light_color: false
+        collapsible_controls: true
+        tap_action:
+          action: toggle
+        hold_action:
+          action: navigate
+          navigation_path: /lovelace/licht-schlafzimmer
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.alle_schlafzimmer_lichter
+        name: Arbeitszimmer Alex
+        icon: mdi:desk
+        show_brightness_control: true
+        use_light_color: false
+        collapsible_controls: true
+        tap_action:
+          action: toggle
+        hold_action:
+          action: navigate
+          navigation_path: /lovelace/licht-arbeitszimmer-alex
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.alle_kinderzimmer_lichter
+        name: Kinderzimmer
+        icon: mdi:teddy-bear
+        show_brightness_control: true
+        use_light_color: false
+        collapsible_controls: true
+        tap_action:
+          action: toggle
+        hold_action:
+          action: navigate
+          navigation_path: /lovelace/licht-kinderzimmer
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.alle_badezimmer_lichter
         name: Badezimmer
-        layout: horizontal
-        icon: mdi:radiator
-        icon_color: red
-    - type: custom:mushroom-title-card
-      title: Energie heute
-      alignment: center
-    - type: custom:mushroom-template-card
-      primary: '{{ states(''sensor.alle_verbrauche_energy_daily'')|float(0)|round(1) }} kWh'
-      secondary: Verbrauch heute
-      icon: mdi:home-lightning-bolt
-      icon_color: blue
-      tap_action:
-        action: more-info
-      entity: sensor.alle_verbrauche_energy_daily
-      multiline_secondary: false
-    - type: custom:mini-graph-card
-      name: Lasten heute
-      icon: mdi:chart-areaspline
-      hours_to_show: 24
-      points_per_hour: 2
-      line_width: 2
-      show:
-        legend: true
-      entities:
-      - entity: sensor.alle_lichter_power_2
-        name: Lichter
-        color: '#fbc02d'
-      - entity: sensor.alle_speaker_power
-        name: Lautsprecher
-        color: '#8e24aa'
-      - entity: sensor.alle_always_on_power
-        name: Immer an
-        color: '#90a4ae'
-      - entity: sensor.alle_variablen_power
-        name: Variabel
-        color: '#1e88e5'
-  - type: custom:gap-card
-    view_layout:
-      grid:area: right
-- title: Adaptives Licht
-  path: adaptive-lighting
-  theme: Backend-selected
-  type: custom:layout-card
-  layout_type: custom:grid-layout
-  layout_options:
-    grid-template-columns: 10% 80% 10%
-    grid-template-rows: auto
-    grid-template-areas: '"left middle right"
-
-      '
-    mediaquery:
-      '(max-width: 1023px)':
-        grid-template-columns: 0 100% 0
-  badges: []
-  cards:
-  - type: custom:gap-card
-    view_layout:
-      grid:area: left
-  - type: vertical-stack
-    view_layout:
-      grid:area: middle
-    cards:
+        icon: mdi:shower
+        show_brightness_control: true
+        use_light_color: false
+        collapsible_controls: true
+        tap_action:
+          action: toggle
+        hold_action:
+          action: navigate
+          navigation_path: /lovelace/licht-badezimmer
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.alle_flur_lichter
+        name: Flur
+        icon: mdi:coat-rack
+        show_brightness_control: true
+        use_light_color: false
+        collapsible_controls: true
+        tap_action:
+          action: toggle
+        hold_action:
+          action: navigate
+          navigation_path: /lovelace/licht-flur
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.alle_ankleide_lichter
+        name: Ankleide
+        icon: mdi:hanger
+        show_brightness_control: true
+        use_light_color: false
+        collapsible_controls: true
+        tap_action:
+          action: toggle
+        hold_action:
+          action: navigate
+          navigation_path: /lovelace/licht-ankleide
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.alle_waschzimmer_lichter
+        name: Waschzimmer
+        icon: mdi:washing-machine
+        show_brightness_control: true
+        use_light_color: false
+        collapsible_controls: true
+        tap_action:
+          action: toggle
+        hold_action:
+          action: navigate
+          navigation_path: /lovelace/licht-waschzimmer
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.alle_balkon_lichter
+        name: Balkon
+        icon: mdi:flower
+        show_brightness_control: true
+        use_light_color: false
+        collapsible_controls: true
+        tap_action:
+          action: toggle
+        hold_action:
+          action: navigate
+          navigation_path: /lovelace/licht-balkon
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
     - type: custom:mushroom-title-card
       alignment: center
       title: Adaptives Licht
@@ -1288,13 +964,9 @@ views:
       - type: template
         content: '{{ [''wohnzimmer'',''kuche'',''schlafzimmer'',''arbeitszimmer'',''kinderzimmer'',''badezimmer'',''flur'',''balkon'',''ankleide'',''waschzimmer'']|select(''in'', states.switch|selectattr(''state'',''eq'',''on'')|map(attribute=''object_id'')|map(''replace'',''adaptive_lighting_'','''')|list)|list|count }} aktiv'
         icon: mdi:theme-light-dark
-        icon_color: amber
       - type: template
-        # float(0) davor: beim Start hat sun.sun das Attribut noch nicht, round(None)
-        # wirft dann und fuellt das Log mit drei Fehlern pro Neustart.
-        content: '{{ state_attr(''sun.sun'',''elevation'') | float(0) | round(0) }}°'
+        content: '{{ state_attr(''sun.sun'',''elevation'')|round(0) }}°'
         icon: mdi:weather-sunny
-        icon_color: amber
         entity: sun.sun
     - type: grid
       square: false
@@ -1305,7 +977,6 @@ views:
         primary: Ankleide
         secondary: '{% if is_state(''binary_sensor.ankleide_manual_control'',''on'') %}Manuell{% elif is_state(''switch.adaptive_lighting_sleep_mode_ankleide'',''on'') %}Schlafmodus{% elif is_state(''switch.adaptive_lighting_ankleide'',''on'') %}Aktiv{% else %}Aus{% endif %}'
         icon: mdi:theme-light-dark
-        icon_color: '{% if is_state(''binary_sensor.ankleide_manual_control'',''on'') %}red{% elif is_state(''switch.adaptive_lighting_sleep_mode_ankleide'',''on'') %}indigo{% elif is_state(''switch.adaptive_lighting_ankleide'',''on'') %}amber{% else %}disabled{% endif %}'
         entity: switch.adaptive_lighting_ankleide
         tap_action:
           action: perform-action
@@ -1318,7 +989,6 @@ views:
         primary: Arbeitszimmer
         secondary: '{% if is_state(''binary_sensor.arbeitszimmer_manual_control'',''on'') %}Manuell{% elif is_state(''switch.adaptive_lighting_sleep_mode_arbeitszimmer'',''on'') %}Schlafmodus{% elif is_state(''switch.adaptive_lighting_arbeitszimmer'',''on'') %}Aktiv{% else %}Aus{% endif %}'
         icon: mdi:theme-light-dark
-        icon_color: '{% if is_state(''binary_sensor.arbeitszimmer_manual_control'',''on'') %}red{% elif is_state(''switch.adaptive_lighting_sleep_mode_arbeitszimmer'',''on'') %}indigo{% elif is_state(''switch.adaptive_lighting_arbeitszimmer'',''on'') %}amber{% else %}disabled{% endif %}'
         entity: switch.adaptive_lighting_arbeitszimmer
         tap_action:
           action: perform-action
@@ -1331,7 +1001,6 @@ views:
         primary: Bad
         secondary: '{% if is_state(''binary_sensor.badezimmer_manual_control'',''on'') %}Manuell{% elif is_state(''switch.adaptive_lighting_sleep_mode_badezimmer'',''on'') %}Schlafmodus{% elif is_state(''switch.adaptive_lighting_badezimmer'',''on'') %}Aktiv{% else %}Aus{% endif %}'
         icon: mdi:theme-light-dark
-        icon_color: '{% if is_state(''binary_sensor.badezimmer_manual_control'',''on'') %}red{% elif is_state(''switch.adaptive_lighting_sleep_mode_badezimmer'',''on'') %}indigo{% elif is_state(''switch.adaptive_lighting_badezimmer'',''on'') %}amber{% else %}disabled{% endif %}'
         entity: switch.adaptive_lighting_badezimmer
         tap_action:
           action: perform-action
@@ -1344,7 +1013,6 @@ views:
         primary: Balkon
         secondary: '{% if is_state(''binary_sensor.balkon_manual_control'',''on'') %}Manuell{% elif is_state(''switch.adaptive_lighting_sleep_mode_balkon'',''on'') %}Schlafmodus{% elif is_state(''switch.adaptive_lighting_balkon'',''on'') %}Aktiv{% else %}Aus{% endif %}'
         icon: mdi:theme-light-dark
-        icon_color: '{% if is_state(''binary_sensor.balkon_manual_control'',''on'') %}red{% elif is_state(''switch.adaptive_lighting_sleep_mode_balkon'',''on'') %}indigo{% elif is_state(''switch.adaptive_lighting_balkon'',''on'') %}amber{% else %}disabled{% endif %}'
         entity: switch.adaptive_lighting_balkon
         tap_action:
           action: perform-action
@@ -1357,7 +1025,6 @@ views:
         primary: Flur
         secondary: '{% if is_state(''binary_sensor.flur_manual_control'',''on'') %}Manuell{% elif is_state(''switch.adaptive_lighting_sleep_mode_flur'',''on'') %}Schlafmodus{% elif is_state(''switch.adaptive_lighting_flur'',''on'') %}Aktiv{% else %}Aus{% endif %}'
         icon: mdi:theme-light-dark
-        icon_color: '{% if is_state(''binary_sensor.flur_manual_control'',''on'') %}red{% elif is_state(''switch.adaptive_lighting_sleep_mode_flur'',''on'') %}indigo{% elif is_state(''switch.adaptive_lighting_flur'',''on'') %}amber{% else %}disabled{% endif %}'
         entity: switch.adaptive_lighting_flur
         tap_action:
           action: perform-action
@@ -1370,7 +1037,6 @@ views:
         primary: Kinderzimmer
         secondary: '{% if is_state(''binary_sensor.kinderzimmer_manual_control'',''on'') %}Manuell{% elif is_state(''switch.adaptive_lighting_sleep_mode_kinderzimmer'',''on'') %}Schlafmodus{% elif is_state(''switch.adaptive_lighting_kinderzimmer'',''on'') %}Aktiv{% else %}Aus{% endif %}'
         icon: mdi:theme-light-dark
-        icon_color: '{% if is_state(''binary_sensor.kinderzimmer_manual_control'',''on'') %}red{% elif is_state(''switch.adaptive_lighting_sleep_mode_kinderzimmer'',''on'') %}indigo{% elif is_state(''switch.adaptive_lighting_kinderzimmer'',''on'') %}amber{% else %}disabled{% endif %}'
         entity: switch.adaptive_lighting_kinderzimmer
         tap_action:
           action: perform-action
@@ -1383,7 +1049,6 @@ views:
         primary: Küche
         secondary: '{% if is_state(''binary_sensor.kuche_manual_control'',''on'') %}Manuell{% elif is_state(''switch.adaptive_lighting_sleep_mode_kueche'',''on'') %}Schlafmodus{% elif is_state(''switch.adaptive_lighting_kueche'',''on'') %}Aktiv{% else %}Aus{% endif %}'
         icon: mdi:theme-light-dark
-        icon_color: '{% if is_state(''binary_sensor.kuche_manual_control'',''on'') %}red{% elif is_state(''switch.adaptive_lighting_sleep_mode_kueche'',''on'') %}indigo{% elif is_state(''switch.adaptive_lighting_kueche'',''on'') %}amber{% else %}disabled{% endif %}'
         entity: switch.adaptive_lighting_kueche
         tap_action:
           action: perform-action
@@ -1396,7 +1061,6 @@ views:
         primary: Schlafzimmer
         secondary: '{% if is_state(''binary_sensor.schlafzimmer_manual_control'',''on'') %}Manuell{% elif is_state(''switch.adaptive_lighting_sleep_mode_schlafzimmer'',''on'') %}Schlafmodus{% elif is_state(''switch.adaptive_lighting_schlafzimmer'',''on'') %}Aktiv{% else %}Aus{% endif %}'
         icon: mdi:theme-light-dark
-        icon_color: '{% if is_state(''binary_sensor.schlafzimmer_manual_control'',''on'') %}red{% elif is_state(''switch.adaptive_lighting_sleep_mode_schlafzimmer'',''on'') %}indigo{% elif is_state(''switch.adaptive_lighting_schlafzimmer'',''on'') %}amber{% else %}disabled{% endif %}'
         entity: switch.adaptive_lighting_schlafzimmer
         tap_action:
           action: perform-action
@@ -1409,7 +1073,6 @@ views:
         primary: Wasch
         secondary: '{% if is_state(''binary_sensor.waschzimmer_manual_control'',''on'') %}Manuell{% elif is_state(''switch.adaptive_lighting_sleep_mode_waschzimmer'',''on'') %}Schlafmodus{% elif is_state(''switch.adaptive_lighting_waschzimmer'',''on'') %}Aktiv{% else %}Aus{% endif %}'
         icon: mdi:theme-light-dark
-        icon_color: '{% if is_state(''binary_sensor.waschzimmer_manual_control'',''on'') %}red{% elif is_state(''switch.adaptive_lighting_sleep_mode_waschzimmer'',''on'') %}indigo{% elif is_state(''switch.adaptive_lighting_waschzimmer'',''on'') %}amber{% else %}disabled{% endif %}'
         entity: switch.adaptive_lighting_waschzimmer
         tap_action:
           action: perform-action
@@ -1422,7 +1085,6 @@ views:
         primary: Wohnzimmer
         secondary: '{% if is_state(''binary_sensor.wohnzimmer_manual_control'',''on'') %}Manuell{% elif is_state(''switch.adaptive_lighting_sleep_mode_wohnzimmer'',''on'') %}Schlafmodus{% elif is_state(''switch.adaptive_lighting_wohnzimmer'',''on'') %}Aktiv{% else %}Aus{% endif %}'
         icon: mdi:theme-light-dark
-        icon_color: '{% if is_state(''binary_sensor.wohnzimmer_manual_control'',''on'') %}red{% elif is_state(''switch.adaptive_lighting_sleep_mode_wohnzimmer'',''on'') %}indigo{% elif is_state(''switch.adaptive_lighting_wohnzimmer'',''on'') %}amber{% else %}disabled{% endif %}'
         entity: switch.adaptive_lighting_wohnzimmer
         tap_action:
           action: perform-action
@@ -1440,76 +1102,369 @@ views:
         name: Ankleide
         layout: horizontal
         icon: mdi:power-sleep
-        icon_color: indigo
       - type: custom:mushroom-entity-card
         entity: switch.adaptive_lighting_sleep_mode_arbeitszimmer
         name: Arbeitszimmer
         layout: horizontal
         icon: mdi:power-sleep
-        icon_color: indigo
       - type: custom:mushroom-entity-card
         entity: switch.adaptive_lighting_sleep_mode_badezimmer
         name: Bad
         layout: horizontal
         icon: mdi:power-sleep
-        icon_color: indigo
       - type: custom:mushroom-entity-card
         entity: switch.adaptive_lighting_sleep_mode_balkon
         name: Balkon
         layout: horizontal
         icon: mdi:power-sleep
-        icon_color: indigo
       - type: custom:mushroom-entity-card
         entity: switch.adaptive_lighting_sleep_mode_flur
         name: Flur
         layout: horizontal
         icon: mdi:power-sleep
-        icon_color: indigo
       - type: custom:mushroom-entity-card
         entity: switch.adaptive_lighting_sleep_mode_kinderzimmer
         name: Kinderzimmer
         layout: horizontal
         icon: mdi:power-sleep
-        icon_color: indigo
       - type: custom:mushroom-entity-card
         entity: switch.adaptive_lighting_sleep_mode_kueche
         name: Küche
         layout: horizontal
         icon: mdi:power-sleep
-        icon_color: indigo
       - type: custom:mushroom-entity-card
         entity: switch.adaptive_lighting_sleep_mode_schlafzimmer
         name: Schlafzimmer
         layout: horizontal
         icon: mdi:power-sleep
-        icon_color: indigo
       - type: custom:mushroom-entity-card
         entity: switch.adaptive_lighting_sleep_mode_waschzimmer
         name: Wasch
         layout: horizontal
         icon: mdi:power-sleep
-        icon_color: indigo
       - type: custom:mushroom-entity-card
         entity: switch.adaptive_lighting_sleep_mode_wohnzimmer
         name: Wohnzimmer
         layout: horizontal
         icon: mdi:power-sleep
-        icon_color: indigo
       title: Schlafmodus
   - type: custom:gap-card
     view_layout:
       grid:area: right
-- title: Prusa MK4
-  path: prusa-mk4
-  theme: Backend-selected
+- title: Klima
+  path: graphs
+  theme: Linear
   type: custom:layout-card
   layout_type: custom:grid-layout
   layout_options:
     grid-template-columns: 10% 80% 10%
     grid-template-rows: auto
-    grid-template-areas: '"left middle right"
-
-      '
+    grid-template-areas: |
+      "left middle right"
+    mediaquery:
+      '(max-width: 1023px)':
+        grid-template-columns: 0 100% 0
+  badges: []
+  cards:
+  - type: custom:gap-card
+    view_layout:
+      grid:area: left
+  - type: vertical-stack
+    view_layout:
+      grid:area: middle
+    cards:
+    - type: custom:mushroom-title-card
+      title: Klima
+      subtitle: Übersicht & Steuerung
+    - type: custom:mushroom-title-card
+      title: Räume
+    - type: grid
+      columns: 2
+      square: false
+      cards:
+      - type: custom:mushroom-template-card
+        primary: Aussen
+        secondary: '{{ states(''sensor.temperatur_aussen'') | float(0) | round(1) }} °C · {{ states(''sensor.luftfeuchtigkeit_aussen'') | float(0) | round(0) }} %'
+        icon: mdi:sun-thermometer-outline
+      - type: custom:mushroom-template-card
+        primary: Wohnzimmer
+        secondary: '{{ states(''sensor.wohnzimmer_temperatur'') | float(0) | round(1) }} °C · {{ states(''sensor.wohnzimmer_luftfeuchtigkeit'') | float(0) | round(0) }} %'
+        icon: mdi:sofa-outline
+      - type: custom:mushroom-template-card
+        primary: Schlafzimmer
+        secondary: '{{ states(''sensor.aqara_climate_04_temperature'') | float(0) | round(1) }} °C · {{ states(''sensor.aqara_climate_04_humidity'') | float(0) | round(0) }} %'
+        icon: mdi:bed-outline
+      - type: custom:mushroom-template-card
+        primary: Arbeitszimmer Alex
+        secondary: '{{ states(''sensor.aqara_climate_01_temperature'') | float(0) | round(1) }} °C · {{ states(''sensor.aqara_climate_01_humidity'') | float(0) | round(0) }} %'
+        icon: mdi:desk
+      - type: custom:mushroom-template-card
+        primary: Kinderzimmer
+        secondary: '{{ states(''sensor.aqara_climate_03_temperature'') | float(0) | round(1) }} °C · {{ states(''sensor.aqara_climate_03_humidity'') | float(0) | round(0) }} %'
+        icon: mdi:teddy-bear
+      - type: custom:mushroom-template-card
+        primary: Badezimmer
+        secondary: '{{ states(''sensor.aqara_climate_02_temperature'') | float(0) | round(1) }} °C · {{ states(''sensor.aqara_climate_02_humidity'') | float(0) | round(0) }} %'
+        icon: mdi:shower
+    - type: custom:mushroom-title-card
+      title: Luftqualität
+    - type: grid
+      columns: 2
+      square: false
+      cards:
+      - type: custom:mushroom-template-card
+        entity: sensor.qingping_air_monitor_lite_co2_carbon_dioxide
+        primary: CO2
+        secondary: '{{ states(''sensor.qingping_air_monitor_lite_co2_carbon_dioxide'') | float(0) | round(0) }} ppm'
+        icon: mdi:molecule-co2
+        tap_action:
+          action: more-info
+      - type: custom:mushroom-template-card
+        entity: sensor.pm2_5_gesamt
+        primary: PM2.5
+        secondary: '{{ states(''sensor.pm2_5_gesamt'') | float(0) | round(1) }} µg/m³'
+        icon: mdi:air-filter
+        tap_action:
+          action: more-info
+      - type: custom:mushroom-template-card
+        entity: sensor.pm10_gesamt
+        primary: PM10
+        secondary: '{{ states(''sensor.pm10_gesamt'') | float(0) | round(1) }} µg/m³'
+        icon: mdi:grain
+        tap_action:
+          action: more-info
+      - type: custom:mushroom-template-card
+        entity: sensor.ikea_air_01_voc_index
+        primary: VOC-Index
+        secondary: '{{ states(''sensor.ikea_air_01_voc_index'') | float(0) | round(0) }} '
+        icon: mdi:molecule
+        tap_action:
+          action: more-info
+    - type: custom:mushroom-title-card
+      title: Steuerung
+    - type: grid
+      columns: 2
+      square: false
+      cards:
+      - type: custom:mushroom-climate-card
+        entity: climate.ac
+        name: Klimaanlage
+        show_temperature_control: true
+        collapsible_controls: true
+      - type: custom:mushroom-fan-card
+        entity: fan.zhimi_vb4_bce4_air_purifier
+        name: Luftreiniger
+        show_percentage_control: true
+        icon_animation: true
+        collapsible_controls: true
+      - type: custom:mushroom-entity-card
+        entity: switch.steckdose_luftwascher
+        name: Luftwäscher
+        icon: mdi:air-humidifier
+      - type: custom:mushroom-fan-card
+        entity: fan.schlafzimmer
+        name: Ventilator Schlafzimmer
+        show_percentage_control: true
+        icon_animation: true
+        collapsible_controls: true
+      - type: custom:mushroom-fan-card
+        entity: fan.kinderzimmer
+        name: Ventilator Kinderzimmer
+        show_percentage_control: true
+        icon_animation: true
+        collapsible_controls: true
+  - type: custom:gap-card
+    view_layout:
+      grid:area: right
+- title: Medien
+  theme: Linear
+  type: custom:layout-card
+  layout_type: custom:grid-layout
+  layout_options:
+    grid-template-columns: 10% 80% 10%
+    grid-template-rows: auto
+    grid-template-areas: |
+      "left middle right"
+    mediaquery:
+      '(max-width: 1023px)':
+        grid-template-columns: 0 100% 0
+  badges: []
+  cards:
+  - type: custom:gap-card
+    view_layout:
+      grid:area: left
+  - type: vertical-stack
+    view_layout:
+      grid:area: middle
+    cards:
+    - type: custom:mushroom-title-card
+      alignment: center
+      title: Medien
+    - type: custom:mushroom-chips-card
+      alignment: center
+      chips:
+      - type: template
+        content: '{{ states.media_player|selectattr(''state'',''eq'',''playing'')|list|count }} spielen'
+        icon: mdi:play-circle
+    - type: custom:mushroom-title-card
+      title: AppleTVs & Verstärker
+    - type: custom:layout-card
+      layout_type: custom:grid-layout
+      layout_options:
+        grid-template-columns: 1fr
+        grid-gap: 12px
+        mediaquery:
+          '(min-width: 600px)':
+            grid-template-columns: 1fr 1fr
+          '(min-width: 1000px)':
+            grid-template-columns: 1fr 1fr 1fr
+      cards:
+      - type: custom:mushroom-media-player-card
+        entity: media_player.denon_avr_x3200w
+        use_media_info: true
+        use_media_artwork: true
+        show_volume_level: false
+        media_controls:
+        - previous
+        - play_pause_stop
+        - next
+        volume_controls: []
+        collapsible_controls: true
+        fill_container: true
+      - type: custom:mushroom-media-player-card
+        entity: media_player.wohnzimmer
+        use_media_info: true
+        use_media_artwork: true
+        show_volume_level: false
+        media_controls:
+        - previous
+        - play_pause_stop
+        - next
+        volume_controls: []
+        collapsible_controls: true
+        fill_container: true
+      - type: custom:mushroom-media-player-card
+        entity: media_player.appletv
+        use_media_info: true
+        use_media_artwork: true
+        show_volume_level: false
+        media_controls:
+        - previous
+        - play_pause_stop
+        - next
+        volume_controls: []
+        collapsible_controls: true
+        fill_container: true
+    - type: custom:mushroom-title-card
+      title: HomePods
+    - type: custom:layout-card
+      layout_type: custom:grid-layout
+      layout_options:
+        grid-template-columns: 1fr
+        grid-gap: 12px
+        mediaquery:
+          '(min-width: 600px)':
+            grid-template-columns: 1fr 1fr
+          '(min-width: 1000px)':
+            grid-template-columns: 1fr 1fr 1fr
+      cards:
+      - type: custom:mushroom-media-player-card
+        entity: media_player.arbeitszimmer
+        use_media_info: true
+        use_media_artwork: true
+        show_volume_level: false
+        media_controls:
+        - previous
+        - play_pause_stop
+        - next
+        volume_controls: []
+        collapsible_controls: true
+        fill_container: true
+      - type: custom:mushroom-media-player-card
+        entity: media_player.homepods
+        use_media_info: true
+        use_media_artwork: true
+        show_volume_level: false
+        media_controls:
+        - previous
+        - play_pause_stop
+        - next
+        volume_controls: []
+        collapsible_controls: true
+        fill_container: true
+      - type: custom:mushroom-media-player-card
+        entity: media_player.schlafzimmer
+        use_media_info: true
+        use_media_artwork: true
+        show_volume_level: false
+        media_controls:
+        - previous
+        - play_pause_stop
+        - next
+        volume_controls: []
+        collapsible_controls: true
+        fill_container: true
+      - type: custom:mushroom-media-player-card
+        entity: media_player.homepod_badezimmer
+        use_media_info: true
+        use_media_artwork: true
+        show_volume_level: false
+        media_controls:
+        - previous
+        - play_pause_stop
+        - next
+        volume_controls: []
+        collapsible_controls: true
+        fill_container: true
+      - type: custom:mushroom-media-player-card
+        entity: media_player.homepod_kinderzimmer
+        use_media_info: true
+        use_media_artwork: true
+        show_volume_level: false
+        media_controls:
+        - previous
+        - play_pause_stop
+        - next
+        volume_controls: []
+        collapsible_controls: true
+        fill_container: true
+      - type: custom:mushroom-media-player-card
+        entity: media_player.kuche
+        use_media_info: true
+        use_media_artwork: true
+        show_volume_level: false
+        media_controls:
+        - previous
+        - play_pause_stop
+        - next
+        volume_controls: []
+        collapsible_controls: true
+        fill_container: true
+      - type: custom:mushroom-media-player-card
+        entity: media_player.homepod_wohnzimmer
+        use_media_info: true
+        use_media_artwork: true
+        show_volume_level: false
+        media_controls:
+        - previous
+        - play_pause_stop
+        - next
+        volume_controls: []
+        collapsible_controls: true
+        fill_container: true
+  - type: custom:gap-card
+    view_layout:
+      grid:area: right
+- title: Prusa MK4
+  path: prusa-mk4
+  theme: Linear
+  type: custom:layout-card
+  layout_type: custom:grid-layout
+  layout_options:
+    grid-template-columns: 10% 80% 10%
+    grid-template-rows: auto
+    grid-template-areas: |
+      "left middle right"
     mediaquery:
       '(max-width: 1023px)':
         grid-template-columns: 0 100% 0
@@ -1533,85 +1488,110 @@ views:
       - type: template
         content: '{{ states(''sensor.prusa_mk4_progress'')|float(0)|round(0) }} %'
         icon: mdi:printer-3d-nozzle
-        icon_color: blue
         entity: sensor.prusa_mk4_progress
-    - type: custom:mushroom-template-card
-      primary: Prusa MK4
-      secondary: '{% if is_state(''sensor.prusa_mk4'',''printing'') %}{{ states(''sensor.prusa_mk4_progress'')|float(0)|round(0) }}% · {{ states(''sensor.prusa_mk4_filename'') }}{% else %}{{ states(''sensor.prusa_mk4'') }}{% endif %}'
-      icon: mdi:printer-3d-nozzle
-      multiline_secondary: true
-      entity: sensor.prusa_mk4
-      tap_action:
-        action: more-info
-      icon_color: '{% set s=states(''sensor.prusa_mk4'') %}{% if s==''printing'' %}blue{% elif s in [''idle'',''finished''] %}green{% elif s in [''error'',''attention'',''stopped''] %}red{% else %}grey{% endif %}'
-    - type: gauge
-      entity: sensor.prusa_mk4_progress
-      name: Fortschritt
-      min: 0
-      max: 100
-      needle: false
-      severity:
-        red: 0
-        yellow: 40
-        green: 80
-    - type: custom:mushroom-chips-card
-      alignment: center
-      chips:
-      - type: template
-        icon: mdi:printer-3d-nozzle-heat
-        content: '{{ states(''sensor.prusa_mk4_nozzle_temperature'')|float(0)|round(0) }}/{{ states(''sensor.prusa_mk4_nozzle_target_temperature'')|float(0)|round(0) }} °C'
-      - type: template
-        icon: mdi:heating-coil
-        content: '{{ states(''sensor.prusa_mk4_heatbed_temperature'')|float(0)|round(0) }}/{{ states(''sensor.prusa_mk4_heatbed_target_temperature'')|float(0)|round(0) }} °C'
-      - type: template
-        icon: mdi:speedometer
-        content: '{{ states(''sensor.prusa_mk4_print_speed'') }}%'
-      - type: conditional
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: sensor.prusa_mk4
+        state:
+        - unavailable
+        - unknown
+      card:
+        type: custom:mushroom-template-card
+        primary: Drucker ausgeschaltet
+        secondary: Antippen schaltet die Steckdose ein
+        icon: mdi:printer-3d-nozzle-off
+        entity: switch.arbeitszimmer_prusa_mk4_pc_rafael
+        tap_action:
+          action: toggle
+    - type: conditional
+      conditions:
+      - condition: not
         conditions:
         - condition: state
           entity: sensor.prusa_mk4
-          state: printing
-        chip:
-          type: template
-          icon: mdi:timer-outline
-          content: '{% set f=as_timestamp(states(''sensor.prusa_mk4_print_finish''), 0) %}{% set t=((f-as_timestamp(now()))|int(0)) if f else 0 %}{% if t<60 %}<1 min{% else %}{{ t//3600 }}h {{ (t%3600)//60 }}m{% endif %}'
-    - type: custom:mushroom-chips-card
-      alignment: center
-      chips:
-      - type: entity
-        entity: button.prusa_mk4_pause_job
-        icon: mdi:pause
-        content_info: none
-        tap_action:
-          action: toggle
-      - type: entity
-        entity: button.prusa_mk4_resume_job
-        icon: mdi:play
-        content_info: none
-        tap_action:
-          action: toggle
-      - type: entity
-        entity: button.prusa_mk4_cancel_job
-        icon: mdi:stop
-        content_info: none
-        tap_action:
-          action: toggle
-    - type: entities
-      title: Druck
-      state_color: true
-      entities:
-      - entity: sensor.prusa_mk4
-        name: Status
-      - entity: sensor.prusa_mk4_filename
-        name: Datei
-      - entity: sensor.prusa_mk4_material
-        name: Material
-      - entity: sensor.prusa_mk4_print_start
-        name: Start
-      - entity: sensor.prusa_mk4_print_finish
-        name: Voraussichtlich fertig
-      - entity: sensor.prusa_mk4_hotend_fan
-        name: Hotend-Lüfter
+          state:
+          - unavailable
+          - unknown
+      card:
+        type: vertical-stack
+        cards:
+        - type: custom:mushroom-template-card
+          primary: Prusa MK4
+          secondary: '{% if is_state(''sensor.prusa_mk4'',''printing'') %}{{ states(''sensor.prusa_mk4_progress'')|float(0)|round(0) }}% · {{ states(''sensor.prusa_mk4_filename'') }}{% else %}{{ states(''sensor.prusa_mk4'') }}{% endif %}'
+          icon: mdi:printer-3d-nozzle
+          multiline_secondary: true
+          entity: sensor.prusa_mk4
+          tap_action:
+            action: more-info
+        - type: gauge
+          entity: sensor.prusa_mk4_progress
+          name: Fortschritt
+          min: 0
+          max: 100
+          needle: false
+          severity:
+            red: 0
+            yellow: 40
+            green: 80
+        - type: custom:mushroom-chips-card
+          alignment: center
+          chips:
+          - type: template
+            icon: mdi:printer-3d-nozzle-heat
+            content: '{{ states(''sensor.prusa_mk4_nozzle_temperature'')|round(0) }}/{{ states(''sensor.prusa_mk4_nozzle_target_temperature'')|round(0) }} °C'
+          - type: template
+            icon: mdi:heating-coil
+            content: '{{ states(''sensor.prusa_mk4_heatbed_temperature'')|round(0) }}/{{ states(''sensor.prusa_mk4_heatbed_target_temperature'')|round(0) }} °C'
+          - type: template
+            icon: mdi:speedometer
+            content: '{{ states(''sensor.prusa_mk4_print_speed'') }}%'
+          - type: conditional
+            conditions:
+            - condition: state
+              entity: sensor.prusa_mk4
+              state: printing
+            chip:
+              type: template
+              icon: mdi:timer-outline
+              content: '{% set f=as_timestamp(states(''sensor.prusa_mk4_print_finish''), 0) %}{% set t=((f-as_timestamp(now()))|int(0)) if f else 0 %}{% if t<60 %}<1 min{% else %}{{ t//3600 }}h {{ (t%3600)//60 }}m{% endif %}'
+        - type: custom:mushroom-chips-card
+          alignment: center
+          chips:
+          - type: entity
+            entity: button.prusa_mk4_pause_job
+            icon: mdi:pause
+            content_info: none
+            tap_action:
+              action: toggle
+          - type: entity
+            entity: button.prusa_mk4_resume_job
+            icon: mdi:play
+            content_info: none
+            tap_action:
+              action: toggle
+          - type: entity
+            entity: button.prusa_mk4_cancel_job
+            icon: mdi:stop
+            content_info: none
+            tap_action:
+              action: toggle
+        - type: entities
+          title: Druck
+          state_color: true
+          entities:
+          - entity: sensor.prusa_mk4
+            name: Status
+          - entity: sensor.prusa_mk4_filename
+            name: Datei
+          - entity: sensor.prusa_mk4_material
+            name: Material
+          - entity: sensor.prusa_mk4_print_start
+            name: Start
+          - entity: sensor.prusa_mk4_print_finish
+            name: Voraussichtlich fertig
+          - entity: sensor.prusa_mk4_hotend_fan
+            name: Hotend-Lüfter
     - type: entities
       title: Strom & Schutz
       state_color: true
@@ -1631,73 +1611,16 @@ views:
   - type: custom:gap-card
     view_layout:
       grid:area: right
-- title: Akku
-  path: battery
-  theme: Backend-selected
-  type: custom:layout-card
-  layout_type: custom:grid-layout
-  layout_options:
-    grid-template-columns: 10% 80% 10%
-    grid-template-rows: auto
-    grid-template-areas: '"left middle right"
-
-      '
-    mediaquery:
-      '(max-width: 1023px)':
-        grid-template-columns: 0 100% 0
-  badges: []
-  cards:
-  - type: custom:gap-card
-    view_layout:
-      grid:area: left
-  - type: vertical-stack
-    view_layout:
-      grid:area: middle
-    cards:
-    - type: custom:mushroom-title-card
-      alignment: center
-      title: Akku
-    - type: custom:mushroom-chips-card
-      alignment: center
-      chips:
-      - type: template
-        content: '{{ states.sensor|selectattr(''attributes.device_class'',''eq'',''battery'')|map(attribute=''state'')|select(''is_number'')|map(''float'')|select(''lt'',20)|list|count }} schwach'
-        icon: mdi:battery-alert-variant-outline
-        icon_color: red
-    - type: custom:auto-entities
-      card:
-        type: entities
-        title: Akkus
-        state_color: true
-      filter:
-        include:
-        - attributes:
-            device_class: battery
-        exclude:
-        - name: /[Ll]ow/
-        - name: /[Ss]tate/
-        - state: unavailable
-        - state: unknown
-        - state: 'on'
-        - state: 'off'
-      sort:
-        method: state
-        numeric: true
-      show_empty: true
-  - type: custom:gap-card
-    view_layout:
-      grid:area: right
 - title: Robbi
   path: robbi
-  theme: Backend-selected
+  theme: Linear
   type: custom:layout-card
   layout_type: custom:grid-layout
   layout_options:
     grid-template-columns: 10% 80% 10%
     grid-template-rows: auto
-    grid-template-areas: '"left middle right"
-
-      '
+    grid-template-areas: |
+      "left middle right"
     mediaquery:
       '(max-width: 1023px)':
         grid-template-columns: 0 100% 0
@@ -1827,332 +1750,693 @@ views:
   - type: custom:gap-card
     view_layout:
       grid:area: right
-- title: Geräte
-  path: utility
-  theme: Backend-selected
-  type: custom:layout-card
-  layout_type: custom:grid-layout
-  layout_options:
-    grid-template-columns: 10% 80% 10%
-    grid-template-rows: auto
-    grid-template-areas: '"left middle right"
-
-      '
-    mediaquery:
-      '(max-width: 1023px)':
-        grid-template-columns: 0 100% 0
-  badges: []
+- title: Wohnzimmer
+  path: licht-wohnzimmer
+  subview: true
   cards:
   - type: custom:gap-card
-    view_layout:
-      grid:area: left
+    height: 10
   - type: vertical-stack
-    view_layout:
-      grid:area: middle
     cards:
     - type: custom:mushroom-title-card
-      alignment: center
-      title: Geräte
-    - type: custom:mushroom-chips-card
-      alignment: center
-      chips:
-      - type: template
-        content: '{{ states|selectattr(''state'',''eq'',''unavailable'')|list|count }} offline'
-        icon: mdi:lan-disconnect
-        icon_color: red
-      - type: template
-        content: '{{ states|selectattr(''state'',''eq'',''unknown'')|list|count }} unbekannt'
-        icon: mdi:help-circle
-        icon_color: amber
-    - type: vertical-stack
-      cards:
-      - type: custom:auto-entities
-        card:
-          type: entities
-          title: 🔴 Offline
-          card_mod:
-            style: "ha-card {\n  border: 2px solid var(--error-color);\n}\n"
-        filter:
-          include:
-          - state: unavailable
-            options:
-              secondary_info: last-changed
-          exclude:
-          - entity_id: '*_blueprint*'
-          - domain: automation
-          - domain: script
-          - integration: blueprint
-        sort:
-          method: last_changed
-          reverse: true
-        show_empty: false
-        unique: true
-      - type: custom:auto-entities
-        card:
-          type: entities
-          title: 🟡 Unbekannt
-          card_mod:
-            style: "ha-card {\n  border: 1px solid var(--warning-color);\n}\n"
-        filter:
-          include:
-          - state: unknown
-            options:
-              secondary_info: last-changed
-          exclude:
-          - entity_id: '*_blueprint*'
-          - domain: automation
-          - domain: script
-          - domain: scene
-          - attributes:
-              friendly_name: '*Blueprint*'
-        sort:
-          method: name
-        show_empty: false
-        unique: true
-  - type: custom:gap-card
-    view_layout:
-      grid:area: right
-- title: Medien
-  theme: Backend-selected
-  type: custom:layout-card
-  layout_type: custom:grid-layout
-  layout_options:
-    grid-template-columns: 10% 80% 10%
-    grid-template-rows: auto
-    grid-template-areas: '"left middle right"
-
-      '
-    mediaquery:
-      '(max-width: 1023px)':
-        grid-template-columns: 0 100% 0
-  badges: []
-  cards:
-  - type: custom:gap-card
-    view_layout:
-      grid:area: left
-  - type: vertical-stack
-    view_layout:
-      grid:area: middle
-    cards:
-    - type: custom:mushroom-title-card
-      alignment: center
-      title: Medien
-    - type: custom:mushroom-chips-card
-      alignment: center
-      chips:
-      - type: template
-        content: '{{ states.media_player|selectattr(''state'',''eq'',''playing'')|list|count }} spielen'
-        icon: mdi:play-circle
-        icon_color: green
-    - type: horizontal-stack
-      cards:
-      - type: custom:mushroom-title-card
-        title: AppleTVs & Verstärker
-      - type: custom:mushroom-chips-card
-        alignment: end
-        chips:
-        - type: action
-          icon: mdi:refresh
-          tap_action:
-            action: perform-action
-            perform_action: script.reload_media_players
-    - type: custom:mushroom-media-player-card
-      entity: media_player.denon_avr_x3200w
-      use_media_info: true
-      show_volume_level: true
-      volume_controls:
-      - volume_set
-      - volume_mute
-      collapsible_controls: true
-      fill_container: true
-      icon_type: entity-picture
-    - type: custom:mushroom-media-player-card
-      entity: media_player.wohnzimmer
-      use_media_info: true
-      show_volume_level: true
-      volume_controls:
-      - volume_set
-      - volume_mute
-      collapsible_controls: true
-      fill_container: true
-      icon_type: entity-picture
-    - type: custom:mushroom-media-player-card
-      entity: media_player.appletv
-      use_media_info: true
-      show_volume_level: true
-      volume_controls:
-      - volume_set
-      - volume_mute
-      collapsible_controls: true
-      fill_container: true
-      icon_type: entity-picture
-    - type: custom:mushroom-title-card
-      title: HomePods
-    - type: entities
-      entities:
-      - type: custom:mini-media-player
-        entity: media_player.arbeitszimmer
-        group: true
-        source: icon
-        info: short
-      - type: custom:mini-media-player
-        entity: media_player.homepods
-        group: true
-        source: icon
-        info: short
-      - type: custom:mini-media-player
-        entity: media_player.schlafzimmer
-        group: true
-        source: icon
-        info: short
-      - type: custom:mini-media-player
-        entity: media_player.homepod_badezimmer
-        group: true
-        source: icon
-        info: short
-      - type: custom:mini-media-player
-        entity: media_player.homepod_kinderzimmer
-        group: true
-        source: icon
-        info: short
-      - type: custom:mini-media-player
-        entity: media_player.kuche
-        group: true
-        source: icon
-        info: short
-      - type: custom:mini-media-player
-        entity: media_player.homepod_wohnzimmer
-        group: true
-        source: icon
-        info: short
-  - type: custom:gap-card
-    view_layout:
-      grid:area: right
-- title: Einstellungen
-  path: settings
-  theme: Backend-selected
-  type: custom:layout-card
-  layout_type: custom:grid-layout
-  layout_options:
-    grid-template-columns: 10% 80% 10%
-    grid-template-rows: auto
-    grid-template-areas: '"left middle right"
-
-      '
-    mediaquery:
-      '(max-width: 1023px)':
-        grid-template-columns: 0 100% 0
-  badges: []
-  cards:
-  - type: custom:gap-card
-    view_layout:
-      grid:area: left
-  - type: vertical-stack
-    view_layout:
-      grid:area: middle
-    cards:
-    - type: custom:mushroom-title-card
-      alignment: center
-      title: Einstellungen
-    - type: custom:mushroom-chips-card
-      alignment: center
-      chips:
-      - type: entity
-        entity: sensor.active_scenes
-      - type: conditional
-        conditions:
-        - entity: binary_sensor.scene_conflict_detected
-          state: 'on'
-        chip:
-          type: template
-          content: Konflikt
-          icon: mdi:alert
-          icon_color: red
-    - type: entities
-      title: Status
-      state_color: true
-      entities:
-      - entity: sensor.active_scenes
-        name: Aktive Szenen
-        icon: mdi:play-circle
-      - entity: binary_sensor.any_scene_active
-      - entity: binary_sensor.scene_conflict_detected
-      - entity: binary_sensor.motion_automations_disabled
-      - entity: input_boolean.tv_timer
-        name: TV Auto-Off (30 min)
-        icon: mdi:television-off
+      title: Wohnzimmer
+      subtitle: Einzellichter
     - type: grid
+      columns: 2
       square: false
-      columns: 4
       cards:
-      - type: custom:mushroom-entity-card
-        entity: input_boolean.movie
-        name: Film
-        layout: horizontal
-        icon: mdi:movie-open
-        icon_color: amber
-      - type: custom:mushroom-entity-card
-        entity: input_boolean.party
-        name: Party
-        layout: horizontal
-        icon: mdi:party-popper
-        icon_color: amber
-      - type: custom:mushroom-entity-card
-        entity: input_boolean.kochen
-        name: Kochen
-        layout: horizontal
-        icon: mdi:pot-steam
-        icon_color: amber
-      - type: custom:mushroom-entity-card
-        entity: input_boolean.essen
-        name: Essen
-        layout: horizontal
-        icon: mdi:silverware-fork-knife
-        icon_color: amber
-      - type: custom:mushroom-entity-card
-        entity: input_boolean.baden
-        name: Baden
-        layout: horizontal
-        icon: mdi:bathtub
-        icon_color: amber
-      - type: custom:mushroom-entity-card
-        entity: input_boolean.sauna
-        name: Sauna
-        layout: horizontal
-        icon: mdi:radiator
-        icon_color: amber
-      - type: custom:mushroom-entity-card
-        entity: input_boolean.arbeit
-        name: Arbeit
-        layout: horizontal
-        icon: mdi:briefcase
-        icon_color: amber
-      - type: custom:mushroom-entity-card
-        entity: input_boolean.gaming
-        name: Gaming
-        layout: horizontal
-        icon: mdi:controller-classic
-        icon_color: amber
-      - type: custom:mushroom-entity-card
-        entity: input_boolean.tv_timer
-        name: TV Auto-Off
-        layout: horizontal
-        icon: mdi:television-off
-        icon_color: blue
-      title: Szenen
-    - type: custom:auto-entities
-      card:
-        type: entities
-        title: Weitere Helfer
-        state_color: true
-      filter:
-        include:
-        - entity_id: input_boolean.haustur_besucher_inside
-        - domain: input_datetime
-        - domain: input_text
-        exclude: []
-      sort:
-        method: friendly_name
+      - type: custom:mushroom-light-card
+        entity: light.ikea_light_18_wand_1
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.ikea_light_19_wand_2
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.ikea_light_20_wand_3
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.ikea_light_21_wand_4
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.ikea_light_22_wand_5
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.ikea_light_23_wand_6
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.philips_light_18_1
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.philips_light_19_2
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.philips_light_20_3
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.philips_light_24
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.philips_light_25_spielematte_2
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.philips_light_26_spielematte_3
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.philips_light_27_spielematte_4
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.philips_light_21_schrank_1
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.philips_light_22_schrank_2
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.philips_light_23_schrank_3
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.ikea_light_24
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.ikea_light_25
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+  theme: Linear
+- title: Küche
+  path: licht-kueche
+  subview: true
+  cards:
   - type: custom:gap-card
-    view_layout:
-      grid:area: right
+    height: 10
+  - type: vertical-stack
+    cards:
+    - type: custom:mushroom-title-card
+      title: Küche
+      subtitle: Einzellichter
+    - type: grid
+      columns: 2
+      square: false
+      cards:
+      - type: custom:mushroom-light-card
+        entity: light.ikea_light_14_decke_1
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.ikea_light_15_decke_2
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.philips_light_11_oben
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.philips_light_12_unten
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.philips_light_13_schrank_1
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.philips_light_14_schrank_2
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+  theme: Linear
+- title: Schlafzimmer
+  path: licht-schlafzimmer
+  subview: true
+  cards:
+  - type: custom:gap-card
+    height: 10
+  - type: vertical-stack
+    cards:
+    - type: custom:mushroom-title-card
+      title: Schlafzimmer
+      subtitle: Einzellichter
+    - type: grid
+      columns: 2
+      square: false
+      cards:
+      - type: custom:mushroom-light-card
+        entity: light.ikea_light_03
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.philips_light_01_pc_1
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.philips_light_02_pc_2
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.philips_light_15_bett
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.philips_light_16_tv
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+  theme: Linear
+- title: Arbeitszimmer Alex
+  path: licht-arbeitszimmer-alex
+  subview: true
+  cards:
+  - type: custom:gap-card
+    height: 10
+  - type: vertical-stack
+    cards:
+    - type: custom:mushroom-title-card
+      title: Arbeitszimmer Alex
+      subtitle: Einzellichter
+    - type: grid
+      columns: 2
+      square: false
+      cards:
+      - type: custom:mushroom-light-card
+        entity: light.ikea_light_16_1
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.ikea_light_17_2
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.ikea_light_04
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+  theme: Linear
+- title: Kinderzimmer
+  path: licht-kinderzimmer
+  subview: true
+  cards:
+  - type: custom:gap-card
+    height: 10
+  - type: vertical-stack
+    cards:
+    - type: custom:mushroom-title-card
+      title: Kinderzimmer
+      subtitle: Einzellichter
+    - type: grid
+      columns: 2
+      square: false
+      cards:
+      - type: custom:mushroom-light-card
+        entity: light.ikea_light_13
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.philips_light_10_bucher
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+  theme: Linear
+- title: Badezimmer
+  path: licht-badezimmer
+  subview: true
+  cards:
+  - type: custom:gap-card
+    height: 10
+  - type: vertical-stack
+    cards:
+    - type: custom:mushroom-title-card
+      title: Badezimmer
+      subtitle: Einzellichter
+    - type: grid
+      columns: 2
+      square: false
+      cards:
+      - type: custom:mushroom-light-card
+        entity: light.philips_light_03
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.philips_light_04_2
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.philips_light_06_schrank
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.philips_light_05_fenster
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+  theme: Linear
+- title: Flur
+  path: licht-flur
+  subview: true
+  cards:
+  - type: custom:gap-card
+    height: 10
+  - type: vertical-stack
+    cards:
+    - type: custom:mushroom-title-card
+      title: Flur
+      subtitle: Einzellichter
+    - type: grid
+      columns: 2
+      square: false
+      cards:
+      - type: custom:mushroom-light-card
+        entity: light.ikea_light_07_decke_1
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.ikea_light_08_decke_2
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.ikea_light_09_decke_3
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.ikea_light_10_decke_4
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.ikea_light_11_decke_5
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.ikea_light_12_decke_6
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.philips_light_08_schrank_1
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.philips_light_09_2
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.stahltraeger
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+  theme: Linear
+- title: Ankleide
+  path: licht-ankleide
+  subview: true
+  cards:
+  - type: custom:gap-card
+    height: 10
+  - type: vertical-stack
+    cards:
+    - type: custom:mushroom-title-card
+      title: Ankleide
+      subtitle: Einzellichter
+    - type: grid
+      columns: 2
+      square: false
+      cards:
+      - type: custom:mushroom-light-card
+        entity: light.ikea_light_01
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.ikea_light_02
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+  theme: Linear
+- title: Waschzimmer
+  path: licht-waschzimmer
+  subview: true
+  cards:
+  - type: custom:gap-card
+    height: 10
+  - type: vertical-stack
+    cards:
+    - type: custom:mushroom-title-card
+      title: Waschzimmer
+      subtitle: Einzellichter
+    - type: grid
+      columns: 2
+      square: false
+      cards:
+      - type: custom:mushroom-light-card
+        entity: light.philips_light_28
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+  theme: Linear
+- title: Balkon
+  path: licht-balkon
+  subview: true
+  cards:
+  - type: custom:gap-card
+    height: 10
+  - type: vertical-stack
+    cards:
+    - type: custom:mushroom-title-card
+      title: Balkon
+      subtitle: Einzellichter
+    - type: grid
+      columns: 2
+      square: false
+      cards:
+      - type: custom:mushroom-light-card
+        entity: light.ikea_light_05_wand_1
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.ikea_light_06_wand_2
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+      - type: custom:mushroom-light-card
+        entity: light.philips_light_07_blumen
+        show_brightness_control: true
+        use_light_color: true
+        collapsible_controls: true
+        card_mod:
+          style: |
+            ha-card mushroom-shape-icon {
+              {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
+            }
+  theme: Linear
