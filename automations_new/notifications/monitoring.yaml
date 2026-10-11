@@ -363,6 +363,7 @@
     value_template: "{{ state_attr('media_player.denon_avr_x3200w', 'source') in ['CBL/SAT', 'SAT/CBL'] }}"
   actions:
   - action: homeassistant.reload_config_entry
+    continue_on_error: true
     data:
       entry_id: "{{ config_entry_id('media_player.wohnzimmer') }}"
   - action: notify.admin_only

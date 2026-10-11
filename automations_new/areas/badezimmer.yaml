@@ -108,8 +108,6 @@
           entity_id: cover.ikea_cover_01
         data:
           position: 100
-      - delay:
-          seconds: 6
     default: []
   mode: restart
 - id: '1662822489094'
@@ -168,8 +166,6 @@
           off_lights:
           - light.alle_badezimmer_lichter
           - light.alle_badezimmer_nachtlichter
-      - delay:
-          seconds: 6
     default: []
   mode: restart
 - id: '1672929418223'

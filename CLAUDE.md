@@ -76,7 +76,7 @@ PYEOF
 | Path | Purpose |
 |------|---------|
 | `configuration.yaml` | Main entry point |
-| `automations_new/` | All automations (33 files) |
+| `automations_new/` | All automations (34 files) |
 | `custom_components/` | Custom integrations |
 | `blueprints/` | Blueprints (mostly switch_manager) |
 | `scripts.yaml` | Reusable scripts |
@@ -116,7 +116,7 @@ configuration.yaml
 ### Automations Directory Structure
 
 ```
-automations_new/                # 33 files
+automations_new/                # 34 files
 ├── areas/                    # 9 room files
 │   ├── arbeitszimmer.yaml   # Office
 │   ├── badezimmer.yaml      # Bathroom
@@ -145,10 +145,11 @@ automations_new/                # 33 files
 │   ├── other.yaml           # Misc devices
 │   └── prusa.yaml           # 3D printer
 │
-├── helpers/                  # 4 helper files
+├── helpers/                  # 5 helper files
 │   ├── automation.yaml      # Automation management, wakeup music
 │   ├── energy.yaml          # Energy tracking
 │   ├── presence.yaml        # Presence detection
+│   ├── room_policy.yaml     # Motion/AL reconciler
 │   └── system.yaml          # System checks
 │
 ├── notifications/            # 4 notification files
@@ -631,10 +632,6 @@ E-Mail-Notifications (SMTP) wurden vollständig entfernt und ersetzt durch:
 - **Persistent Notification** (`persistent_notification.create`) als Erinnerung in der HA-Oberfläche
 
 Jede Persistent Notification hat eine eindeutige `notification_id` (z.B. `robbi_hauptbuerste`, `waschmaschine_fertig`), damit sie nicht doppelt erscheint und manuell weggeklickt werden kann.
-
-### TTS Notifications
-
-Uses `chime_tts` custom component for audio announcements with notification chimes.
 
 ---
 
