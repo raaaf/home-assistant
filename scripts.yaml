@@ -549,7 +549,109 @@ lock_wohnungstuer_safe:
           message: >-
             Die Wohnungstür konnte nach 3 Versuchen nicht verriegelt werden
             (Status: {{ states('lock.nuki_wohnungstur_lock') }}, {{ context_message }}).
+            {% if is_state('input_boolean.alle_sind_weg', 'on') -%}
+            Weitere Versuche alle 5 Minuten für 30 Minuten, solange niemand zu Hause ist.
+            {%- else -%}
             Bitte manuell prüfen.
+            {%- endif %}
+      - alias: "Nachverriegeln im Hintergrund, blockiert den Aufrufer nicht"
+        action: script.turn_on
+        target:
+          entity_id: script.lock_wohnungstuer_retry
+        data:
+          variables:
+            context_message: "{{ context_message }}"
+
+lock_wohnungstuer_retry:
+  alias: "Wohnungstür nachverriegeln"
+  description: >-
+    Started by lock_wohnungstuer_safe after its three attempts failed. Retries every
+    5 minutes for 30 minutes while input_boolean.alle_sind_weg is on. On success it
+    replaces the critical push (same tag) with a normal all-clear. Stops when someone
+    comes home or the door is opened.
+  icon: mdi:lock-clock
+  mode: single
+  max_exceeded: silent
+  fields:
+    context_message:
+      description: "Kurzer Kontext für Logbook und Notification"
+      required: false
+      default: "automatische Verriegelung"
+  sequence:
+  - repeat:
+      sequence:
+      - alias: "5 Minuten warten, früher abbrechen wenn sich der Zustand klärt"
+        wait_template: >-
+          {{ is_state('input_boolean.alle_sind_weg', 'off')
+             or states('lock.nuki_wohnungstur_lock') in ['locked', 'open'] }}
+        timeout: "00:05:00"
+        continue_on_timeout: true
+      - if:
+        - condition: state
+          entity_id: input_boolean.alle_sind_weg
+          state: 'on'
+        - condition: state
+          entity_id: lock.nuki_wohnungstur_lock
+          state: unlocked
+        then:
+        - action: lock.lock
+          target:
+            entity_id: lock.nuki_wohnungstur_lock
+          continue_on_error: true
+          data: {}
+        - wait_template: "{{ is_state('lock.nuki_wohnungstur_lock', 'locked') }}"
+          timeout: "00:00:20"
+          continue_on_timeout: true
+      until:
+      - condition: or
+        conditions:
+        - condition: state
+          entity_id: input_boolean.alle_sind_weg
+          state: 'off'
+        - condition: state
+          entity_id: lock.nuki_wohnungstur_lock
+          state:
+          - locked
+          - open
+        - condition: template
+          value_template: "{{ repeat.index >= 6 }}"
+  - choose:
+    - alias: "Doch noch verriegelt"
+      conditions:
+      - condition: state
+        entity_id: lock.nuki_wohnungstur_lock
+        state: locked
+      sequence:
+      - action: logbook.log
+        data:
+          name: "Wohnungstür"
+          message: "Nachträglich verriegelt ({{ context_message }})"
+          domain: lock
+      - action: notify.family
+        data:
+          title: "Wohnungstür verriegelt"
+          message: "Entwarnung: die Wohnungstür ist jetzt doch verriegelt ({{ context_message }})."
+          data:
+            tag: door_lock_fail
+    - alias: "Jemand ist zu Hause"
+      conditions:
+      - condition: state
+        entity_id: input_boolean.alle_sind_weg
+        state: 'off'
+      sequence:
+      - action: logbook.log
+        data:
+          name: "Wohnungstür"
+          message: "Nachverriegeln beendet, jemand ist zu Hause ({{ context_message }})"
+          domain: lock
+    default:
+    - action: logbook.log
+      data:
+        name: "Wohnungstür"
+        message: >-
+          Nachverriegeln beendet ohne Erfolg, Status {{ states('lock.nuki_wohnungstur_lock') }}
+          ({{ context_message }})
+        domain: lock
 
 homepods_mute:
   alias: HomePods stummschalten
