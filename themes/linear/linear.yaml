@@ -63,6 +63,11 @@ Linear:
       state-binary_sensor-active-color: "#ff6b35"
       state-binary_sensor-on-color: "#ff6b35"
       state-sensor-battery-high-color: "#c2c2c2"
+      state-lock-locked-color: "#c2c2c2"
+      state-lock-unlocked-color: "#fab84d"
+      state-lock-open-color: "#fab84d"
+      state-lock-opening-color: "#fab84d"
+      state-lock-jammed-color: "#f97066"
       state-sensor-battery-medium-color: "#fab84d"
       state-sensor-battery-low-color: "#f97066"
       # HA named palette: decorative hues -> grey, semantic hues -> design system
