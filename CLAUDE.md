@@ -76,7 +76,7 @@ PYEOF
 | Path | Purpose |
 |------|---------|
 | `configuration.yaml` | Main entry point |
-| `automations_new/` | All automations (34 files) |
+| `automations_new/` | All automations (35 files) |
 | `custom_components/` | Custom integrations |
 | `blueprints/` | Blueprints (mostly switch_manager) |
 | `scripts.yaml` | Reusable scripts |
@@ -116,7 +116,7 @@ configuration.yaml
 ### Automations Directory Structure
 
 ```
-automations_new/                # 34 files
+automations_new/                # 35 files
 ├── areas/                    # 9 room files
 │   ├── arbeitszimmer.yaml   # Office
 │   ├── badezimmer.yaml      # Bathroom
@@ -145,9 +145,10 @@ automations_new/                # 34 files
 │   ├── other.yaml           # Misc devices
 │   └── prusa.yaml           # 3D printer
 │
-├── helpers/                  # 5 helper files
+├── helpers/                  # 6 helper files
 │   ├── automation.yaml      # Automation management, wakeup music
 │   ├── energy.yaml          # Energy tracking
+│   ├── maintenance_todo.yaml # Syncs todo.wartung (refill/replace/fix items)
 │   ├── presence.yaml        # Presence detection
 │   ├── room_policy.yaml     # Motion/AL reconciler
 │   └── system.yaml          # System checks

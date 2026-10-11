@@ -1,0 +1,82 @@
+# Helpers - Maintenance To-do
+# Keeps todo.wartung in sync with what needs refilling, replacing or fixing.
+# Part of Home Assistant configuration
+
+- id: wartung_todo_abgleich
+  alias: Helper » Wartung To-do abgleichen
+  description: >-
+    Trägt fällige Wartungspunkte (Robbi-Verschleißteile, Filter, Batterien, Müll, Wassermelder,
+    Updates) in todo.wartung ein und entfernt sie, sobald der Grund weg ist. Verwaltet nur
+    Einträge mit der Beschreibung "Automatisch"; selbst angelegte Punkte bleiben unberührt.
+    Ein abgehakter Punkt bleibt abgehakt, solange der Grund besteht.
+  triggers:
+  - trigger: time_pattern
+    minutes: /15
+  - trigger: homeassistant
+    event: start
+  - trigger: state
+    entity_id:
+    - binary_sensor.kuche_wasser_sensor
+    - sensor.s7_maxv_vacuum_error
+    - sensor.restmuell
+    - sensor.bioabfall
+    - sensor.altpapier
+    - sensor.gelbersack
+  conditions:
+  - condition: template
+    value_template: "{{ has_value('todo.wartung') }}"
+  mode: queued
+  max: 3
+  actions:
+  - variables:
+      wanted: >-
+        {% set ns = namespace(l=[]) %}
+        {% if is_state('binary_sensor.kuche_wasser_sensor', 'on') %}{% set ns.l = ns.l + ['Wasser in der Küche prüfen'] %}{% endif %}
+        {% for e, n in [('sensor.s7_maxv_main_brush_time_left', 'Hauptbürste tauschen'),
+                        ('sensor.s7_maxv_side_brush_time_left', 'Seitenbürste tauschen'),
+                        ('sensor.s7_maxv_filter_time_left', 'Filter tauschen'),
+                        ('sensor.s7_maxv_sensor_time_left', 'Sensoren reinigen')] %}
+          {% if has_value(e) and states(e) | float(999) < 10 %}{% set ns.l = ns.l + ['Robbi: ' ~ n] %}{% endif %}
+        {% endfor %}
+        {% if states('sensor.s7_maxv_vacuum_error') not in ['none', 'None', 'unknown', 'unavailable', ''] %}{% set ns.l = ns.l + ['Robbi: Fehler prüfen'] %}{% endif %}
+        {% if has_value('sensor.zhimi_vb4_bce4_filter_life_level') and states('sensor.zhimi_vb4_bce4_filter_life_level') | float(100) < 10 %}{% set ns.l = ns.l + ['Luftreiniger: Filter wechseln'] %}{% endif %}
+        {% if has_value('sensor.mmgg_wi11_7a1c_filter_left_time_2') and states('sensor.mmgg_wi11_7a1c_filter_left_time_2') | float(99) <= 7 %}{% set ns.l = ns.l + ['Wasserspender: Filter wechseln'] %}{% endif %}
+        {% for s in states.sensor | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', 'battery') %}
+          {% if not (s.entity_id is search('iphone|ipad|macbook|watch')) and s.state | is_number and s.state | float < 15 %}
+            {% set ns.l = ns.l + ['Batterie wechseln: ' ~ (s.name | replace(' Battery', '') | replace(' Batterie', ''))] %}
+          {% endif %}
+        {% endfor %}
+        {% for e, n in [('sensor.restmuell', 'Restmüll'), ('sensor.bioabfall', 'Biotonne'), ('sensor.altpapier', 'Altpapier'), ('sensor.gelbersack', 'Gelben Sack')] %}
+          {% if states(e) in ['Morgen', 'Heute'] %}{% set ns.l = ns.l + [n ~ ' rausstellen'] %}{% endif %}
+        {% endfor %}
+        {% for u in states.update | selectattr('state', 'eq', 'on') %}{% set ns.l = ns.l + ['Update: ' ~ u.name] %}{% endfor %}
+        {{ ns.l | unique | list }}
+  - action: todo.get_items
+    target:
+      entity_id: todo.wartung
+    data:
+      status:
+      - needs_action
+      - completed
+    response_variable: current
+  - variables:
+      managed: >-
+        {{ current['todo.wartung']['items'] | selectattr('description', 'defined')
+           | selectattr('description', 'eq', 'Automatisch') | map(attribute='summary') | list }}
+  - repeat:
+      for_each: "{{ wanted | reject('in', managed) | list }}"
+      sequence:
+      - action: todo.add_item
+        target:
+          entity_id: todo.wartung
+        data:
+          item: "{{ repeat.item }}"
+          description: Automatisch
+  - repeat:
+      for_each: "{{ managed | reject('in', wanted) | list }}"
+      sequence:
+      - action: todo.remove_item
+        target:
+          entity_id: todo.wartung
+        data:
+          item: "{{ repeat.item }}"
