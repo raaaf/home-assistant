@@ -1,6 +1,18 @@
 # General: time sensors, device status binary sensors, visitor helpers and saved HomePod volumes
 
 template:
+  # Devices whose battery needs replacing (phones and Macs excluded), drives the dashboard to-do row
+  - sensor:
+      - name: "Batterien niedrig"
+        unique_id: batterien_niedrig
+        icon: mdi:battery-alert-variant-outline
+        state: >
+          {{ states.sensor | selectattr('attributes.device_class', 'defined')
+             | selectattr('attributes.device_class', 'eq', 'battery')
+             | rejectattr('entity_id', 'search', 'iphone|ipad|macbook|watch')
+             | selectattr('state', 'is_number') | map(attribute='state') | map('float')
+             | select('lt', 15) | list | count }}
+
   # Time-based sensors
   - sensor:
       - name: "WakeUp Light Timestamp"

@@ -7,7 +7,8 @@
   description: >-
     Trägt fällige Wartungspunkte (Robbi-Verschleißteile, Filter, Batterien, Müll, Wassermelder,
     Updates) in todo.wartung ein und entfernt sie, sobald der Grund weg ist. Verwaltet nur
-    Einträge mit der Beschreibung "Automatisch"; selbst angelegte Punkte bleiben unberührt.
+    Einträge, deren Text einem der Muster unten entspricht; selbst angelegte Punkte bleiben
+    unberührt.
     Ein abgehakter Punkt bleibt abgehakt, solange der Grund besteht.
   triggers:
   - trigger: time_pattern
@@ -60,9 +61,11 @@
       - completed
     response_variable: current
   - variables:
+      # Entries this automation owns are recognised by their wording, so they need no visible marker
       managed: >-
-        {{ current['todo.wartung']['items'] | selectattr('description', 'defined')
-           | selectattr('description', 'eq', 'Automatisch') | map(attribute='summary') | list }}
+        {{ current['todo.wartung']['items'] | map(attribute='summary')
+           | select('search', '^(Robbi: |Batterie wechseln: |Luftreiniger: |Wasserspender: |Update: |Wasser in der Küche prüfen$|.+ rausstellen$)')
+           | list }}
   - repeat:
       for_each: "{{ wanted | reject('in', managed) | list }}"
       sequence:
@@ -71,7 +74,6 @@
           entity_id: todo.wartung
         data:
           item: "{{ repeat.item }}"
-          description: Automatisch
   - repeat:
       for_each: "{{ managed | reject('in', wanted) | list }}"
       sequence:
