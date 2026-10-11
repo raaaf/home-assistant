@@ -120,7 +120,7 @@ template:
       - name: "Count Lights On"
         unique_id: count_lights_on
         icon: mdi:ceiling-light
-        unit_of_measurement: "Lichter"
+        unit_of_measurement: "lights"
         state: >
           {{ states.light | selectattr('state', 'eq', 'on') | list | count }}
 

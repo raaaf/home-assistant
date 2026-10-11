@@ -32,23 +32,23 @@
   - variables:
       wanted: >-
         {% set ns = namespace(l=[]) %}
-        {% if is_state('binary_sensor.kuche_wasser_sensor', 'on') %}{% set ns.l = ns.l + ['Wasser in der Küche prüfen'] %}{% endif %}
-        {% for e, n in [('sensor.s7_maxv_main_brush_time_left', 'Hauptbürste tauschen'),
-                        ('sensor.s7_maxv_side_brush_time_left', 'Seitenbürste tauschen'),
-                        ('sensor.s7_maxv_filter_time_left', 'Filter tauschen'),
-                        ('sensor.s7_maxv_sensor_time_left', 'Sensoren reinigen')] %}
+        {% if is_state('binary_sensor.kuche_wasser_sensor', 'on') %}{% set ns.l = ns.l + ['Check the kitchen for water'] %}{% endif %}
+        {% for e, n in [('sensor.s7_maxv_main_brush_time_left', 'replace main brush'),
+                        ('sensor.s7_maxv_side_brush_time_left', 'replace side brush'),
+                        ('sensor.s7_maxv_filter_time_left', 'replace filter'),
+                        ('sensor.s7_maxv_sensor_time_left', 'clean sensors')] %}
           {% if has_value(e) and states(e) | float(999) < 10 %}{% set ns.l = ns.l + ['Robbi: ' ~ n] %}{% endif %}
         {% endfor %}
-        {% if states('sensor.s7_maxv_vacuum_error') not in ['none', 'None', 'unknown', 'unavailable', ''] %}{% set ns.l = ns.l + ['Robbi: Fehler prüfen'] %}{% endif %}
-        {% if has_value('sensor.zhimi_vb4_bce4_filter_life_level') and states('sensor.zhimi_vb4_bce4_filter_life_level') | float(100) < 10 %}{% set ns.l = ns.l + ['Luftreiniger: Filter wechseln'] %}{% endif %}
-        {% if has_value('sensor.mmgg_wi11_7a1c_filter_left_time_2') and states('sensor.mmgg_wi11_7a1c_filter_left_time_2') | float(99) <= 7 %}{% set ns.l = ns.l + ['Wasserspender: Filter wechseln'] %}{% endif %}
+        {% if states('sensor.s7_maxv_vacuum_error') not in ['none', 'None', 'unknown', 'unavailable', ''] %}{% set ns.l = ns.l + ['Robbi: check error'] %}{% endif %}
+        {% if has_value('sensor.zhimi_vb4_bce4_filter_life_level') and states('sensor.zhimi_vb4_bce4_filter_life_level') | float(100) < 10 %}{% set ns.l = ns.l + ['Air purifier: replace filter'] %}{% endif %}
+        {% if has_value('sensor.mmgg_wi11_7a1c_filter_left_time_2') and states('sensor.mmgg_wi11_7a1c_filter_left_time_2') | float(99) <= 7 %}{% set ns.l = ns.l + ['Water dispenser: replace filter'] %}{% endif %}
         {% for s in states.sensor | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', 'battery') %}
           {% if not (s.entity_id is search('iphone|ipad|macbook|watch')) and s.state | is_number and s.state | float < 15 %}
-            {% set ns.l = ns.l + ['Batterie wechseln: ' ~ (s.name | replace(' Battery', '') | replace(' Batterie', ''))] %}
+            {% set ns.l = ns.l + ['Replace battery: ' ~ (s.name | replace(' Battery', '') | replace(' Batterie', ''))] %}
           {% endif %}
         {% endfor %}
-        {% for e, n in [('sensor.restmuell', 'Restmüll'), ('sensor.bioabfall', 'Biotonne'), ('sensor.altpapier', 'Altpapier'), ('sensor.gelbersack', 'Gelben Sack')] %}
-          {% if states(e) in ['Morgen', 'Heute'] %}{% set ns.l = ns.l + [n ~ ' rausstellen'] %}{% endif %}
+        {% for e, n in [('sensor.restmuell', 'waste'), ('sensor.bioabfall', 'organic bin'), ('sensor.altpapier', 'paper'), ('sensor.gelbersack', 'recycling')] %}
+          {% if states(e) in ['Morgen', 'Heute'] %}{% set ns.l = ns.l + ['Put out the ' ~ n] %}{% endif %}
         {% endfor %}
         {% for u in states.update | selectattr('state', 'eq', 'on') %}{% set ns.l = ns.l + ['Update: ' ~ u.name] %}{% endfor %}
         {{ ns.l | unique | list }}
@@ -64,7 +64,7 @@
       # Entries this automation owns are recognised by their wording, so they need no visible marker
       managed: >-
         {{ current['todo.wartung']['items'] | map(attribute='summary')
-           | select('search', '^(Robbi: |Batterie wechseln: |Luftreiniger: |Wasserspender: |Update: |Wasser in der Küche prüfen$|.+ rausstellen$)')
+           | select('search', '^(Robbi: |Replace battery: |Air purifier: |Water dispenser: |Update: |Check the kitchen for water$|Put out the )')
            | list }}
   - repeat:
       for_each: "{{ wanted | reject('in', managed) | list }}"

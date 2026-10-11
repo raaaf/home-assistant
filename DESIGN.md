@@ -37,16 +37,20 @@ is fine for threshold colors (CO2, overdue Robbi parts), it only adds color.
 
 ## Structure
 
-One sections view, `Zuhause` (`/lovelace/zuhause`), shows only what needs attention or a single
+One sections view, `Home` (`/lovelace/zuhause`), shows only what needs attention or a single
 value per area; every area tile opens a subview with the details (back arrow returns home).
 
-| Block on Zuhause | Shows | Detail |
+| Block on Home | Shows | Detail |
 |---|---|---|
 | Badges | people, outside temperature, clothing; lights, open door/windows, CO2, heating, laundry only when relevant | none |
-| Zu erledigen | one row per due item (Robbi parts, filters, batteries from `sensor.batterien_niedrig`, waste, leak); tap opens `todo.wartung` | To-do panel |
-| Empfehlungen | one row per room and problem, only while something is off (UBA/WHO bands, `TBAND` below) | Klima |
-| Läuft gerade | playing media players with inline controls, hidden when nothing plays | none |
-| Bereiche | Licht, Klima, Türen & Fenster, Energie, Wetter, Rollos, Haushalt, Prusa (only when on) | one subview each |
+| To do | one row per due item (Robbi parts, filters, batteries from `sensor.batterien_niedrig`, waste, leak); tap opens `todo.wartung` | To-do panel |
+| Recommendations | one row per room and problem, only while something is off (UBA/WHO bands, `TBAND` below) | Klima |
+| Now playing | playing media players with inline controls, hidden when nothing plays | none |
+| Areas | Lights, Climate, Doors & windows, Energy, Weather, Blinds, Household, Prusa (only when on) | one subview each |
+
+UI language is English (labels, recommendations, to-do entries); entity ids and some device
+names stay German. Sensors that report German states (waste pickup, laundry) are translated in
+the card templates.
 
 Comfort bands (green / amber, red outside): living rooms 20–23 °C, bedroom 16–19, children's room
 18–21, bathroom 20–24, humidity 40–60 %, CO2 < 1000 / < 2000 ppm, PM2.5 ≤ 15 / ≤ 35, PM10 ≤ 45 / ≤ 100,
