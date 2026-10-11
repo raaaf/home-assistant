@@ -35,10 +35,32 @@ Set colors through theme variables, never through `card-mod-card`: card-mod appl
 first render, so icons flashed in their default colors for about a second. Per-card `card_mod`
 is fine for threshold colors (CO2, overdue Robbi parts), it only adds color.
 
+## Structure
+
+One sections view, `Zuhause` (`/lovelace/zuhause`), shows only what needs attention or a single
+value per area; every area tile opens a subview with the details (back arrow returns home).
+
+| Block on Zuhause | Shows | Detail |
+|---|---|---|
+| Badges | people, outside temperature, clothing; lights, open door/windows, CO2, heating, laundry only when relevant | none |
+| Zu erledigen | one row per due item (Robbi parts, filters, batteries from `sensor.batterien_niedrig`, waste, leak); tap opens `todo.wartung` | To-do panel |
+| Empfehlungen | one row per room and problem, only while something is off (UBA/WHO bands, `TBAND` below) | Klima |
+| Läuft gerade | playing media players with inline controls, hidden when nothing plays | none |
+| Bereiche | Licht, Klima, Türen & Fenster, Energie, Wetter, Rollos, Haushalt, Prusa (only when on) | one subview each |
+
+Comfort bands (green / amber, red outside): living rooms 20–23 °C, bedroom 16–19, children's room
+18–21, bathroom 20–24, humidity 40–60 %, CO2 < 1000 / < 2000 ppm, PM2.5 ≤ 15 / ≤ 35, PM10 ≤ 45 / ≤ 100,
+VOC index ≤ 150 / ≤ 250.
+
+Plugins: Mushroom (template cards, chips) and card-mod (threshold colors only). No layout-card, no
+Bubble Card: the native sections view and subviews cover layout and drill-down. A dashboard
+template must never iterate `states` or `states.sensor`; precompute such lists in a template sensor
+(see `sensor.batterien_niedrig`), otherwise every state change re-renders the card and the page
+takes 20 s to fill in.
+
 ## Rules that apply here
 
-- Signal Orange is the only accent and stays under 10% of a view. Light cards show their
-  slider only when on (`collapsible_controls`), otherwise four sliders break the rule.
+- Signal Orange is the only accent and stays under 10% of a view.
 - The active navigation item is an ink icon, never an orange one; the orange tab underline
   is additive.
 - Hierarchy through size, not weight: mushroom card names are Regular (`mush-card-primary-font-weight: 400`).

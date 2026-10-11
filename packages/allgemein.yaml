@@ -12,6 +12,17 @@ template:
              | rejectattr('entity_id', 'search', 'iphone|ipad|macbook|watch')
              | selectattr('state', 'is_number') | map(attribute='state') | map('float')
              | select('lt', 15) | list | count }}
+        attributes:
+          geraete: >
+            {% set ns = namespace(l=[]) %}
+            {% for s in states.sensor | selectattr('attributes.device_class', 'defined')
+                 | selectattr('attributes.device_class', 'eq', 'battery')
+                 | rejectattr('entity_id', 'search', 'iphone|ipad|macbook|watch') %}
+              {% if s.state | is_number and s.state | float < 15 %}
+                {% set ns.l = ns.l + [s.name | replace(' Battery', '') ~ ' ' ~ s.state | int ~ ' %'] %}
+              {% endif %}
+            {% endfor %}
+            {{ ns.l | join(' · ') }}
 
   # Time-based sensors
   - sensor:
