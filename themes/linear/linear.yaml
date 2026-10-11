@@ -2,29 +2,9 @@ Linear:
   # Dark port of the Rafael Design System (see DESIGN.md): true-black ground, neutral
   # surface ladder, Signal Orange #FF6B35 as the only brand accent, semantic colors for state.
   card-mod-theme: Linear
+  # Colors come from theme variables, not card-mod, so the first render is already right
+  # (card-mod applies after render and made icons flash in their default colors).
   card-mod-card: |
-    mushroom-shape-icon {
-      --icon-color: rgb(194, 194, 194) !important;
-      --shape-color: rgba(194, 194, 194, 0.08) !important;
-    }
-    mushroom-chip, mushroom-template-chip, mushroom-entity-chip, mushroom-conditional-chip {
-      --color: rgb(194, 194, 194) !important;
-    }
-    ha-state-icon, ha-icon, ha-svg-icon {
-      color: rgb(194, 194, 194) !important;
-    }
-    ha-tile-icon {
-      --tile-icon-color: rgb(194, 194, 194) !important;
-    }
-    mushroom-fan-card, mushroom-light-card, mushroom-climate-card, mushroom-cover-card, mushroom-media-player-card {
-      --slider-color: #ff6b35 !important;
-      --control-slider-color: #ff6b35 !important;
-      --main-color: #ff6b35 !important;
-      --rgb-state-fan: 255, 107, 53 !important;
-      --rgb-state-light: 255, 107, 53 !important;
-      --rgb-state-climate-cool: 255, 107, 53 !important;
-      --rgb-state-media-player: 255, 107, 53 !important;
-    }
     img, .entity-picture, state-badge, ha-entity-picture, .image, .picture {
       filter: grayscale(1) brightness(0.95) !important;
     }
@@ -80,6 +60,80 @@ Linear:
       paper-slider-active-color: "#ff6b35"
       paper-slider-knob-color: "#ff6b35"
       mdc-theme-primary: "#ff6b35"
+      # --- state: inactive is grey, active is Signal Orange, problems are semantic ---
+      state-inactive-color: "#c2c2c2"
+      state-input_boolean-active-color: "#ff6b35"
+      state-input_boolean-on-color: "#ff6b35"
+      state-binary_sensor-active-color: "#ff6b35"
+      state-binary_sensor-on-color: "#ff6b35"
+      state-sensor-battery-high-color: "#c2c2c2"
+      state-sensor-battery-medium-color: "#fab84d"
+      state-sensor-battery-low-color: "#f97066"
+      # HA named palette: decorative hues -> grey, semantic hues -> design system
+      blue-color: "#c2c2c2"
+      light-blue-color: "#c2c2c2"
+      cyan-color: "#c2c2c2"
+      teal-color: "#c2c2c2"
+      indigo-color: "#c2c2c2"
+      purple-color: "#c2c2c2"
+      deep-purple-color: "#c2c2c2"
+      pink-color: "#c2c2c2"
+      lime-color: "#c2c2c2"
+      light-green-color: "#c2c2c2"
+      brown-color: "#c2c2c2"
+      grey-color: "#c2c2c2"
+      blue-grey-color: "#c2c2c2"
+      red-color: "#f97066"
+      amber-color: "#fab84d"
+      orange-color: "#fab84d"
+      yellow-color: "#fab84d"
+      green-color: "#4cd98a"
+      deep-orange-color: "#ff6b35"
+      # mushroom palette (read before card-mod runs)
+      mush-rgb-blue: "194,194,194"
+      mush-rgb-light-blue: "194,194,194"
+      mush-rgb-cyan: "194,194,194"
+      mush-rgb-teal: "194,194,194"
+      mush-rgb-indigo: "194,194,194"
+      mush-rgb-purple: "194,194,194"
+      mush-rgb-deep-purple: "194,194,194"
+      mush-rgb-pink: "194,194,194"
+      mush-rgb-lime: "194,194,194"
+      mush-rgb-light-green: "194,194,194"
+      mush-rgb-brown: "194,194,194"
+      mush-rgb-grey: "194,194,194"
+      mush-rgb-blue-grey: "194,194,194"
+      mush-rgb-dark-grey: "194,194,194"
+      mush-rgb-light-grey: "194,194,194"
+      mush-rgb-info: "194,194,194"
+      mush-rgb-state-entity: "194,194,194"
+      mush-rgb-state-cover-open: "194,194,194"
+      mush-rgb-state-cover-closed: "194,194,194"
+      mush-rgb-state-person-home: "194,194,194"
+      mush-rgb-state-person-not-home: "194,194,194"
+      mush-rgb-state-person-zone: "194,194,194"
+      mush-rgb-state-person-unknown: "194,194,194"
+      mush-rgb-state-number: "194,194,194"
+      mush-rgb-state-vacuum: "194,194,194"
+      mush-rgb-state-lock-locked: "194,194,194"
+      mush-rgb-state-climate-off: "194,194,194"
+      mush-rgb-state-climate-idle: "194,194,194"
+      mush-rgb-red: "249,112,102"
+      mush-rgb-danger: "249,112,102"
+      mush-rgb-amber: "250,184,77"
+      mush-rgb-orange: "250,184,77"
+      mush-rgb-yellow: "250,184,77"
+      mush-rgb-warning: "250,184,77"
+      mush-rgb-green: "76,217,138"
+      mush-rgb-success: "76,217,138"
+      mush-rgb-deep-orange: "255,107,53"
+      mush-rgb-state-light: "255,107,53"
+      mush-rgb-state-fan: "255,107,53"
+      mush-rgb-state-media-player: "255,107,53"
+      mush-rgb-state-humidifier: "255,107,53"
+      mush-rgb-state-climate-cool: "255,107,53"
+      mush-rgb-state-climate-heat: "255,107,53"
+      mush-rgb-state-lock-unlocked: "250,184,77"
       # --- alle Farbvariablen auf ein Grau mappen (mushroom + tiles) ---
       rgb-primary-color: "255,107,53"
       rgb-accent-color: "255,107,53"

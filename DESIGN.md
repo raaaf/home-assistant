@@ -27,8 +27,13 @@ Reload after a theme edit: `frontend.reload_themes`, no restart.
 | Signal Orange (`brand-indicator`, `brand-progress`) | `primary-color`, `app-header-selection-bar-color`, sliders, switches |
 | `danger` / `warning` / `available` (dark) | `rgb-red` / `rgb-amber`, `rgb-orange` / `rgb-green` |
 
-Every other `rgb-*` color maps to the neutral `text-secondary` grey on purpose: icons are
-monochrome, state is carried by orange plus a non-color cue.
+Every other `rgb-*`, `mush-rgb-*` and named `*-color` maps to the neutral `text-secondary`
+grey on purpose: icons are monochrome, an active toggle is Signal Orange (`icon_color:
+deep-orange` on mushroom entity cards for `switch`/`input_boolean`, mushroom greys it when off).
+
+Set colors through theme variables, never through `card-mod-card`: card-mod applies after the
+first render, so icons flashed in their default colors for about a second. Per-card `card_mod`
+is fine for threshold colors (CO2, overdue Robbi parts), it only adds color.
 
 ## Rules that apply here
 
