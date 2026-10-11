@@ -5,6 +5,7 @@
 !*.yaml
 !*.yml
 !CLAUDE.md
+!DESIGN.md
 !README.md
 !.gitignore
 
@@ -15,6 +16,10 @@
 # Allow packages directory and all its contents
 !packages/
 !packages/**
+
+# Allow the theme (design system port, see DESIGN.md)
+!themes/
+!themes/**
 
 # BUT exclude sensitive files even if they match allowed patterns
 secrets.yaml
