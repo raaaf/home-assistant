@@ -25,7 +25,7 @@ views:
     layout_type: custom:masonry-layout
     layout:
       max_width: 1000
-      width: 400
+      width: 300
     cards:
     - type: custom:mushroom-title-card
       alignment: center
@@ -49,16 +49,6 @@ views:
       - type: entity
         entity: sensor.what_to_wear_outside
         icon: mdi:tshirt-v
-      - type: entity
-        entity: sensor.sunlight_pct
-        icon: mdi:sunglasses
-      - type: entity
-        entity: sensor.night_state
-        icon: mdi:weather-night
-      - type: entity
-        entity: sensor.ikea_motion_03_illuminance
-      - type: entity
-        entity: sensor.season
       - type: entity
         entity: person.rafael
         use_entity_picture: true
@@ -304,7 +294,7 @@ views:
     layout_type: custom:masonry-layout
     layout:
       max_width: 1000
-      width: 400
+      width: 300
     cards:
     - type: custom:layout-card
       layout_type: custom:grid-layout
@@ -335,23 +325,22 @@ views:
       - type: grid
         title: Waschmaschine & Trockner
         square: false
-        columns: 2
+        columns: 1
         cards:
-        - type: custom:mushroom-entity-card
-          entity: input_select.waschmaschine
-          layout: vertical
-          name: Status
-        - type: custom:mushroom-entity-card
-          entity: input_select.trockner
-          layout: vertical
-          name: Status
-        - type: custom:mushroom-entity-card
+        - type: custom:mushroom-template-card
+          primary: Waschmaschine
+          icon: mdi:washing-machine
           entity: switch.steckdose_waschmaschine
-          name: Waschmaschine
-          layout: vertical
-        - type: custom:mushroom-entity-card
+          secondary: '{{ states(''input_select.waschmaschine'') }}{{ '' · Strom an'' if is_state(''switch.steckdose_waschmaschine'',''on'') }}'
+          tap_action:
+            action: more-info
+        - type: custom:mushroom-template-card
+          primary: Trockner
+          icon: mdi:tumble-dryer
           entity: switch.trockner
-          layout: vertical
+          secondary: '{{ states(''input_select.trockner'') }}{{ '' · Strom an'' if is_state(''switch.trockner'',''on'') }}'
+          tap_action:
+            action: more-info
       - type: vertical-stack
         cards:
         - type: custom:mushroom-title-card
@@ -502,6 +491,7 @@ views:
   - type: custom:gap-card
     view_layout:
       grid:area: right
+  icon: mdi:home
 - title: Licht
   theme: Linear
   type: custom:layout-card
@@ -559,7 +549,7 @@ views:
           type: entity
           entity: light.alle_schlafzimmer_lichter
           content_info: name
-          name: Arbeitszimmer Alex
+          name: Büro Alex
       - type: conditional
         conditions:
         - entity: light.alle_arbeitszimmer_lichter
@@ -623,87 +613,6 @@ views:
           entity: light.alle_waschzimmer_lichter
           content_info: name
           name: Wasch
-    - type: custom:mushroom-chips-card
-      alignment: center
-      chips:
-      - type: template
-        entity: binary_sensor.ikea_motion_01_occupancy
-        icon: mdi:motion-sensor
-        content: Ankleide
-        tap_action:
-          action: more-info
-      - type: template
-        entity: binary_sensor.tuya_motion_01_presence
-        icon: mdi:motion-sensor
-        content: Bad
-        tap_action:
-          action: more-info
-      - type: template
-        entity: binary_sensor.ikea_motion_03_occupancy
-        icon: mdi:motion-sensor
-        content: Balkon
-        tap_action:
-          action: more-info
-      - type: template
-        entity: binary_sensor.flur_motion
-        icon: mdi:motion-sensor
-        content: Flur
-        tap_action:
-          action: more-info
-      - type: template
-        entity: binary_sensor.tuya_motion_03_motion_presence
-        icon: mdi:motion-sensor
-        content: Wasch
-        tap_action:
-          action: more-info
-      - type: template
-        entity: binary_sensor.ikea_motion_06
-        icon: mdi:motion-sensor
-        content: Haustür
-        tap_action:
-          action: more-info
-      - type: template
-        entity: binary_sensor.ikea_motion_07
-        icon: mdi:motion-sensor
-        content: Küche
-        tap_action:
-          action: more-info
-      - type: template
-        entity: binary_sensor.ikea_motion_02
-        icon: mdi:motion-sensor
-        content: Büro
-        tap_action:
-          action: more-info
-      - type: template
-        entity: binary_sensor.tuya_motion_02_presence
-        icon: mdi:motion-sensor
-        content: Kinderzimmer
-        tap_action:
-          action: more-info
-      - type: template
-        entity: binary_sensor.ikea_motion_09
-        icon: mdi:motion-sensor
-        content: Schlafzimmer
-        tap_action:
-          action: more-info
-      - type: template
-        entity: binary_sensor.ikea_motion_08
-        icon: mdi:motion-sensor
-        content: Dusche
-        tap_action:
-          action: more-info
-      - type: template
-        entity: binary_sensor.aqara_vibration_01_vibration
-        icon: mdi:motion-sensor
-        content: Spieletisch
-        tap_action:
-          action: more-info
-      - type: template
-        entity: binary_sensor.aqara_vibration_02_vibration
-        icon: mdi:motion-sensor
-        content: Esstisch
-        tap_action:
-          action: more-info
     - type: custom:mushroom-title-card
       title: Szenen
     - type: custom:layout-card
@@ -838,7 +747,7 @@ views:
             }
       - type: custom:mushroom-light-card
         entity: light.alle_schlafzimmer_lichter
-        name: Arbeitszimmer Alex
+        name: Büro Alex
         icon: mdi:desk
         show_brightness_control: true
         use_light_color: false
@@ -1148,9 +1057,93 @@ views:
         layout: horizontal
         icon: mdi:power-sleep
       title: Schlafmodus
+    - type: custom:mushroom-title-card
+      title: Bewegungsmelder
+    - type: custom:mushroom-chips-card
+      alignment: center
+      chips:
+      - type: template
+        entity: binary_sensor.ikea_motion_01_occupancy
+        icon: mdi:motion-sensor
+        content: Ankleide
+        tap_action:
+          action: more-info
+      - type: template
+        entity: binary_sensor.tuya_motion_01_presence
+        icon: mdi:motion-sensor
+        content: Bad
+        tap_action:
+          action: more-info
+      - type: template
+        entity: binary_sensor.ikea_motion_03_occupancy
+        icon: mdi:motion-sensor
+        content: Balkon
+        tap_action:
+          action: more-info
+      - type: template
+        entity: binary_sensor.flur_motion
+        icon: mdi:motion-sensor
+        content: Flur
+        tap_action:
+          action: more-info
+      - type: template
+        entity: binary_sensor.tuya_motion_03_motion_presence
+        icon: mdi:motion-sensor
+        content: Wasch
+        tap_action:
+          action: more-info
+      - type: template
+        entity: binary_sensor.ikea_motion_06
+        icon: mdi:motion-sensor
+        content: Haustür
+        tap_action:
+          action: more-info
+      - type: template
+        entity: binary_sensor.ikea_motion_07
+        icon: mdi:motion-sensor
+        content: Küche
+        tap_action:
+          action: more-info
+      - type: template
+        entity: binary_sensor.ikea_motion_02
+        icon: mdi:motion-sensor
+        content: Büro
+        tap_action:
+          action: more-info
+      - type: template
+        entity: binary_sensor.tuya_motion_02_presence
+        icon: mdi:motion-sensor
+        content: Kinderzimmer
+        tap_action:
+          action: more-info
+      - type: template
+        entity: binary_sensor.ikea_motion_09
+        icon: mdi:motion-sensor
+        content: Schlafzimmer
+        tap_action:
+          action: more-info
+      - type: template
+        entity: binary_sensor.ikea_motion_08
+        icon: mdi:motion-sensor
+        content: Dusche
+        tap_action:
+          action: more-info
+      - type: template
+        entity: binary_sensor.aqara_vibration_01_vibration
+        icon: mdi:motion-sensor
+        content: Spieletisch
+        tap_action:
+          action: more-info
+      - type: template
+        entity: binary_sensor.aqara_vibration_02_vibration
+        icon: mdi:motion-sensor
+        content: Esstisch
+        tap_action:
+          action: more-info
   - type: custom:gap-card
     view_layout:
       grid:area: right
+  icon: mdi:lightbulb-group
 - title: Klima
   path: graphs
   theme: Linear
@@ -1195,7 +1188,7 @@ views:
         secondary: '{{ states(''sensor.aqara_climate_04_temperature'') | float(0) | round(1) }} °C · {{ states(''sensor.aqara_climate_04_humidity'') | float(0) | round(0) }} %'
         icon: mdi:bed-outline
       - type: custom:mushroom-template-card
-        primary: Arbeitszimmer Alex
+        primary: Büro Alex
         secondary: '{{ states(''sensor.aqara_climate_01_temperature'') | float(0) | round(1) }} °C · {{ states(''sensor.aqara_climate_01_humidity'') | float(0) | round(0) }} %'
         icon: mdi:desk
       - type: custom:mushroom-template-card
@@ -1219,6 +1212,10 @@ views:
         icon: mdi:molecule-co2
         tap_action:
           action: more-info
+        card_mod:
+          style: |
+            {% set v = states(config.entity) | float(0) %}{% set c = '249,112,102' if v >= 1400 else ('250,184,77' if v >= 1000 else '') %}{% if c %}ha-card ha-tile-icon { --tile-icon-color: rgb({{ c }}) !important; }
+            ha-card ha-tile-icon ha-state-icon { color: rgb({{ c }}) !important; }{% endif %}
       - type: custom:mushroom-template-card
         entity: sensor.pm2_5_gesamt
         primary: PM2.5
@@ -1246,36 +1243,63 @@ views:
       columns: 2
       square: false
       cards:
-      - type: custom:mushroom-climate-card
-        entity: climate.ac
-        name: Klimaanlage
-        show_temperature_control: true
-        collapsible_controls: true
+      - type: conditional
+        conditions:
+        - condition: state
+          entity: climate.ac
+          state:
+          - 'off'
+          - cool
+          - heat
+          - heat_cool
+          - auto
+          - dry
+          - fan_only
+        card:
+          type: custom:mushroom-climate-card
+          entity: climate.ac
+          name: Klimaanlage
+          show_temperature_control: true
+          collapsible_controls: true
       - type: custom:mushroom-fan-card
         entity: fan.zhimi_vb4_bce4_air_purifier
         name: Luftreiniger
         show_percentage_control: true
-        icon_animation: true
         collapsible_controls: true
       - type: custom:mushroom-entity-card
         entity: switch.steckdose_luftwascher
         name: Luftwäscher
         icon: mdi:air-humidifier
-      - type: custom:mushroom-fan-card
-        entity: fan.schlafzimmer
-        name: Ventilator Schlafzimmer
-        show_percentage_control: true
-        icon_animation: true
-        collapsible_controls: true
-      - type: custom:mushroom-fan-card
-        entity: fan.kinderzimmer
-        name: Ventilator Kinderzimmer
-        show_percentage_control: true
-        icon_animation: true
-        collapsible_controls: true
+      - type: conditional
+        conditions:
+        - condition: state
+          entity: fan.schlafzimmer
+          state:
+          - 'on'
+          - 'off'
+        card:
+          type: custom:mushroom-fan-card
+          entity: fan.schlafzimmer
+          name: Ventilator Schlafzimmer
+          show_percentage_control: true
+          collapsible_controls: true
+      - type: conditional
+        conditions:
+        - condition: state
+          entity: fan.kinderzimmer
+          state:
+          - 'on'
+          - 'off'
+        card:
+          type: custom:mushroom-fan-card
+          entity: fan.kinderzimmer
+          name: Ventilator Kinderzimmer
+          show_percentage_control: true
+          collapsible_controls: true
   - type: custom:gap-card
     view_layout:
       grid:area: right
+  icon: mdi:thermometer
 - title: Medien
   theme: Linear
   type: custom:layout-card
@@ -1455,6 +1479,7 @@ views:
   - type: custom:gap-card
     view_layout:
       grid:area: right
+  icon: mdi:speaker
 - title: Prusa MK4
   path: prusa-mk4
   theme: Linear
@@ -1611,6 +1636,7 @@ views:
   - type: custom:gap-card
     view_layout:
       grid:area: right
+  icon: mdi:printer-3d
 - title: Robbi
   path: robbi
   theme: Linear
@@ -1668,7 +1694,6 @@ views:
       - type: tile
         entity: sensor.s7_maxv_battery
         name: Akku
-        color: green
       - type: tile
         entity: sensor.s7_maxv_cleaning_area
         name: Fläche
@@ -1711,24 +1736,50 @@ views:
       square: false
       columns: 2
       cards:
-      - type: tile
+      - type: custom:mushroom-template-card
         entity: sensor.s7_maxv_main_brush_time_left
-        name: Hauptbürste
-      - type: tile
+        primary: Hauptbürste
+        icon: mdi:brush
+        secondary: '{% set h = states(entity) | float(0) %}{{ ''überfällig'' if h < 0 else ''%d h übrig'' | format(h) }}'
+        tap_action:
+          action: more-info
+        card_mod:
+          style: |
+            {% if states(config.entity) | float(0) < 0 %}ha-card ha-tile-icon { --tile-icon-color: rgb(249,112,102) !important; }
+            ha-card ha-tile-icon ha-state-icon { color: rgb(249,112,102) !important; }{% endif %}
+      - type: custom:mushroom-template-card
         entity: sensor.s7_maxv_side_brush_time_left
-        name: Seitenbürste
-      - type: tile
+        primary: Seitenbürste
+        icon: mdi:brush-variant
+        secondary: '{% set h = states(entity) | float(0) %}{{ ''überfällig'' if h < 0 else ''%d h übrig'' | format(h) }}'
+        tap_action:
+          action: more-info
+        card_mod:
+          style: |
+            {% if states(config.entity) | float(0) < 0 %}ha-card ha-tile-icon { --tile-icon-color: rgb(249,112,102) !important; }
+            ha-card ha-tile-icon ha-state-icon { color: rgb(249,112,102) !important; }{% endif %}
+      - type: custom:mushroom-template-card
         entity: sensor.s7_maxv_filter_time_left
-        name: Filter
-      - type: tile
+        primary: Filter
+        icon: mdi:air-filter
+        secondary: '{% set h = states(entity) | float(0) %}{{ ''überfällig'' if h < 0 else ''%d h übrig'' | format(h) }}'
+        tap_action:
+          action: more-info
+        card_mod:
+          style: |
+            {% if states(config.entity) | float(0) < 0 %}ha-card ha-tile-icon { --tile-icon-color: rgb(249,112,102) !important; }
+            ha-card ha-tile-icon ha-state-icon { color: rgb(249,112,102) !important; }{% endif %}
+      - type: custom:mushroom-template-card
         entity: sensor.s7_maxv_sensor_time_left
-        name: Sensoren
-      - type: tile
-        entity: sensor.s7_maxv_dock_maintenance_brush_time_left
-        name: Dock-Bürste
-      - type: tile
-        entity: sensor.s7_maxv_dock_strainer_time_left
-        name: Dock-Sieb
+        primary: Sensoren
+        icon: mdi:eye-outline
+        secondary: '{% set h = states(entity) | float(0) %}{{ ''überfällig'' if h < 0 else ''%d h übrig'' | format(h) }}'
+        tap_action:
+          action: more-info
+        card_mod:
+          style: |
+            {% if states(config.entity) | float(0) < 0 %}ha-card ha-tile-icon { --tile-icon-color: rgb(249,112,102) !important; }
+            ha-card ha-tile-icon ha-state-icon { color: rgb(249,112,102) !important; }{% endif %}
     - type: heading
       heading: Statistiken
     - type: grid
@@ -1750,6 +1801,7 @@ views:
   - type: custom:gap-card
     view_layout:
       grid:area: right
+  icon: mdi:robot-vacuum
 - title: Wohnzimmer
   path: licht-wohnzimmer
   subview: true
@@ -1775,6 +1827,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Wand 1
       - type: custom:mushroom-light-card
         entity: light.ikea_light_19_wand_2
         show_brightness_control: true
@@ -1785,6 +1838,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Wand 2
       - type: custom:mushroom-light-card
         entity: light.ikea_light_20_wand_3
         show_brightness_control: true
@@ -1795,6 +1849,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Wand 3
       - type: custom:mushroom-light-card
         entity: light.ikea_light_21_wand_4
         show_brightness_control: true
@@ -1805,6 +1860,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Wand 4
       - type: custom:mushroom-light-card
         entity: light.ikea_light_22_wand_5
         show_brightness_control: true
@@ -1815,6 +1871,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Wand 5
       - type: custom:mushroom-light-card
         entity: light.ikea_light_23_wand_6
         show_brightness_control: true
@@ -1825,6 +1882,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Wand 6
       - type: custom:mushroom-light-card
         entity: light.philips_light_18_1
         show_brightness_control: true
@@ -1835,6 +1893,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Esstisch 1
       - type: custom:mushroom-light-card
         entity: light.philips_light_19_2
         show_brightness_control: true
@@ -1845,6 +1904,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Esstisch 2
       - type: custom:mushroom-light-card
         entity: light.philips_light_20_3
         show_brightness_control: true
@@ -1855,6 +1915,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Esstisch 3
       - type: custom:mushroom-light-card
         entity: light.philips_light_24
         show_brightness_control: true
@@ -1865,6 +1926,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Spielematte 1
       - type: custom:mushroom-light-card
         entity: light.philips_light_25_spielematte_2
         show_brightness_control: true
@@ -1875,6 +1937,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Spielematte 2
       - type: custom:mushroom-light-card
         entity: light.philips_light_26_spielematte_3
         show_brightness_control: true
@@ -1885,6 +1948,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Spielematte 3
       - type: custom:mushroom-light-card
         entity: light.philips_light_27_spielematte_4
         show_brightness_control: true
@@ -1895,6 +1959,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Spielematte 4
       - type: custom:mushroom-light-card
         entity: light.philips_light_21_schrank_1
         show_brightness_control: true
@@ -1905,6 +1970,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Schrank 1
       - type: custom:mushroom-light-card
         entity: light.philips_light_22_schrank_2
         show_brightness_control: true
@@ -1915,6 +1981,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Schrank 2
       - type: custom:mushroom-light-card
         entity: light.philips_light_23_schrank_3
         show_brightness_control: true
@@ -1925,6 +1992,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Schrank 3
       - type: custom:mushroom-light-card
         entity: light.ikea_light_24
         show_brightness_control: true
@@ -1971,6 +2039,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Decke 1
       - type: custom:mushroom-light-card
         entity: light.ikea_light_15_decke_2
         show_brightness_control: true
@@ -1981,6 +2050,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Decke 2
       - type: custom:mushroom-light-card
         entity: light.philips_light_11_oben
         show_brightness_control: true
@@ -1991,6 +2061,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Insel Oben
       - type: custom:mushroom-light-card
         entity: light.philips_light_12_unten
         show_brightness_control: true
@@ -2001,6 +2072,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Insel Unten
       - type: custom:mushroom-light-card
         entity: light.philips_light_13_schrank_1
         show_brightness_control: true
@@ -2011,6 +2083,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Schrank 1
       - type: custom:mushroom-light-card
         entity: light.philips_light_14_schrank_2
         show_brightness_control: true
@@ -2021,6 +2094,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Schrank 2
   theme: Linear
 - title: Schlafzimmer
   path: licht-schlafzimmer
@@ -2047,6 +2121,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Decke
       - type: custom:mushroom-light-card
         entity: light.philips_light_01_pc_1
         show_brightness_control: true
@@ -2057,6 +2132,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: PC 1
       - type: custom:mushroom-light-card
         entity: light.philips_light_02_pc_2
         show_brightness_control: true
@@ -2067,6 +2143,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: PC 2
       - type: custom:mushroom-light-card
         entity: light.philips_light_15_bett
         show_brightness_control: true
@@ -2077,6 +2154,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Bett
       - type: custom:mushroom-light-card
         entity: light.philips_light_16_tv
         show_brightness_control: true
@@ -2087,6 +2165,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: TV
   theme: Linear
 - title: Arbeitszimmer Alex
   path: licht-arbeitszimmer-alex
@@ -2113,6 +2192,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Decke 1
       - type: custom:mushroom-light-card
         entity: light.ikea_light_17_2
         show_brightness_control: true
@@ -2123,6 +2203,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Decke 2
       - type: custom:mushroom-light-card
         entity: light.ikea_light_04
         show_brightness_control: true
@@ -2133,6 +2214,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Stehlampe
   theme: Linear
 - title: Kinderzimmer
   path: licht-kinderzimmer
@@ -2159,6 +2241,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Decke
       - type: custom:mushroom-light-card
         entity: light.philips_light_10_bucher
         show_brightness_control: true
@@ -2169,6 +2252,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Bücher
   theme: Linear
 - title: Badezimmer
   path: licht-badezimmer
@@ -2195,6 +2279,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Decke 1
       - type: custom:mushroom-light-card
         entity: light.philips_light_04_2
         show_brightness_control: true
@@ -2205,6 +2290,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Decke 2
       - type: custom:mushroom-light-card
         entity: light.philips_light_06_schrank
         show_brightness_control: true
@@ -2215,6 +2301,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Schrank
       - type: custom:mushroom-light-card
         entity: light.philips_light_05_fenster
         show_brightness_control: true
@@ -2225,6 +2312,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Fenster
   theme: Linear
 - title: Flur
   path: licht-flur
@@ -2251,6 +2339,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Decke 1
       - type: custom:mushroom-light-card
         entity: light.ikea_light_08_decke_2
         show_brightness_control: true
@@ -2261,6 +2350,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Decke 2
       - type: custom:mushroom-light-card
         entity: light.ikea_light_09_decke_3
         show_brightness_control: true
@@ -2271,6 +2361,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Decke 3
       - type: custom:mushroom-light-card
         entity: light.ikea_light_10_decke_4
         show_brightness_control: true
@@ -2281,6 +2372,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Decke 4
       - type: custom:mushroom-light-card
         entity: light.ikea_light_11_decke_5
         show_brightness_control: true
@@ -2291,6 +2383,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Decke 5
       - type: custom:mushroom-light-card
         entity: light.ikea_light_12_decke_6
         show_brightness_control: true
@@ -2301,6 +2394,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Decke 6
       - type: custom:mushroom-light-card
         entity: light.philips_light_08_schrank_1
         show_brightness_control: true
@@ -2311,6 +2405,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Schrank 1
       - type: custom:mushroom-light-card
         entity: light.philips_light_09_2
         show_brightness_control: true
@@ -2321,6 +2416,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Schrank 2
       - type: custom:mushroom-light-card
         entity: light.stahltraeger
         show_brightness_control: true
@@ -2357,6 +2453,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Decke 1
       - type: custom:mushroom-light-card
         entity: light.ikea_light_02
         show_brightness_control: true
@@ -2367,6 +2464,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Decke 2
   theme: Linear
 - title: Waschzimmer
   path: licht-waschzimmer
@@ -2393,6 +2491,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Decke
   theme: Linear
 - title: Balkon
   path: licht-balkon
@@ -2419,6 +2518,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Wand 1
       - type: custom:mushroom-light-card
         entity: light.ikea_light_06_wand_2
         show_brightness_control: true
@@ -2429,6 +2529,7 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Wand 2
       - type: custom:mushroom-light-card
         entity: light.philips_light_07_blumen
         show_brightness_control: true
@@ -2439,4 +2540,5 @@ views:
             ha-card mushroom-shape-icon {
               {% if is_state(config.entity, 'on') %}--icon-color: #ff6b35 !important;{% endif %}
             }
+        name: Blumen
   theme: Linear

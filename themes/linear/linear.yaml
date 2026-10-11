@@ -13,6 +13,9 @@ Linear:
     ha-state-icon, ha-icon, ha-svg-icon {
       color: rgb(194, 194, 194) !important;
     }
+    ha-tile-icon {
+      --tile-icon-color: rgb(194, 194, 194) !important;
+    }
     mushroom-fan-card, mushroom-light-card, mushroom-climate-card, mushroom-cover-card, mushroom-media-player-card {
       --slider-color: #ff6b35 !important;
       --control-slider-color: #ff6b35 !important;
@@ -57,6 +60,8 @@ Linear:
       ha-card-border-radius: "12px"
       ha-card-box-shadow: "none"
       mush-card-primary-font-weight: "400"
+      ha-tile-info-primary-font-weight: "400"
+      mush-chip-font-weight: "500"
       mush-chip-height: "44px"
       # --- icons / states monochrome ---
       state-icon-color: "#c2c2c2"
