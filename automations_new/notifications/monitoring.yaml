@@ -363,8 +363,8 @@
     value_template: "{{ state_attr('media_player.denon_avr_x3200w', 'source') in ['CBL/SAT', 'SAT/CBL'] }}"
   actions:
   - action: homeassistant.reload_config_entry
-    target:
-      entity_id: media_player.wohnzimmer
+    data:
+      entry_id: "{{ config_entry_id('media_player.wohnzimmer') }}"
   - action: notify.admin_only
     data:
       title: "AppleTV Watchdog"
@@ -406,8 +406,8 @@
       sequence:
       - action: homeassistant.reload_config_entry
         continue_on_error: true
-        target:
-          entity_id: "{{ repeat.item }}"
+        data:
+          entry_id: "{{ config_entry_id(repeat.item) }}"
       - action: logbook.log
         data:
           name: HomePod-Recovery
@@ -436,8 +436,8 @@
   actions:
   - action: homeassistant.reload_config_entry
     continue_on_error: true
-    target:
-      entity_id: "{{ trigger.entity_id }}"
+    data:
+      entry_id: "{{ config_entry_id(trigger.entity_id) }}"
   - action: logbook.log
     data:
       name: HomePod Watchdog

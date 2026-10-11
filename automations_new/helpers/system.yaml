@@ -96,10 +96,10 @@
           for_each: "{{ problem_devices }}"
           sequence:
           - condition: template
-            value_template: "{{ device_id(repeat.item) is not none }}"
+            value_template: "{{ config_entry_id(repeat.item) is not none }}"
           - action: homeassistant.reload_config_entry
-            target:
-              device_id: "{{ device_id(repeat.item) }}"
+            data:
+              entry_id: "{{ config_entry_id(repeat.item) }}"
             continue_on_error: true
           - delay:
               seconds: 2
@@ -112,10 +112,10 @@
       delay:
         seconds: 10
     - condition: template
-      value_template: "{{ trigger.entity_id is defined and device_id(trigger.entity_id) is not none }}"
+      value_template: "{{ trigger.entity_id is defined and config_entry_id(trigger.entity_id) is not none }}"
     - action: homeassistant.reload_config_entry
-      target:
-        device_id: "{{ device_id(trigger.entity_id) }}"
+      data:
+        entry_id: "{{ config_entry_id(trigger.entity_id) }}"
       continue_on_error: true
     - action: logbook.log
       data:
