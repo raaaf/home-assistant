@@ -2,12 +2,8 @@ Linear:
   # Dark port of the Rafael Design System (see DESIGN.md): true-black ground, neutral
   # surface ladder, Signal Orange #FF6B35 as the only brand accent, semantic colors for state.
   card-mod-theme: Linear
-  # Colors come from theme variables, not card-mod, so the first render is already right
-  # (card-mod applies after render and made icons flash in their default colors).
-  card-mod-card: |
-    img, .entity-picture, state-badge, ha-entity-picture, .image, .picture {
-      filter: grayscale(1) brightness(0.95) !important;
-    }
+  # Colors come from theme variables, not card-mod: card-mod applies after the first render
+  # and made icons flash in their default colors.
   modes:
     dark:
       # --- base ---

@@ -69,6 +69,7 @@ views:
           icon: mdi:molecule-co2
           content: '{{states(''sensor.qingping_air_monitor_lite_co2_carbon_dioxide'')}}'
           entity: sensor.qingping_air_monitor_lite_co2_carbon_dioxide
+          icon_color: red
       - type: conditional
         conditions:
         - entity: switch.sonoff_switch_01
@@ -180,6 +181,7 @@ views:
           icon: mdi:door-open
           content: Wohnungstür aufgeschlossen
           entity: lock.nuki_wohnungstur_lock
+          icon_color: amber
       - type: conditional
         conditions:
         - entity: binary_sensor.aqara_contact_07
