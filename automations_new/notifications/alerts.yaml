@@ -19,7 +19,6 @@
   - variables:
       rafael_zuhause: "{{ has_value('person.rafael') and is_state('person.rafael', 'home') }}"
       alex_zuhause: "{{ has_value('person.alex') and is_state('person.alex', 'home') }}"
-      niemand_zuhause: "{{ has_value('input_boolean.alle_sind_weg') and is_state('input_boolean.alle_sind_weg', 'on') }}"
       ist_dunkel: "{{ has_value('input_boolean.es_ist_dunkel') and is_state('input_boolean.es_ist_dunkel', 'on') }}"
       anwesenheits_status: >
         {% if rafael_zuhause and alex_zuhause %}
@@ -520,7 +519,7 @@
   # These messages come from the nightly container auto-update and carry no
   # information: end the run without any push or persistent notification.
   - condition: template
-    value_template: "{{ not (meldung is search('Container .+ stopped unexpectedly')) }}"
+    value_template: "{{ not (meldung is search('container .+ stopped unexpectedly', ignorecase=True)) }}"
   - action: script.turn_on
     target:
       entity_id: script.notify_hinweis

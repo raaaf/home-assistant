@@ -136,16 +136,18 @@
     to: 'on'
   mode: single
   actions:
-  - action: script.notify_critical
-    data:
-      title: "Wasser in der Küche"
-      message: "Der Wassersensor in der Küche meldet Feuchtigkeit. Sofort nachsehen!"
-      tag: wasserleck_kueche
+  # Record in HA first so a failed push still leaves a trace
   - action: persistent_notification.create
     data:
       title: "Wasser in der Küche"
       message: "Der Wassersensor in der Küche meldet Feuchtigkeit. Sofort nachsehen!"
       notification_id: wasserleck_kueche
+  - action: script.notify_critical
+    continue_on_error: true
+    data:
+      title: "Wasser in der Küche"
+      message: "Der Wassersensor in der Küche meldet Feuchtigkeit. Sofort nachsehen!"
+      tag: wasserleck_kueche
 - id: '1744713615211'
   alias: Scenen » Essen
   description: Aktiviert spezielle Küchenbeleuchtung für Kochmodus
