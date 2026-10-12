@@ -118,15 +118,11 @@
       sequence:
       - action: input_boolean.turn_on
         target:
-          entity_id:
-          - input_boolean.werktag_aufwachen
-          - input_boolean.werktag_musik
+          entity_id: input_boolean.werktag_musik
       - delay: 00:00:05
       - action: input_boolean.turn_off
         target:
-          entity_id:
-          - input_boolean.werktag_musik
-          - input_boolean.werktag_aufwachen
+          entity_id: input_boolean.werktag_musik
       - alias: "Warten bis ein HomePod 'playing' meldet"
         wait_template: "{{ ['media_player.arbeitszimmer', 'media_player.schlafzimmer', 'media_player.homepod_badezimmer', 'media_player.homepod_kinderzimmer', 'media_player.homepod_wohnzimmer', 'media_player.kuche'] | select('is_state', 'playing') | list | length > 0 }}"
         timeout: 00:00:25
@@ -148,7 +144,7 @@
   # wait.completed: das war am 21.08. der falsch-positive Kurzimpuls.
   - variables:
       musik_laeuft: "{{ ['media_player.arbeitszimmer', 'media_player.schlafzimmer', 'media_player.homepod_badezimmer', 'media_player.homepod_kinderzimmer', 'media_player.homepod_wohnzimmer', 'media_player.kuche'] | select('is_state', 'playing') | list | length > 0 }}"
-  # Kein eigener Volume-Fade mehr: den 30-Minuten-Fade der HomePods macht
+  # Kein eigener Volume-Fade mehr: den 15-Minuten-Fade der HomePods macht
   # "State » Tag/Nacht" (Wakeup); zwei parallele Fades auf dieselben Player
   # liefen gegeneinander.
   - alias: "Ergebnis ehrlich protokollieren"
