@@ -478,7 +478,13 @@
   mode: single
 - id: '1749999999998'
   alias: Heizung » Smart Floor Control (Predictive)
-  description: 'Predictive floor heating control for slow-response system (1-2h warmup). Morning boost based on current outdoor temp, afternoon boost based on daily high forecast. Only controls Kinderzimmer, Schlafzimmer, Wohnzimmer.'
+  description: >-
+    Floor heating boost at fixed times for a slow system (1-2 h warmup). 06:30 uses the current
+    outdoor temperature, 14:30 the daily forecast high: below 0 °C 3 h, below 5 °C 2 h, below 10 °C
+    1.5 h. A sunny afternoon (forecast cloud cover 35 % or less) drops the outdoor boost. Only rooms
+    below the top of their day comfort band are heated; a room below the bottom of its band gets at
+    least 1 h even when it is mild outside. A room without a reading is heated as before.
+    Controls Kinderzimmer, Schlafzimmer, Wohnzimmer.
   triggers:
   - at: "06:30:00"
     id: morning-boost
@@ -486,102 +492,83 @@
   - at: "14:30:00"
     id: afternoon-boost
     trigger: time
-  conditions: []
+  conditions:
+  - alias: Jemand zuhause oder weniger als 24 h weg
+    condition: template
+    value_template: >-
+      {{ is_state('input_boolean.alle_sind_weg', 'off') or
+         (now() - states.input_boolean.alle_sind_weg.last_changed).total_seconds() < 86400 }}
+  - alias: Heizsaison Oktober bis April
+    condition: template
+    value_template: '{{ now().month <= 4 or now().month >= 10 }}'
   actions:
   - variables:
-      heating_switches:
-      - switch.sonoff_switch_03
-      - switch.sonoff_switch_04
-      - switch.sonoff_switch_05
+      # Day comfort bands, keep in sync with TBAND in DESIGN.md (Comfort bands)
+      rooms:
+      - {name: Kinderzimmer, switch: switch.sonoff_switch_03, sensor: sensor.aqara_climate_03_temperature, low: 19, high: 20}
+      - {name: Schlafzimmer, switch: switch.sonoff_switch_04, sensor: sensor.aqara_climate_04_temperature, low: 20, high: 21}
+      - {name: Wohnzimmer, switch: switch.sonoff_switch_05, sensor: sensor.wohnzimmer_temperatur, low: 20, high: 22}
+      forecast: >-
+        {% set f = state_attr('sensor.fuerth_daily', 'forecast') %}
+        {{ f[0] if f and f | length > 0 else {} }}
       temp_source: >-
         {% if trigger.id == 'morning-boost' %}
           {{ state_attr('weather.fuerth_bayern', 'temperature') | float(5) }}
         {% else %}
-          {% set forecast = state_attr('sensor.fuerth_daily', 'forecast') %}
-          {% if forecast and forecast | length > 0 %}
-            {{ forecast[0].temperature | float(5) }}
-          {% else %}
-            5
-          {% endif %}
+          {{ forecast.temperature | float(5) }}
         {% endif %}
+      sunny_afternoon: >-
+        {{ trigger.id == 'afternoon-boost' and forecast.cloud_coverage | float(100) <= 35 }}
+      outdoor_duration: >-
+        {% set t = temp_source | float %}
+        {% if sunny_afternoon %}00:00:00
+        {% elif t < 0 %}03:00:00
+        {% elif t < 5 %}02:00:00
+        {% elif t < 10 %}01:30:00
+        {% else %}00:00:00
+        {% endif %}
+      below_top: >-
+        {% set ns = namespace(l=[]) %}
+        {% for r in rooms %}
+          {% set t = states(r.sensor) | float(none) %}
+          {% if t is none or t < r.high %}{% set ns.l = ns.l + [r] %}{% endif %}
+        {% endfor %}
+        {{ ns.l }}
+      below_bottom: >-
+        {% set ns = namespace(l=[]) %}
+        {% for r in rooms %}
+          {% set t = states(r.sensor) | float(none) %}
+          {% if t is not none and t < r.low %}{% set ns.l = ns.l + [r] %}{% endif %}
+        {% endfor %}
+        {{ ns.l }}
+      heat_rooms: "{{ below_top if outdoor_duration != '00:00:00' else below_bottom }}"
       boost_duration: >-
-        {% if temp_source | float < 0 %}
-          03:00:00
-        {% elif temp_source | float < 5 %}
-          02:00:00
-        {% elif temp_source | float < 10 %}
-          01:30:00
-        {% else %}
-          00:00:00
-        {% endif %}
-  - choose:
-    # === LAYER 1: MORNING BOOST (06:00) ===
-    - conditions:
-      - condition: trigger
-        id: morning-boost
-      - condition: or
-        conditions:
-        # Someone is home
-        - condition: state
-          entity_id: input_boolean.alle_sind_weg
-          state: 'off'
-        # OR away less than 24 hours (short absence like picking up kids)
-        - condition: template
-          value_template: >
-            {{ is_state('input_boolean.alle_sind_weg', 'on') and
-               (now() - states.input_boolean.alle_sind_weg.last_changed).total_seconds() < 86400 }}
-      - condition: template
-        value_template: '{{ now().month <= 4 or now().month >= 10 }}'
-      - condition: template
-        value_template: "{{ boost_duration != '00:00:00' }}"
-      sequence:
-      - action: switch.turn_on
-        target:
-          entity_id: '{{ heating_switches }}'
-      - action: logbook.log
-        data:
-          name: Heizung Morning Boost
-          message: "Außentemperatur {{ temp_source | round(1) }}°C → Boost {{ boost_duration }}"
-          domain: climate
-      - action: timer.start
-        target:
-          entity_id: timer.heizung_boost
-        data:
-          duration: "{{ boost_duration }}"
-
-    # === LAYER 2: AFTERNOON BOOST (15:00) ===
-    - conditions:
-      - condition: trigger
-        id: afternoon-boost
-      - condition: or
-        conditions:
-        # Someone is home
-        - condition: state
-          entity_id: input_boolean.alle_sind_weg
-          state: 'off'
-        # OR away less than 24 hours (short absence like picking up kids)
-        - condition: template
-          value_template: >
-            {{ is_state('input_boolean.alle_sind_weg', 'on') and
-               (now() - states.input_boolean.alle_sind_weg.last_changed).total_seconds() < 86400 }}
-      - condition: template
-        value_template: '{{ now().month <= 4 or now().month >= 10 }}'
-      - condition: template
-        value_template: "{{ boost_duration != '00:00:00' }}"
-      sequence:
-      - action: switch.turn_on
-        target:
-          entity_id: '{{ heating_switches }}'
-      - action: logbook.log
-        data:
-          name: Heizung Afternoon Boost
-          message: "Tages-Höchstwert {{ temp_source | round(1) }}°C → Boost {{ boost_duration }}"
-          domain: climate
-      - action: timer.start
-        target:
-          entity_id: timer.heizung_boost
-        data:
-          duration: "{{ boost_duration }}"
+        {{ outdoor_duration if outdoor_duration != '00:00:00'
+           else ('01:00:00' if below_bottom | length > 0 else '00:00:00') }}
+      room_summary: >-
+        {% set ns = namespace(l=[]) %}
+        {% for r in rooms %}
+          {% set ns.l = ns.l + [r.name ~ ' ' ~ states(r.sensor) ~ (' heizt' if r in heat_rooms else ' aus')] %}
+        {% endfor %}
+        {{ ns.l | join(', ') }}
+  - action: logbook.log
+    data:
+      name: "Heizung {{ 'Morning' if trigger.id == 'morning-boost' else 'Afternoon' }} Boost"
+      message: >-
+        {{ 'Außentemperatur' if trigger.id == 'morning-boost' else 'Tages-Höchstwert' }}
+        {{ temp_source | float | round(1) }}°C{{ ', sonnig' if sunny_afternoon else '' }}
+        → Boost {{ boost_duration }} · {{ room_summary }}
+      domain: climate
+  - condition: template
+    value_template: "{{ boost_duration != '00:00:00' and heat_rooms | length > 0 }}"
+  - action: switch.turn_on
+    target:
+      entity_id: "{{ heat_rooms | map(attribute='switch') | list }}"
+  - action: timer.start
+    target:
+      entity_id: timer.heizung_boost
+    data:
+      duration: "{{ boost_duration }}"
   mode: single
 - id: '1749999999999'
   alias: Heizung » Boost Timer Finished
@@ -617,7 +604,7 @@
         - action: logbook.log
           data:
             name: Heizung Boost beendet
-            message: "1,5h Boost abgeschlossen - alle Schalter aus (Versuch {{ repeat.index }})"
+            message: "Boost abgeschlossen - alle Schalter aus (Versuch {{ repeat.index }})"
             domain: climate
         - stop: "All switches confirmed off"
         else:
@@ -651,14 +638,14 @@
   mode: single
 - id: '1750000000001'
   alias: Heizung » Safety Watchdog (2h Limit)
-  description: 'Safety backup: Turns off heating if on > 2 hours without active timer'
+  description: >-
+    Safety backup for all five floor heating circuits, including Bad and Flur and manually switched
+    ones: off after 2 h without an active boost timer, or after 3 h 10 min while the timer runs
+    (longest boost is 3 h).
   triggers:
   - trigger: time_pattern
     minutes: "/15"
   conditions:
-  - condition: state
-    entity_id: timer.heizung_boost
-    state: idle
   - alias: "Race-Guard: HA laeuft seit mindestens 3 Minuten"
     condition: template
     value_template: >
@@ -667,16 +654,18 @@
   actions:
   - variables:
       heating_switches:
+      - switch.sonoff_switch_01
+      - switch.sonoff_switch_02
       - switch.sonoff_switch_03
       - switch.sonoff_switch_04
       - switch.sonoff_switch_05
-      max_on_seconds: 7200
+      max_on_seconds: "{{ 11400 if is_state('timer.heizung_boost', 'active') else 7200 }}"
       switches_on_too_long: >
         {% set result = namespace(switches=[]) %}
         {% for sw in heating_switches %}
           {% if is_state(sw, 'on') %}
             {% set on_duration = (now() - states[sw].last_changed).total_seconds() %}
-            {% if on_duration > max_on_seconds %}
+            {% if on_duration > max_on_seconds | int %}
               {% set result.switches = result.switches + [sw] %}
             {% endif %}
           {% endif %}
@@ -687,7 +676,7 @@
   - action: logbook.log
     data:
       name: Heizung Safety Watchdog
-      message: "WARNUNG: Schalter > 2h an ohne Timer: {{ switches_on_too_long | join(', ') }} - schalte aus"
+      message: "WARNUNG: Schalter länger als {{ (max_on_seconds | int / 60) | int }} min an: {{ switches_on_too_long | join(', ') }} - schalte aus"
       domain: climate
   - action: script.turn_off_with_retry
     data:
@@ -704,7 +693,7 @@
     - action: persistent_notification.create
       data:
         title: "Heizung Safety Watchdog"
-        message: "Schalter waren > 2h an ohne Timer: {{ switches_on_too_long | join(', ') }}"
+        message: "Schalter länger als {{ (max_on_seconds | int / 60) | int }} min an und nicht ausschaltbar: {{ still_on_after | join(', ') }}"
         notification_id: heizung_watchdog_warning
   mode: single
 - id: '1750000000002'
@@ -1058,3 +1047,30 @@
     - action: climate.turn_off
       target:
         entity_id: climate.ac
+- id: 'heizung_schalter_nicht_erreichbar'
+  alias: Heizung » Schalter nicht erreichbar
+  description: >-
+    Push to admin when a floor heating switch is unreachable for 15 min during the heating season.
+    A boost cannot start or stop on an unreachable switch (seen 2026-10-03 for about two hours).
+  triggers:
+  - trigger: state
+    entity_id:
+    - switch.sonoff_switch_01
+    - switch.sonoff_switch_02
+    - switch.sonoff_switch_03
+    - switch.sonoff_switch_04
+    - switch.sonoff_switch_05
+    to: unavailable
+    for: "00:15:00"
+  conditions:
+  - condition: template
+    value_template: '{{ now().month <= 4 or now().month >= 10 }}'
+  actions:
+  - action: notify.admin_only
+    data:
+      title: "Heizung nicht erreichbar"
+      message: >-
+        {{ state_attr(trigger.entity_id, 'friendly_name') or trigger.entity_id }} ist seit 15 Minuten
+        nicht erreichbar. Zigbee prüfen, sonst startet oder endet kein Boost.
+  mode: queued
+  max: 5

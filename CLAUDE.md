@@ -416,7 +416,7 @@ The AC sits in the Arbeitszimmer (office) and is steered by **"Helper » AC manu
 
 ### Heating
 
-`switch.sonoff_switch_03`, `_04`, `_05` floor heating is predictive (morning/afternoon boost from forecast) with a boost timer, a 2h safety watchdog, and restart recovery. Heating uses forecast (`weather.fuerth_bayern` / `sensor.fuerth_daily`), not room temperature.
+`switch.sonoff_switch_03`, `_04`, `_05` (Kinderzimmer, Schlafzimmer, Wohnzimmer) get a boost at fixed times, 06:30 and 14:30, whose length comes from the outdoor temperature or forecast (`weather.fuerth_bayern` / `sensor.fuerth_daily`). The fixed times are deliberate (worked well in winter 2025/26). Room temperature only filters: a room at or above the top of its day comfort band is skipped, a room below the bottom gets 1 h even when it is mild outside, and a sunny afternoon (forecast cloud cover 35 % or less) drops the outdoor boost. The bands sit in the automation's `rooms` variable and must match `TBAND` in DESIGN.md. Bad (`_01`) and Flur (`_02`) are manual only. The safety watchdog covers all five circuits (2 h without timer, 3 h 10 min with), and `Heizung » Schalter nicht erreichbar` pushes when a switch is unreachable for 15 min.
 
 ---
 
