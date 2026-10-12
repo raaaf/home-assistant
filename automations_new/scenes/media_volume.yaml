@@ -66,6 +66,13 @@
       entity_id: input_boolean.party
       to: 'off'
       id: party-aus
+    # Film start is handled by script.homepod_film_start; every film end restores WZ and Küche here,
+    # also when the morning scene reset turns movie off
+    - trigger: state
+      entity_id: input_boolean.movie
+      from: 'on'
+      to: 'off'
+      id: film-aus
   conditions:
     - condition: or
       conditions:
@@ -126,6 +133,7 @@
             playing: false
             stop: true
           party-an: {fade: 0, playing: true, stop: false}
+          film-aus: {players: [media_player.homepod_wohnzimmer, media_player.kuche], fade: 0, playing: false, stop: false}
           party-aus: {fade: 0, playing: false, stop: true}
         step: "{{ plan[trigger.id] }}"
     - action: script.turn_on

@@ -74,7 +74,7 @@
       - alias: "Musik in Wohnzimmer und Küche ruhigstellen, auch beim Kochen"
         if:
         - condition: template
-          value_template: "{{ trigger.id != 'game-on' }}"
+          value_template: "{{ state_attr('media_player.denon_avr_x3200w', 'source') != 'Game' }}"
         then:
         - action: script.turn_on
           target:
@@ -206,16 +206,6 @@
           entity_id: input_boolean.movie
         data: {}
         action: input_boolean.turn_off
-      - alias: "HomePod-Lautstärke nach Film wiederherstellen"
-        action: script.turn_on
-        target:
-          entity_id: script.homepod_volume_apply
-        data:
-          variables:
-            players:
-            - media_player.homepod_wohnzimmer
-            - media_player.kuche
-            only_if_playing: false
       # Ambilight must go off on every film end, even when another scene is active
       - alias: "HyperHDR nach Film ausschalten"
         action: light.turn_off
