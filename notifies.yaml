@@ -9,16 +9,15 @@
     - service: mobile_app_iphone_rafael
     - service: mobile_app_alex_iphone
 
+# MacBooks deliberately excluded from rafael/alex: every push otherwise arrived twice.
 - name: rafael
   platform: group
   services:
-    - service: mobile_app_macbook_pro_rafael
     - service: mobile_app_iphone_rafael
 
 - name: alex
   platform: group
   services:
-    - service: mobile_app_macbook_pro_2
     - service: mobile_app_alex_iphone
 
 # NOTE: SMTP services (rafael_mail, alex_mail) removed — email notifications

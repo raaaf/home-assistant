@@ -421,6 +421,57 @@ notify_critical:
           {{- payload -}}
         {%- endif -%}
 
+# Non-urgent hint: waits out the quiet hours 22:00-07:00. A push waiting through
+# the night is lost on HA restart; callers create the persistent notification
+# themselves immediately, so nothing is lost for good.
+notify_hinweis:
+  alias: "Benachrichtigung » Hinweis mit Ruhezeit"
+  description: >
+    Helper fuer nicht dringende Hinweise. Zwischen 22:00 und 07:00 wird der Push
+    bis 07:00 zurueckgehalten. Aufruf fire-and-forget per script.turn_on.
+    Parameter: target (z.B. notify.rafael), title, message (required), tag (optional).
+  icon: mdi:bell-sleep
+  mode: parallel
+  max: 20
+  fields:
+    target:
+      description: "Notify-Service, z.B. notify.rafael"
+      required: true
+      selector:
+        text:
+    title:
+      description: "Titel der Notification"
+      required: false
+      selector:
+        text:
+    message:
+      description: "Text der Notification"
+      required: true
+      selector:
+        text:
+    tag:
+      description: "Tag fuer Replace statt Stapeln auf dem iPhone"
+      required: false
+      selector:
+        text:
+  sequence:
+  - if:
+    - condition: template
+      value_template: "{{ now().hour >= 22 or now().hour < 7 }}"
+    then:
+    - wait_for_trigger:
+      - trigger: time
+        at: "07:00:00"
+      timeout: "10:00:00"
+      continue_on_timeout: true
+  - action: "{{ target }}"
+    data:
+      title: "{{ title | default('') }}"
+      message: "{{ message }}"
+      data: >
+        {{ {'push': {'interruption-level': 'active'}} if not tag
+           else {'push': {'interruption-level': 'active'}, 'tag': tag} }}
+
 lock_wohnungstuer_safe:
   alias: "Wohnungstür sicher verriegeln"
   description: >
