@@ -366,6 +366,7 @@ script.al_set_manual_control            # Mark/clear AL manual control per room 
 script.scene_stop_rgb_effect            # Stop a Hue effect, reset to color_temp, turn lights off
 script.restore_leselicht                # Restore the reading light if input_boolean.leselicht is on
 script.homepod_volume_apply             # Apply HomePod volume levels from the single table
+script.homepod_film_start               # Film start: stop room HomePods, or set them to 0 while other rooms share the AirPlay stream
 ```
 
 The two `scene_disable_*` scripts take an `exclude_scenes` list of `input_boolean` names and do nothing

@@ -801,6 +801,9 @@ homepod_volume_apply:
     Baden/Sauna sonst 50, Kinderzimmer 50, Arbeitszimmer 50, Schlafzimmer 55 %),
     Party Wohnzimmer (WZ 55 oder 30 bei Essen, Küche 50), danach die
     Einzelszenen (Essen WZ 30, Kochen Küche 50, Baden/Sauna Bad 35 %).
+    Vor allem anderen gilt Film: Film im Wohnzimmer (nicht Game) setzt WZ und
+    Küche auf 0, AppleTV Schlafzimmer spielt oder pausiert setzt Schlafzimmer
+    auf 0, auch beim Kochen oder bei Party.
     Immer per script.turn_on (fire-and-forget) aufrufen.
   icon: mdi:volume-high
   mode: parallel
@@ -879,16 +882,18 @@ homepod_volume_apply:
             {% set essen = is_state('input_boolean.essen', 'on') %}
             {% set kochen = is_state('input_boolean.kochen', 'on') %}
             {% set bad = is_state('input_boolean.baden', 'on') or is_state('input_boolean.sauna', 'on') %}
+            {% set film_wz = is_state('input_boolean.movie', 'on') and state_attr('media_player.denon_avr_x3200w', 'source') != 'Game' %}
+            {% set film_sz = states('media_player.appletv') in ['playing', 'paused'] %}
             {% if p == 'media_player.homepod_wohnzimmer' %}
-              {% if party or party_wz %}{{ 0.30 if essen else 0.55 }}{% elif essen %}0.30{% endif %}
+              {% if film_wz %}0{% elif party or party_wz %}{{ 0.30 if essen else 0.55 }}{% elif essen %}0.30{% endif %}
             {% elif p == 'media_player.kuche' %}
-              {% if party or party_wz or kochen %}0.50{% endif %}
+              {% if film_wz %}0{% elif party or party_wz or kochen %}0.50{% endif %}
             {% elif p == 'media_player.homepod_badezimmer' %}
               {% if party %}{{ 0.35 if bad else 0.50 }}{% elif bad %}0.35{% endif %}
             {% elif p == 'media_player.homepod_kinderzimmer' or p == 'media_player.arbeitszimmer' %}
               {% if party %}0.50{% endif %}
             {% elif p == 'media_player.schlafzimmer' %}
-              {% if party %}0.55{% endif %}
+              {% if film_sz %}0{% elif party %}0.55{% endif %}
             {% endif %}
       - variables:
           has_override: "{{ (override | string | trim) != '' }}"
@@ -926,6 +931,57 @@ homepod_volume_apply:
                 player: "{{ repeat.item }}"
                 volume: "{{ target | float(0) }}"
                 stop: "{{ apply_stop_at_night and night and not has_override }}"
+
+homepod_film_start:
+  alias: HomePod Musik bei Filmstart
+  # AirPlay streams to several HomePods as one session: a stop on one HomePod stops every room
+  description: >-
+    Bringt spielende HomePods im Filmraum zum Schweigen. Spielt sonst kein
+    HomePod, wird gestoppt. Spielen andere Räume mit, gehen nur diese HomePods
+    über script.homepod_volume_apply auf 0 (Filmregel dort), weil ein Stopp den
+    gemeinsamen AirPlay-Stream in allen Räumen beenden würde. Am Filmende
+    stellt der Aufrufer die Lautstärke per homepod_volume_apply mit
+    only_if_playing false wieder her. Per script.turn_on aufrufen.
+  icon: mdi:music-off
+  mode: parallel
+  max: 5
+  fields:
+    players:
+      name: Player
+      description: HomePods im Filmraum.
+      required: true
+      selector:
+        entity:
+          domain: media_player
+          multiple: true
+  variables:
+    all_homepods:
+    - media_player.homepod_wohnzimmer
+    - media_player.kuche
+    - media_player.homepod_badezimmer
+    - media_player.homepod_kinderzimmer
+    - media_player.arbeitszimmer
+    - media_player.schlafzimmer
+    playing: "{{ players | select('is_state', 'playing') | list }}"
+    others_playing: "{{ all_homepods | reject('in', players) | select('is_state', 'playing') | list | count > 0 }}"
+  sequence:
+  - condition: template
+    value_template: "{{ playing | count > 0 }}"
+  - if:
+    - condition: template
+      value_template: "{{ others_playing }}"
+    then:
+    - action: script.turn_on
+      target:
+        entity_id: script.homepod_volume_apply
+      data:
+        variables:
+          players: "{{ playing }}"
+    else:
+    - action: media_player.media_stop
+      continue_on_error: true
+      target:
+        entity_id: "{{ playing }}"
 
 homepod_wake:
   alias: HomePod aufwecken
