@@ -5,8 +5,8 @@
 - id: wartung_todo_abgleich
   alias: Helper » Wartung To-do abgleichen
   description: >-
-    Trägt fällige Wartungspunkte (Robbi-Verschleißteile, Filter, Batterien, Müll, Wassermelder,
-    Updates) in todo.wartung ein und entfernt sie, sobald der Grund weg ist. Verwaltet nur
+    Trägt fällige Wartungspunkte (Robbi-Verschleißteile, Filter, Batterien, Müll, Wassermelder)
+    in todo.wartung ein und entfernt sie, sobald der Grund weg ist. Verwaltet nur
     Einträge, deren Text einem der Muster unten entspricht; selbst angelegte Punkte bleiben
     unberührt.
     Ein abgehakter Punkt bleibt abgehakt, solange der Grund besteht.
@@ -50,7 +50,6 @@
         {% for e, n in [('sensor.restmuell', 'Restmüll'), ('sensor.bioabfall', 'Biotonne'), ('sensor.altpapier', 'Altpapier'), ('sensor.gelbersack', 'Gelben Sack')] %}
           {% if states(e) in ['Morgen', 'Heute'] %}{% set ns.l = ns.l + [n ~ ' rausstellen'] %}{% endif %}
         {% endfor %}
-        {% for u in states.update | selectattr('state', 'eq', 'on') %}{% set ns.l = ns.l + ['Update: ' ~ u.name] %}{% endfor %}
         {{ ns.l | unique | list }}
   - action: todo.get_items
     target:
@@ -64,7 +63,7 @@
       # Entries this automation owns are recognised by their wording, so they need no visible marker
       managed: >-
         {{ current['todo.wartung']['items'] | map(attribute='summary')
-           | select('search', '^(Robbi: |Batterie wechseln: |Luftreiniger: |Wasserspender: |Update: |Wasser in der Küche prüfen$|.+ rausstellen$)')
+           | select('search', '^(Robbi: (Hauptbürste tauschen|Seitenbürste tauschen|Filter tauschen|Sensoren reinigen|Fehler prüfen)|Batterie wechseln: .+|Luftreiniger: Filter wechseln|Wasserspender: Filter wechseln|Wasser in der Küche prüfen|(Restmüll|Biotonne|Altpapier|Gelben Sack) rausstellen)$')
            | list }}
   - repeat:
       for_each: "{{ wanted | reject('in', managed) | list }}"

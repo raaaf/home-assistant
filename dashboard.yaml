@@ -61,11 +61,21 @@ views:
     entity: sensor.qingping_air_monitor_lite_co2_carbon_dioxide
     name: CO2
     icon: mdi:molecule-co2
+    color: amber
+    visibility:
+    - condition: numeric_state
+      entity: sensor.qingping_air_monitor_lite_co2_carbon_dioxide
+      above: 999
+      below: 2000
+  - type: entity
+    entity: sensor.qingping_air_monitor_lite_co2_carbon_dioxide
+    name: CO2
+    icon: mdi:molecule-co2
     color: red
     visibility:
     - condition: numeric_state
       entity: sensor.qingping_air_monitor_lite_co2_carbon_dioxide
-      above: 1200
+      above: 1999
   - type: entity
     entity: switch.sonoff_switch_05
     name: Heizung Wohnzimmer
@@ -145,7 +155,7 @@ views:
         icon: mdi:format-list-checks
         tap_action:
           action: navigate
-          navigation_path: /lovelace/todo?entity_id=todo.wartung
+          navigation_path: /todo?entity_id=todo.wartung
     - type: custom:mushroom-template-card
       primary: Wasser in der Küche
       secondary: Wassermelder hat ausgelöst. Sofort nachsehen.
@@ -155,12 +165,12 @@ views:
       grid_options:
         columns: 12
       visibility:
-      - - condition: state
-          entity: binary_sensor.kuche_wasser_sensor
-          state: 'on'
+      - condition: state
+        entity: binary_sensor.kuche_wasser_sensor
+        state: 'on'
       tap_action:
         action: navigate
-        navigation_path: /lovelace/todo?entity_id=todo.wartung
+        navigation_path: /todo?entity_id=todo.wartung
     - type: custom:mushroom-template-card
       primary: Robbi
       secondary: '{% set ns = namespace(l=[]) %}{% set h = states(''sensor.s7_maxv_main_brush_time_left'') | float(999) %}{% if h < 10 %}{% set ns.l = ns.l + [''Hauptbürste'' ~ ('' überfällig'' if h < 0 else '' in '' ~ h | int ~ '' h'')] %}{% endif %}{% set h = states(''sensor.s7_maxv_side_brush_time_left'') | float(999) %}{% if h < 10 %}{% set ns.l = ns.l + [''Seitenbürste'' ~ ('' überfällig'' if h < 0 else '' in '' ~ h | int ~ '' h'')] %}{% endif %}{% set h = states(''sensor.s7_maxv_filter_time_left'') | float(999) %}{% if h < 10 %}{% set ns.l = ns.l + [''Filter'' ~ ('' überfällig'' if h < 0 else '' in '' ~ h | int ~ '' h'')] %}{% endif %}{% set h = states(''sensor.s7_maxv_sensor_time_left'') | float(999) %}{% if h < 10 %}{% set ns.l = ns.l + [''Sensoren'' ~ ('' überfällig'' if h < 0 else '' in '' ~ h | int ~ '' h'')] %}{% endif %}{{ ns.l | join('' · '') }}'
@@ -186,7 +196,7 @@ views:
           below: 10
       tap_action:
         action: navigate
-        navigation_path: /lovelace/todo?entity_id=todo.wartung
+        navigation_path: /todo?entity_id=todo.wartung
     - type: custom:mushroom-template-card
       primary: Robbi meldet einen Fehler
       secondary: '{{ states(''sensor.s7_maxv_vacuum_error'') }}'
@@ -201,10 +211,19 @@ views:
         state_not: none
       - condition: state
         entity: sensor.s7_maxv_vacuum_error
+        state_not: None
+      - condition: state
+        entity: sensor.s7_maxv_vacuum_error
+        state_not: unknown
+      - condition: state
+        entity: sensor.s7_maxv_vacuum_error
         state_not: unavailable
+      - condition: state
+        entity: sensor.s7_maxv_vacuum_error
+        state_not: ''
       tap_action:
         action: navigate
-        navigation_path: /lovelace/todo?entity_id=todo.wartung
+        navigation_path: /todo?entity_id=todo.wartung
     - type: custom:mushroom-template-card
       primary: Wasserspender-Filter
       secondary: '{% set d = states(''sensor.mmgg_wi11_7a1c_filter_left_time_2'') | int(0) %}{{ ''jetzt wechseln'' if d <= 0 else ''in '' ~ d ~ '' Tagen wechseln'' }}'
@@ -219,7 +238,7 @@ views:
         below: 7.01
       tap_action:
         action: navigate
-        navigation_path: /lovelace/todo?entity_id=todo.wartung
+        navigation_path: /todo?entity_id=todo.wartung
     - type: custom:mushroom-template-card
       primary: Luftreiniger-Filter
       secondary: noch {{ states('sensor.zhimi_vb4_bce4_filter_life_level') | int(0) }} %, Ersatz bestellen
@@ -234,7 +253,7 @@ views:
         below: 10
       tap_action:
         action: navigate
-        navigation_path: /lovelace/todo?entity_id=todo.wartung
+        navigation_path: /todo?entity_id=todo.wartung
     - type: custom:mushroom-template-card
       primary: Batterien
       secondary: '{{ state_attr(''sensor.batterien_niedrig'',''geraete'') }}'
@@ -249,7 +268,7 @@ views:
         above: 0
       tap_action:
         action: navigate
-        navigation_path: /lovelace/todo?entity_id=todo.wartung
+        navigation_path: /todo?entity_id=todo.wartung
     - type: custom:mushroom-template-card
       primary: Restmüll rausstellen
       secondary: Abholung {{ states('sensor.restmuell') | lower }}
@@ -266,7 +285,7 @@ views:
         - Heute
       tap_action:
         action: navigate
-        navigation_path: /lovelace/todo?entity_id=todo.wartung
+        navigation_path: /todo?entity_id=todo.wartung
     - type: custom:mushroom-template-card
       primary: Biotonne rausstellen
       secondary: Abholung {{ states('sensor.bioabfall') | lower }}
@@ -283,7 +302,7 @@ views:
         - Heute
       tap_action:
         action: navigate
-        navigation_path: /lovelace/todo?entity_id=todo.wartung
+        navigation_path: /todo?entity_id=todo.wartung
     - type: custom:mushroom-template-card
       primary: Altpapier rausstellen
       secondary: Abholung {{ states('sensor.altpapier') | lower }}
@@ -300,7 +319,7 @@ views:
         - Heute
       tap_action:
         action: navigate
-        navigation_path: /lovelace/todo?entity_id=todo.wartung
+        navigation_path: /todo?entity_id=todo.wartung
     - type: custom:mushroom-template-card
       primary: Gelben Sack rausstellen
       secondary: Abholung {{ states('sensor.gelbersack') | lower }}
@@ -317,7 +336,7 @@ views:
         - Heute
       tap_action:
         action: navigate
-        navigation_path: /lovelace/todo?entity_id=todo.wartung
+        navigation_path: /todo?entity_id=todo.wartung
     - type: custom:mushroom-template-card
       primary: Nichts zu tun
       secondary: Alles aufgefüllt und gewartet.
@@ -333,9 +352,9 @@ views:
           conditions:
           - condition: and
             conditions:
-            - - condition: state
-                entity: binary_sensor.kuche_wasser_sensor
-                state: 'on'
+            - condition: state
+              entity: binary_sensor.kuche_wasser_sensor
+              state: 'on'
           - condition: and
             conditions:
             - condition: or
@@ -359,7 +378,16 @@ views:
               state_not: none
             - condition: state
               entity: sensor.s7_maxv_vacuum_error
+              state_not: None
+            - condition: state
+              entity: sensor.s7_maxv_vacuum_error
+              state_not: unknown
+            - condition: state
+              entity: sensor.s7_maxv_vacuum_error
               state_not: unavailable
+            - condition: state
+              entity: sensor.s7_maxv_vacuum_error
+              state_not: ''
           - condition: and
             conditions:
             - condition: numeric_state
@@ -405,7 +433,7 @@ views:
               - Heute
       tap_action:
         action: navigate
-        navigation_path: /lovelace/todo?entity_id=todo.wartung
+        navigation_path: /todo?entity_id=todo.wartung
   - type: grid
     cards:
     - type: heading
