@@ -214,6 +214,16 @@ template:
             {{ 2000 if state_attr('sun.sun', 'elevation') | float(-90) > 3 else 5 }}
           {% endif %}
 
+  - binary_sensor:
+      # Night comfort band for the bedroom and Alex's office (one air volume via the sliding door).
+      # Schlafenszeit already starts at the children's bedtime (19-21), so the adults' night band
+      # waits until 22:00.
+      - name: "Nachtklima Schlafzimmer"
+        unique_id: nachtklima_schlafzimmer
+        icon: mdi:bed-clock
+        state: "{{ is_state('input_boolean.schlafenszeit', 'on') and (now().hour >= 22 or now().hour < 12) }}"
+        availability: "{{ has_value('input_boolean.schlafenszeit') }}"
+
 input_boolean:
   frost_warning_sent:
     name: "Frostwarnung gesendet"

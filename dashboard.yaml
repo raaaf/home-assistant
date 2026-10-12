@@ -471,7 +471,7 @@ views:
         action: none
     - type: custom:mushroom-template-card
       primary: Wohnzimmer zu warm
-      secondary: '{{ (states(''sensor.wohnzimmer_temperatur'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel 20–23 · kurz lüften'
+      secondary: '{{ (states(''sensor.wohnzimmer_temperatur'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel 20–22 · kurz lüften'
       icon: mdi:thermometer-high
       icon_color: amber
       color: amber
@@ -480,12 +480,12 @@ views:
       visibility:
       - condition: numeric_state
         entity: sensor.wohnzimmer_temperatur
-        above: 23
+        above: 22
       tap_action:
         action: none
     - type: custom:mushroom-template-card
       primary: Wohnzimmer zu kühl
-      secondary: '{{ (states(''sensor.wohnzimmer_temperatur'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel 20–23 · heizen'
+      secondary: '{{ (states(''sensor.wohnzimmer_temperatur'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel 20–22 · heizen'
       icon: mdi:thermometer-low
       icon_color: amber
       color: amber
@@ -527,30 +527,78 @@ views:
         action: none
     - type: custom:mushroom-template-card
       primary: Schlafzimmer zu warm
-      secondary: '{{ (states(''sensor.aqara_climate_04_temperature'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel 16–19 · kurz lüften'
+      secondary: '{{ (states(''sensor.aqara_climate_04_temperature'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel 20–21 · kurz lüften'
       icon: mdi:thermometer-high
-      icon_color: red
-      color: red
+      icon_color: amber
+      color: amber
       grid_options:
         columns: 12
       visibility:
-      - condition: numeric_state
-        entity: sensor.aqara_climate_04_temperature
-        above: 19
+      - condition: and
+        conditions:
+        - condition: state
+          entity: binary_sensor.nachtklima_schlafzimmer
+          state: 'off'
+        - condition: numeric_state
+          entity: sensor.aqara_climate_04_temperature
+          above: 21
       tap_action:
         action: none
     - type: custom:mushroom-template-card
       primary: Schlafzimmer zu kühl
-      secondary: '{{ (states(''sensor.aqara_climate_04_temperature'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel 16–19 · heizen'
+      secondary: '{{ (states(''sensor.aqara_climate_04_temperature'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel 20–21 · heizen'
       icon: mdi:thermometer-low
       icon_color: amber
       color: amber
       grid_options:
         columns: 12
       visibility:
-      - condition: numeric_state
-        entity: sensor.aqara_climate_04_temperature
-        below: 16
+      - condition: and
+        conditions:
+        - condition: state
+          entity: binary_sensor.nachtklima_schlafzimmer
+          state: 'off'
+        - condition: numeric_state
+          entity: sensor.aqara_climate_04_temperature
+          below: 20
+      tap_action:
+        action: none
+    - type: custom:mushroom-template-card
+      primary: Schlafzimmer zu warm
+      secondary: '{{ (states(''sensor.aqara_climate_04_temperature'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel nachts 17–18 · kurz lüften'
+      icon: mdi:thermometer-high
+      icon_color: red
+      color: red
+      grid_options:
+        columns: 12
+      visibility:
+      - condition: and
+        conditions:
+        - condition: state
+          entity: binary_sensor.nachtklima_schlafzimmer
+          state: 'on'
+        - condition: numeric_state
+          entity: sensor.aqara_climate_04_temperature
+          above: 18
+      tap_action:
+        action: none
+    - type: custom:mushroom-template-card
+      primary: Schlafzimmer zu kühl
+      secondary: '{{ (states(''sensor.aqara_climate_04_temperature'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel nachts 17–18 · heizen'
+      icon: mdi:thermometer-low
+      icon_color: amber
+      color: amber
+      grid_options:
+        columns: 12
+      visibility:
+      - condition: and
+        conditions:
+        - condition: state
+          entity: binary_sensor.nachtklima_schlafzimmer
+          state: 'on'
+        - condition: numeric_state
+          entity: sensor.aqara_climate_04_temperature
+          below: 17
       tap_action:
         action: none
     - type: custom:mushroom-template-card
@@ -583,30 +631,78 @@ views:
         action: none
     - type: custom:mushroom-template-card
       primary: Büro Alex zu warm
-      secondary: '{{ (states(''sensor.aqara_climate_01_temperature'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel 20–23 · kurz lüften'
+      secondary: '{{ (states(''sensor.aqara_climate_01_temperature'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel 20–21 · kurz lüften'
       icon: mdi:thermometer-high
       icon_color: amber
       color: amber
       grid_options:
         columns: 12
       visibility:
-      - condition: numeric_state
-        entity: sensor.aqara_climate_01_temperature
-        above: 23
+      - condition: and
+        conditions:
+        - condition: state
+          entity: binary_sensor.nachtklima_schlafzimmer
+          state: 'off'
+        - condition: numeric_state
+          entity: sensor.aqara_climate_01_temperature
+          above: 21
       tap_action:
         action: none
     - type: custom:mushroom-template-card
       primary: Büro Alex zu kühl
-      secondary: '{{ (states(''sensor.aqara_climate_01_temperature'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel 20–23 · heizen'
+      secondary: '{{ (states(''sensor.aqara_climate_01_temperature'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel 20–21 · heizen'
       icon: mdi:thermometer-low
       icon_color: amber
       color: amber
       grid_options:
         columns: 12
       visibility:
-      - condition: numeric_state
-        entity: sensor.aqara_climate_01_temperature
-        below: 20
+      - condition: and
+        conditions:
+        - condition: state
+          entity: binary_sensor.nachtklima_schlafzimmer
+          state: 'off'
+        - condition: numeric_state
+          entity: sensor.aqara_climate_01_temperature
+          below: 20
+      tap_action:
+        action: none
+    - type: custom:mushroom-template-card
+      primary: Büro Alex zu warm
+      secondary: '{{ (states(''sensor.aqara_climate_01_temperature'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel nachts 16–19 · kurz lüften'
+      icon: mdi:thermometer-high
+      icon_color: red
+      color: red
+      grid_options:
+        columns: 12
+      visibility:
+      - condition: and
+        conditions:
+        - condition: state
+          entity: binary_sensor.nachtklima_schlafzimmer
+          state: 'on'
+        - condition: numeric_state
+          entity: sensor.aqara_climate_01_temperature
+          above: 19
+      tap_action:
+        action: none
+    - type: custom:mushroom-template-card
+      primary: Büro Alex zu kühl
+      secondary: '{{ (states(''sensor.aqara_climate_01_temperature'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel nachts 16–19 · heizen'
+      icon: mdi:thermometer-low
+      icon_color: amber
+      color: amber
+      grid_options:
+        columns: 12
+      visibility:
+      - condition: and
+        conditions:
+        - condition: state
+          entity: binary_sensor.nachtklima_schlafzimmer
+          state: 'on'
+        - condition: numeric_state
+          entity: sensor.aqara_climate_01_temperature
+          below: 16
       tap_action:
         action: none
     - type: custom:mushroom-template-card
@@ -639,30 +735,78 @@ views:
         action: none
     - type: custom:mushroom-template-card
       primary: Kinderzimmer zu warm
-      secondary: '{{ (states(''sensor.aqara_climate_03_temperature'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel 18–21 · kurz lüften'
+      secondary: '{{ (states(''sensor.aqara_climate_03_temperature'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel 19–20 · kurz lüften'
       icon: mdi:thermometer-high
-      icon_color: red
-      color: red
+      icon_color: amber
+      color: amber
       grid_options:
         columns: 12
       visibility:
-      - condition: numeric_state
-        entity: sensor.aqara_climate_03_temperature
-        above: 21
+      - condition: and
+        conditions:
+        - condition: state
+          entity: input_boolean.schlafenszeit
+          state: 'off'
+        - condition: numeric_state
+          entity: sensor.aqara_climate_03_temperature
+          above: 20
       tap_action:
         action: none
     - type: custom:mushroom-template-card
       primary: Kinderzimmer zu kühl
-      secondary: '{{ (states(''sensor.aqara_climate_03_temperature'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel 18–21 · heizen'
+      secondary: '{{ (states(''sensor.aqara_climate_03_temperature'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel 19–20 · heizen'
       icon: mdi:thermometer-low
       icon_color: amber
       color: amber
       grid_options:
         columns: 12
       visibility:
-      - condition: numeric_state
-        entity: sensor.aqara_climate_03_temperature
-        below: 18
+      - condition: and
+        conditions:
+        - condition: state
+          entity: input_boolean.schlafenszeit
+          state: 'off'
+        - condition: numeric_state
+          entity: sensor.aqara_climate_03_temperature
+          below: 19
+      tap_action:
+        action: none
+    - type: custom:mushroom-template-card
+      primary: Kinderzimmer zu warm
+      secondary: '{{ (states(''sensor.aqara_climate_03_temperature'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel nachts 17–18 · kurz lüften'
+      icon: mdi:thermometer-high
+      icon_color: red
+      color: red
+      grid_options:
+        columns: 12
+      visibility:
+      - condition: and
+        conditions:
+        - condition: state
+          entity: input_boolean.schlafenszeit
+          state: 'on'
+        - condition: numeric_state
+          entity: sensor.aqara_climate_03_temperature
+          above: 18
+      tap_action:
+        action: none
+    - type: custom:mushroom-template-card
+      primary: Kinderzimmer zu kühl
+      secondary: '{{ (states(''sensor.aqara_climate_03_temperature'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel nachts 17–18 · heizen'
+      icon: mdi:thermometer-low
+      icon_color: amber
+      color: amber
+      grid_options:
+        columns: 12
+      visibility:
+      - condition: and
+        conditions:
+        - condition: state
+          entity: input_boolean.schlafenszeit
+          state: 'on'
+        - condition: numeric_state
+          entity: sensor.aqara_climate_03_temperature
+          below: 17
       tap_action:
         action: none
     - type: custom:mushroom-template-card
@@ -695,7 +839,7 @@ views:
         action: none
     - type: custom:mushroom-template-card
       primary: Badezimmer zu warm
-      secondary: '{{ (states(''sensor.aqara_climate_02_temperature'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel 20–24 · kurz lüften'
+      secondary: '{{ (states(''sensor.aqara_climate_02_temperature'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel 22–24 · kurz lüften'
       icon: mdi:thermometer-high
       icon_color: amber
       color: amber
@@ -709,7 +853,7 @@ views:
         action: none
     - type: custom:mushroom-template-card
       primary: Badezimmer zu kühl
-      secondary: '{{ (states(''sensor.aqara_climate_02_temperature'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel 20–24 · heizen'
+      secondary: '{{ (states(''sensor.aqara_climate_02_temperature'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel 22–24 · heizen'
       icon: mdi:thermometer-low
       icon_color: amber
       color: amber
@@ -718,7 +862,7 @@ views:
       visibility:
       - condition: numeric_state
         entity: sensor.aqara_climate_02_temperature
-        below: 20
+        below: 22
       tap_action:
         action: none
     - type: custom:mushroom-template-card
@@ -810,7 +954,7 @@ views:
         conditions:
         - condition: numeric_state
           entity: sensor.wohnzimmer_temperatur
-          above: 23
+          above: 22
       - condition: and
         conditions:
         - condition: numeric_state
@@ -828,14 +972,44 @@ views:
           below: 40
       - condition: and
         conditions:
-        - condition: numeric_state
-          entity: sensor.aqara_climate_04_temperature
-          above: 19
+        - condition: and
+          conditions:
+          - condition: state
+            entity: binary_sensor.nachtklima_schlafzimmer
+            state: 'off'
+          - condition: numeric_state
+            entity: sensor.aqara_climate_04_temperature
+            above: 21
       - condition: and
         conditions:
-        - condition: numeric_state
-          entity: sensor.aqara_climate_04_temperature
-          below: 16
+        - condition: and
+          conditions:
+          - condition: state
+            entity: binary_sensor.nachtklima_schlafzimmer
+            state: 'off'
+          - condition: numeric_state
+            entity: sensor.aqara_climate_04_temperature
+            below: 20
+      - condition: and
+        conditions:
+        - condition: and
+          conditions:
+          - condition: state
+            entity: binary_sensor.nachtklima_schlafzimmer
+            state: 'on'
+          - condition: numeric_state
+            entity: sensor.aqara_climate_04_temperature
+            above: 18
+      - condition: and
+        conditions:
+        - condition: and
+          conditions:
+          - condition: state
+            entity: binary_sensor.nachtklima_schlafzimmer
+            state: 'on'
+          - condition: numeric_state
+            entity: sensor.aqara_climate_04_temperature
+            below: 17
       - condition: and
         conditions:
         - condition: numeric_state
@@ -848,14 +1022,44 @@ views:
           below: 40
       - condition: and
         conditions:
-        - condition: numeric_state
-          entity: sensor.aqara_climate_01_temperature
-          above: 23
+        - condition: and
+          conditions:
+          - condition: state
+            entity: binary_sensor.nachtklima_schlafzimmer
+            state: 'off'
+          - condition: numeric_state
+            entity: sensor.aqara_climate_01_temperature
+            above: 21
       - condition: and
         conditions:
-        - condition: numeric_state
-          entity: sensor.aqara_climate_01_temperature
-          below: 20
+        - condition: and
+          conditions:
+          - condition: state
+            entity: binary_sensor.nachtklima_schlafzimmer
+            state: 'off'
+          - condition: numeric_state
+            entity: sensor.aqara_climate_01_temperature
+            below: 20
+      - condition: and
+        conditions:
+        - condition: and
+          conditions:
+          - condition: state
+            entity: binary_sensor.nachtklima_schlafzimmer
+            state: 'on'
+          - condition: numeric_state
+            entity: sensor.aqara_climate_01_temperature
+            above: 19
+      - condition: and
+        conditions:
+        - condition: and
+          conditions:
+          - condition: state
+            entity: binary_sensor.nachtklima_schlafzimmer
+            state: 'on'
+          - condition: numeric_state
+            entity: sensor.aqara_climate_01_temperature
+            below: 16
       - condition: and
         conditions:
         - condition: numeric_state
@@ -868,14 +1072,44 @@ views:
           below: 40
       - condition: and
         conditions:
-        - condition: numeric_state
-          entity: sensor.aqara_climate_03_temperature
-          above: 21
+        - condition: and
+          conditions:
+          - condition: state
+            entity: input_boolean.schlafenszeit
+            state: 'off'
+          - condition: numeric_state
+            entity: sensor.aqara_climate_03_temperature
+            above: 20
       - condition: and
         conditions:
-        - condition: numeric_state
-          entity: sensor.aqara_climate_03_temperature
-          below: 18
+        - condition: and
+          conditions:
+          - condition: state
+            entity: input_boolean.schlafenszeit
+            state: 'off'
+          - condition: numeric_state
+            entity: sensor.aqara_climate_03_temperature
+            below: 19
+      - condition: and
+        conditions:
+        - condition: and
+          conditions:
+          - condition: state
+            entity: input_boolean.schlafenszeit
+            state: 'on'
+          - condition: numeric_state
+            entity: sensor.aqara_climate_03_temperature
+            above: 18
+      - condition: and
+        conditions:
+        - condition: and
+          conditions:
+          - condition: state
+            entity: input_boolean.schlafenszeit
+            state: 'on'
+          - condition: numeric_state
+            entity: sensor.aqara_climate_03_temperature
+            below: 17
       - condition: and
         conditions:
         - condition: numeric_state
@@ -895,7 +1129,7 @@ views:
         conditions:
         - condition: numeric_state
           entity: sensor.aqara_climate_02_temperature
-          below: 20
+          below: 22
       - condition: and
         conditions:
         - condition: numeric_state
@@ -1114,8 +1348,8 @@ views:
       primary: Klima
       secondary: Innen {{ states('sensor.wohnzimmer_temperatur') | float(0) | round(1) | string | replace('.',',') }} °C · CO2 {{ states('sensor.qingping_air_monitor_lite_co2_carbon_dioxide') | int(0) }} ppm
       icon: mdi:thermometer
-      icon_color: '{% set c = states(''sensor.qingping_air_monitor_lite_co2_carbon_dioxide'') | float(0) %}{% set bad = c >= 1000 or not (20 <= states(''sensor.wohnzimmer_temperatur'') | float(20) <= 23) or not (16 <= states(''sensor.aqara_climate_04_temperature'') | float(16) <= 19) or not (20 <= states(''sensor.aqara_climate_01_temperature'') | float(20) <= 23) or not (18 <= states(''sensor.aqara_climate_03_temperature'') | float(18) <= 21) or not (20 <= states(''sensor.aqara_climate_02_temperature'') | float(20) <= 24) %}{{ ''red'' if c >= 2000 else (''amber'' if bad else ''green'') }}'
-      color: '{% set c = states(''sensor.qingping_air_monitor_lite_co2_carbon_dioxide'') | float(0) %}{% set bad = c >= 1000 or not (20 <= states(''sensor.wohnzimmer_temperatur'') | float(20) <= 23) or not (16 <= states(''sensor.aqara_climate_04_temperature'') | float(16) <= 19) or not (20 <= states(''sensor.aqara_climate_01_temperature'') | float(20) <= 23) or not (18 <= states(''sensor.aqara_climate_03_temperature'') | float(18) <= 21) or not (20 <= states(''sensor.aqara_climate_02_temperature'') | float(20) <= 24) %}{{ ''red'' if c >= 2000 else (''amber'' if bad else ''green'') }}'
+      icon_color: '{% set c = states(''sensor.qingping_air_monitor_lite_co2_carbon_dioxide'') | float(0) %}{% set bad = c >= 1000 or not (20 <= states(''sensor.wohnzimmer_temperatur'') | float(20) <= 22) or not ((17 if is_state(''binary_sensor.nachtklima_schlafzimmer'',''on'') else 20) <= states(''sensor.aqara_climate_04_temperature'') | float((17 if is_state(''binary_sensor.nachtklima_schlafzimmer'',''on'') else 20)) <= (18 if is_state(''binary_sensor.nachtklima_schlafzimmer'',''on'') else 21)) or not ((16 if is_state(''binary_sensor.nachtklima_schlafzimmer'',''on'') else 20) <= states(''sensor.aqara_climate_01_temperature'') | float((16 if is_state(''binary_sensor.nachtklima_schlafzimmer'',''on'') else 20)) <= (19 if is_state(''binary_sensor.nachtklima_schlafzimmer'',''on'') else 21)) or not ((17 if is_state(''input_boolean.schlafenszeit'',''on'') else 19) <= states(''sensor.aqara_climate_03_temperature'') | float((17 if is_state(''input_boolean.schlafenszeit'',''on'') else 19)) <= (18 if is_state(''input_boolean.schlafenszeit'',''on'') else 20)) or not (22 <= states(''sensor.aqara_climate_02_temperature'') | float(22) <= 24) %}{{ ''red'' if c >= 2000 else (''amber'' if bad else ''green'') }}'
+      color: '{% set c = states(''sensor.qingping_air_monitor_lite_co2_carbon_dioxide'') | float(0) %}{% set bad = c >= 1000 or not (20 <= states(''sensor.wohnzimmer_temperatur'') | float(20) <= 22) or not ((17 if is_state(''binary_sensor.nachtklima_schlafzimmer'',''on'') else 20) <= states(''sensor.aqara_climate_04_temperature'') | float((17 if is_state(''binary_sensor.nachtklima_schlafzimmer'',''on'') else 20)) <= (18 if is_state(''binary_sensor.nachtklima_schlafzimmer'',''on'') else 21)) or not ((16 if is_state(''binary_sensor.nachtklima_schlafzimmer'',''on'') else 20) <= states(''sensor.aqara_climate_01_temperature'') | float((16 if is_state(''binary_sensor.nachtklima_schlafzimmer'',''on'') else 20)) <= (19 if is_state(''binary_sensor.nachtklima_schlafzimmer'',''on'') else 21)) or not ((17 if is_state(''input_boolean.schlafenszeit'',''on'') else 19) <= states(''sensor.aqara_climate_03_temperature'') | float((17 if is_state(''input_boolean.schlafenszeit'',''on'') else 19)) <= (18 if is_state(''input_boolean.schlafenszeit'',''on'') else 20)) or not (22 <= states(''sensor.aqara_climate_02_temperature'') | float(22) <= 24) %}{{ ''red'' if c >= 2000 else (''amber'' if bad else ''green'') }}'
       grid_options:
         columns: 6
       tap_action:
@@ -1634,7 +1868,7 @@ views:
         columns: 6
       card_mod:
         style: |
-          {% set v = states(config.entity) | float(-999) %}{% set c = '' if v == -999 else ('76,217,138' if 20 <= v <= 23 else ('250,184,77' if 18 <= v <= 25 else '249,112,102')) %}{% if c %}ha-card { --tile-color: rgb({{ c }}) !important; }
+          {% set v = states(config.entity) | float(-999) %}{% set gl,gh,al,ah = (20,22,19,24) %}{% set c = '' if v == -999 else ('76,217,138' if gl <= v <= gh else ('250,184,77' if al <= v <= ah else '249,112,102')) %}{% if c %}ha-card { --tile-color: rgb({{ c }}) !important; }
           ha-tile-icon { --tile-icon-color: rgb({{ c }}) !important; }
           ha-tile-icon ha-state-icon { color: rgb({{ c }}) !important; }{% endif %}
     - type: tile
@@ -1649,7 +1883,7 @@ views:
         columns: 6
       card_mod:
         style: |
-          {% set v = states(config.entity) | float(-999) %}{% set c = '' if v == -999 else ('76,217,138' if 16 <= v <= 19 else ('250,184,77' if 15 <= v <= 21 else '249,112,102')) %}{% if c %}ha-card { --tile-color: rgb({{ c }}) !important; }
+          {% set v = states(config.entity) | float(-999) %}{% set gl,gh,al,ah = (17,18,16,20) if is_state('binary_sensor.nachtklima_schlafzimmer','on') else (20,21,19,23) %}{% set c = '' if v == -999 else ('76,217,138' if gl <= v <= gh else ('250,184,77' if al <= v <= ah else '249,112,102')) %}{% if c %}ha-card { --tile-color: rgb({{ c }}) !important; }
           ha-tile-icon { --tile-icon-color: rgb({{ c }}) !important; }
           ha-tile-icon ha-state-icon { color: rgb({{ c }}) !important; }{% endif %}
     - type: tile
@@ -1664,7 +1898,7 @@ views:
         columns: 6
       card_mod:
         style: |
-          {% set v = states(config.entity) | float(-999) %}{% set c = '' if v == -999 else ('76,217,138' if 20 <= v <= 23 else ('250,184,77' if 18 <= v <= 25 else '249,112,102')) %}{% if c %}ha-card { --tile-color: rgb({{ c }}) !important; }
+          {% set v = states(config.entity) | float(-999) %}{% set gl,gh,al,ah = (16,19,15,21) if is_state('binary_sensor.nachtklima_schlafzimmer','on') else (20,21,19,23) %}{% set c = '' if v == -999 else ('76,217,138' if gl <= v <= gh else ('250,184,77' if al <= v <= ah else '249,112,102')) %}{% if c %}ha-card { --tile-color: rgb({{ c }}) !important; }
           ha-tile-icon { --tile-icon-color: rgb({{ c }}) !important; }
           ha-tile-icon ha-state-icon { color: rgb({{ c }}) !important; }{% endif %}
     - type: tile
@@ -1679,7 +1913,7 @@ views:
         columns: 6
       card_mod:
         style: |
-          {% set v = states(config.entity) | float(-999) %}{% set c = '' if v == -999 else ('76,217,138' if 18 <= v <= 21 else ('250,184,77' if 16 <= v <= 23 else '249,112,102')) %}{% if c %}ha-card { --tile-color: rgb({{ c }}) !important; }
+          {% set v = states(config.entity) | float(-999) %}{% set gl,gh,al,ah = (17,18,16,20) if is_state('input_boolean.schlafenszeit','on') else (19,20,18,22) %}{% set c = '' if v == -999 else ('76,217,138' if gl <= v <= gh else ('250,184,77' if al <= v <= ah else '249,112,102')) %}{% if c %}ha-card { --tile-color: rgb({{ c }}) !important; }
           ha-tile-icon { --tile-icon-color: rgb({{ c }}) !important; }
           ha-tile-icon ha-state-icon { color: rgb({{ c }}) !important; }{% endif %}
     - type: tile
@@ -1694,7 +1928,7 @@ views:
         columns: 6
       card_mod:
         style: |
-          {% set v = states(config.entity) | float(-999) %}{% set c = '' if v == -999 else ('76,217,138' if 20 <= v <= 24 else ('250,184,77' if 18 <= v <= 26 else '249,112,102')) %}{% if c %}ha-card { --tile-color: rgb({{ c }}) !important; }
+          {% set v = states(config.entity) | float(-999) %}{% set gl,gh,al,ah = (22,24,20,26) %}{% set c = '' if v == -999 else ('76,217,138' if gl <= v <= gh else ('250,184,77' if al <= v <= ah else '249,112,102')) %}{% if c %}ha-card { --tile-color: rgb({{ c }}) !important; }
           ha-tile-icon { --tile-icon-color: rgb({{ c }}) !important; }
           ha-tile-icon ha-state-icon { color: rgb({{ c }}) !important; }{% endif %}
   - type: grid
@@ -1715,7 +1949,7 @@ views:
         columns: 12
       card_mod:
         style: |
-          {% set v = states(config.entity) | float(-999) %}{% set c = '' if v == -999 else ('76,217,138' if 0 <= v <= 999 else ('250,184,77' if 1000 <= v <= 1999 else '249,112,102')) %}{% if c %}ha-card { --tile-color: rgb({{ c }}) !important; }
+          {% set v = states(config.entity) | float(-999) %}{% set gl,gh,al,ah = (0,999,1000,1999) %}{% set c = '' if v == -999 else ('76,217,138' if gl <= v <= gh else ('250,184,77' if al <= v <= ah else '249,112,102')) %}{% if c %}ha-card { --tile-color: rgb({{ c }}) !important; }
           ha-tile-icon { --tile-icon-color: rgb({{ c }}) !important; }
           ha-tile-icon ha-state-icon { color: rgb({{ c }}) !important; }{% endif %}
     - type: tile
@@ -1727,7 +1961,7 @@ views:
       vertical: true
       card_mod:
         style: |
-          {% set v = states(config.entity) | float(-999) %}{% set c = '' if v == -999 else ('76,217,138' if 0 <= v <= 15 else ('250,184,77' if 15 <= v <= 35 else '249,112,102')) %}{% if c %}ha-card { --tile-color: rgb({{ c }}) !important; }
+          {% set v = states(config.entity) | float(-999) %}{% set gl,gh,al,ah = (0,15,15,35) %}{% set c = '' if v == -999 else ('76,217,138' if gl <= v <= gh else ('250,184,77' if al <= v <= ah else '249,112,102')) %}{% if c %}ha-card { --tile-color: rgb({{ c }}) !important; }
           ha-tile-icon { --tile-icon-color: rgb({{ c }}) !important; }
           ha-tile-icon ha-state-icon { color: rgb({{ c }}) !important; }{% endif %}
     - type: tile
@@ -1739,7 +1973,7 @@ views:
       vertical: true
       card_mod:
         style: |
-          {% set v = states(config.entity) | float(-999) %}{% set c = '' if v == -999 else ('76,217,138' if 0 <= v <= 45 else ('250,184,77' if 45 <= v <= 100 else '249,112,102')) %}{% if c %}ha-card { --tile-color: rgb({{ c }}) !important; }
+          {% set v = states(config.entity) | float(-999) %}{% set gl,gh,al,ah = (0,45,45,100) %}{% set c = '' if v == -999 else ('76,217,138' if gl <= v <= gh else ('250,184,77' if al <= v <= ah else '249,112,102')) %}{% if c %}ha-card { --tile-color: rgb({{ c }}) !important; }
           ha-tile-icon { --tile-icon-color: rgb({{ c }}) !important; }
           ha-tile-icon ha-state-icon { color: rgb({{ c }}) !important; }{% endif %}
     - type: tile
@@ -1751,7 +1985,7 @@ views:
       vertical: true
       card_mod:
         style: |
-          {% set v = states(config.entity) | float(-999) %}{% set c = '' if v == -999 else ('76,217,138' if 0 <= v <= 150 else ('250,184,77' if 150 <= v <= 250 else '249,112,102')) %}{% if c %}ha-card { --tile-color: rgb({{ c }}) !important; }
+          {% set v = states(config.entity) | float(-999) %}{% set gl,gh,al,ah = (0,150,150,250) %}{% set c = '' if v == -999 else ('76,217,138' if gl <= v <= gh else ('250,184,77' if al <= v <= ah else '249,112,102')) %}{% if c %}ha-card { --tile-color: rgb({{ c }}) !important; }
           ha-tile-icon { --tile-icon-color: rgb({{ c }}) !important; }
           ha-tile-icon ha-state-icon { color: rgb({{ c }}) !important; }{% endif %}
     - type: tile
@@ -1770,7 +2004,7 @@ views:
       vertical: true
       card_mod:
         style: |
-          {% set v = states(config.entity) | float(-999) %}{% set c = '' if v == -999 else ('76,217,138' if 40 <= v <= 60 else ('250,184,77' if 30 <= v <= 70 else '249,112,102')) %}{% if c %}ha-card { --tile-color: rgb({{ c }}) !important; }
+          {% set v = states(config.entity) | float(-999) %}{% set gl,gh,al,ah = (40,60,30,70) %}{% set c = '' if v == -999 else ('76,217,138' if gl <= v <= gh else ('250,184,77' if al <= v <= ah else '249,112,102')) %}{% if c %}ha-card { --tile-color: rgb({{ c }}) !important; }
           ha-tile-icon { --tile-icon-color: rgb({{ c }}) !important; }
           ha-tile-icon ha-state-icon { color: rgb({{ c }}) !important; }{% endif %}
     - type: tile
@@ -1782,7 +2016,7 @@ views:
       vertical: true
       card_mod:
         style: |
-          {% set v = states(config.entity) | float(-999) %}{% set c = '' if v == -999 else ('76,217,138' if 40 <= v <= 60 else ('250,184,77' if 30 <= v <= 70 else '249,112,102')) %}{% if c %}ha-card { --tile-color: rgb({{ c }}) !important; }
+          {% set v = states(config.entity) | float(-999) %}{% set gl,gh,al,ah = (40,60,30,70) %}{% set c = '' if v == -999 else ('76,217,138' if gl <= v <= gh else ('250,184,77' if al <= v <= ah else '249,112,102')) %}{% if c %}ha-card { --tile-color: rgb({{ c }}) !important; }
           ha-tile-icon { --tile-icon-color: rgb({{ c }}) !important; }
           ha-tile-icon ha-state-icon { color: rgb({{ c }}) !important; }{% endif %}
     - type: tile
@@ -1794,7 +2028,7 @@ views:
       vertical: true
       card_mod:
         style: |
-          {% set v = states(config.entity) | float(-999) %}{% set c = '' if v == -999 else ('76,217,138' if 40 <= v <= 60 else ('250,184,77' if 30 <= v <= 70 else '249,112,102')) %}{% if c %}ha-card { --tile-color: rgb({{ c }}) !important; }
+          {% set v = states(config.entity) | float(-999) %}{% set gl,gh,al,ah = (40,60,30,70) %}{% set c = '' if v == -999 else ('76,217,138' if gl <= v <= gh else ('250,184,77' if al <= v <= ah else '249,112,102')) %}{% if c %}ha-card { --tile-color: rgb({{ c }}) !important; }
           ha-tile-icon { --tile-icon-color: rgb({{ c }}) !important; }
           ha-tile-icon ha-state-icon { color: rgb({{ c }}) !important; }{% endif %}
     - type: tile
@@ -1806,7 +2040,7 @@ views:
       vertical: true
       card_mod:
         style: |
-          {% set v = states(config.entity) | float(-999) %}{% set c = '' if v == -999 else ('76,217,138' if 40 <= v <= 60 else ('250,184,77' if 30 <= v <= 70 else '249,112,102')) %}{% if c %}ha-card { --tile-color: rgb({{ c }}) !important; }
+          {% set v = states(config.entity) | float(-999) %}{% set gl,gh,al,ah = (40,60,30,70) %}{% set c = '' if v == -999 else ('76,217,138' if gl <= v <= gh else ('250,184,77' if al <= v <= ah else '249,112,102')) %}{% if c %}ha-card { --tile-color: rgb({{ c }}) !important; }
           ha-tile-icon { --tile-icon-color: rgb({{ c }}) !important; }
           ha-tile-icon ha-state-icon { color: rgb({{ c }}) !important; }{% endif %}
     - type: tile
@@ -1818,7 +2052,7 @@ views:
       vertical: true
       card_mod:
         style: |
-          {% set v = states(config.entity) | float(-999) %}{% set c = '' if v == -999 else ('76,217,138' if 40 <= v <= 60 else ('250,184,77' if 30 <= v <= 70 else '249,112,102')) %}{% if c %}ha-card { --tile-color: rgb({{ c }}) !important; }
+          {% set v = states(config.entity) | float(-999) %}{% set gl,gh,al,ah = (40,60,30,70) %}{% set c = '' if v == -999 else ('76,217,138' if gl <= v <= gh else ('250,184,77' if al <= v <= ah else '249,112,102')) %}{% if c %}ha-card { --tile-color: rgb({{ c }}) !important; }
           ha-tile-icon { --tile-icon-color: rgb({{ c }}) !important; }
           ha-tile-icon ha-state-icon { color: rgb({{ c }}) !important; }{% endif %}
   - type: grid
