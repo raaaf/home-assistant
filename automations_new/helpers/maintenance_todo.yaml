@@ -72,8 +72,11 @@
         data:
           item: "{{ repeat.item }}"
   - variables:
-      # Right after a restart the battery sensor may not have rendered yet: keep battery items then
-      battery_known: "{{ state_attr('sensor.batterien_niedrig', 'namen') is list }}"
+      # Right after a restart the battery sensor and the devices it reads may not report yet:
+      # keep battery items during the first 10 minutes of uptime
+      battery_known: >-
+        {{ state_attr('sensor.batterien_niedrig', 'namen') is list
+           and (now() - as_datetime(states('sensor.uptime'), now())).total_seconds() > 600 }}
       stale: >-
         {% set m = managed | reject('in', wanted) | list %}
         {{ m if battery_known else m | reject('search', '^Batterie wechseln: ') | list }}
