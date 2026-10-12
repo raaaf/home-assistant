@@ -470,429 +470,203 @@ views:
       tap_action:
         action: none
     - type: custom:mushroom-template-card
-      primary: Wohnzimmer zu warm
-      secondary: '{{ (states(''sensor.wohnzimmer_temperatur'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel 20–22 · kurz lüften'
+      primary: '{% set ns = namespace(l=[], r=false) %}{% set gl,gh,al,ah = (20,22,19,24) %}{% set v = states(''sensor.wohnzimmer_temperatur'') | float(none) %}{% if v is not none and v > gh + 0.05 %}{% set ns.l = ns.l + [''Wohnzimmer '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v > ah %}{% set ns.r = true %}{% endif %}{% endif %}{% set gl,gh,al,ah = (17,18,16,20) if is_state(''binary_sensor.nachtklima_schlafzimmer'',''on'') else (20,21,19,23) %}{% set v = states(''sensor.aqara_climate_04_temperature'') | float(none) %}{% if v is not none and v > gh + 0.05 %}{% set ns.l = ns.l + [''Schlafzimmer '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v > ah %}{% set ns.r = true %}{% endif %}{% endif %}{% set gl,gh,al,ah = (16,19,15,21) if is_state(''binary_sensor.nachtklima_schlafzimmer'',''on'') else (20,21,19,23) %}{% set v = states(''sensor.aqara_climate_01_temperature'') | float(none) %}{% if v is not none and v > gh + 0.05 %}{% set ns.l = ns.l + [''Büro Alex '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v > ah %}{% set ns.r = true %}{% endif %}{% endif %}{% set gl,gh,al,ah = (17,18,16,20) if is_state(''input_boolean.schlafenszeit'',''on'') else (19,20,18,22) %}{% set v = states(''sensor.aqara_climate_03_temperature'') | float(none) %}{% if v is not none and v > gh + 0.05 %}{% set ns.l = ns.l + [''Kinderzimmer '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v > ah %}{% set ns.r = true %}{% endif %}{% endif %}{% set gl,gh,al,ah = (22,24,20,26) %}{% set v = states(''sensor.aqara_climate_02_temperature'') | float(none) %}{% if v is not none and v > gh + 0.05 %}{% set ns.l = ns.l + [''Badezimmer '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v > ah %}{% set ns.r = true %}{% endif %}{% endif %}{{ ns.l[0].rsplit('' '',1)[0] if ns.l | length == 1 else (ns.l | length) ~ '' Räume'' }} zu warm'
+      secondary: '{% set ns = namespace(l=[], r=false) %}{% set gl,gh,al,ah = (20,22,19,24) %}{% set v = states(''sensor.wohnzimmer_temperatur'') | float(none) %}{% if v is not none and v > gh + 0.05 %}{% set ns.l = ns.l + [''Wohnzimmer '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v > ah %}{% set ns.r = true %}{% endif %}{% endif %}{% set gl,gh,al,ah = (17,18,16,20) if is_state(''binary_sensor.nachtklima_schlafzimmer'',''on'') else (20,21,19,23) %}{% set v = states(''sensor.aqara_climate_04_temperature'') | float(none) %}{% if v is not none and v > gh + 0.05 %}{% set ns.l = ns.l + [''Schlafzimmer '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v > ah %}{% set ns.r = true %}{% endif %}{% endif %}{% set gl,gh,al,ah = (16,19,15,21) if is_state(''binary_sensor.nachtklima_schlafzimmer'',''on'') else (20,21,19,23) %}{% set v = states(''sensor.aqara_climate_01_temperature'') | float(none) %}{% if v is not none and v > gh + 0.05 %}{% set ns.l = ns.l + [''Büro Alex '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v > ah %}{% set ns.r = true %}{% endif %}{% endif %}{% set gl,gh,al,ah = (17,18,16,20) if is_state(''input_boolean.schlafenszeit'',''on'') else (19,20,18,22) %}{% set v = states(''sensor.aqara_climate_03_temperature'') | float(none) %}{% if v is not none and v > gh + 0.05 %}{% set ns.l = ns.l + [''Kinderzimmer '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v > ah %}{% set ns.r = true %}{% endif %}{% endif %}{% set gl,gh,al,ah = (22,24,20,26) %}{% set v = states(''sensor.aqara_climate_02_temperature'') | float(none) %}{% if v is not none and v > gh + 0.05 %}{% set ns.l = ns.l + [''Badezimmer '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v > ah %}{% set ns.r = true %}{% endif %}{% endif %}{{ ns.l | join('' · '') }} °C · lüften'
       icon: mdi:thermometer-high
-      icon_color: amber
-      color: amber
+      icon_color: '{% set ns = namespace(l=[], r=false) %}{% set gl,gh,al,ah = (20,22,19,24) %}{% set v = states(''sensor.wohnzimmer_temperatur'') | float(none) %}{% if v is not none and v > gh + 0.05 %}{% set ns.l = ns.l + [''Wohnzimmer '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v > ah %}{% set ns.r = true %}{% endif %}{% endif %}{% set gl,gh,al,ah = (17,18,16,20) if is_state(''binary_sensor.nachtklima_schlafzimmer'',''on'') else (20,21,19,23) %}{% set v = states(''sensor.aqara_climate_04_temperature'') | float(none) %}{% if v is not none and v > gh + 0.05 %}{% set ns.l = ns.l + [''Schlafzimmer '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v > ah %}{% set ns.r = true %}{% endif %}{% endif %}{% set gl,gh,al,ah = (16,19,15,21) if is_state(''binary_sensor.nachtklima_schlafzimmer'',''on'') else (20,21,19,23) %}{% set v = states(''sensor.aqara_climate_01_temperature'') | float(none) %}{% if v is not none and v > gh + 0.05 %}{% set ns.l = ns.l + [''Büro Alex '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v > ah %}{% set ns.r = true %}{% endif %}{% endif %}{% set gl,gh,al,ah = (17,18,16,20) if is_state(''input_boolean.schlafenszeit'',''on'') else (19,20,18,22) %}{% set v = states(''sensor.aqara_climate_03_temperature'') | float(none) %}{% if v is not none and v > gh + 0.05 %}{% set ns.l = ns.l + [''Kinderzimmer '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v > ah %}{% set ns.r = true %}{% endif %}{% endif %}{% set gl,gh,al,ah = (22,24,20,26) %}{% set v = states(''sensor.aqara_climate_02_temperature'') | float(none) %}{% if v is not none and v > gh + 0.05 %}{% set ns.l = ns.l + [''Badezimmer '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v > ah %}{% set ns.r = true %}{% endif %}{% endif %}{{ ''red'' if ns.r else ''amber'' }}'
+      color: '{% set ns = namespace(l=[], r=false) %}{% set gl,gh,al,ah = (20,22,19,24) %}{% set v = states(''sensor.wohnzimmer_temperatur'') | float(none) %}{% if v is not none and v > gh + 0.05 %}{% set ns.l = ns.l + [''Wohnzimmer '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v > ah %}{% set ns.r = true %}{% endif %}{% endif %}{% set gl,gh,al,ah = (17,18,16,20) if is_state(''binary_sensor.nachtklima_schlafzimmer'',''on'') else (20,21,19,23) %}{% set v = states(''sensor.aqara_climate_04_temperature'') | float(none) %}{% if v is not none and v > gh + 0.05 %}{% set ns.l = ns.l + [''Schlafzimmer '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v > ah %}{% set ns.r = true %}{% endif %}{% endif %}{% set gl,gh,al,ah = (16,19,15,21) if is_state(''binary_sensor.nachtklima_schlafzimmer'',''on'') else (20,21,19,23) %}{% set v = states(''sensor.aqara_climate_01_temperature'') | float(none) %}{% if v is not none and v > gh + 0.05 %}{% set ns.l = ns.l + [''Büro Alex '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v > ah %}{% set ns.r = true %}{% endif %}{% endif %}{% set gl,gh,al,ah = (17,18,16,20) if is_state(''input_boolean.schlafenszeit'',''on'') else (19,20,18,22) %}{% set v = states(''sensor.aqara_climate_03_temperature'') | float(none) %}{% if v is not none and v > gh + 0.05 %}{% set ns.l = ns.l + [''Kinderzimmer '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v > ah %}{% set ns.r = true %}{% endif %}{% endif %}{% set gl,gh,al,ah = (22,24,20,26) %}{% set v = states(''sensor.aqara_climate_02_temperature'') | float(none) %}{% if v is not none and v > gh + 0.05 %}{% set ns.l = ns.l + [''Badezimmer '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v > ah %}{% set ns.r = true %}{% endif %}{% endif %}{{ ''red'' if ns.r else ''amber'' }}'
       grid_options:
         columns: 12
       visibility:
-      - condition: numeric_state
-        entity: sensor.wohnzimmer_temperatur
-        above: 22
+      - condition: or
+        conditions:
+        - condition: numeric_state
+          entity: sensor.wohnzimmer_temperatur
+          above: 22.05
+        - condition: and
+          conditions:
+          - condition: state
+            entity: binary_sensor.nachtklima_schlafzimmer
+            state: 'off'
+          - condition: numeric_state
+            entity: sensor.aqara_climate_04_temperature
+            above: 21.05
+        - condition: and
+          conditions:
+          - condition: state
+            entity: binary_sensor.nachtklima_schlafzimmer
+            state: 'on'
+          - condition: numeric_state
+            entity: sensor.aqara_climate_04_temperature
+            above: 18.05
+        - condition: and
+          conditions:
+          - condition: state
+            entity: binary_sensor.nachtklima_schlafzimmer
+            state: 'off'
+          - condition: numeric_state
+            entity: sensor.aqara_climate_01_temperature
+            above: 21.05
+        - condition: and
+          conditions:
+          - condition: state
+            entity: binary_sensor.nachtklima_schlafzimmer
+            state: 'on'
+          - condition: numeric_state
+            entity: sensor.aqara_climate_01_temperature
+            above: 19.05
+        - condition: and
+          conditions:
+          - condition: state
+            entity: input_boolean.schlafenszeit
+            state: 'off'
+          - condition: numeric_state
+            entity: sensor.aqara_climate_03_temperature
+            above: 20.05
+        - condition: and
+          conditions:
+          - condition: state
+            entity: input_boolean.schlafenszeit
+            state: 'on'
+          - condition: numeric_state
+            entity: sensor.aqara_climate_03_temperature
+            above: 18.05
+        - condition: numeric_state
+          entity: sensor.aqara_climate_02_temperature
+          above: 24.05
       tap_action:
-        action: none
+        action: navigate
+        navigation_path: /lovelace/klima
+      multiline_secondary: true
     - type: custom:mushroom-template-card
-      primary: Wohnzimmer zu kühl
-      secondary: '{{ (states(''sensor.wohnzimmer_temperatur'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel 20–22 · heizen'
+      primary: '{% set ns = namespace(l=[], r=false) %}{% set gl,gh,al,ah = (20,22,19,24) %}{% set v = states(''sensor.wohnzimmer_temperatur'') | float(none) %}{% if v is not none and v < gl - 0.05 %}{% set ns.l = ns.l + [''Wohnzimmer '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v < al %}{% set ns.r = true %}{% endif %}{% endif %}{% set gl,gh,al,ah = (17,18,16,20) if is_state(''binary_sensor.nachtklima_schlafzimmer'',''on'') else (20,21,19,23) %}{% set v = states(''sensor.aqara_climate_04_temperature'') | float(none) %}{% if v is not none and v < gl - 0.05 %}{% set ns.l = ns.l + [''Schlafzimmer '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v < al %}{% set ns.r = true %}{% endif %}{% endif %}{% set gl,gh,al,ah = (16,19,15,21) if is_state(''binary_sensor.nachtklima_schlafzimmer'',''on'') else (20,21,19,23) %}{% set v = states(''sensor.aqara_climate_01_temperature'') | float(none) %}{% if v is not none and v < gl - 0.05 %}{% set ns.l = ns.l + [''Büro Alex '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v < al %}{% set ns.r = true %}{% endif %}{% endif %}{% set gl,gh,al,ah = (17,18,16,20) if is_state(''input_boolean.schlafenszeit'',''on'') else (19,20,18,22) %}{% set v = states(''sensor.aqara_climate_03_temperature'') | float(none) %}{% if v is not none and v < gl - 0.05 %}{% set ns.l = ns.l + [''Kinderzimmer '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v < al %}{% set ns.r = true %}{% endif %}{% endif %}{% set gl,gh,al,ah = (22,24,20,26) %}{% set v = states(''sensor.aqara_climate_02_temperature'') | float(none) %}{% if v is not none and v < gl - 0.05 %}{% set ns.l = ns.l + [''Badezimmer '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v < al %}{% set ns.r = true %}{% endif %}{% endif %}{{ ns.l[0].rsplit('' '',1)[0] if ns.l | length == 1 else (ns.l | length) ~ '' Räume'' }} zu kühl'
+      secondary: '{% set ns = namespace(l=[], r=false) %}{% set gl,gh,al,ah = (20,22,19,24) %}{% set v = states(''sensor.wohnzimmer_temperatur'') | float(none) %}{% if v is not none and v < gl - 0.05 %}{% set ns.l = ns.l + [''Wohnzimmer '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v < al %}{% set ns.r = true %}{% endif %}{% endif %}{% set gl,gh,al,ah = (17,18,16,20) if is_state(''binary_sensor.nachtklima_schlafzimmer'',''on'') else (20,21,19,23) %}{% set v = states(''sensor.aqara_climate_04_temperature'') | float(none) %}{% if v is not none and v < gl - 0.05 %}{% set ns.l = ns.l + [''Schlafzimmer '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v < al %}{% set ns.r = true %}{% endif %}{% endif %}{% set gl,gh,al,ah = (16,19,15,21) if is_state(''binary_sensor.nachtklima_schlafzimmer'',''on'') else (20,21,19,23) %}{% set v = states(''sensor.aqara_climate_01_temperature'') | float(none) %}{% if v is not none and v < gl - 0.05 %}{% set ns.l = ns.l + [''Büro Alex '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v < al %}{% set ns.r = true %}{% endif %}{% endif %}{% set gl,gh,al,ah = (17,18,16,20) if is_state(''input_boolean.schlafenszeit'',''on'') else (19,20,18,22) %}{% set v = states(''sensor.aqara_climate_03_temperature'') | float(none) %}{% if v is not none and v < gl - 0.05 %}{% set ns.l = ns.l + [''Kinderzimmer '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v < al %}{% set ns.r = true %}{% endif %}{% endif %}{% set gl,gh,al,ah = (22,24,20,26) %}{% set v = states(''sensor.aqara_climate_02_temperature'') | float(none) %}{% if v is not none and v < gl - 0.05 %}{% set ns.l = ns.l + [''Badezimmer '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v < al %}{% set ns.r = true %}{% endif %}{% endif %}{{ ns.l | join('' · '') }} °C · heizen'
       icon: mdi:thermometer-low
-      icon_color: amber
-      color: amber
+      icon_color: '{% set ns = namespace(l=[], r=false) %}{% set gl,gh,al,ah = (20,22,19,24) %}{% set v = states(''sensor.wohnzimmer_temperatur'') | float(none) %}{% if v is not none and v < gl - 0.05 %}{% set ns.l = ns.l + [''Wohnzimmer '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v < al %}{% set ns.r = true %}{% endif %}{% endif %}{% set gl,gh,al,ah = (17,18,16,20) if is_state(''binary_sensor.nachtklima_schlafzimmer'',''on'') else (20,21,19,23) %}{% set v = states(''sensor.aqara_climate_04_temperature'') | float(none) %}{% if v is not none and v < gl - 0.05 %}{% set ns.l = ns.l + [''Schlafzimmer '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v < al %}{% set ns.r = true %}{% endif %}{% endif %}{% set gl,gh,al,ah = (16,19,15,21) if is_state(''binary_sensor.nachtklima_schlafzimmer'',''on'') else (20,21,19,23) %}{% set v = states(''sensor.aqara_climate_01_temperature'') | float(none) %}{% if v is not none and v < gl - 0.05 %}{% set ns.l = ns.l + [''Büro Alex '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v < al %}{% set ns.r = true %}{% endif %}{% endif %}{% set gl,gh,al,ah = (17,18,16,20) if is_state(''input_boolean.schlafenszeit'',''on'') else (19,20,18,22) %}{% set v = states(''sensor.aqara_climate_03_temperature'') | float(none) %}{% if v is not none and v < gl - 0.05 %}{% set ns.l = ns.l + [''Kinderzimmer '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v < al %}{% set ns.r = true %}{% endif %}{% endif %}{% set gl,gh,al,ah = (22,24,20,26) %}{% set v = states(''sensor.aqara_climate_02_temperature'') | float(none) %}{% if v is not none and v < gl - 0.05 %}{% set ns.l = ns.l + [''Badezimmer '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v < al %}{% set ns.r = true %}{% endif %}{% endif %}{{ ''red'' if ns.r else ''amber'' }}'
+      color: '{% set ns = namespace(l=[], r=false) %}{% set gl,gh,al,ah = (20,22,19,24) %}{% set v = states(''sensor.wohnzimmer_temperatur'') | float(none) %}{% if v is not none and v < gl - 0.05 %}{% set ns.l = ns.l + [''Wohnzimmer '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v < al %}{% set ns.r = true %}{% endif %}{% endif %}{% set gl,gh,al,ah = (17,18,16,20) if is_state(''binary_sensor.nachtklima_schlafzimmer'',''on'') else (20,21,19,23) %}{% set v = states(''sensor.aqara_climate_04_temperature'') | float(none) %}{% if v is not none and v < gl - 0.05 %}{% set ns.l = ns.l + [''Schlafzimmer '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v < al %}{% set ns.r = true %}{% endif %}{% endif %}{% set gl,gh,al,ah = (16,19,15,21) if is_state(''binary_sensor.nachtklima_schlafzimmer'',''on'') else (20,21,19,23) %}{% set v = states(''sensor.aqara_climate_01_temperature'') | float(none) %}{% if v is not none and v < gl - 0.05 %}{% set ns.l = ns.l + [''Büro Alex '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v < al %}{% set ns.r = true %}{% endif %}{% endif %}{% set gl,gh,al,ah = (17,18,16,20) if is_state(''input_boolean.schlafenszeit'',''on'') else (19,20,18,22) %}{% set v = states(''sensor.aqara_climate_03_temperature'') | float(none) %}{% if v is not none and v < gl - 0.05 %}{% set ns.l = ns.l + [''Kinderzimmer '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v < al %}{% set ns.r = true %}{% endif %}{% endif %}{% set gl,gh,al,ah = (22,24,20,26) %}{% set v = states(''sensor.aqara_climate_02_temperature'') | float(none) %}{% if v is not none and v < gl - 0.05 %}{% set ns.l = ns.l + [''Badezimmer '' ~ (v | round(1) | string | replace(''.'','',''))] %}{% if v < al %}{% set ns.r = true %}{% endif %}{% endif %}{{ ''red'' if ns.r else ''amber'' }}'
       grid_options:
         columns: 12
       visibility:
-      - condition: numeric_state
-        entity: sensor.wohnzimmer_temperatur
-        below: 20
+      - condition: or
+        conditions:
+        - condition: numeric_state
+          entity: sensor.wohnzimmer_temperatur
+          below: 19.95
+        - condition: and
+          conditions:
+          - condition: state
+            entity: binary_sensor.nachtklima_schlafzimmer
+            state: 'off'
+          - condition: numeric_state
+            entity: sensor.aqara_climate_04_temperature
+            below: 19.95
+        - condition: and
+          conditions:
+          - condition: state
+            entity: binary_sensor.nachtklima_schlafzimmer
+            state: 'on'
+          - condition: numeric_state
+            entity: sensor.aqara_climate_04_temperature
+            below: 16.95
+        - condition: and
+          conditions:
+          - condition: state
+            entity: binary_sensor.nachtklima_schlafzimmer
+            state: 'off'
+          - condition: numeric_state
+            entity: sensor.aqara_climate_01_temperature
+            below: 19.95
+        - condition: and
+          conditions:
+          - condition: state
+            entity: binary_sensor.nachtklima_schlafzimmer
+            state: 'on'
+          - condition: numeric_state
+            entity: sensor.aqara_climate_01_temperature
+            below: 15.95
+        - condition: and
+          conditions:
+          - condition: state
+            entity: input_boolean.schlafenszeit
+            state: 'off'
+          - condition: numeric_state
+            entity: sensor.aqara_climate_03_temperature
+            below: 18.95
+        - condition: and
+          conditions:
+          - condition: state
+            entity: input_boolean.schlafenszeit
+            state: 'on'
+          - condition: numeric_state
+            entity: sensor.aqara_climate_03_temperature
+            below: 16.95
+        - condition: numeric_state
+          entity: sensor.aqara_climate_02_temperature
+          below: 21.95
       tap_action:
-        action: none
+        action: navigate
+        navigation_path: /lovelace/klima
+      multiline_secondary: true
     - type: custom:mushroom-template-card
-      primary: Wohnzimmer zu feucht
-      secondary: '{{ (states(''sensor.wohnzimmer_luftfeuchtigkeit'') | float(0) | round(0)) | string | replace(''.'','','') }} % · Schimmelrisiko ab 60 · lüften'
+      primary: '{% set ns = namespace(l=[], r=false) %}{% set v = states(''sensor.wohnzimmer_luftfeuchtigkeit'') | float(none) %}{% if v is not none and v > 60 %}{% set ns.l = ns.l + [''Wohnzimmer '' ~ (v | round(0) | int | string)] %}{% if v > 70 %}{% set ns.r = true %}{% endif %}{% endif %}{% set v = states(''sensor.aqara_climate_04_humidity'') | float(none) %}{% if v is not none and v > 60 %}{% set ns.l = ns.l + [''Schlafzimmer '' ~ (v | round(0) | int | string)] %}{% if v > 70 %}{% set ns.r = true %}{% endif %}{% endif %}{% set v = states(''sensor.aqara_climate_01_humidity'') | float(none) %}{% if v is not none and v > 60 %}{% set ns.l = ns.l + [''Büro Alex '' ~ (v | round(0) | int | string)] %}{% if v > 70 %}{% set ns.r = true %}{% endif %}{% endif %}{% set v = states(''sensor.aqara_climate_03_humidity'') | float(none) %}{% if v is not none and v > 60 %}{% set ns.l = ns.l + [''Kinderzimmer '' ~ (v | round(0) | int | string)] %}{% if v > 70 %}{% set ns.r = true %}{% endif %}{% endif %}{% set v = states(''sensor.aqara_climate_02_humidity'') | float(none) %}{% if v is not none and v > 60 %}{% set ns.l = ns.l + [''Badezimmer '' ~ (v | round(0) | int | string)] %}{% if v > 70 %}{% set ns.r = true %}{% endif %}{% endif %}{{ ns.l[0].rsplit('' '',1)[0] if ns.l | length == 1 else (ns.l | length) ~ '' Räume'' }} zu feucht'
+      secondary: '{% set ns = namespace(l=[], r=false) %}{% set v = states(''sensor.wohnzimmer_luftfeuchtigkeit'') | float(none) %}{% if v is not none and v > 60 %}{% set ns.l = ns.l + [''Wohnzimmer '' ~ (v | round(0) | int | string)] %}{% if v > 70 %}{% set ns.r = true %}{% endif %}{% endif %}{% set v = states(''sensor.aqara_climate_04_humidity'') | float(none) %}{% if v is not none and v > 60 %}{% set ns.l = ns.l + [''Schlafzimmer '' ~ (v | round(0) | int | string)] %}{% if v > 70 %}{% set ns.r = true %}{% endif %}{% endif %}{% set v = states(''sensor.aqara_climate_01_humidity'') | float(none) %}{% if v is not none and v > 60 %}{% set ns.l = ns.l + [''Büro Alex '' ~ (v | round(0) | int | string)] %}{% if v > 70 %}{% set ns.r = true %}{% endif %}{% endif %}{% set v = states(''sensor.aqara_climate_03_humidity'') | float(none) %}{% if v is not none and v > 60 %}{% set ns.l = ns.l + [''Kinderzimmer '' ~ (v | round(0) | int | string)] %}{% if v > 70 %}{% set ns.r = true %}{% endif %}{% endif %}{% set v = states(''sensor.aqara_climate_02_humidity'') | float(none) %}{% if v is not none and v > 60 %}{% set ns.l = ns.l + [''Badezimmer '' ~ (v | round(0) | int | string)] %}{% if v > 70 %}{% set ns.r = true %}{% endif %}{% endif %}{{ ns.l | join('' · '') }} % · lüften, Schimmelrisiko'
       icon: mdi:water-alert-outline
-      icon_color: amber
-      color: amber
+      icon_color: '{% set ns = namespace(l=[], r=false) %}{% set v = states(''sensor.wohnzimmer_luftfeuchtigkeit'') | float(none) %}{% if v is not none and v > 60 %}{% set ns.l = ns.l + [''Wohnzimmer '' ~ (v | round(0) | int | string)] %}{% if v > 70 %}{% set ns.r = true %}{% endif %}{% endif %}{% set v = states(''sensor.aqara_climate_04_humidity'') | float(none) %}{% if v is not none and v > 60 %}{% set ns.l = ns.l + [''Schlafzimmer '' ~ (v | round(0) | int | string)] %}{% if v > 70 %}{% set ns.r = true %}{% endif %}{% endif %}{% set v = states(''sensor.aqara_climate_01_humidity'') | float(none) %}{% if v is not none and v > 60 %}{% set ns.l = ns.l + [''Büro Alex '' ~ (v | round(0) | int | string)] %}{% if v > 70 %}{% set ns.r = true %}{% endif %}{% endif %}{% set v = states(''sensor.aqara_climate_03_humidity'') | float(none) %}{% if v is not none and v > 60 %}{% set ns.l = ns.l + [''Kinderzimmer '' ~ (v | round(0) | int | string)] %}{% if v > 70 %}{% set ns.r = true %}{% endif %}{% endif %}{% set v = states(''sensor.aqara_climate_02_humidity'') | float(none) %}{% if v is not none and v > 60 %}{% set ns.l = ns.l + [''Badezimmer '' ~ (v | round(0) | int | string)] %}{% if v > 70 %}{% set ns.r = true %}{% endif %}{% endif %}{{ ''red'' if ns.r else ''amber'' }}'
+      color: '{% set ns = namespace(l=[], r=false) %}{% set v = states(''sensor.wohnzimmer_luftfeuchtigkeit'') | float(none) %}{% if v is not none and v > 60 %}{% set ns.l = ns.l + [''Wohnzimmer '' ~ (v | round(0) | int | string)] %}{% if v > 70 %}{% set ns.r = true %}{% endif %}{% endif %}{% set v = states(''sensor.aqara_climate_04_humidity'') | float(none) %}{% if v is not none and v > 60 %}{% set ns.l = ns.l + [''Schlafzimmer '' ~ (v | round(0) | int | string)] %}{% if v > 70 %}{% set ns.r = true %}{% endif %}{% endif %}{% set v = states(''sensor.aqara_climate_01_humidity'') | float(none) %}{% if v is not none and v > 60 %}{% set ns.l = ns.l + [''Büro Alex '' ~ (v | round(0) | int | string)] %}{% if v > 70 %}{% set ns.r = true %}{% endif %}{% endif %}{% set v = states(''sensor.aqara_climate_03_humidity'') | float(none) %}{% if v is not none and v > 60 %}{% set ns.l = ns.l + [''Kinderzimmer '' ~ (v | round(0) | int | string)] %}{% if v > 70 %}{% set ns.r = true %}{% endif %}{% endif %}{% set v = states(''sensor.aqara_climate_02_humidity'') | float(none) %}{% if v is not none and v > 60 %}{% set ns.l = ns.l + [''Badezimmer '' ~ (v | round(0) | int | string)] %}{% if v > 70 %}{% set ns.r = true %}{% endif %}{% endif %}{{ ''red'' if ns.r else ''amber'' }}'
       grid_options:
         columns: 12
       visibility:
-      - condition: numeric_state
-        entity: sensor.wohnzimmer_luftfeuchtigkeit
-        above: 60
+      - condition: or
+        conditions:
+        - condition: numeric_state
+          entity: sensor.wohnzimmer_luftfeuchtigkeit
+          above: 60
+        - condition: numeric_state
+          entity: sensor.aqara_climate_04_humidity
+          above: 60
+        - condition: numeric_state
+          entity: sensor.aqara_climate_01_humidity
+          above: 60
+        - condition: numeric_state
+          entity: sensor.aqara_climate_03_humidity
+          above: 60
+        - condition: numeric_state
+          entity: sensor.aqara_climate_02_humidity
+          above: 60
       tap_action:
-        action: none
+        action: navigate
+        navigation_path: /lovelace/klima
+      multiline_secondary: true
     - type: custom:mushroom-template-card
-      primary: Wohnzimmer zu trocken
-      secondary: '{{ (states(''sensor.wohnzimmer_luftfeuchtigkeit'') | float(0) | round(0)) | string | replace(''.'','','') }} % · unter 40 · Luftwäscher an'
+      primary: '{% set ns = namespace(l=[], r=false) %}{% set v = states(''sensor.wohnzimmer_luftfeuchtigkeit'') | float(none) %}{% if v is not none and v < 40 %}{% set ns.l = ns.l + [''Wohnzimmer '' ~ (v | round(0) | int | string)] %}{% if v < 30 %}{% set ns.r = true %}{% endif %}{% endif %}{% set v = states(''sensor.aqara_climate_04_humidity'') | float(none) %}{% if v is not none and v < 40 %}{% set ns.l = ns.l + [''Schlafzimmer '' ~ (v | round(0) | int | string)] %}{% if v < 30 %}{% set ns.r = true %}{% endif %}{% endif %}{% set v = states(''sensor.aqara_climate_01_humidity'') | float(none) %}{% if v is not none and v < 40 %}{% set ns.l = ns.l + [''Büro Alex '' ~ (v | round(0) | int | string)] %}{% if v < 30 %}{% set ns.r = true %}{% endif %}{% endif %}{% set v = states(''sensor.aqara_climate_03_humidity'') | float(none) %}{% if v is not none and v < 40 %}{% set ns.l = ns.l + [''Kinderzimmer '' ~ (v | round(0) | int | string)] %}{% if v < 30 %}{% set ns.r = true %}{% endif %}{% endif %}{% set v = states(''sensor.aqara_climate_02_humidity'') | float(none) %}{% if v is not none and v < 40 %}{% set ns.l = ns.l + [''Badezimmer '' ~ (v | round(0) | int | string)] %}{% if v < 30 %}{% set ns.r = true %}{% endif %}{% endif %}{{ ns.l[0].rsplit('' '',1)[0] if ns.l | length == 1 else (ns.l | length) ~ '' Räume'' }} zu trocken'
+      secondary: '{% set ns = namespace(l=[], r=false) %}{% set v = states(''sensor.wohnzimmer_luftfeuchtigkeit'') | float(none) %}{% if v is not none and v < 40 %}{% set ns.l = ns.l + [''Wohnzimmer '' ~ (v | round(0) | int | string)] %}{% if v < 30 %}{% set ns.r = true %}{% endif %}{% endif %}{% set v = states(''sensor.aqara_climate_04_humidity'') | float(none) %}{% if v is not none and v < 40 %}{% set ns.l = ns.l + [''Schlafzimmer '' ~ (v | round(0) | int | string)] %}{% if v < 30 %}{% set ns.r = true %}{% endif %}{% endif %}{% set v = states(''sensor.aqara_climate_01_humidity'') | float(none) %}{% if v is not none and v < 40 %}{% set ns.l = ns.l + [''Büro Alex '' ~ (v | round(0) | int | string)] %}{% if v < 30 %}{% set ns.r = true %}{% endif %}{% endif %}{% set v = states(''sensor.aqara_climate_03_humidity'') | float(none) %}{% if v is not none and v < 40 %}{% set ns.l = ns.l + [''Kinderzimmer '' ~ (v | round(0) | int | string)] %}{% if v < 30 %}{% set ns.r = true %}{% endif %}{% endif %}{% set v = states(''sensor.aqara_climate_02_humidity'') | float(none) %}{% if v is not none and v < 40 %}{% set ns.l = ns.l + [''Badezimmer '' ~ (v | round(0) | int | string)] %}{% if v < 30 %}{% set ns.r = true %}{% endif %}{% endif %}{{ ns.l | join('' · '') }} % · Luftwäscher an'
       icon: mdi:water-off-outline
-      icon_color: amber
-      color: amber
+      icon_color: '{% set ns = namespace(l=[], r=false) %}{% set v = states(''sensor.wohnzimmer_luftfeuchtigkeit'') | float(none) %}{% if v is not none and v < 40 %}{% set ns.l = ns.l + [''Wohnzimmer '' ~ (v | round(0) | int | string)] %}{% if v < 30 %}{% set ns.r = true %}{% endif %}{% endif %}{% set v = states(''sensor.aqara_climate_04_humidity'') | float(none) %}{% if v is not none and v < 40 %}{% set ns.l = ns.l + [''Schlafzimmer '' ~ (v | round(0) | int | string)] %}{% if v < 30 %}{% set ns.r = true %}{% endif %}{% endif %}{% set v = states(''sensor.aqara_climate_01_humidity'') | float(none) %}{% if v is not none and v < 40 %}{% set ns.l = ns.l + [''Büro Alex '' ~ (v | round(0) | int | string)] %}{% if v < 30 %}{% set ns.r = true %}{% endif %}{% endif %}{% set v = states(''sensor.aqara_climate_03_humidity'') | float(none) %}{% if v is not none and v < 40 %}{% set ns.l = ns.l + [''Kinderzimmer '' ~ (v | round(0) | int | string)] %}{% if v < 30 %}{% set ns.r = true %}{% endif %}{% endif %}{% set v = states(''sensor.aqara_climate_02_humidity'') | float(none) %}{% if v is not none and v < 40 %}{% set ns.l = ns.l + [''Badezimmer '' ~ (v | round(0) | int | string)] %}{% if v < 30 %}{% set ns.r = true %}{% endif %}{% endif %}{{ ''red'' if ns.r else ''amber'' }}'
+      color: '{% set ns = namespace(l=[], r=false) %}{% set v = states(''sensor.wohnzimmer_luftfeuchtigkeit'') | float(none) %}{% if v is not none and v < 40 %}{% set ns.l = ns.l + [''Wohnzimmer '' ~ (v | round(0) | int | string)] %}{% if v < 30 %}{% set ns.r = true %}{% endif %}{% endif %}{% set v = states(''sensor.aqara_climate_04_humidity'') | float(none) %}{% if v is not none and v < 40 %}{% set ns.l = ns.l + [''Schlafzimmer '' ~ (v | round(0) | int | string)] %}{% if v < 30 %}{% set ns.r = true %}{% endif %}{% endif %}{% set v = states(''sensor.aqara_climate_01_humidity'') | float(none) %}{% if v is not none and v < 40 %}{% set ns.l = ns.l + [''Büro Alex '' ~ (v | round(0) | int | string)] %}{% if v < 30 %}{% set ns.r = true %}{% endif %}{% endif %}{% set v = states(''sensor.aqara_climate_03_humidity'') | float(none) %}{% if v is not none and v < 40 %}{% set ns.l = ns.l + [''Kinderzimmer '' ~ (v | round(0) | int | string)] %}{% if v < 30 %}{% set ns.r = true %}{% endif %}{% endif %}{% set v = states(''sensor.aqara_climate_02_humidity'') | float(none) %}{% if v is not none and v < 40 %}{% set ns.l = ns.l + [''Badezimmer '' ~ (v | round(0) | int | string)] %}{% if v < 30 %}{% set ns.r = true %}{% endif %}{% endif %}{{ ''red'' if ns.r else ''amber'' }}'
       grid_options:
         columns: 12
       visibility:
-      - condition: numeric_state
-        entity: sensor.wohnzimmer_luftfeuchtigkeit
-        below: 40
-      tap_action:
-        action: none
-    - type: custom:mushroom-template-card
-      primary: Schlafzimmer zu warm
-      secondary: '{{ (states(''sensor.aqara_climate_04_temperature'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel 20–21 · kurz lüften'
-      icon: mdi:thermometer-high
-      icon_color: amber
-      color: amber
-      grid_options:
-        columns: 12
-      visibility:
-      - condition: and
+      - condition: or
         conditions:
-        - condition: state
-          entity: binary_sensor.nachtklima_schlafzimmer
-          state: 'off'
         - condition: numeric_state
-          entity: sensor.aqara_climate_04_temperature
-          above: 21
-      tap_action:
-        action: none
-    - type: custom:mushroom-template-card
-      primary: Schlafzimmer zu kühl
-      secondary: '{{ (states(''sensor.aqara_climate_04_temperature'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel 20–21 · heizen'
-      icon: mdi:thermometer-low
-      icon_color: amber
-      color: amber
-      grid_options:
-        columns: 12
-      visibility:
-      - condition: and
-        conditions:
-        - condition: state
-          entity: binary_sensor.nachtklima_schlafzimmer
-          state: 'off'
+          entity: sensor.wohnzimmer_luftfeuchtigkeit
+          below: 40
         - condition: numeric_state
-          entity: sensor.aqara_climate_04_temperature
-          below: 20
-      tap_action:
-        action: none
-    - type: custom:mushroom-template-card
-      primary: Schlafzimmer zu warm
-      secondary: '{{ (states(''sensor.aqara_climate_04_temperature'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel nachts 17–18 · kurz lüften'
-      icon: mdi:thermometer-high
-      icon_color: red
-      color: red
-      grid_options:
-        columns: 12
-      visibility:
-      - condition: and
-        conditions:
-        - condition: state
-          entity: binary_sensor.nachtklima_schlafzimmer
-          state: 'on'
+          entity: sensor.aqara_climate_04_humidity
+          below: 40
         - condition: numeric_state
-          entity: sensor.aqara_climate_04_temperature
-          above: 18
-      tap_action:
-        action: none
-    - type: custom:mushroom-template-card
-      primary: Schlafzimmer zu kühl
-      secondary: '{{ (states(''sensor.aqara_climate_04_temperature'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel nachts 17–18 · heizen'
-      icon: mdi:thermometer-low
-      icon_color: amber
-      color: amber
-      grid_options:
-        columns: 12
-      visibility:
-      - condition: and
-        conditions:
-        - condition: state
-          entity: binary_sensor.nachtklima_schlafzimmer
-          state: 'on'
+          entity: sensor.aqara_climate_01_humidity
+          below: 40
         - condition: numeric_state
-          entity: sensor.aqara_climate_04_temperature
-          below: 17
-      tap_action:
-        action: none
-    - type: custom:mushroom-template-card
-      primary: Schlafzimmer zu feucht
-      secondary: '{{ (states(''sensor.aqara_climate_04_humidity'') | float(0) | round(0)) | string | replace(''.'','','') }} % · Schimmelrisiko ab 60 · lüften'
-      icon: mdi:water-alert-outline
-      icon_color: amber
-      color: amber
-      grid_options:
-        columns: 12
-      visibility:
-      - condition: numeric_state
-        entity: sensor.aqara_climate_04_humidity
-        above: 60
-      tap_action:
-        action: none
-    - type: custom:mushroom-template-card
-      primary: Schlafzimmer zu trocken
-      secondary: '{{ (states(''sensor.aqara_climate_04_humidity'') | float(0) | round(0)) | string | replace(''.'','','') }} % · unter 40 · Luftwäscher an'
-      icon: mdi:water-off-outline
-      icon_color: amber
-      color: amber
-      grid_options:
-        columns: 12
-      visibility:
-      - condition: numeric_state
-        entity: sensor.aqara_climate_04_humidity
-        below: 40
-      tap_action:
-        action: none
-    - type: custom:mushroom-template-card
-      primary: Büro Alex zu warm
-      secondary: '{{ (states(''sensor.aqara_climate_01_temperature'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel 20–21 · kurz lüften'
-      icon: mdi:thermometer-high
-      icon_color: amber
-      color: amber
-      grid_options:
-        columns: 12
-      visibility:
-      - condition: and
-        conditions:
-        - condition: state
-          entity: binary_sensor.nachtklima_schlafzimmer
-          state: 'off'
+          entity: sensor.aqara_climate_03_humidity
+          below: 40
         - condition: numeric_state
-          entity: sensor.aqara_climate_01_temperature
-          above: 21
+          entity: sensor.aqara_climate_02_humidity
+          below: 40
       tap_action:
-        action: none
-    - type: custom:mushroom-template-card
-      primary: Büro Alex zu kühl
-      secondary: '{{ (states(''sensor.aqara_climate_01_temperature'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel 20–21 · heizen'
-      icon: mdi:thermometer-low
-      icon_color: amber
-      color: amber
-      grid_options:
-        columns: 12
-      visibility:
-      - condition: and
-        conditions:
-        - condition: state
-          entity: binary_sensor.nachtklima_schlafzimmer
-          state: 'off'
-        - condition: numeric_state
-          entity: sensor.aqara_climate_01_temperature
-          below: 20
-      tap_action:
-        action: none
-    - type: custom:mushroom-template-card
-      primary: Büro Alex zu warm
-      secondary: '{{ (states(''sensor.aqara_climate_01_temperature'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel nachts 16–19 · kurz lüften'
-      icon: mdi:thermometer-high
-      icon_color: red
-      color: red
-      grid_options:
-        columns: 12
-      visibility:
-      - condition: and
-        conditions:
-        - condition: state
-          entity: binary_sensor.nachtklima_schlafzimmer
-          state: 'on'
-        - condition: numeric_state
-          entity: sensor.aqara_climate_01_temperature
-          above: 19
-      tap_action:
-        action: none
-    - type: custom:mushroom-template-card
-      primary: Büro Alex zu kühl
-      secondary: '{{ (states(''sensor.aqara_climate_01_temperature'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel nachts 16–19 · heizen'
-      icon: mdi:thermometer-low
-      icon_color: amber
-      color: amber
-      grid_options:
-        columns: 12
-      visibility:
-      - condition: and
-        conditions:
-        - condition: state
-          entity: binary_sensor.nachtklima_schlafzimmer
-          state: 'on'
-        - condition: numeric_state
-          entity: sensor.aqara_climate_01_temperature
-          below: 16
-      tap_action:
-        action: none
-    - type: custom:mushroom-template-card
-      primary: Büro Alex zu feucht
-      secondary: '{{ (states(''sensor.aqara_climate_01_humidity'') | float(0) | round(0)) | string | replace(''.'','','') }} % · Schimmelrisiko ab 60 · lüften'
-      icon: mdi:water-alert-outline
-      icon_color: amber
-      color: amber
-      grid_options:
-        columns: 12
-      visibility:
-      - condition: numeric_state
-        entity: sensor.aqara_climate_01_humidity
-        above: 60
-      tap_action:
-        action: none
-    - type: custom:mushroom-template-card
-      primary: Büro Alex zu trocken
-      secondary: '{{ (states(''sensor.aqara_climate_01_humidity'') | float(0) | round(0)) | string | replace(''.'','','') }} % · unter 40 · Luftwäscher an'
-      icon: mdi:water-off-outline
-      icon_color: amber
-      color: amber
-      grid_options:
-        columns: 12
-      visibility:
-      - condition: numeric_state
-        entity: sensor.aqara_climate_01_humidity
-        below: 40
-      tap_action:
-        action: none
-    - type: custom:mushroom-template-card
-      primary: Kinderzimmer zu warm
-      secondary: '{{ (states(''sensor.aqara_climate_03_temperature'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel 19–20 · kurz lüften'
-      icon: mdi:thermometer-high
-      icon_color: amber
-      color: amber
-      grid_options:
-        columns: 12
-      visibility:
-      - condition: and
-        conditions:
-        - condition: state
-          entity: input_boolean.schlafenszeit
-          state: 'off'
-        - condition: numeric_state
-          entity: sensor.aqara_climate_03_temperature
-          above: 20
-      tap_action:
-        action: none
-    - type: custom:mushroom-template-card
-      primary: Kinderzimmer zu kühl
-      secondary: '{{ (states(''sensor.aqara_climate_03_temperature'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel 19–20 · heizen'
-      icon: mdi:thermometer-low
-      icon_color: amber
-      color: amber
-      grid_options:
-        columns: 12
-      visibility:
-      - condition: and
-        conditions:
-        - condition: state
-          entity: input_boolean.schlafenszeit
-          state: 'off'
-        - condition: numeric_state
-          entity: sensor.aqara_climate_03_temperature
-          below: 19
-      tap_action:
-        action: none
-    - type: custom:mushroom-template-card
-      primary: Kinderzimmer zu warm
-      secondary: '{{ (states(''sensor.aqara_climate_03_temperature'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel nachts 17–18 · kurz lüften'
-      icon: mdi:thermometer-high
-      icon_color: red
-      color: red
-      grid_options:
-        columns: 12
-      visibility:
-      - condition: and
-        conditions:
-        - condition: state
-          entity: input_boolean.schlafenszeit
-          state: 'on'
-        - condition: numeric_state
-          entity: sensor.aqara_climate_03_temperature
-          above: 18
-      tap_action:
-        action: none
-    - type: custom:mushroom-template-card
-      primary: Kinderzimmer zu kühl
-      secondary: '{{ (states(''sensor.aqara_climate_03_temperature'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel nachts 17–18 · heizen'
-      icon: mdi:thermometer-low
-      icon_color: amber
-      color: amber
-      grid_options:
-        columns: 12
-      visibility:
-      - condition: and
-        conditions:
-        - condition: state
-          entity: input_boolean.schlafenszeit
-          state: 'on'
-        - condition: numeric_state
-          entity: sensor.aqara_climate_03_temperature
-          below: 17
-      tap_action:
-        action: none
-    - type: custom:mushroom-template-card
-      primary: Kinderzimmer zu feucht
-      secondary: '{{ (states(''sensor.aqara_climate_03_humidity'') | float(0) | round(0)) | string | replace(''.'','','') }} % · Schimmelrisiko ab 60 · lüften'
-      icon: mdi:water-alert-outline
-      icon_color: amber
-      color: amber
-      grid_options:
-        columns: 12
-      visibility:
-      - condition: numeric_state
-        entity: sensor.aqara_climate_03_humidity
-        above: 60
-      tap_action:
-        action: none
-    - type: custom:mushroom-template-card
-      primary: Kinderzimmer zu trocken
-      secondary: '{{ (states(''sensor.aqara_climate_03_humidity'') | float(0) | round(0)) | string | replace(''.'','','') }} % · unter 40 · Luftwäscher an'
-      icon: mdi:water-off-outline
-      icon_color: amber
-      color: amber
-      grid_options:
-        columns: 12
-      visibility:
-      - condition: numeric_state
-        entity: sensor.aqara_climate_03_humidity
-        below: 40
-      tap_action:
-        action: none
-    - type: custom:mushroom-template-card
-      primary: Badezimmer zu warm
-      secondary: '{{ (states(''sensor.aqara_climate_02_temperature'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel 22–24 · kurz lüften'
-      icon: mdi:thermometer-high
-      icon_color: amber
-      color: amber
-      grid_options:
-        columns: 12
-      visibility:
-      - condition: numeric_state
-        entity: sensor.aqara_climate_02_temperature
-        above: 24
-      tap_action:
-        action: none
-    - type: custom:mushroom-template-card
-      primary: Badezimmer zu kühl
-      secondary: '{{ (states(''sensor.aqara_climate_02_temperature'') | float(0) | round(1)) | string | replace(''.'','','') }} °C · Ziel 22–24 · heizen'
-      icon: mdi:thermometer-low
-      icon_color: amber
-      color: amber
-      grid_options:
-        columns: 12
-      visibility:
-      - condition: numeric_state
-        entity: sensor.aqara_climate_02_temperature
-        below: 22
-      tap_action:
-        action: none
-    - type: custom:mushroom-template-card
-      primary: Badezimmer zu feucht
-      secondary: '{{ (states(''sensor.aqara_climate_02_humidity'') | float(0) | round(0)) | string | replace(''.'','','') }} % · Schimmelrisiko ab 60 · lüften'
-      icon: mdi:water-alert-outline
-      icon_color: amber
-      color: amber
-      grid_options:
-        columns: 12
-      visibility:
-      - condition: numeric_state
-        entity: sensor.aqara_climate_02_humidity
-        above: 60
-      tap_action:
-        action: none
-    - type: custom:mushroom-template-card
-      primary: Badezimmer zu trocken
-      secondary: '{{ (states(''sensor.aqara_climate_02_humidity'') | float(0) | round(0)) | string | replace(''.'','','') }} % · unter 40 · Luftwäscher an'
-      icon: mdi:water-off-outline
-      icon_color: amber
-      color: amber
-      grid_options:
-        columns: 12
-      visibility:
-      - condition: numeric_state
-        entity: sensor.aqara_climate_02_humidity
-        below: 40
-      tap_action:
-        action: none
+        action: navigate
+        navigation_path: /lovelace/klima
+      multiline_secondary: true
     - type: custom:mushroom-template-card
       primary: Feinstaub hoch
       secondary: '{{ (states(''sensor.pm2_5_gesamt'') | float(0) | round(0)) | string | replace(''.'','','') }} µg/m³ · WHO 15 · Reiniger max, Fenster zu'
@@ -952,194 +726,158 @@ views:
           below: 2000
       - condition: and
         conditions:
-        - condition: numeric_state
-          entity: sensor.wohnzimmer_temperatur
-          above: 22
-      - condition: and
-        conditions:
-        - condition: numeric_state
-          entity: sensor.wohnzimmer_temperatur
-          below: 20
-      - condition: and
-        conditions:
-        - condition: numeric_state
-          entity: sensor.wohnzimmer_luftfeuchtigkeit
-          above: 60
-      - condition: and
-        conditions:
-        - condition: numeric_state
-          entity: sensor.wohnzimmer_luftfeuchtigkeit
-          below: 40
-      - condition: and
-        conditions:
-        - condition: and
+        - condition: or
           conditions:
-          - condition: state
-            entity: binary_sensor.nachtklima_schlafzimmer
-            state: 'off'
           - condition: numeric_state
-            entity: sensor.aqara_climate_04_temperature
-            above: 21
+            entity: sensor.wohnzimmer_temperatur
+            above: 22.05
+          - condition: and
+            conditions:
+            - condition: state
+              entity: binary_sensor.nachtklima_schlafzimmer
+              state: 'off'
+            - condition: numeric_state
+              entity: sensor.aqara_climate_04_temperature
+              above: 21.05
+          - condition: and
+            conditions:
+            - condition: state
+              entity: binary_sensor.nachtklima_schlafzimmer
+              state: 'on'
+            - condition: numeric_state
+              entity: sensor.aqara_climate_04_temperature
+              above: 18.05
+          - condition: and
+            conditions:
+            - condition: state
+              entity: binary_sensor.nachtklima_schlafzimmer
+              state: 'off'
+            - condition: numeric_state
+              entity: sensor.aqara_climate_01_temperature
+              above: 21.05
+          - condition: and
+            conditions:
+            - condition: state
+              entity: binary_sensor.nachtklima_schlafzimmer
+              state: 'on'
+            - condition: numeric_state
+              entity: sensor.aqara_climate_01_temperature
+              above: 19.05
+          - condition: and
+            conditions:
+            - condition: state
+              entity: input_boolean.schlafenszeit
+              state: 'off'
+            - condition: numeric_state
+              entity: sensor.aqara_climate_03_temperature
+              above: 20.05
+          - condition: and
+            conditions:
+            - condition: state
+              entity: input_boolean.schlafenszeit
+              state: 'on'
+            - condition: numeric_state
+              entity: sensor.aqara_climate_03_temperature
+              above: 18.05
+          - condition: numeric_state
+            entity: sensor.aqara_climate_02_temperature
+            above: 24.05
       - condition: and
         conditions:
-        - condition: and
+        - condition: or
           conditions:
-          - condition: state
-            entity: binary_sensor.nachtklima_schlafzimmer
-            state: 'off'
           - condition: numeric_state
-            entity: sensor.aqara_climate_04_temperature
-            below: 20
+            entity: sensor.wohnzimmer_temperatur
+            below: 19.95
+          - condition: and
+            conditions:
+            - condition: state
+              entity: binary_sensor.nachtklima_schlafzimmer
+              state: 'off'
+            - condition: numeric_state
+              entity: sensor.aqara_climate_04_temperature
+              below: 19.95
+          - condition: and
+            conditions:
+            - condition: state
+              entity: binary_sensor.nachtklima_schlafzimmer
+              state: 'on'
+            - condition: numeric_state
+              entity: sensor.aqara_climate_04_temperature
+              below: 16.95
+          - condition: and
+            conditions:
+            - condition: state
+              entity: binary_sensor.nachtklima_schlafzimmer
+              state: 'off'
+            - condition: numeric_state
+              entity: sensor.aqara_climate_01_temperature
+              below: 19.95
+          - condition: and
+            conditions:
+            - condition: state
+              entity: binary_sensor.nachtklima_schlafzimmer
+              state: 'on'
+            - condition: numeric_state
+              entity: sensor.aqara_climate_01_temperature
+              below: 15.95
+          - condition: and
+            conditions:
+            - condition: state
+              entity: input_boolean.schlafenszeit
+              state: 'off'
+            - condition: numeric_state
+              entity: sensor.aqara_climate_03_temperature
+              below: 18.95
+          - condition: and
+            conditions:
+            - condition: state
+              entity: input_boolean.schlafenszeit
+              state: 'on'
+            - condition: numeric_state
+              entity: sensor.aqara_climate_03_temperature
+              below: 16.95
+          - condition: numeric_state
+            entity: sensor.aqara_climate_02_temperature
+            below: 21.95
       - condition: and
         conditions:
-        - condition: and
+        - condition: or
           conditions:
-          - condition: state
-            entity: binary_sensor.nachtklima_schlafzimmer
-            state: 'on'
           - condition: numeric_state
-            entity: sensor.aqara_climate_04_temperature
-            above: 18
+            entity: sensor.wohnzimmer_luftfeuchtigkeit
+            above: 60
+          - condition: numeric_state
+            entity: sensor.aqara_climate_04_humidity
+            above: 60
+          - condition: numeric_state
+            entity: sensor.aqara_climate_01_humidity
+            above: 60
+          - condition: numeric_state
+            entity: sensor.aqara_climate_03_humidity
+            above: 60
+          - condition: numeric_state
+            entity: sensor.aqara_climate_02_humidity
+            above: 60
       - condition: and
         conditions:
-        - condition: and
+        - condition: or
           conditions:
-          - condition: state
-            entity: binary_sensor.nachtklima_schlafzimmer
-            state: 'on'
           - condition: numeric_state
-            entity: sensor.aqara_climate_04_temperature
-            below: 17
-      - condition: and
-        conditions:
-        - condition: numeric_state
-          entity: sensor.aqara_climate_04_humidity
-          above: 60
-      - condition: and
-        conditions:
-        - condition: numeric_state
-          entity: sensor.aqara_climate_04_humidity
-          below: 40
-      - condition: and
-        conditions:
-        - condition: and
-          conditions:
-          - condition: state
-            entity: binary_sensor.nachtklima_schlafzimmer
-            state: 'off'
+            entity: sensor.wohnzimmer_luftfeuchtigkeit
+            below: 40
           - condition: numeric_state
-            entity: sensor.aqara_climate_01_temperature
-            above: 21
-      - condition: and
-        conditions:
-        - condition: and
-          conditions:
-          - condition: state
-            entity: binary_sensor.nachtklima_schlafzimmer
-            state: 'off'
+            entity: sensor.aqara_climate_04_humidity
+            below: 40
           - condition: numeric_state
-            entity: sensor.aqara_climate_01_temperature
-            below: 20
-      - condition: and
-        conditions:
-        - condition: and
-          conditions:
-          - condition: state
-            entity: binary_sensor.nachtklima_schlafzimmer
-            state: 'on'
+            entity: sensor.aqara_climate_01_humidity
+            below: 40
           - condition: numeric_state
-            entity: sensor.aqara_climate_01_temperature
-            above: 19
-      - condition: and
-        conditions:
-        - condition: and
-          conditions:
-          - condition: state
-            entity: binary_sensor.nachtklima_schlafzimmer
-            state: 'on'
+            entity: sensor.aqara_climate_03_humidity
+            below: 40
           - condition: numeric_state
-            entity: sensor.aqara_climate_01_temperature
-            below: 16
-      - condition: and
-        conditions:
-        - condition: numeric_state
-          entity: sensor.aqara_climate_01_humidity
-          above: 60
-      - condition: and
-        conditions:
-        - condition: numeric_state
-          entity: sensor.aqara_climate_01_humidity
-          below: 40
-      - condition: and
-        conditions:
-        - condition: and
-          conditions:
-          - condition: state
-            entity: input_boolean.schlafenszeit
-            state: 'off'
-          - condition: numeric_state
-            entity: sensor.aqara_climate_03_temperature
-            above: 20
-      - condition: and
-        conditions:
-        - condition: and
-          conditions:
-          - condition: state
-            entity: input_boolean.schlafenszeit
-            state: 'off'
-          - condition: numeric_state
-            entity: sensor.aqara_climate_03_temperature
-            below: 19
-      - condition: and
-        conditions:
-        - condition: and
-          conditions:
-          - condition: state
-            entity: input_boolean.schlafenszeit
-            state: 'on'
-          - condition: numeric_state
-            entity: sensor.aqara_climate_03_temperature
-            above: 18
-      - condition: and
-        conditions:
-        - condition: and
-          conditions:
-          - condition: state
-            entity: input_boolean.schlafenszeit
-            state: 'on'
-          - condition: numeric_state
-            entity: sensor.aqara_climate_03_temperature
-            below: 17
-      - condition: and
-        conditions:
-        - condition: numeric_state
-          entity: sensor.aqara_climate_03_humidity
-          above: 60
-      - condition: and
-        conditions:
-        - condition: numeric_state
-          entity: sensor.aqara_climate_03_humidity
-          below: 40
-      - condition: and
-        conditions:
-        - condition: numeric_state
-          entity: sensor.aqara_climate_02_temperature
-          above: 24
-      - condition: and
-        conditions:
-        - condition: numeric_state
-          entity: sensor.aqara_climate_02_temperature
-          below: 22
-      - condition: and
-        conditions:
-        - condition: numeric_state
-          entity: sensor.aqara_climate_02_humidity
-          above: 60
-      - condition: and
-        conditions:
-        - condition: numeric_state
-          entity: sensor.aqara_climate_02_humidity
-          below: 40
+            entity: sensor.aqara_climate_02_humidity
+            below: 40
       - condition: and
         conditions:
         - condition: numeric_state

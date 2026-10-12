@@ -44,7 +44,7 @@ value per area; every area tile opens a subview with the details (back arrow ret
 |---|---|---|
 | Badges | people, outside temperature, clothing; lights, open door/windows, CO2, heating, laundry only when relevant | none |
 | Zu erledigen | one row per due item (Robbi parts, filters, batteries from `sensor.batterien_niedrig`, waste, leak); tap opens `todo.wartung` | To-do panel |
-| Empfehlungen | one row per room and problem, only while something is off (UBA/WHO bands, `TBAND` below) | Klima |
+| Empfehlungen | one row per problem listing the affected rooms, only while something is off (UBA/WHO bands, `TBAND` below); red once a room leaves its amber band | Klima |
 | Läuft gerade | playing media players with inline controls, hidden when nothing plays | none |
 | Bereiche | Licht, Klima, Türen & Fenster, Energie, Wetter, Rollos, Haushalt, Prusa (only when on) | one subview each |
 
