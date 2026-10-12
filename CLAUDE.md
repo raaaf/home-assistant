@@ -621,8 +621,8 @@ The recorder is configured to:
 | Service | Recipients |
 |---------|------------|
 | `notify.family` | Rafael + Alex (mobile) |
-| `notify.rafael` | Rafael (MacBook + iPhone) |
-| `notify.alex` | Alex (MacBook + iPhone) |
+| `notify.rafael` | Rafael (nur iPhone; MacBooks bekommen nichts, sonst kam jeder Push doppelt) |
+| `notify.alex` | Alex (nur iPhone) |
 | `notify.critical_alerts` | Both (mobile push) |
 | `notify.admin_only` | Rafael (mobile push) |
 
@@ -633,6 +633,13 @@ E-Mail-Notifications (SMTP) wurden vollständig entfernt und ersetzt durch:
 - **Persistent Notification** (`persistent_notification.create`) als Erinnerung in der HA-Oberfläche
 
 Jede Persistent Notification hat eine eindeutige `notification_id` (z.B. `robbi_hauptbuerste`, `waschmaschine_fertig`), damit sie nicht doppelt erscheint und manuell weggeklickt werden kann.
+
+### Dringlichkeit
+
+- `critical` nur für echte Notfälle (`script.notify_critical`): Wasserleck, Wohnungstür nicht verriegelt, Tür geöffnet bei Abwesenheit.
+- `time-sensitive` für Türklingel, Wäsche, CO2, Robbi-Fehler, Solarüberschuss, Bedtime-Reminder.
+- Nicht dringende Hinweise laufen über `script.notify_hinweis` (Level `active`). Es hält Pushes zwischen 22:00 und 07:00 zurück; bei einem HA-Neustart gehen sie verloren, die Persistent Notification bleibt (Aufrufer legen sie sofort selbst an).
+- Aufruf fire-and-forget: `script.turn_on` mit `variables: {target, title, message, tag}`.
 
 ---
 
