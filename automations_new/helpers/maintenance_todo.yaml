@@ -42,10 +42,8 @@
         {% if states('sensor.s7_maxv_vacuum_error') not in ['none', 'None', 'unknown', 'unavailable', ''] %}{% set ns.l = ns.l + ['Robbi: Fehler prüfen'] %}{% endif %}
         {% if has_value('sensor.zhimi_vb4_bce4_filter_life_level') and states('sensor.zhimi_vb4_bce4_filter_life_level') | float(100) < 10 %}{% set ns.l = ns.l + ['Luftreiniger: Filter wechseln'] %}{% endif %}
         {% if has_value('sensor.mmgg_wi11_7a1c_filter_left_time_2') and states('sensor.mmgg_wi11_7a1c_filter_left_time_2') | float(99) <= 7 %}{% set ns.l = ns.l + ['Wasserspender: Filter wechseln'] %}{% endif %}
-        {% for s in states.sensor | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', 'battery') %}
-          {% if not (s.entity_id is search('iphone|ipad|macbook|watch')) and s.state | is_number and s.state | float < 15 %}
-            {% set ns.l = ns.l + ['Batterie wechseln: ' ~ (s.name | replace(' Battery', '') | replace(' Batterie', ''))] %}
-          {% endif %}
+        {% for n in state_attr('sensor.batterien_niedrig', 'namen') or [] %}
+          {% set ns.l = ns.l + ['Batterie wechseln: ' ~ n] %}
         {% endfor %}
         {% for e, n in [('sensor.restmuell', 'Restmüll'), ('sensor.bioabfall', 'Biotonne'), ('sensor.altpapier', 'Altpapier'), ('sensor.gelbersack', 'Gelben Sack')] %}
           {% if states(e) in ['Morgen', 'Heute'] %}{% set ns.l = ns.l + [n ~ ' rausstellen'] %}{% endif %}
@@ -73,8 +71,14 @@
           entity_id: todo.wartung
         data:
           item: "{{ repeat.item }}"
+  - variables:
+      # Right after a restart the battery sensor may not have rendered yet: keep battery items then
+      battery_known: "{{ state_attr('sensor.batterien_niedrig', 'namen') is list }}"
+      stale: >-
+        {% set m = managed | reject('in', wanted) | list %}
+        {{ m if battery_known else m | reject('search', '^Batterie wechseln: ') | list }}
   - repeat:
-      for_each: "{{ managed | reject('in', wanted) | list }}"
+      for_each: "{{ stale }}"
       sequence:
       - action: todo.remove_item
         target:
