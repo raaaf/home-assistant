@@ -483,7 +483,8 @@
     outdoor temperature, 14:30 the daily forecast high: below 0 °C 3 h, below 5 °C 2 h, below 10 °C
     1.5 h. A sunny afternoon (forecast cloud cover 35 % or less) drops the outdoor boost. Only rooms
     below the top of their day comfort band are heated; a room below the bottom of its band gets at
-    least 1 h even when it is mild outside. A room without a reading is heated as before.
+    least 1 h even when it is mild outside. A room without a reading is heated with the outdoor
+    boost as before, but gets no mild-weather hour.
     Controls Kinderzimmer, Schlafzimmer, Wohnzimmer.
   triggers:
   - at: "06:30:00"
@@ -515,10 +516,10 @@
         {% if trigger.id == 'morning-boost' %}
           {{ state_attr('weather.fuerth_bayern', 'temperature') | float(5) }}
         {% else %}
-          {{ forecast.temperature | float(5) }}
+          {{ forecast.get('temperature') | float(5) }}
         {% endif %}
       sunny_afternoon: >-
-        {{ trigger.id == 'afternoon-boost' and forecast.cloud_coverage | float(100) <= 35 }}
+        {{ trigger.id == 'afternoon-boost' and forecast.get('cloud_coverage') | float(100) <= 35 }}
       outdoor_duration: >-
         {% set t = temp_source | float %}
         {% if sunny_afternoon %}00:00:00
