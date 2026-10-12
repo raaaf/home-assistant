@@ -31,62 +31,23 @@
         {% else %}
           Niemand zuhause
         {% endif %}
-  - choose:
-    - alias: "Beide sind zuhause"
-      conditions:
-      - condition: template
-        value_template: "{{ rafael_zuhause and alex_zuhause }}"
+  - variables:
+      # Only iPhones; fall back to Rafael when nobody (or unknown state) is home.
+      ziele: >-
+        {{ (['notify.mobile_app_iphone_rafael'] if rafael_zuhause else [])
+           + (['notify.mobile_app_alex_iphone'] if alex_zuhause else [])
+           or ['notify.mobile_app_iphone_rafael'] }}
+  - repeat:
+      for_each: "{{ ziele }}"
       sequence:
-      - action: notify.mobile_app_macbook_pro_rafael
+      - action: "{{ repeat.item }}"
         data:
           title: "Haustür Klingel"
           message: "{{ now().strftime('%A, %H:%M Uhr, %d.%m.%Y') }} - {{ anwesenheits_status }}"
           data:
             push:
-              interruption-level: critical
-      - action: notify.mobile_app_macbook_pro_2
-        data:
-          title: "Haustür Klingel"
-          message: "{{ now().strftime('%A, %H:%M Uhr, %d.%m.%Y') }} - {{ anwesenheits_status }}"
-          data:
-            push:
-              interruption-level: critical
-    - alias: "Nur Rafael ist zuhause"
-      conditions:
-      - condition: template
-        value_template: "{{ rafael_zuhause and not alex_zuhause }}"
-      sequence:
-      - action: notify.mobile_app_macbook_pro_rafael
-        data:
-          title: "Haustür Klingel"
-          message: "{{ now().strftime('%A, %H:%M Uhr, %d.%m.%Y') }} - {{ anwesenheits_status }}"
-          data:
-            push:
-              interruption-level: critical
-    - alias: "Nur Alex ist zuhause"
-      conditions:
-      - condition: template
-        value_template: "{{ alex_zuhause and not rafael_zuhause }}"
-      sequence:
-      - action: notify.mobile_app_macbook_pro_2
-        data:
-          title: "Haustür Klingel"
-          message: "{{ now().strftime('%A, %H:%M Uhr, %d.%m.%Y') }} - {{ anwesenheits_status }}"
-          data:
-            push:
-              interruption-level: critical
-    - alias: "Niemand ist zuhause"
-      conditions:
-      - condition: template
-        value_template: "{{ niemand_zuhause }}"
-      sequence:
-      - action: notify.mobile_app_iphone_rafael
-        data:
-          title: "Haustür Klingel"
-          message: "{{ now().strftime('%A, %H:%M Uhr, %d.%m.%Y') }} - {{ anwesenheits_status }}"
-          data:
-            push:
-              interruption-level: critical
+              interruption-level: time-sensitive
+            tag: haustuer_klingel
   - alias: "Akzentlichter blinken lassen (nur tagsüber)"
     choose:
     - conditions:
@@ -205,10 +166,15 @@
         id:
         - wasser-leer
       sequence:
-      - action: notify.rafael
+      - action: script.turn_on
+        target:
+          entity_id: script.notify_hinweis
         data:
-          title: "Wasserspender — Braucht Wasser"
-          message: "Wassertank ist leer. Bitte auffüllen."
+          variables:
+            target: notify.rafael
+            title: "Wasserspender — Braucht Wasser"
+            message: "Wassertank ist leer. Bitte auffüllen."
+            tag: wasserspender_wasser
       - action: persistent_notification.create
         data:
           title: "Wasserspender — Braucht Wasser"
@@ -219,10 +185,15 @@
         id:
         - pumpe
       sequence:
-      - action: notify.rafael
+      - action: script.turn_on
+        target:
+          entity_id: script.notify_hinweis
         data:
-          title: "Wasserspender — Pumpe prüfen"
-          message: "Pumpe blockiert. Bitte überprüfen."
+          variables:
+            target: notify.rafael
+            title: "Wasserspender — Pumpe prüfen"
+            message: "Pumpe blockiert. Bitte überprüfen."
+            tag: wasserspender_pumpe
       - action: persistent_notification.create
         data:
           title: "Wasserspender — Pumpe prüfen"
@@ -233,10 +204,15 @@
         id:
         - clean
       sequence:
-      - action: notify.rafael
+      - action: script.turn_on
+        target:
+          entity_id: script.notify_hinweis
         data:
-          title: "Wasserspender — Reinigung erforderlich"
-          message: "Zeit für die regelmäßige Reinigung."
+          variables:
+            target: notify.rafael
+            title: "Wasserspender — Reinigung erforderlich"
+            message: "Zeit für die regelmäßige Reinigung."
+            tag: wasserspender_reinigung
       - action: persistent_notification.create
         data:
           title: "Wasserspender — Reinigung erforderlich"
@@ -311,14 +287,17 @@
     - condition: trigger
       id: 'co2-critical'
   actions:
-  - action: script.notify_critical
+  - action: notify.family
     data:
-      tag: co2_critical
       title: >-
         CO2 zu hoch, {{ 'Fenster öffnen' if is_state('input_boolean.schlafenszeit', 'on') else 'Fenster auf im Arbeitszimmer' }}
       message: >-
         Der Wert liegt aktuell bei {{ states('sensor.qingping_air_monitor_lite_co2_carbon_dioxide') | int(0) }} ppm!
         {{ ' Ventilator läuft bereits auf ' ~ states('sensor.fan_speed_schlafzimmer_co2_calculated') ~ '%.' if is_state('fan.schlafzimmer', 'on') else '' }}
+      data:
+        push:
+          interruption-level: time-sensitive
+        tag: co2_critical
   mode: single
 - id: '1715850119149'
   alias: Notifications » Temperatur Aussen
@@ -383,11 +362,7 @@
       notify_message: "Bett fertig machen, morgen ist Arbeitstag"
       notify_data:
         push:
-          interruption-level: critical
-          sound:
-            name: default
-            critical: 1
-            volume: 1.0
+          interruption-level: time-sensitive
         tag: "bedtime_kinder"
         actions:
         - action: "BEDTIME_DONE"
@@ -542,10 +517,19 @@
         {% elif 'aktualisier' in t or 'dsm-update' in t
              or ('update' in t and 'kein' not in t) %}update
         {% else %}allgemein{% endif %}
-  - action: notify.rafael
+  # These messages come from the nightly container auto-update and carry no
+  # information: end the run without any push or persistent notification.
+  - condition: template
+    value_template: "{{ not (meldung is search('Container .+ stopped unexpectedly')) }}"
+  - action: script.turn_on
+    target:
+      entity_id: script.notify_hinweis
     data:
-      title: NAS
-      message: 'Meldung der Synology: {{ meldung }}'
+      variables:
+        target: notify.rafael
+        title: NAS
+        message: 'Meldung der Synology: {{ meldung }}'
+        tag: "nas_{{ meldung_id | trim }}"
   - action: persistent_notification.create
     data:
       notification_id: "synology_nas_{{ meldung_id | trim }}"

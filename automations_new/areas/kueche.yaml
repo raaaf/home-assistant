@@ -130,11 +130,22 @@
 - id: '1688644812345'
   alias: Wasser » Küche leckt
   description: Überwacht Wassersensor in der Küche und alarmiert bei Leckage
-  use_blueprint:
-    path: user-x-adm/wasserleck-liste-der-sensoren.yaml
-    input:
-      sensor:
-      - binary_sensor.kuche_wasser_sensor
+  triggers:
+  - trigger: state
+    entity_id: binary_sensor.kuche_wasser_sensor
+    to: 'on'
+  mode: single
+  actions:
+  - action: script.notify_critical
+    data:
+      title: "Wasser in der Küche"
+      message: "Der Wassersensor in der Küche meldet Feuchtigkeit. Sofort nachsehen!"
+      tag: wasserleck_kueche
+  - action: persistent_notification.create
+    data:
+      title: "Wasser in der Küche"
+      message: "Der Wassersensor in der Küche meldet Feuchtigkeit. Sofort nachsehen!"
+      notification_id: wasserleck_kueche
 - id: '1744713615211'
   alias: Scenen » Essen
   description: Aktiviert spezielle Küchenbeleuchtung für Kochmodus

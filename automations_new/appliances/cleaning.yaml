@@ -46,10 +46,15 @@
       - condition: trigger
         id: hauptbueste
       sequence:
-      - action: notify.rafael
+      - action: script.turn_on
+        target:
+          entity_id: script.notify_hinweis
         data:
-          title: "Robbi Wartung — Hauptbürste wechseln"
-          message: "Verbleibend: {{ states('sensor.s7_maxv_main_brush_time_left') | int(0) }}h"
+          variables:
+            target: notify.rafael
+            title: "Robbi Wartung — Hauptbürste wechseln"
+            message: "Verbleibend: {{ states('sensor.s7_maxv_main_brush_time_left') | int(0) }}h"
+            tag: robbi_hauptbuerste
       - action: persistent_notification.create
         data:
           title: "Robbi Wartung — Hauptbürste wechseln"
@@ -61,10 +66,15 @@
       - condition: trigger
         id: seitenbueste
       sequence:
-      - action: notify.rafael
+      - action: script.turn_on
+        target:
+          entity_id: script.notify_hinweis
         data:
-          title: "Robbi Wartung — Seitenbürste wechseln"
-          message: "Verbleibend: {{ states('sensor.s7_maxv_side_brush_time_left') | int(0) }}h"
+          variables:
+            target: notify.rafael
+            title: "Robbi Wartung — Seitenbürste wechseln"
+            message: "Verbleibend: {{ states('sensor.s7_maxv_side_brush_time_left') | int(0) }}h"
+            tag: robbi_seitenbuerste
       - action: persistent_notification.create
         data:
           title: "Robbi Wartung — Seitenbürste wechseln"
@@ -76,10 +86,15 @@
       - condition: trigger
         id: filter
       sequence:
-      - action: notify.rafael
+      - action: script.turn_on
+        target:
+          entity_id: script.notify_hinweis
         data:
-          title: "Robbi Wartung — Filter wechseln"
-          message: "Verbleibend: {{ states('sensor.s7_maxv_filter_time_left') | int(0) }}h"
+          variables:
+            target: notify.rafael
+            title: "Robbi Wartung — Filter wechseln"
+            message: "Verbleibend: {{ states('sensor.s7_maxv_filter_time_left') | int(0) }}h"
+            tag: robbi_filter
       - action: persistent_notification.create
         data:
           title: "Robbi Wartung — Filter wechseln"
@@ -91,10 +106,15 @@
       - condition: trigger
         id: sensoren
       sequence:
-      - action: notify.rafael
+      - action: script.turn_on
+        target:
+          entity_id: script.notify_hinweis
         data:
-          title: "Robbi Wartung — Sensoren reinigen"
-          message: "Verbleibend: {{ states('sensor.s7_maxv_sensor_time_left') | int(0) }}h"
+          variables:
+            target: notify.rafael
+            title: "Robbi Wartung — Sensoren reinigen"
+            message: "Verbleibend: {{ states('sensor.s7_maxv_sensor_time_left') | int(0) }}h"
+            tag: robbi_sensoren
       - action: persistent_notification.create
         data:
           title: "Robbi Wartung — Sensoren reinigen"
@@ -123,6 +143,9 @@
   conditions:
   - condition: template
     value_template: "{{ states('vacuum.s7_maxv') not in ['unknown', 'unavailable'] }}"
+  - alias: "Höchstens alle 30 Minuten melden"
+    condition: template
+    value_template: "{{ this.attributes.last_triggered is none or (now() - this.attributes.last_triggered).total_seconds() > 1800 }}"
   actions:
   - action: notify.family
     data:
@@ -131,10 +154,12 @@
         {% if trigger.id == 'stuck' %}
         Robbi steckt fest und braucht Hilfe!
         {% else %}
-        Robbi hat einen Fehler: {{ states('sensor.s7_maxv_status') | default('Unbekannt') }}
+        {% set fehler = states('sensor.s7_maxv_vacuum_error') %}
+        Robbi hat einen Fehler: {{ fehler if fehler not in ['none', 'None', 'unknown', 'unavailable', ''] else states('sensor.s7_maxv_status') }}
         {% endif %}
         Akku: {{ states('sensor.s7_maxv_battery') | default('?') }}%
       data:
         push:
           interruption-level: time-sensitive
+        tag: robbi_fehler
   mode: single

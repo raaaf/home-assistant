@@ -167,12 +167,17 @@
       kosten_ohne_solar: >-
         {{ (verbrauch_brutto_kwh | float(0) * strompreis | float(0) + grundpreis_monat | float(0)) | round(2) }}
 
-  - action: notify.rafael
+  - action: script.turn_on
+    target:
+      entity_id: script.notify_hinweis
     data:
-      title: "Energiebericht {{ vormonat }}"
-      message: >-
-        Solar {{ solarproduktion_kwh }} kWh · Eigenverbrauch {{ eigenverbrauchsquote }}% ·
-        Netzbezug {{ netzbezug_kwh }} kWh · Kosten {{ kosten_gesamt }} € (Ersparnis {{ ersparnis_solar }} €)
+      variables:
+        target: notify.rafael
+        title: "Energiebericht {{ vormonat }}"
+        message: >-
+          Solar {{ solarproduktion_kwh }} kWh · Eigenverbrauch {{ eigenverbrauchsquote }}% ·
+          Netzbezug {{ netzbezug_kwh }} kWh · Kosten {{ kosten_gesamt }} € (Ersparnis {{ ersparnis_solar }} €)
+        tag: energiebericht
   - action: persistent_notification.create
     data:
       title: "Energiebericht {{ vormonat }}"

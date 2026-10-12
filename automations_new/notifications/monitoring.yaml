@@ -4,16 +4,53 @@
 
 - id: '1645110903677'
   alias: Notification » Es gibt nicht erreichbare Geräte
-  description: Sendet werktags um 10 Uhr eine E-Mail bei nicht erreichbaren Geräten
+  description: Sendet werktags um 10 Uhr einen Push bei nicht erreichbaren Geräten
   use_blueprint:
     path: gmlupatelli/unavailable_entities_notification.yaml
     input:
       time: '10:00:00'
+      # Unavailable by design: printer off, step sensors, HA Cloud not subscribed,
+      # DTU diagnostics (covered by the Solar automation).
+      exclude:
+        entity_id:
+        - sensor.iphone_rafael_current_pace
+        - sensor.iphone_rafael_current_cadence
+        - sensor.iphone_alex_alex_iphone_current_pace
+        - sensor.iphone_alex_alex_iphone_current_cadence
+        - sensor.dtu_sw_version
+        - sensor.dtu_hw_version
+        - sensor.inverter_sw_version
+        - sensor.inverter_hw_version
+        - sensor.dtu_signal_strength
+        - switch.cloud_alexa
+        - switch.cloud_alexa_report_state
+        - switch.cloud_google
+        - switch.cloud_google_report_state
+        - switch.cloud_remote
+        - button.prusa_mk4_cancel_job
+        - button.prusa_mk4_pause_job
+        - button.prusa_mk4_resume_job
+        - button.prusa_mk4_continue_job
+        - camera.prusa_mk4_preview
+        - sensor.prusa_mk4
+        - sensor.prusa_mk4_heatbed_temperature
+        - sensor.prusa_mk4_nozzle_temperature
+        - sensor.prusa_mk4_heatbed_target_temperature
+        - sensor.prusa_mk4_nozzle_target_temperature
+        - sensor.prusa_mk4_print_speed
+        - sensor.prusa_mk4_hotend_fan
+        - sensor.prusa_mk4_material
+        - sensor.prusa_mk4_progress
+        - sensor.prusa_mk4_filename
+        - sensor.prusa_mk4_print_start
+        - sensor.prusa_mk4_print_finish
       actions:
       - action: notify.rafael
         data:
           title: "Nicht erreichbare Geräte"
           message: '{{entities}}'
+          data:
+            tag: unavailable_entities
       - action: persistent_notification.create
         data:
           title: "Nicht erreichbare Geräte"
@@ -43,16 +80,6 @@
         entity_id:
         - sensor.aqara_climate_05_humidity
         - sensor.tuya_climate_01_humidity
-- id: '1726065861905'
-  alias: Notifications » Niedriger Batteriestand
-  description: Benachrichtigt bei niedrigem Batteriestand (unter 10%) von Geräten
-  use_blueprint:
-    path: Blackshome/low-battery-notifications-and-actions.yaml
-    input:
-      include_time: time_enabled
-      time: '10:00:00'
-      include_persistent_notification: enable_persistent_notification
-      battery_level: 10
 - id: '1754557053144'
   alias: Helper » Unbekannte Geräte reparieren
   description: Versucht Geräte mit 'unknown' Status zu reaktivieren
@@ -110,10 +137,15 @@
       data:
         message: Außensensor offline - prüfe Batterie!
         level: warning
-    - action: notify.rafael
+    - action: script.turn_on
+      target:
+        entity_id: script.notify_hinweis
       data:
-        title: "Außensensor offline"
-        message: "Der Außensensor liefert keine Daten. Bitte Batterie prüfen."
+        variables:
+          target: notify.rafael
+          title: "Außensensor offline"
+          message: "Der Außensensor liefert keine Daten. Bitte Batterie prüfen."
+          tag: aussensensor_offline
     - action: persistent_notification.create
       data:
         title: "Außensensor offline"
@@ -256,12 +288,15 @@
       sensor_id: '{{ trigger.entity_id }}'
       duration: '{{ relative_time(trigger.from_state.last_changed) }}'
   - parallel:
-    - action: script.notify_critical
+    - action: notify.admin_only
       data:
-        tag: motion_sensor_failure
-        group: system_alerts
         title: "Bewegungsmelder ausgefallen"
         message: "{{ sensor_name }} ist seit {{ duration }} nicht verfügbar ({{ sensor_id }})"
+        data:
+          push:
+            interruption-level: active
+          tag: motion_sensor_failure
+          group: system_alerts
     - action: persistent_notification.create
       data:
         title: "Bewegungsmelder ausgefallen, {{ sensor_name }}"
@@ -312,22 +347,17 @@
           sensor_id: "{{ repeat.item }}"
           sensor_name: "{{ state_attr(repeat.item, 'friendly_name') or repeat.item }}"
           duration: "{{ relative_time(states[repeat.item].last_changed) }}"
-      - parallel:
-        - action: script.notify_critical
-          data:
-            tag: motion_sensor_failure
-            group: system_alerts
-            title: "Bewegungsmelder ausgefallen"
-            message: "{{ sensor_name }} ist seit {{ duration }} nicht verfügbar ({{ sensor_id }})"
-        - action: persistent_notification.create
-          data:
-            title: "Bewegungsmelder ausgefallen, {{ sensor_name }}"
-            message: >
-              Sensor: {{ sensor_name }} ({{ sensor_id }})
-              Status: {{ states(repeat.item) }}
-              Ausgefallen seit: {{ duration }}
-              Bitte prüfen: Batterie, Zigbee-Verbindung, Position
-            notification_id: "motion_sensor_{{ sensor_id | replace('.', '_') }}"
+      # The main automation already pushes once; this loop only refreshes the
+      # persistent notification.
+      - action: persistent_notification.create
+        data:
+          title: "Bewegungsmelder ausgefallen, {{ sensor_name }}"
+          message: >
+            Sensor: {{ sensor_name }} ({{ sensor_id }})
+            Status: {{ states(repeat.item) }}
+            Ausgefallen seit: {{ duration }}
+            Bitte prüfen: Batterie, Zigbee-Verbindung, Position
+          notification_id: "motion_sensor_{{ sensor_id | replace('.', '_') }}"
   mode: single
 - id: 'appletv_wohnzimmer_watchdog'
   alias: Helper » AppleTV Wohnzimmer Watchdog

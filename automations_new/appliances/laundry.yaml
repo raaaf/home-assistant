@@ -60,21 +60,14 @@
       
       # Mobile Benachrichtigungen + Persistent Notification
       - parallel:
-        # Mobile Benachrichtigungen (kritisch - funktioniert überall)
-        - action: notify.rafael
+        # Mobile Benachrichtigung (time-sensitive)
+        - action: notify.family
           data:
             title: "Waschmaschine ist fertig"
             message: "Fertig um {{ now().strftime('%H:%M Uhr') }}"
             data:
               push:
-                interruption-level: critical
-        - action: notify.alex
-          data:
-            title: "Waschmaschine ist fertig"
-            message: "Fertig um {{ now().strftime('%H:%M Uhr') }}"
-            data:
-              push:
-                interruption-level: critical
+                interruption-level: time-sensitive
         - action: persistent_notification.create
           data:
             title: "Waschmaschine ist fertig"
@@ -98,20 +91,13 @@
             data:
               option: "Fertig"
           - parallel:
-            - action: notify.rafael
+            - action: notify.family
               data:
                 title: "Waschmaschine ist fertig"
                 message: "Fertig um {{ now().strftime('%H:%M Uhr') }}"
                 data:
                   push:
-                    interruption-level: critical
-            - action: notify.alex
-              data:
-                title: "Waschmaschine ist fertig"
-                message: "Fertig um {{ now().strftime('%H:%M Uhr') }}"
-                data:
-                  push:
-                    interruption-level: critical
+                    interruption-level: time-sensitive
             - action: persistent_notification.create
               data:
                 title: "Waschmaschine ist fertig"
@@ -190,21 +176,14 @@
       
       # Mobile Benachrichtigungen + Persistent Notification
       - parallel:
-        # Mobile Benachrichtigungen (kritisch - funktioniert überall)
-        - action: notify.rafael
+        # Mobile Benachrichtigung (time-sensitive)
+        - action: notify.family
           data:
             title: "Trockner ist fertig"
             message: "Der Trockner ist fertig! ({{ now().strftime('%H:%M Uhr') }})"
             data:
               push:
-                interruption-level: critical
-        - action: notify.alex
-          data:
-            title: "Trockner ist fertig"
-            message: "Der Trockner ist fertig! ({{ now().strftime('%H:%M Uhr') }})"
-            data:
-              push:
-                interruption-level: critical
+                interruption-level: time-sensitive
         - action: persistent_notification.create
           data:
             title: "Trockner ist fertig"

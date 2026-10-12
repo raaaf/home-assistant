@@ -32,10 +32,15 @@
       - condition: trigger
         id: filter
       sequence:
-      - action: notify.rafael
+      - action: script.turn_on
+        target:
+          entity_id: script.notify_hinweis
         data:
-          title: "Futterspender — Filter ersetzen"
-          message: "Bitte den Filter des Futterspenders ersetzen."
+          variables:
+            target: notify.rafael
+            title: "Futterspender — Filter ersetzen"
+            message: "Bitte den Filter des Futterspenders ersetzen."
+            tag: futterspender_filter
       - action: persistent_notification.create
         data:
           title: "Futterspender — Filter ersetzen"
@@ -47,10 +52,15 @@
       - condition: trigger
         id: reinigung
       sequence:
-      - action: notify.rafael
+      - action: script.turn_on
+        target:
+          entity_id: script.notify_hinweis
         data:
-          title: "Futterspender — Reinigung erforderlich"
-          message: "Bitte den Futterspender gründlich reinigen."
+          variables:
+            target: notify.rafael
+            title: "Futterspender — Reinigung erforderlich"
+            message: "Bitte den Futterspender gründlich reinigen."
+            tag: futterspender_reinigung
       - action: persistent_notification.create
         data:
           title: "Futterspender — Reinigung erforderlich"
