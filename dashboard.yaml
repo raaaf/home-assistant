@@ -902,14 +902,13 @@ views:
       icon: mdi:play-circle-outline
     - type: tile
       entity: media_player.wohnzimmer
+      show_entity_picture: true
       name: AppleTV Wohnzimmer
-      features:
-      - type: media-player-playback
-      features_position: inline
       grid_options:
         columns: 12
       state_content:
       - media_title
+      - media_artist
       visibility:
       - condition: state
         entity: media_player.wohnzimmer
@@ -918,14 +917,13 @@ views:
         - paused
     - type: tile
       entity: media_player.appletv
+      show_entity_picture: true
       name: AppleTV Schlafzimmer
-      features:
-      - type: media-player-playback
-      features_position: inline
       grid_options:
         columns: 12
       state_content:
       - media_title
+      - media_artist
       visibility:
       - condition: state
         entity: media_player.appletv
@@ -934,13 +932,12 @@ views:
         - paused
     - type: tile
       entity: media_player.homepod_wohnzimmer
-      features:
-      - type: media-player-playback
-      features_position: inline
+      show_entity_picture: true
       grid_options:
         columns: 12
       state_content:
       - media_title
+      - media_artist
       visibility:
       - condition: state
         entity: media_player.homepod_wohnzimmer
@@ -949,13 +946,12 @@ views:
         - paused
     - type: tile
       entity: media_player.kuche
-      features:
-      - type: media-player-playback
-      features_position: inline
+      show_entity_picture: true
       grid_options:
         columns: 12
       state_content:
       - media_title
+      - media_artist
       visibility:
       - condition: state
         entity: media_player.kuche
@@ -964,13 +960,12 @@ views:
         - paused
     - type: tile
       entity: media_player.arbeitszimmer
-      features:
-      - type: media-player-playback
-      features_position: inline
+      show_entity_picture: true
       grid_options:
         columns: 12
       state_content:
       - media_title
+      - media_artist
       visibility:
       - condition: state
         entity: media_player.arbeitszimmer
@@ -978,29 +973,13 @@ views:
         - playing
         - paused
     - type: tile
-      entity: media_player.schlafzimmer
-      features:
-      - type: media-player-playback
-      features_position: inline
-      grid_options:
-        columns: 12
-      state_content:
-      - media_title
-      visibility:
-      - condition: state
-        entity: media_player.schlafzimmer
-        state:
-        - playing
-        - paused
-    - type: tile
       entity: media_player.homepod_kinderzimmer
-      features:
-      - type: media-player-playback
-      features_position: inline
+      show_entity_picture: true
       grid_options:
         columns: 12
       state_content:
       - media_title
+      - media_artist
       visibility:
       - condition: state
         entity: media_player.homepod_kinderzimmer
@@ -1009,13 +988,12 @@ views:
         - paused
     - type: tile
       entity: media_player.homepod_badezimmer
-      features:
-      - type: media-player-playback
-      features_position: inline
+      show_entity_picture: true
       grid_options:
         columns: 12
       state_content:
       - media_title
+      - media_artist
       visibility:
       - condition: state
         entity: media_player.homepod_badezimmer
@@ -1047,11 +1025,6 @@ views:
         - paused
       - condition: state
         entity: media_player.arbeitszimmer
-        state:
-        - playing
-        - paused
-      - condition: state
-        entity: media_player.schlafzimmer
         state:
         - playing
         - paused
