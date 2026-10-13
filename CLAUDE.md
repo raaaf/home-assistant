@@ -372,10 +372,7 @@ script.homepod_film_start               # Film start: stop room HomePods, or set
 `media_player.schlafzimmer` is not a bedroom speaker: it is the second HomePod mini of the stereo pair in
 the Kinderzimmer. HA shows it as `off`, but every volume or playback command to it reaches the Kinderzimmer
 pair (13.10.2026: its 30 % wake fade overrode the Kinderzimmer's 50 %). Keep it out of every list that
-writes volume or playback; only the connection watchdogs keep it. The bedroom has no HomePod.
-
-```yaml
-```
+writes volume or playback; only the connection watchdogs and status polls keep it. The bedroom has no HomePod.
 
 The two `scene_disable_*` scripts take an `exclude_scenes` list of `input_boolean` names and do nothing
 while one of them is on. That check only sees input_booleans.
