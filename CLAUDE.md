@@ -369,6 +369,14 @@ script.homepod_volume_apply             # Apply HomePod volume levels from the s
 script.homepod_film_start               # Film start: stop room HomePods, or set them to 0 while other rooms share the AirPlay stream
 ```
 
+`media_player.schlafzimmer` is not a bedroom speaker: it is the second HomePod mini of the stereo pair in
+the Kinderzimmer. HA shows it as `off`, but every volume or playback command to it reaches the Kinderzimmer
+pair (13.10.2026: its 30 % wake fade overrode the Kinderzimmer's 50 %). Keep it out of every list that
+writes volume or playback; only the connection watchdogs keep it. The bedroom has no HomePod.
+
+```yaml
+```
+
 The two `scene_disable_*` scripts take an `exclude_scenes` list of `input_boolean` names and do nothing
 while one of them is on. That check only sees input_booleans.
 
@@ -417,7 +425,7 @@ The AC sits in the Arbeitszimmer (office) and is steered by **"Helper » AC manu
 
 ### Heating
 
-`switch.sonoff_switch_03`, `_04`, `_05` (Kinderzimmer, Schlafzimmer, Wohnzimmer) get a boost at fixed times, 06:30 and 14:30, whose length comes from the outdoor temperature or forecast (`weather.fuerth_bayern` / `sensor.fuerth_daily`). The fixed times are deliberate (worked well in winter 2025/26). Room temperature only filters: a room at or above the top of its day comfort band is skipped, a room below the bottom gets 1 h even when it is mild outside, and a sunny afternoon (forecast cloud cover 35 % or less) drops the outdoor boost. The bands sit in the automation's `rooms` variable and must match `TBAND` in DESIGN.md. Bad (`_01`) and Flur (`_02`) are manual only. The safety watchdog covers all five circuits (2 h without timer, 3 h 10 min with), and `Heizung » Schalter nicht erreichbar` pushes when a switch is unreachable for 15 min.
+`switch.sonoff_switch_03`, `_04`, `_05` (Kinderzimmer, Schlafzimmer, Wohnzimmer) get a boost at fixed times, 06:30 and 14:30, whose length comes from the outdoor temperature or forecast (`weather.fuerth_bayern` / `sensor.fuerth_daily`). The fixed times are deliberate (worked well in winter 2025/26). Room temperature only filters: a room at or above the top of its day comfort band is skipped, a room below the bottom gets 1 h even when it is mild outside, and a sunny afternoon (forecast cloud cover 35 % or less) drops the outdoor boost. In the morning a room whose window is open or was closed less than 3 h ago gets the outdoor boost regardless of its reading (the air sensors stay warm while the floor cools). Schlafzimmer (`_04`) heats both the bedroom and Alex' office and reads `sensor.arbeitszimmer_temperatur`, a UI group (median) of both rooms' sensors. The bands sit in the automation's `rooms` variable and must match `TBAND` in DESIGN.md. Bad (`_01`) and Flur (`_02`) are manual only. The safety watchdog covers all five circuits (2 h without timer, 3 h 10 min with), and `Heizung » Schalter nicht erreichbar` pushes when a switch is unreachable for 15 min.
 
 ---
 
