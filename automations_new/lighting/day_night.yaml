@@ -203,7 +203,7 @@
           wait_template: >
             {{ ['media_player.homepod_wohnzimmer', 'media_player.kuche',
                 'media_player.homepod_badezimmer', 'media_player.homepod_kinderzimmer',
-                'media_player.arbeitszimmer', 'media_player.schlafzimmer']
+                'media_player.arbeitszimmer']
                | select('is_state', 'playing') | map('state_attr', 'volume_level')
                | select('is_number') | select('le', 0.05) | list | length > 0 }}
           timeout: 00:00:45

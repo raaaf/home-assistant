@@ -343,14 +343,6 @@
             continue_on_error: true
             target:
               entity_id: media_player.arbeitszimmer
-        - if:
-          - condition: template
-            value_template: "{{ is_state('media_player.schlafzimmer', 'playing') }}"
-          then:
-          - action: media_player.media_stop
-            continue_on_error: true
-            target:
-              entity_id: media_player.schlafzimmer
       - alias: Türe abschließen wenn offen
         if:
         - condition: state
@@ -443,7 +435,7 @@
         wait_template: >
           {{ ['media_player.homepod_wohnzimmer', 'media_player.kuche',
               'media_player.homepod_badezimmer', 'media_player.homepod_kinderzimmer',
-              'media_player.arbeitszimmer', 'media_player.schlafzimmer']
+              'media_player.arbeitszimmer']
              | select('is_state', 'playing') | list | length > 0 }}
         timeout: 00:00:30
         continue_on_timeout: true

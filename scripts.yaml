@@ -721,7 +721,6 @@ homepods_mute:
       - media_player.kuche
       - media_player.homepod_badezimmer
       - media_player.homepod_kinderzimmer
-      - media_player.schlafzimmer
   - repeat:
       for_each: "{{ players }}"
       sequence:
@@ -794,17 +793,17 @@ homepod_volume_apply:
   description: >-
     Einzige Stelle mit der HomePod-Lautstärketabelle. Das Ziel je Player wird
     bei jedem Aufruf aus dem aktuellen Zustand berechnet. Basis: Schlafenszeit
-    an = Nacht (WZ 35, Küche/Bad/Kinderzimmer 40, Arbeitszimmer 35,
-    Schlafzimmer 30 %), sonst Tag (WZ 35, Küche/Bad/Kinderzimmer 50,
-    Arbeitszimmer 35, Schlafzimmer 30 %). Überschreibungen, die erste Regel
+    an = Nacht (WZ 35, Küche/Bad/Kinderzimmer 40, Arbeitszimmer 35 %), sonst
+    Tag (WZ 35, Küche/Bad/Kinderzimmer 50, Arbeitszimmer 35 %).
+    media_player.schlafzimmer fehlt bewusst: er ist die zweite Hälfte des
+    Stereopaars im Kinderzimmer, jeder Befehl an ihn landet dort.
+    Überschreibungen, die erste Regel
     gewinnt: Party (WZ 55 oder 30 bei Essen, Küche 50, Bad 35 bei
-    Baden/Sauna sonst 50, Kinderzimmer 50, Arbeitszimmer 50, Schlafzimmer 55 %),
+    Baden/Sauna sonst 50, Kinderzimmer 50, Arbeitszimmer 50 %),
     Party Wohnzimmer (WZ 55 oder 30 bei Essen, Küche 50), danach die
     Einzelszenen (Essen WZ 30, Kochen Küche 50, Baden/Sauna Bad 35 %).
     Vor allem anderen gilt Film: Film im Wohnzimmer (nicht Game) setzt WZ und
-    Küche auf 0, AppleTV Schlafzimmer spielt (oder pausiert seit unter 30 min)
-    setzt Schlafzimmer auf 0, auch beim Kochen oder bei Party. Eine länger
-    stehende Pause soll die Weckmusik nicht stumm lassen.
+    Küche auf 0, auch beim Kochen oder bei Party.
     Immer per script.turn_on (fire-and-forget) aufrufen.
   icon: mdi:volume-high
   mode: parallel
@@ -820,7 +819,6 @@ homepod_volume_apply:
       - media_player.homepod_badezimmer
       - media_player.homepod_kinderzimmer
       - media_player.arbeitszimmer
-      - media_player.schlafzimmer
       selector:
         entity:
           domain: media_player
@@ -857,7 +855,7 @@ homepod_volume_apply:
       {% else %}
         {{ ['media_player.homepod_wohnzimmer', 'media_player.kuche',
             'media_player.homepod_badezimmer', 'media_player.homepod_kinderzimmer',
-            'media_player.arbeitszimmer', 'media_player.schlafzimmer'] }}
+            'media_player.arbeitszimmer'] }}
       {% endif %}
     apply_fade: "{{ fade | default(0) | float(0) }}"
     apply_only_if_playing: "{{ only_if_playing | default(true) | bool(true) }}"
@@ -869,7 +867,6 @@ homepod_volume_apply:
       media_player.homepod_badezimmer: {day: 0.50, night: 0.40}
       media_player.homepod_kinderzimmer: {day: 0.50, night: 0.40}
       media_player.arbeitszimmer: {day: 0.35, night: 0.35}
-      media_player.schlafzimmer: {day: 0.30, night: 0.30}
   sequence:
   - repeat:
       for_each: "{{ apply_players }}"
@@ -884,7 +881,6 @@ homepod_volume_apply:
             {% set kochen = is_state('input_boolean.kochen', 'on') %}
             {% set bad = is_state('input_boolean.baden', 'on') or is_state('input_boolean.sauna', 'on') %}
             {% set film_wz = is_state('input_boolean.movie', 'on') and state_attr('media_player.denon_avr_x3200w', 'source') != 'Game' %}
-            {% set film_sz = is_state('media_player.appletv', 'playing') or (is_state('media_player.appletv', 'paused') and now() - states.media_player.appletv.last_changed < timedelta(minutes=30)) %}
             {% if p == 'media_player.homepod_wohnzimmer' %}
               {% if film_wz %}0{% elif party or party_wz %}{{ 0.30 if essen else 0.55 }}{% elif essen %}0.30{% endif %}
             {% elif p == 'media_player.kuche' %}
@@ -893,8 +889,6 @@ homepod_volume_apply:
               {% if party %}{{ 0.35 if bad else 0.50 }}{% elif bad %}0.35{% endif %}
             {% elif p == 'media_player.homepod_kinderzimmer' or p == 'media_player.arbeitszimmer' %}
               {% if party %}0.50{% endif %}
-            {% elif p == 'media_player.schlafzimmer' %}
-              {% if film_sz %}0{% elif party %}0.55{% endif %}
             {% endif %}
       - variables:
           has_override: "{{ (override | string | trim) != '' }}"
@@ -962,7 +956,6 @@ homepod_film_start:
     - media_player.homepod_badezimmer
     - media_player.homepod_kinderzimmer
     - media_player.arbeitszimmer
-    - media_player.schlafzimmer
     playing: "{{ players | select('is_state', 'playing') | list }}"
     others_playing: "{{ all_homepods | reject('in', players) | select('is_state', 'playing') | list | count > 0 }}"
   sequence:
