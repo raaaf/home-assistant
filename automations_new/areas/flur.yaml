@@ -28,6 +28,7 @@
       night_lights_entity_state:
       - input_boolean.nachtlicht
       - input_boolean.schlafenszeit
+      - input_boolean.movie  # Film: nur schwaches Nachtlicht statt voller Decke
       include_night_light_control:
       - use_brightness
       - use_transition
@@ -86,6 +87,7 @@
       night_lights_entity_state:
       - input_boolean.nachtlicht
       - input_boolean.schlafenszeit
+      - input_boolean.movie  # Film: nur schwaches Nachtlicht statt voller Decke
       night_light_brightness: 30  # Indirekte Lichter (Flur Schrank, Stahltraeger)
       # 2200K statt RGB-Amber: sonst setzt die Blueprint erst Rot und Adaptive
       # Lighting korrigiert eine Sekunde spaeter auf 2200K, sichtbar als Farbsprung.
