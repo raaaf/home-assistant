@@ -179,6 +179,20 @@
             - automation.motion_haustur_flur
       - alias: "Leselicht wiederherstellen falls aktiv"
         action: script.restore_leselicht
+      # 2026-10-16 incident: light.hyperhdr stayed unavailable for a day; retries are useless then, only a reload recreates it
+      - alias: "HyperHDR-Entity neu laden falls unavailable"
+        if:
+        - condition: state
+          entity_id: light.hyperhdr
+          state: 'unavailable'
+        then:
+        - action: homeassistant.reload_config_entry
+          continue_on_error: true
+          target:
+            entity_id: light.hyperhdr
+        - wait_template: "{{ not is_state('light.hyperhdr', 'unavailable') }}"
+          timeout: '00:00:30'
+          continue_on_timeout: true
       - alias: "Ambilight mit Retry einschalten (HyperHDR-Verbindung bricht beim Filmstart oft kurz ab)"
         repeat:
           sequence:

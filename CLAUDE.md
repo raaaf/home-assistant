@@ -347,7 +347,7 @@ Managed via `input_boolean` helpers:
 | Arbeit | `input_boolean.arbeit` | Work mode |
 | Gaming | `input_boolean.gaming` | Gaming mode |
 
-**Film mode and HyperHDR** (Pi 2, 192.168.178.100): `light.hyperhdr` drives the LED strip. Do not drive the Zigbee Hue lamps from HyperHDR: its zigbee2mqtt driver (tested 2026-10-03 with 4 lamps at 1 Hz) hung HyperHDR twice and zigbee2mqtt once, and the lamps sit in AL and the film turn-offs. Ambilight on Hue needs a Hue Bridge with Entertainment streaming. Denon reports the AppleTV input as `SAT/CBL`, older code expected `CBL/SAT`; match both.
+**Film mode and HyperHDR** (Pi 2, 192.168.178.100): `light.hyperhdr` drives the LED strip. Do not drive the Zigbee Hue lamps from HyperHDR: its zigbee2mqtt driver (tested 2026-10-03 with 4 lamps at 1 Hz) hung HyperHDR twice and zigbee2mqtt once, and the lamps sit in AL and the film turn-offs. Ambilight on Hue needs a Hue Bridge with Entertainment streaming. Denon reports the AppleTV input as `SAT/CBL`, older code expected `CBL/SAT`; match both. `light.hyperhdr` can stay `unavailable` while the Pi runs (its availability is `has_loaded_state`, 15./16.10.2026 for 28 h); only a config entry reload recreates it. `Helper » HyperHDR Watchdog` (`notifications/monitoring.yaml`) and the film start both reload it.
 
 ### Scene Tracking Sensors
 
