@@ -1124,7 +1124,7 @@ views:
     - type: custom:mushroom-template-card
       primary: Prusa
       entity: switch.arbeitszimmer_prusa_mk4_pc_rafael
-      secondary: '{% if is_state(''sensor.prusa_mk4'',''printing'') %}{{ states(''sensor.prusa_mk4_progress'') | int(0) }} % gedruckt{% elif is_state(''switch.arbeitszimmer_prusa_mk4_pc_rafael'',''off'') %}Aus{% else %}{{ states(''sensor.prusa_mk4'') }}{% endif %}'
+      secondary: '{% if is_state(''sensor.prusa_mk4'',''printing'') %}{{ states(''sensor.prusa_mk4_progress'') | int(0) }} % gedruckt{% elif is_state(''switch.arbeitszimmer_prusa_mk4_pc_rafael'',''off'') %}Aus{% elif states(''sensor.prusa_mk4'') in [''unavailable'',''unknown''] %}Startet{% else %}{{ states(''sensor.prusa_mk4'') }}{% endif %}'
       icon: mdi:printer-3d-nozzle
       icon_color: '{{ ''deep-orange'' if is_state(''switch.arbeitszimmer_prusa_mk4_pc_rafael'',''on'') else ''grey'' }}'
       color: '{{ ''deep-orange'' if is_state(''switch.arbeitszimmer_prusa_mk4_pc_rafael'',''on'') else ''grey'' }}'

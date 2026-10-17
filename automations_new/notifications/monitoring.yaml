@@ -576,16 +576,22 @@
     light.hyperhdr kann unavailable bleiben, obwohl der Pi läuft (2026-10-15
     bis 2026-10-16 fast 28 Stunden), weil die Entity an has_loaded_state der
     Integration hängt. Nur ein Reload des Config-Entries erzeugt sie neu.
-    Höchstens ein Reload pro Stunde.
+    Höchstens ein Reload pro Stunde, solange sie unavailable bleibt.
+  # binary_sensor.hyperhdr_pi_running is a constant "on" template, so there is
+  # no real Pi check; a reload while the Pi is off just fails (continue_on_error).
+  # The hourly trigger retries when a reload did not bring the entity back.
   triggers:
   - trigger: state
     entity_id: light.hyperhdr
     to: 'unavailable'
     for: "00:05:00"
+  - trigger: time_pattern
+    minutes: 17
   conditions:
   - condition: state
-    entity_id: binary_sensor.hyperhdr_pi_running
-    state: 'on'
+    entity_id: light.hyperhdr
+    state: 'unavailable'
+    for: "00:05:00"
   actions:
   - action: homeassistant.reload_config_entry
     continue_on_error: true
@@ -594,9 +600,7 @@
   - action: logbook.log
     data:
       name: HyperHDR Watchdog
-      message: "light.hyperhdr war 5 Min unavailable bei laufendem Pi, Config-Entry neu geladen."
+      message: "light.hyperhdr war mindestens 5 Min unavailable, Config-Entry neu geladen."
       domain: automation
-  # Rate limit: mode single keeps the run alive, so no second reload within an hour
-  - delay: 01:00:00
   mode: single
   max_exceeded: silent
