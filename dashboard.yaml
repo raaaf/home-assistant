@@ -1123,22 +1123,20 @@ views:
         navigation_path: /lovelace/haushalt
     - type: custom:mushroom-template-card
       primary: Prusa
-      secondary: '{% if is_state(''sensor.prusa_mk4'',''printing'') %}{{ states(''sensor.prusa_mk4_progress'') | int(0) }} % gedruckt{% else %}{{ states(''sensor.prusa_mk4'') }}{% endif %}'
+      entity: switch.arbeitszimmer_prusa_mk4_pc_rafael
+      secondary: '{% if is_state(''sensor.prusa_mk4'',''printing'') %}{{ states(''sensor.prusa_mk4_progress'') | int(0) }} % gedruckt{% elif is_state(''switch.arbeitszimmer_prusa_mk4_pc_rafael'',''off'') %}Aus{% else %}{{ states(''sensor.prusa_mk4'') }}{% endif %}'
       icon: mdi:printer-3d-nozzle
-      icon_color: '{{ ''deep-orange'' if is_state(''sensor.prusa_mk4'',''printing'') else ''grey'' }}'
-      color: '{{ ''deep-orange'' if is_state(''sensor.prusa_mk4'',''printing'') else ''grey'' }}'
+      icon_color: '{{ ''deep-orange'' if is_state(''switch.arbeitszimmer_prusa_mk4_pc_rafael'',''on'') else ''grey'' }}'
+      color: '{{ ''deep-orange'' if is_state(''switch.arbeitszimmer_prusa_mk4_pc_rafael'',''on'') else ''grey'' }}'
       grid_options:
         columns: 6
+      icon_tap_action:
+        action: toggle
+        confirmation:
+          text: Prusa-Steckdose umschalten? Ein laufender Druck bricht ab.
       tap_action:
         action: navigate
         navigation_path: /lovelace/prusa
-      visibility:
-      - condition: state
-        entity: sensor.prusa_mk4
-        state_not: unavailable
-      - condition: state
-        entity: sensor.prusa_mk4
-        state_not: unknown
 - type: sections
   title: Licht
   path: licht
