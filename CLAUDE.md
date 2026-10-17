@@ -455,6 +455,7 @@ The AC sits in the Arbeitszimmer (office) and is steered by **"Helper » AC manu
 input_boolean.movie, party, kochen, essen, baden, sauna, arbeit, gaming
 input_boolean.frost_warning_sent
 input_boolean.guest_or_away
+input_boolean.wochenende_ausschlafen  # On + no workday: wake-up skips lights, blind, music, pre-wake, 08:00 unlock; Schlafenszeit still ends at wake time
 ```
 
 ### Input DateTime (Schedules)

@@ -155,3 +155,6 @@ input_boolean:
   wakeup_active:
     name: "Aufwachroutine aktiv"
     icon: mdi:weather-sunset-up
+  wochenende_ausschlafen:
+    name: "Wochenende ausschlafen"
+    icon: mdi:sleep

@@ -33,6 +33,11 @@
   - condition: time
     after: 04:50:00
     before: '10:00:00'
+  - alias: Nicht am Wochenende, wenn Ausschlafen an ist
+    condition: template
+    value_template: >-
+      {{ not (is_state('input_boolean.wochenende_ausschlafen', 'on')
+              and is_state('binary_sensor.workday_sensor', 'off')) }}
   actions:
   # Je Geraet ein eigener fire-and-forget-Lauf, um 5 s versetzt. Ein einzelner
   # turn_on auf alle sechs HomePods gleichzeitig hat am 11.08. um 06:20:00
@@ -101,6 +106,11 @@
   - condition: time
     after: 05:00:00
     before: '10:00:00'
+  - alias: Nicht am Wochenende, wenn Ausschlafen an ist
+    condition: template
+    value_template: >-
+      {{ not (is_state('input_boolean.wochenende_ausschlafen', 'on')
+              and is_state('binary_sensor.workday_sensor', 'off')) }}
   actions:
   # Apple Home startet die Wiedergabe unzuverlaessig (19.08.2026: Timeout ohne
   # Playback, 18.08. ok). Darum bis zu 3 Trigger-Pulse, bis ein HomePod spielt.

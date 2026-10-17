@@ -145,6 +145,11 @@
         - alias: Jemand ist zu Hause
           condition: template
           value_template: "{{ states('input_boolean.alle_sind_weg') == 'off' }}"
+        - alias: Nicht am Wochenende, wenn Ausschlafen an ist
+          condition: template
+          value_template: >-
+            {{ not (is_state('input_boolean.wochenende_ausschlafen', 'on')
+                    and is_state('binary_sensor.workday_sensor', 'off')) }}
         then:
         - alias: Motion-Automationen für Wake-Up Räume deaktivieren
           # Achtung, gekreuzte entity_ids nach Room-Swap:
