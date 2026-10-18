@@ -338,6 +338,168 @@ views:
         action: navigate
         navigation_path: /todo?entity_id=todo.wartung
     - type: custom:mushroom-template-card
+      primary: Venta
+      secondary: Kein Wasser mehr, Tank auffüllen
+      icon: mdi:water-off-outline
+      icon_color: amber
+      color: amber
+      grid_options:
+        columns: 12
+      visibility:
+      - condition: state
+        entity: binary_sensor.venta_wasser_leer
+        state: 'on'
+      tap_action:
+        action: navigate
+        navigation_path: /todo?entity_id=todo.wartung
+    - type: custom:mushroom-template-card
+      primary: Wasserspender
+      secondary: '{% set ns = namespace(l=[]) %}{% if is_state(''binary_sensor.mmgg_wi11_7a1c_no_water_flag'', ''on'') %}{% set ns.l = ns.l + [''Tank leer''] %}{% endif %}{% if is_state(''binary_sensor.mmgg_wi11_7a1c_pump_block_flag'', ''on'') %}{% set ns.l = ns.l + [''Pumpe blockiert''] %}{% endif %}{% if states(''sensor.mmgg_wi11_7a1c_remain_clean_time'') | float(99) <= 1 %}{% set ns.l = ns.l + [''reinigen''] %}{% endif %}{{ ns.l | join('' · '') }}'
+      icon: mdi:water-pump
+      icon_color: amber
+      color: amber
+      grid_options:
+        columns: 12
+      visibility:
+      - condition: or
+        conditions:
+        - condition: state
+          entity: binary_sensor.mmgg_wi11_7a1c_no_water_flag
+          state: 'on'
+        - condition: state
+          entity: binary_sensor.mmgg_wi11_7a1c_pump_block_flag
+          state: 'on'
+        - condition: numeric_state
+          entity: sensor.mmgg_wi11_7a1c_remain_clean_time
+          below: 1.5
+      tap_action:
+        action: navigate
+        navigation_path: /todo?entity_id=todo.wartung
+    - type: custom:mushroom-template-card
+      primary: Futterspender
+      secondary: '{% set ns = namespace(l=[]) %}{% if states(''sensor.mmgg_fi1_2081_desiccant_left_time'') | float(99) <= 1 %}{% set ns.l = ns.l + [''Filter wechseln''] %}{% endif %}{% if states(''sensor.mmgg_fi1_2081_cleantime'') | float(99) <= 1 %}{% set ns.l = ns.l + [''reinigen''] %}{% endif %}{{ ns.l | join('' · '') }}'
+      icon: mdi:bowl-outline
+      icon_color: amber
+      color: amber
+      grid_options:
+        columns: 12
+      visibility:
+      - condition: or
+        conditions:
+        - condition: numeric_state
+          entity: sensor.mmgg_fi1_2081_desiccant_left_time
+          below: 1.5
+        - condition: numeric_state
+          entity: sensor.mmgg_fi1_2081_cleantime
+          below: 1.5
+      tap_action:
+        action: navigate
+        navigation_path: /todo?entity_id=todo.wartung
+    - type: custom:mushroom-template-card
+      primary: Prusa
+      secondary: Druck gestoppt ({{ states('sensor.prusa_mk4') }}), nachsehen
+      icon: mdi:printer-3d-nozzle-alert-outline
+      icon_color: red
+      color: red
+      grid_options:
+        columns: 12
+      visibility:
+      - condition: state
+        entity: sensor.prusa_mk4
+        state:
+        - error
+        - stopped
+        - attention
+      tap_action:
+        action: navigate
+        navigation_path: /todo?entity_id=todo.wartung
+    - type: custom:mushroom-template-card
+      primary: Mückenlampe
+      secondary: Auffangschale leeren
+      icon: mdi:delete-empty-outline
+      icon_color: amber
+      color: amber
+      grid_options:
+        columns: 12
+      visibility:
+      - condition: state
+        entity: binary_sensor.muckenlampe_schale_leeren
+        state: 'on'
+      tap_action:
+        action: navigate
+        navigation_path: /todo?entity_id=todo.wartung
+    - type: custom:mushroom-template-card
+      primary: Bewegungsmelder
+      secondary: '{{ expand([''binary_sensor.ikea_motion_09'', ''binary_sensor.ikea_motion_03_occupancy'', ''binary_sensor.ikea_motion_07'', ''binary_sensor.ikea_motion_06'', ''binary_sensor.tuya_motion_03_motion_presence'', ''binary_sensor.tuya_motion_02_presence'', ''binary_sensor.tuya_motion_01_presence'', ''binary_sensor.ikea_motion_02'']) | selectattr(''state'', ''in'', [''unavailable'', ''unknown'']) | map(attribute=''name'') | map(''replace'', '' Occupancy'', '''') | map(''replace'', '' Motion'', '''') | join('' · '') }} nicht erreichbar'
+      icon: mdi:motion-sensor-off
+      icon_color: amber
+      color: amber
+      grid_options:
+        columns: 12
+      visibility:
+      - condition: or
+        conditions:
+        - condition: state
+          entity: binary_sensor.ikea_motion_09
+          state:
+          - unavailable
+          - unknown
+        - condition: state
+          entity: binary_sensor.ikea_motion_03_occupancy
+          state:
+          - unavailable
+          - unknown
+        - condition: state
+          entity: binary_sensor.ikea_motion_07
+          state:
+          - unavailable
+          - unknown
+        - condition: state
+          entity: binary_sensor.ikea_motion_06
+          state:
+          - unavailable
+          - unknown
+        - condition: state
+          entity: binary_sensor.tuya_motion_03_motion_presence
+          state:
+          - unavailable
+          - unknown
+        - condition: state
+          entity: binary_sensor.tuya_motion_02_presence
+          state:
+          - unavailable
+          - unknown
+        - condition: state
+          entity: binary_sensor.tuya_motion_01_presence
+          state:
+          - unavailable
+          - unknown
+        - condition: state
+          entity: binary_sensor.ikea_motion_02
+          state:
+          - unavailable
+          - unknown
+      tap_action:
+        action: navigate
+        navigation_path: /todo?entity_id=todo.wartung
+    - type: custom:mushroom-template-card
+      primary: Außensensor
+      secondary: Liefert keine Daten, Batterie prüfen
+      icon: mdi:thermometer-off
+      icon_color: amber
+      color: amber
+      grid_options:
+        columns: 12
+      visibility:
+      - condition: state
+        entity: sensor.luftfeuchtigkeit_aussen
+        state:
+        - unavailable
+        - unknown
+      tap_action:
+        action: navigate
+        navigation_path: /todo?entity_id=todo.wartung
+    - type: custom:mushroom-template-card
       primary: Nichts zu tun
       secondary: Alles aufgefüllt und gewartet.
       icon: mdi:check-circle-outline
@@ -431,6 +593,98 @@ views:
               state:
               - Morgen
               - Heute
+          - condition: and
+            conditions:
+            - condition: state
+              entity: binary_sensor.venta_wasser_leer
+              state: 'on'
+          - condition: and
+            conditions:
+            - condition: or
+              conditions:
+              - condition: state
+                entity: binary_sensor.mmgg_wi11_7a1c_no_water_flag
+                state: 'on'
+              - condition: state
+                entity: binary_sensor.mmgg_wi11_7a1c_pump_block_flag
+                state: 'on'
+              - condition: numeric_state
+                entity: sensor.mmgg_wi11_7a1c_remain_clean_time
+                below: 1.5
+          - condition: and
+            conditions:
+            - condition: or
+              conditions:
+              - condition: numeric_state
+                entity: sensor.mmgg_fi1_2081_desiccant_left_time
+                below: 1.5
+              - condition: numeric_state
+                entity: sensor.mmgg_fi1_2081_cleantime
+                below: 1.5
+          - condition: and
+            conditions:
+            - condition: state
+              entity: sensor.prusa_mk4
+              state:
+              - error
+              - stopped
+              - attention
+          - condition: and
+            conditions:
+            - condition: state
+              entity: binary_sensor.muckenlampe_schale_leeren
+              state: 'on'
+          - condition: and
+            conditions:
+            - condition: or
+              conditions:
+              - condition: state
+                entity: binary_sensor.ikea_motion_09
+                state:
+                - unavailable
+                - unknown
+              - condition: state
+                entity: binary_sensor.ikea_motion_03_occupancy
+                state:
+                - unavailable
+                - unknown
+              - condition: state
+                entity: binary_sensor.ikea_motion_07
+                state:
+                - unavailable
+                - unknown
+              - condition: state
+                entity: binary_sensor.ikea_motion_06
+                state:
+                - unavailable
+                - unknown
+              - condition: state
+                entity: binary_sensor.tuya_motion_03_motion_presence
+                state:
+                - unavailable
+                - unknown
+              - condition: state
+                entity: binary_sensor.tuya_motion_02_presence
+                state:
+                - unavailable
+                - unknown
+              - condition: state
+                entity: binary_sensor.tuya_motion_01_presence
+                state:
+                - unavailable
+                - unknown
+              - condition: state
+                entity: binary_sensor.ikea_motion_02
+                state:
+                - unavailable
+                - unknown
+          - condition: and
+            conditions:
+            - condition: state
+              entity: sensor.luftfeuchtigkeit_aussen
+              state:
+              - unavailable
+              - unknown
       tap_action:
         action: navigate
         navigation_path: /todo?entity_id=todo.wartung
