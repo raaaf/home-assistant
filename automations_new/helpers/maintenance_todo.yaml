@@ -96,6 +96,27 @@
           {% if s.state in ['unavailable', 'unknown'] and now() - s.last_changed > timedelta(minutes=5) %}{% set ns.l = ns.l + ['Außensensor: Batterie prüfen'] %}{% endif %}
         {% endfor %}
         {{ ns.l | unique | list }}
+      # Description shown under an item on the dashboard, kept current while the item exists
+      details: >-
+        {% set ns = namespace(l=[]) %}
+        {% for e, n in [('sensor.s7_maxv_main_brush_time_left', 'Hauptbürste tauschen'),
+                        ('sensor.s7_maxv_side_brush_time_left', 'Seitenbürste tauschen'),
+                        ('sensor.s7_maxv_filter_time_left', 'Filter tauschen'),
+                        ('sensor.s7_maxv_sensor_time_left', 'Sensoren reinigen')] %}
+          {% if has_value(e) %}{% set h = states(e) | float(0) %}{% set ns.l = ns.l + [('Robbi: ' ~ n, 'überfällig' if h < 0 else 'noch ' ~ h | int ~ ' h')] %}{% endif %}
+        {% endfor %}
+        {% set ns.l = ns.l + [('Robbi: Fehler prüfen', states('sensor.s7_maxv_vacuum_error'))] %}
+        {% set ns.l = ns.l + [('Luftreiniger: Filter wechseln', 'noch ' ~ states('sensor.zhimi_vb4_bce4_filter_life_level') | int(0) ~ ' %')] %}
+        {% set d = states('sensor.mmgg_wi11_7a1c_filter_left_time_2') | int(0) %}
+        {% set ns.l = ns.l + [('Wasserspender: Filter wechseln', 'jetzt fällig' if d <= 0 else 'in ' ~ d ~ ' Tagen')] %}
+        {% for n, pct in state_attr('sensor.batterien_niedrig', 'stand') or [] %}
+          {% set ns.l = ns.l + [('Batterie wechseln: ' ~ n, pct ~ ' %')] %}
+        {% endfor %}
+        {% for e, n in [('sensor.restmuell', 'Restmüll'), ('sensor.bioabfall', 'Biotonne'), ('sensor.altpapier', 'Altpapier'), ('sensor.gelbersack', 'Gelben Sack')] %}
+          {% set ns.l = ns.l + [(n ~ ' rausstellen', 'Abholung ' ~ states(e) | lower)] %}
+        {% endfor %}
+        {% set ns.l = ns.l + [('Prusa: Druck prüfen', 'Status ' ~ states('sensor.prusa_mk4'))] %}
+        {{ dict(ns.l) }}
   - action: todo.get_items
     target:
       entity_id: todo.wartung
@@ -118,6 +139,22 @@
           entity_id: todo.wartung
         data:
           item: "{{ repeat.item }}"
+          description: "{{ details.get(repeat.item, '') }}"
+  - repeat:
+      for_each: >-
+        {{ current['todo.wartung']['items'] | selectattr('summary', 'in', managed)
+           | selectattr('summary', 'in', details.keys() | list) | list }}
+      sequence:
+      - if:
+        - condition: template
+          value_template: "{{ (repeat.item.description or '') != details[repeat.item.summary] }}"
+        then:
+        - action: todo.update_item
+          target:
+            entity_id: todo.wartung
+          data:
+            item: "{{ repeat.item.uid }}"
+            description: "{{ details[repeat.item.summary] }}"
   - variables:
       # Right after a restart the battery sensor and the devices it reads may not report yet:
       # keep battery items during the first 10 minutes of uptime

@@ -1,7 +1,7 @@
 # General: time sensors, device status binary sensors, visitor helpers and saved HomePod volumes
 
 template:
-  # Devices whose battery needs replacing (phones and Macs excluded), drives the dashboard to-do row
+  # Devices whose battery needs replacing (phones and Macs excluded), feeds the maintenance to-do
   - sensor:
       - name: "Batterien niedrig"
         unique_id: batterien_niedrig
@@ -13,16 +13,6 @@ template:
              | selectattr('state', 'is_number') | map(attribute='state') | map('float')
              | select('lt', 15) | list | count }}
         attributes:
-          geraete: >
-            {% set ns = namespace(l=[]) %}
-            {% for s in states.sensor | selectattr('attributes.device_class', 'defined')
-                 | selectattr('attributes.device_class', 'eq', 'battery')
-                 | rejectattr('entity_id', 'search', 'iphone|ipad|macbook|watch') %}
-              {% if s.state | is_number and s.state | float < 15 %}
-                {% set ns.l = ns.l + [s.name | replace(' Battery', '') | replace(' Batterie', '') ~ ' ' ~ s.state | int ~ ' %'] %}
-              {% endif %}
-            {% endfor %}
-            {{ ns.l | join(' · ') }}
           # Plain device names, read by the maintenance to-do sync (helpers/maintenance_todo.yaml)
           namen: >
             {% set ns = namespace(l=[]) %}
@@ -31,6 +21,17 @@ template:
                  | rejectattr('entity_id', 'search', 'iphone|ipad|macbook|watch') %}
               {% if s.state | is_number and s.state | float < 15 %}
                 {% set ns.l = ns.l + [s.name | replace(' Battery', '') | replace(' Batterie', '')] %}
+              {% endif %}
+            {% endfor %}
+            {{ ns.l }}
+          # [name, percent] pairs, the item descriptions of the maintenance to-do sync
+          stand: >
+            {% set ns = namespace(l=[]) %}
+            {% for s in states.sensor | selectattr('attributes.device_class', 'defined')
+                 | selectattr('attributes.device_class', 'eq', 'battery')
+                 | rejectattr('entity_id', 'search', 'iphone|ipad|macbook|watch') %}
+              {% if s.state | is_number and s.state | float < 15 %}
+                {% set ns.l = ns.l + [[s.name | replace(' Battery', '') | replace(' Batterie', ''), s.state | int]] %}
               {% endif %}
             {% endfor %}
             {{ ns.l }}
@@ -152,7 +153,7 @@ template:
         icon: mdi:fan
         availability: "{{ states('input_select.trockner') not in ['unknown', 'unavailable'] }}"
 
-      # Mückenlampe reminder fired in the last 7 days, read by the maintenance to-do sync and the dashboard row
+      # Mückenlampe reminder fired in the last 7 days, read by the maintenance to-do sync
       - name: "Mückenlampe Schale leeren"
         unique_id: mueckenlampe_schale_leeren
         icon: mdi:delete-empty-outline
@@ -162,7 +163,7 @@ template:
 
   # Set when "Benachrichtigung » Luftwäscher kein Wasser" fires (it also cuts the socket, so the socket state
   # cannot tell an empty tank apart), cleared once the Venta draws running power again. Trigger-based, so the
-  # state survives restarts. Read by the maintenance to-do sync and the dashboard row
+  # state survives restarts. Read by the maintenance to-do sync
   - triggers:
       - trigger: event
         event_type: automation_triggered
