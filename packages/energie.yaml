@@ -53,27 +53,15 @@ template:
         device_class: energy
         state: >-
           {#
-            Priority order for yesterday's solar production (kWh):
-            1) UI helper input_number.solarproduktion_gestern saved at 23:55
-            2) DTU daily energy statistics fallback (Wh -> kWh)
+            Yesterday's solar production (kWh):
+            UI helper input_number.solarproduktion_gestern saved at 23:55, else 0.
+            The DTU sensor has no statistics attribute, so there is no fallback source.
           #}
           {% set helper = states('input_number.solarproduktion_gestern') %}
           {% if helper not in ['unknown', 'unavailable', ''] and helper | float(0) > 0 %}
             {{ helper | float(0) | round(2) }}
           {% else %}
-            {% set today = now().date() %}
-            {% set yesterday = (today - timedelta(days=1)).isoformat() %}
-            {% set stats = state_attr('sensor.dtu_ac_daily_energy', 'statistics') %}
-            {% if stats %}
-              {% set match = stats | selectattr('start', 'defined') | selectattr('start', 'search', yesterday) | list %}
-              {% if match and match[0]['sum'] is defined %}
-                {{ (match[0]['sum'] / 1000) | round(2) }}
-              {% else %}
-                0
-              {% endif %}
-            {% else %}
-              0
-            {% endif %}
+            0
           {% endif %}
 
       # Netz Einspeisung/Bezug (Phase-Based Calculation)

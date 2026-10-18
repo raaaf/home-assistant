@@ -1030,7 +1030,7 @@ scene_stop_rgb_effect:
     Beendet einen laufenden Hue-Effekt, setzt die RGB-Lichter zurueck in den
     color_temp-Modus (sonst starten sie beim naechsten Mal wieder farbig) und
     schaltet danach die Raumlichter aus.
-  icon: mdi:palette-off
+  icon: mdi:lightbulb-group-off
   mode: parallel
   max: 10
   fields:

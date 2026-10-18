@@ -90,7 +90,6 @@ template:
           wind_speed_unit: "{{ state_attr('weather.fuerth_bayern', 'wind_speed_unit') }}"
           visibility: "{{ state_attr('weather.fuerth_bayern', 'visibility') }}"
           visibility_unit: "{{ state_attr('weather.fuerth_bayern', 'visibility_unit') }}"
-          precipitation: "{{ state_attr('weather.fuerth_bayern', 'precipitation') }}"
           precipitation_unit: "{{ state_attr('weather.fuerth_bayern', 'precipitation_unit') }}"
           forecast: "{{ daily_forecast['weather.fuerth_bayern'].forecast[:5] }}"
 
