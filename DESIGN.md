@@ -43,7 +43,7 @@ value per area; every area tile opens a subview with the details (back arrow ret
 | Block on Zuhause | Shows | Detail |
 |---|---|---|
 | Badges | people, outside temperature, clothing; lights, open door/windows, CO2, heating, laundry only when relevant | none |
-| Zu erledigen | one row per due item (Robbi parts, filters, batteries from `sensor.batterien_niedrig`, waste, leak, Venta, water and food dispenser, stopped Prusa print, Mückenlampe, unreachable motion and outdoor sensors); laundry stays a badge; tap opens `todo.wartung` | To-do panel |
+| Zu erledigen | native to-do card with the open items of `todo.wartung` (ticked items hidden), details in the item description; `Helper » Wartung To-do abgleichen` fills it; "Nichts zu tun" when nothing is open | To-do panel |
 | Empfehlungen | one row per problem listing the affected rooms, only while something is off (UBA/WHO bands, `TBAND` below); red once a room leaves its amber band | Klima |
 | Läuft gerade | playing media players with inline controls, hidden when nothing plays | none |
 | Bereiche | Licht, Klima, Türen & Fenster, Energie, Wetter, Rollos, Haushalt, Prusa (only when on) | one subview each |
