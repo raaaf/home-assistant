@@ -152,6 +152,35 @@ template:
         icon: mdi:fan
         availability: "{{ states('input_select.trockner') not in ['unknown', 'unavailable'] }}"
 
+      # Mückenlampe reminder fired in the last 7 days, read by the maintenance to-do sync and the dashboard row
+      - name: "Mückenlampe Schale leeren"
+        unique_id: mueckenlampe_schale_leeren
+        icon: mdi:delete-empty-outline
+        state: >
+          {% set t = state_attr('automation.benachrichtigung_muckenlampe_reinigen', 'last_triggered') %}
+          {{ t is not none and now() - t < timedelta(days=7) }}
+
+  # Set when "Benachrichtigung » Luftwäscher kein Wasser" fires (it also cuts the socket, so the socket state
+  # cannot tell an empty tank apart), cleared once the Venta draws running power again. Trigger-based, so the
+  # state survives restarts. Read by the maintenance to-do sync and the dashboard row
+  - triggers:
+      - trigger: event
+        event_type: automation_triggered
+        event_data:
+          entity_id: automation.benachrichtigung_luftwascher_kein_wasser
+        id: leer
+      - trigger: numeric_state
+        entity_id: sensor.steckdose_luftwascher_power
+        above: input_number.luftwascher_leer_schwelle
+        for:
+          minutes: 2
+        id: laeuft
+    binary_sensor:
+      - name: "Venta Wasser leer"
+        unique_id: venta_wasser_leer
+        icon: mdi:water-off-outline
+        state: "{{ trigger.id == 'leer' }}"
+
 input_boolean:
   haustur_besucher_inside:
     name: "Besucher ist im Haus"

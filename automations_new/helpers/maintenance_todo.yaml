@@ -6,10 +6,12 @@
   alias: Helper » Wartung To-do abgleichen
   description: >-
     Trägt fällige Wartungspunkte (Robbi-Verschleißteile, Filter, Batterien, Müll, Wassermelder)
-    in todo.wartung ein und entfernt sie, sobald der Grund weg ist. Verwaltet nur
-    Einträge, deren Text einem der Muster unten entspricht; selbst angelegte Punkte bleiben
-    unberührt.
-    Ein abgehakter Punkt bleibt abgehakt, solange der Grund besteht.
+    und die Aufgaben aus Geräte-Benachrichtigungen (Wäsche, Venta, Wasser- und Futterspender,
+    Prusa, Mückenlampe, ausgefallene Sensoren) in todo.wartung ein und entfernt sie, sobald der
+    Grund weg ist. Verwaltet nur Einträge, deren Text einem der Muster unten entspricht; selbst
+    angelegte Punkte bleiben unberührt.
+    Ein abgehakter Punkt bleibt abgehakt, solange der Grund besteht. Ist das Gerät gerade nicht
+    erreichbar, bleibt sein Punkt stehen, bis es wieder einen Wert meldet.
   triggers:
   - trigger: time_pattern
     minutes: /15
@@ -23,6 +25,18 @@
     - sensor.bioabfall
     - sensor.altpapier
     - sensor.gelbersack
+    - input_select.waschmaschine
+    - input_select.trockner
+    - binary_sensor.venta_wasser_leer
+    - binary_sensor.muckenlampe_schale_leeren
+  - trigger: state
+    entity_id: sensor.prusa_mk4
+    to:
+    - error
+    - stopped
+    - attention
+    for:
+      seconds: 31
   conditions:
   - condition: template
     value_template: "{{ has_value('todo.wartung') }}"
@@ -30,6 +44,16 @@
   max: 3
   actions:
   - variables:
+      # Same eight sensors as "Notification » Bewegungsmelder ausgefallen" (notifications/monitoring.yaml)
+      motion_sensors:
+      - binary_sensor.ikea_motion_09
+      - binary_sensor.ikea_motion_03_occupancy
+      - binary_sensor.ikea_motion_07
+      - binary_sensor.ikea_motion_06
+      - binary_sensor.tuya_motion_03_motion_presence
+      - binary_sensor.tuya_motion_02_presence
+      - binary_sensor.tuya_motion_01_presence
+      - binary_sensor.ikea_motion_02
       wanted: >-
         {% set ns = namespace(l=[]) %}
         {% if is_state('binary_sensor.kuche_wasser_sensor', 'on') %}{% set ns.l = ns.l + ['Wasser in der Küche prüfen'] %}{% endif %}
@@ -48,6 +72,29 @@
         {% for e, n in [('sensor.restmuell', 'Restmüll'), ('sensor.bioabfall', 'Biotonne'), ('sensor.altpapier', 'Altpapier'), ('sensor.gelbersack', 'Gelben Sack')] %}
           {% if states(e) in ['Morgen', 'Heute'] %}{% set ns.l = ns.l + [n ~ ' rausstellen'] %}{% endif %}
         {% endfor %}
+        {% if is_state('input_select.waschmaschine', 'Fertig') %}{% set ns.l = ns.l + ['Waschmaschine: Wäsche aufhängen'] %}{% endif %}
+        {% if is_state('input_select.trockner', 'Fertig') %}{% set ns.l = ns.l + ['Trockner: Wäsche rausholen'] %}{% endif %}
+        {% if is_state('binary_sensor.venta_wasser_leer', 'on') %}{% set ns.l = ns.l + ['Venta: Wasser auffüllen'] %}{% endif %}
+        {% if is_state('binary_sensor.muckenlampe_schale_leeren', 'on') %}{% set ns.l = ns.l + ['Mückenlampe: Auffangschale leeren'] %}{% endif %}
+        {# The tank and pump flags flicker for a minute at a time, so they count after 5 minutes #}
+        {% for s in expand('binary_sensor.mmgg_wi11_7a1c_no_water_flag', 'binary_sensor.mmgg_wi11_7a1c_pump_block_flag') %}
+          {% if s.state == 'on' and now() - s.last_changed > timedelta(minutes=5) %}
+            {% set ns.l = ns.l + ['Wasserspender: ' ~ ('Wasser auffüllen' if 'no_water' in s.entity_id else 'Pumpe prüfen')] %}
+          {% endif %}
+        {% endfor %}
+        {% if has_value('sensor.mmgg_wi11_7a1c_remain_clean_time') and states('sensor.mmgg_wi11_7a1c_remain_clean_time') | float(99) <= 1 %}{% set ns.l = ns.l + ['Wasserspender: reinigen'] %}{% endif %}
+        {% for e, n in [('sensor.mmgg_fi1_2081_desiccant_left_time', 'Filter wechseln'), ('sensor.mmgg_fi1_2081_cleantime', 'reinigen')] %}
+          {% if has_value(e) and states(e) | float(99) <= 1 %}{% set ns.l = ns.l + ['Futterspender: ' ~ n] %}{% endif %}
+        {% endfor %}
+        {% for s in expand('sensor.prusa_mk4') %}
+          {% if s.state in ['error', 'stopped', 'attention'] and now() - s.last_changed > timedelta(seconds=30) %}{% set ns.l = ns.l + ['Prusa: Druck prüfen'] %}{% endif %}
+        {% endfor %}
+        {% for s in expand(motion_sensors) %}
+          {% if s.state in ['unavailable', 'unknown'] and now() - s.last_changed > timedelta(minutes=30) %}{% set ns.l = ns.l + ['Bewegungsmelder prüfen: ' ~ s.name | replace(' Occupancy', '') | replace(' Motion', '')] %}{% endif %}
+        {% endfor %}
+        {% for s in expand('sensor.luftfeuchtigkeit_aussen') %}
+          {% if s.state in ['unavailable', 'unknown'] and now() - s.last_changed > timedelta(minutes=5) %}{% set ns.l = ns.l + ['Außensensor: Batterie prüfen'] %}{% endif %}
+        {% endfor %}
         {{ ns.l | unique | list }}
   - action: todo.get_items
     target:
@@ -61,7 +108,7 @@
       # Entries this automation owns are recognised by their wording, so they need no visible marker
       managed: >-
         {{ current['todo.wartung']['items'] | map(attribute='summary')
-           | select('search', '^(Robbi: (Hauptbürste tauschen|Seitenbürste tauschen|Filter tauschen|Sensoren reinigen|Fehler prüfen)|Batterie wechseln: .+|Luftreiniger: Filter wechseln|Wasserspender: Filter wechseln|Wasser in der Küche prüfen|(Restmüll|Biotonne|Altpapier|Gelben Sack) rausstellen)$')
+           | select('search', '^(Robbi: (Hauptbürste tauschen|Seitenbürste tauschen|Filter tauschen|Sensoren reinigen|Fehler prüfen)|Batterie wechseln: .+|Bewegungsmelder prüfen: .+|Luftreiniger: Filter wechseln|Wasserspender: (Filter wechseln|Wasser auffüllen|Pumpe prüfen|reinigen)|Futterspender: (Filter wechseln|reinigen)|Waschmaschine: Wäsche aufhängen|Trockner: Wäsche rausholen|Venta: Wasser auffüllen|Mückenlampe: Auffangschale leeren|Prusa: Druck prüfen|Außensensor: Batterie prüfen|Wasser in der Küche prüfen|(Restmüll|Biotonne|Altpapier|Gelben Sack) rausstellen)$')
            | list }}
   - repeat:
       for_each: "{{ wanted | reject('in', managed) | list }}"
@@ -77,8 +124,28 @@
       battery_known: >-
         {{ state_attr('sensor.batterien_niedrig', 'namen') is list
            and (now() - as_datetime(states('sensor.uptime'), now())).total_seconds() > 600 }}
+      # Items whose device reports no value right now: the reason may still be there, so they stay.
+      # The water dispenser's cleaning counter restarts on its own, so an open cleaning item stays until ticked
+      held: >-
+        {% set ns = namespace(l=[]) %}
+        {% for e, n in [('binary_sensor.mmgg_wi11_7a1c_no_water_flag', 'Wasserspender: Wasser auffüllen'),
+                        ('binary_sensor.mmgg_wi11_7a1c_pump_block_flag', 'Wasserspender: Pumpe prüfen'),
+                        ('sensor.mmgg_fi1_2081_desiccant_left_time', 'Futterspender: Filter wechseln'),
+                        ('sensor.mmgg_fi1_2081_cleantime', 'Futterspender: reinigen'),
+                        ('sensor.prusa_mk4', 'Prusa: Druck prüfen'),
+                        ('sensor.luftfeuchtigkeit_aussen', 'Außensensor: Batterie prüfen')] %}
+          {% if not has_value(e) %}{% set ns.l = ns.l + [n] %}{% endif %}
+        {% endfor %}
+        {% for s in expand(motion_sensors) %}
+          {% if s.state in ['unavailable', 'unknown'] %}{% set ns.l = ns.l + ['Bewegungsmelder prüfen: ' ~ s.name | replace(' Occupancy', '') | replace(' Motion', '')] %}{% endif %}
+        {% endfor %}
+        {% if current['todo.wartung']['items'] | selectattr('summary', 'eq', 'Wasserspender: reinigen')
+              | selectattr('status', 'eq', 'needs_action') | list | count > 0 %}
+          {% set ns.l = ns.l + ['Wasserspender: reinigen'] %}
+        {% endif %}
+        {{ ns.l }}
       stale: >-
-        {% set m = managed | reject('in', wanted) | list %}
+        {% set m = managed | reject('in', wanted) | reject('in', held) | list %}
         {{ m if battery_known else m | reject('search', '^Batterie wechseln: ') | list }}
   - repeat:
       for_each: "{{ stale }}"
