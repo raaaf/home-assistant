@@ -1026,6 +1026,9 @@ homepod_wake:
   # 19.10.2026: Die Apple-Szene startete um 07:00 mit der Vortags-Lautstaerke
   # (Bad 70 %), der Mute im Wakeup kam eine Sekunde zu spaet. Darum schon hier,
   # 10 Minuten vorher, auf 0. HomePods nehmen die Lautstaerke auch im Leerlauf an.
+  # Laufende Wiedergabe bleibt unangetastet.
+  - condition: template
+    value_template: "{{ states(target_player) not in ['playing', 'unavailable', 'unknown'] }}"
   - action: media_player.volume_set
     continue_on_error: true
     target:

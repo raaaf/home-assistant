@@ -94,10 +94,13 @@
       - action: cover.open_cover
         target:
           entity_id: cover.aqara_cover_02
-      - alias: "Schlafzimmer-Rollo nur, wenn nicht gespielt oder geschaut wird"
+      # Im Wakeup (wakeup_active, bis 08:00) bleibt das Rollo bei Dunkelheit zu
+      # und oeffnet erst hier. Dann ohne rollo_01_frei: ein haengender AppleTV
+      # darf das Aufwachen nicht blockieren (siehe day_night.yaml).
+      - alias: "Schlafzimmer-Rollo nur, wenn nicht gespielt oder geschaut wird, oder im Wakeup"
         if:
         - condition: template
-          value_template: '{{ rollo_01_frei }}'
+          value_template: "{{ rollo_01_frei or is_state('input_boolean.wakeup_active', 'on') }}"
         then:
         - action: cover.open_cover
           target:
