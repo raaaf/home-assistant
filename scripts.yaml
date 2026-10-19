@@ -1023,6 +1023,15 @@ homepod_wake:
     continue_on_error: true
     target:
       entity_id: "{{ target_player }}"
+  # 19.10.2026: Die Apple-Szene startete um 07:00 mit der Vortags-Lautstaerke
+  # (Bad 70 %), der Mute im Wakeup kam eine Sekunde zu spaet. Darum schon hier,
+  # 10 Minuten vorher, auf 0. HomePods nehmen die Lautstaerke auch im Leerlauf an.
+  - action: media_player.volume_set
+    continue_on_error: true
+    target:
+      entity_id: "{{ target_player }}"
+    data:
+      volume_level: 0
 
 scene_stop_rgb_effect:
   alias: 'Szene » Hue-Effekt stoppen und Lichter ausschalten'
