@@ -184,12 +184,35 @@
         # Dezember ueber eine Stunde. Deshalb hier im Wakeup, und bewusst ohne
         # den rollo_01_frei-Guard: ein haengender AppleTV (meldet dauerhaft
         # "playing") darf das Aufwachen nicht blockieren.
-        - alias: "Schlafzimmer-Rollo ganz auf"
-          action: cover.open_cover
+        # Nur wenn die Sonne schon oben ist: im Dunkeln bringt ein offenes Rollo
+        # nichts. Sonst oeffnet es der "morgens"-Trigger (Elevation > 0) in
+        # rollos.yaml.
+        - alias: "Schlafzimmer-Rollo ganz auf, wenn es draussen hell ist"
+          if:
+          - condition: numeric_state
+            entity_id: sun.sun
+            attribute: elevation
+            above: 0
+          then:
+          - action: cover.open_cover
+            continue_on_error: true
+            target:
+              entity_id: cover.aqara_cover_01
+        # IKEA ignoriert transition beim Einschalten aus "off", deshalb erst
+        # ohne Fade auf 1 %, dann parallel zur Musik ueber 15 Minuten auf 100 %.
+        - alias: "Schlafzimmer, Kinderzimmer und Badezimmer auf 1%"
+          action: light.turn_on
           continue_on_error: true
           target:
-            entity_id: cover.aqara_cover_01
-        - alias: "Schlafzimmer, Kinderzimmer und Badezimmer sofort auf 100%"
+            entity_id:
+            - light.alle_schlafzimmer_aufwachlichter
+            - light.alle_kinderzimmer_lichter
+            - light.alle_badezimmer_lichter
+          data:
+            brightness_pct: 1
+            transition: 0
+        - delay: 00:00:02
+        - alias: "Licht ueber 15 Minuten auf 100% einfaden"
           action: light.turn_on
           continue_on_error: true
           target:
@@ -199,7 +222,7 @@
             - light.alle_badezimmer_lichter
           data:
             brightness_pct: 100
-            transition: 0
+            transition: 900
         # The Apple Home scene "Aufwachen" (via input_boolean.werktag_musik, helpers/automation.yaml)
         # starts the music at 1 %. Starting the fade in the same second read the old level
         # (12.10.2026: Küche began at 40 %, Bad at 50 %), so wait until a HomePod plays at the
