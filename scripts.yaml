@@ -1023,12 +1023,12 @@ homepod_wake:
     continue_on_error: true
     target:
       entity_id: "{{ target_player }}"
-  # 19.10.2026: Die Apple-Szene startete um 07:00 mit der Vortags-Lautstaerke
-  # (Bad 70 %), der Mute im Wakeup kam eine Sekunde zu spaet. Darum schon hier,
-  # 10 Minuten vorher, auf 0. HomePods nehmen die Lautstaerke auch im Leerlauf an.
-  # Laufende Wiedergabe bleibt unangetastet. Das Kinderzimmer-Stereopaar bleibt
-  # aussen vor: am 20.10. spielte es nach diesem Mute laut HA und Home-App mit
-  # 50 %, blieb aber stumm. Die Apple-Szene setzt es ohnehin vor dem Start auf 1,8 %.
+  # 19.10.2026: the Apple scene started at 07:00 with the previous day's volume
+  # (bathroom 70 %) and the wakeup mute landed a second too late, so mute here,
+  # ten minutes earlier. HomePods accept a volume change while idle. Playing
+  # players are left alone. The Kinderzimmer stereo pair is skipped: on 20.10. it
+  # played at 50 % per HA and the Home app after this mute but stayed silent. The
+  # Apple scene sets it to 1.8 % before playback anyway.
   - condition: template
     value_template: >-
       {{ target_player != 'media_player.homepod_kinderzimmer'

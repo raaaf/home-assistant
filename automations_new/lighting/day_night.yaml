@@ -184,9 +184,8 @@
         # Dezember ueber eine Stunde. Deshalb hier im Wakeup, und bewusst ohne
         # den rollo_01_frei-Guard: ein haengender AppleTV (meldet dauerhaft
         # "playing") darf das Aufwachen nicht blockieren.
-        # Nur wenn die Sonne schon oben ist: im Dunkeln bringt ein offenes Rollo
-        # nichts. Sonst oeffnet es der "morgens"-Trigger (Elevation > 0) in
-        # rollos.yaml.
+        # Only when the sun is already up: an open blind is pointless in the dark.
+        # Otherwise the "morgens" trigger (elevation > 0) in rollos.yaml opens it.
         - alias: "Schlafzimmer-Rollo ganz auf, wenn es draussen hell ist"
           if:
           - condition: numeric_state
@@ -198,8 +197,8 @@
             continue_on_error: true
             target:
               entity_id: cover.aqara_cover_01
-        # IKEA ignoriert transition beim Einschalten aus "off", deshalb erst
-        # ohne Fade auf 1 %, dann parallel zur Musik ueber 15 Minuten auf 100 %.
+        # IKEA ignores transition when turning on from off, so first switch to 1 % without
+        # a fade, then fade to 100 % over 15 minutes in step with the music.
         - alias: "Schlafzimmer, Kinderzimmer und Badezimmer auf 1%"
           action: light.turn_on
           continue_on_error: true
