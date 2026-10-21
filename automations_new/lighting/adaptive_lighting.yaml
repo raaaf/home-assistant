@@ -62,6 +62,8 @@
         state: 'off'
       - alias: Keine manuelle Steuerung aktiv (Adaptive Lighting)
         condition: template
+        # Area schlafzimmer = Rafaels Raum (Bett + PC, AL-Instanz arbeitszimmer),
+        # Area arbeitszimmer_alex = Alex' Buero (AL-Instanz schlafzimmer)
         value_template: >-
           {% set area_to_sensor = {
             'ankleide': 'binary_sensor.ankleide_manual_control',
@@ -73,8 +75,8 @@
             'badezimmer_klein': 'binary_sensor.waschzimmer_manual_control',
             'waschzimmer': 'binary_sensor.waschzimmer_manual_control',
             'kinderzimmer': 'binary_sensor.kinderzimmer_manual_control',
-            'arbeitszimmer': 'binary_sensor.arbeitszimmer_manual_control',
-            'schlafzimmer': 'binary_sensor.schlafzimmer_manual_control',
+            'schlafzimmer': 'binary_sensor.arbeitszimmer_manual_control',
+            'arbeitszimmer_alex': 'binary_sensor.schlafzimmer_manual_control',
             'balkon': 'binary_sensor.balkon_manual_control'
           } %}
           {% set sensor = area_to_sensor.get(motion_area, none) %}
@@ -83,7 +85,7 @@
         condition: template
         value_template: >-
           {% set szene_aktiv = {
-            'arbeitszimmer': is_state('input_boolean.arbeit', 'on') or is_state('input_boolean.gaming', 'on'),
+            'schlafzimmer': is_state('input_boolean.arbeit', 'on') or is_state('input_boolean.gaming', 'on'),
             'wohnzimmer': is_state('input_boolean.party_wohnzimmer', 'on'),
             'kuche': is_state('input_boolean.party_wohnzimmer', 'on'),
             'arbeitszimmer_alex': is_state('input_boolean.arbeit', 'on'),
