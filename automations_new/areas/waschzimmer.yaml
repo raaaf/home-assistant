@@ -23,13 +23,13 @@
       include_light_control:
       - use_brightness
       - use_transition
-      light_transition_on: 2
+      light_transition_on: 0.5
       light_transition_off: 10
       include_night_light_control:
       - use_brightness
       - use_transition
       night_light_brightness: 15
-      night_light_transition_on: 2
+      night_light_transition_on: 0.5
       night_light_transition_off: 10
       # 2200K statt RGB-Amber: sonst setzt die Blueprint erst Rot und Adaptive
       # Lighting korrigiert eine Sekunde spaeter auf 2200K, sichtbar als Farbsprung.
@@ -56,9 +56,9 @@
       include_light_control:
       - use_brightness
       - use_transition
-      light_transition_on: 2
+      light_transition_on: 0.5
       light_transition_off: 10
-      time_delay: 0
+      time_delay: 1
       include_night_lights: night_lights_enabled
       night_lights_conditions:
       - entity_state_enabled
@@ -71,7 +71,7 @@
       - use_brightness
       - use_transition
       night_light_brightness: 15
-      night_light_transition_on: 2
+      night_light_transition_on: 0.5
       night_light_transition_off: 10
       include_night_light_colour_control: use_colour_temperature
       night_light_colour_temperature: 2200

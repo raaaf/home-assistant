@@ -21,17 +21,17 @@
       include_light_control:
       - use_brightness
       - use_transition
-      light_transition_on: 2
+      light_transition_on: 0.5
       light_transition_off: 10
       include_night_light_control:
       - use_night_brightness
       - use_brightness
       - use_transition
-      night_light_transition_on: 2
+      night_light_transition_on: 0.5
       night_light_transition_off: 10
       night_lights_after_time: '19:00:00'
       night_lights_before_time: 05:30:00
-      time_delay: 0
+      time_delay: 1
       night_time_delay: 0
       night_lights_conditions:
       - entity_state_enabled
