@@ -51,7 +51,7 @@ value per area; every area tile opens a subview with the details (back arrow ret
 Comfort bands (green, amber one step around it, red outside): living room 20–22 °C, bathroom 22–24,
 bedroom and Alex's office 20–21 by day; from 22:00 during Schlafenszeit (`binary_sensor.nachtklima_schlafzimmer`,
 the sliding door makes both one air volume) bedroom 17–18 and office 16–19; children's room 19–20 by day,
-17–18 during `input_boolean.schlafenszeit`. Humidity 40–60 %, CO2 < 1000 / < 2000 ppm, PM2.5 ≤ 15 / ≤ 35, PM10 ≤ 45 / ≤ 100,
+17–18 during `input_boolean.schlafenszeit`. Hallway 18–20 is used only by the floor heating automation, no card. Humidity 40–60 %, CO2 < 1000 / < 2000 ppm, PM2.5 ≤ 15 / ≤ 35, PM10 ≤ 45 / ≤ 100,
 VOC index ≤ 150 / ≤ 250.
 
 Plugins: Mushroom (template cards, chips) and card-mod (threshold colors only). No layout-card, no

@@ -481,13 +481,17 @@
   description: >-
     Floor heating boost at fixed times for a slow system (1-2 h warmup). 06:30 uses the current
     outdoor temperature, 14:30 the daily forecast high: below 0 °C 3 h, below 5 °C 2 h, below 10 °C
-    1.5 h. A sunny afternoon (forecast cloud cover 35 % or less) drops the outdoor boost. Only rooms
-    below the top of their day comfort band are heated; a room below the bottom of its band gets at
-    least 1 h even when it is mild outside. A room without a reading is heated with the outdoor
-    boost as before, but gets no mild-weather hour. Morning only: a room whose window is open or
-    was closed less than 3 h ago gets the outdoor boost regardless of its reading, because the
-    air sensors stay warm while the floor cools under a window that was open all night.
-    Controls Kinderzimmer, Schlafzimmer, Wohnzimmer.
+    1.5 h. A sunny afternoon (forecast cloud cover 35 % or less) drops the outdoor boost.
+    Morning base load (since 2026-10-26): when the outdoor boost applies, the air reading no longer
+    decides whether a circuit heats, only how long. A room below the top of its band (or with an
+    open or recently closed window, or without a reading) gets the full outdoor boost, a room up to
+    2 °C above the top gets 1 h, only a room more than 2 °C above the top is skipped (Schlafzimmer
+    only above 25 °C: it is the workroom, so it gets at least 1 h up to there). Reason: the air
+    sensors read warm from sun and appliances while the screed cools, so air-gated heating left the
+    floors cold. Bad and Flur take part in the morning run only.
+    Afternoon, and mornings at 10 °C or more outside: only rooms below the top of their band are
+    heated with the outdoor boost; a room below the bottom of its band gets 1 h even when it is
+    mild outside. Controls Kinderzimmer, Schlafzimmer, Wohnzimmer (both runs), Bad and Flur (morning).
   triggers:
   - at: "06:30:00"
     id: morning-boost
@@ -508,11 +512,23 @@
   - variables:
       # Day comfort bands, keep in sync with TBAND in DESIGN.md (Comfort bands)
       # switch_04 heats both the bedroom and Alex' office, so it reads the group mean of both rooms
-      rooms:
+      # morning_only: circuits that are otherwise switched by hand (Bad, Flur)
+      # no_skip: at least the 1 h morning base load up to 25 °C air (Schlafzimmer: Rafael and Alex work there)
+      all_rooms:
       - {name: Kinderzimmer, switch: switch.sonoff_switch_03, sensor: sensor.aqara_climate_03_temperature, low: 19, high: 20}
       - {name: Schlafzimmer, switch: switch.sonoff_switch_04, sensor: sensor.arbeitszimmer_temperatur, low: 20, high: 21,
-         windows: [binary_sensor.aqara_contact_01, binary_sensor.aqara_contact_07]}
+         windows: [binary_sensor.aqara_contact_01, binary_sensor.aqara_contact_07], no_skip: true}
       - {name: Wohnzimmer, switch: switch.sonoff_switch_05, sensor: sensor.wohnzimmer_temperatur, low: 20, high: 22}
+      - {name: Badezimmer, switch: switch.sonoff_switch_01, sensor: sensor.aqara_climate_02_temperature, low: 22, high: 24,
+         morning_only: true}
+      - {name: Flur, switch: switch.sonoff_switch_02, sensor: sensor.philips_motion_01_motion_1_temperature, low: 18, high: 20,
+         morning_only: true}
+      rooms: >-
+        {{ all_rooms if trigger.id == 'morning-boost'
+           else all_rooms | rejectattr('morning_only', 'defined') | list }}
+      # Air reading more than this above the band top skips the morning base load
+      hard_margin: 2
+      base_seconds: 3600
       forecast: >-
         {% set f = state_attr('sensor.fuerth_daily', 'forecast') %}
         {{ f[0] if f and f | length > 0 else {} }}
@@ -524,13 +540,13 @@
         {% endif %}
       sunny_afternoon: >-
         {{ trigger.id == 'afternoon-boost' and forecast.get('cloud_coverage') | float(100) <= 35 }}
-      outdoor_duration: >-
+      outdoor_seconds: >-
         {% set t = temp_source | float %}
-        {% if sunny_afternoon %}00:00:00
-        {% elif t < 0 %}03:00:00
-        {% elif t < 5 %}02:00:00
-        {% elif t < 10 %}01:30:00
-        {% else %}00:00:00
+        {% if sunny_afternoon %}0
+        {% elif t < 0 %}10800
+        {% elif t < 5 %}7200
+        {% elif t < 10 %}5400
+        {% else %}0
         {% endif %}
       window_rooms: >-
         {% set ns = namespace(l=[]) %}
@@ -544,28 +560,37 @@
           {% endfor %}
         {% endif %}
         {{ ns.l | unique | list }}
-      below_top: >-
+      # One entry per heated circuit: name, switch, seconds
+      plan: >-
         {% set ns = namespace(l=[]) %}
+        {% set od = outdoor_seconds | int %}
         {% for r in rooms %}
           {% set t = states(r.sensor) | float(none) %}
-          {% if t is none or t < r.high or r.name in window_rooms %}{% set ns.l = ns.l + [r] %}{% endif %}
+          {% set below_top = t is none or t < r.high or r.name in window_rooms %}
+          {% if trigger.id == 'morning-boost' and od > 0 %}
+            {% if below_top %}{% set s = od %}
+            {% elif t <= r.high + hard_margin or (r.get('no_skip') and t <= 25) %}{% set s = [base_seconds, od] | min %}
+            {% else %}{% set s = 0 %}{% endif %}
+          {% elif od > 0 %}
+            {% set s = od if below_top else 0 %}
+          {% else %}
+            {% set s = base_seconds if (t is not none and t < r.low) else 0 %}
+          {% endif %}
+          {% if s > 0 %}{% set ns.l = ns.l + [{'name': r.name, 'switch': r.switch, 'seconds': s}] %}{% endif %}
         {% endfor %}
         {{ ns.l }}
-      below_bottom: >-
-        {% set ns = namespace(l=[]) %}
-        {% for r in rooms %}
-          {% set t = states(r.sensor) | float(none) %}
-          {% if t is not none and t < r.low %}{% set ns.l = ns.l + [r] %}{% endif %}
-        {% endfor %}
-        {{ ns.l }}
-      heat_rooms: "{{ below_top if outdoor_duration != '00:00:00' else below_bottom }}"
+      boost_seconds: "{{ plan | map(attribute='seconds') | max if plan | length > 0 else 0 }}"
+      short_seconds: "{{ base_seconds }}"
+      short_switches: >-
+        {{ plan | selectattr('seconds', 'lt', boost_seconds | int) | map(attribute='switch') | list }}
       boost_duration: >-
-        {{ outdoor_duration if outdoor_duration != '00:00:00'
-           else ('01:00:00' if below_bottom | length > 0 else '00:00:00') }}
+        {% set s = boost_seconds | int %}
+        {{ '%02d:%02d:00' | format(s // 3600, (s % 3600) // 60) }}
       room_summary: >-
         {% set ns = namespace(l=[]) %}
         {% for r in rooms %}
-          {% set ns.l = ns.l + [r.name ~ ' ' ~ states(r.sensor) ~ (' heizt' if r in heat_rooms else ' aus') ~ (' (Fenster)' if r.name in window_rooms else '')] %}
+          {% set p = plan | selectattr('name', 'eq', r.name) | list %}
+          {% set ns.l = ns.l + [r.name ~ ' ' ~ states(r.sensor) ~ ((' heizt ' ~ ((p[0].seconds / 3600) | round(1)) ~ ' h') if p else ' aus') ~ (' (Fenster)' if r.name in window_rooms else '')] %}
         {% endfor %}
         {{ ns.l | join(', ') }}
   - action: logbook.log
@@ -577,15 +602,26 @@
         → Boost {{ boost_duration }} · {{ room_summary }}
       domain: climate
   - condition: template
-    value_template: "{{ boost_duration != '00:00:00' and heat_rooms | length > 0 }}"
+    value_template: "{{ plan | length > 0 }}"
   - action: switch.turn_on
     target:
-      entity_id: "{{ heat_rooms | map(attribute='switch') | list }}"
+      entity_id: "{{ plan | map(attribute='switch') | list }}"
   - action: timer.start
     target:
       entity_id: timer.heizung_boost
     data:
       duration: "{{ boost_duration }}"
+  # Circuits on the 1 h base load stop early; the rest stop when the timer finishes.
+  # After an HA restart during this delay they run until the timer ends instead.
+  - condition: template
+    value_template: "{{ short_switches | length > 0 }}"
+  - delay:
+      seconds: "{{ short_seconds | int }}"
+  - action: script.turn_off_with_retry
+    data:
+      target_entities: "{{ short_switches }}"
+      retry_delay: 3
+      max_retries: 1
   mode: single
 - id: '1749999999999'
   alias: Heizung » Boost Timer Finished
@@ -598,6 +634,8 @@
   actions:
   - variables:
       heating_switches:
+      - switch.sonoff_switch_01
+      - switch.sonoff_switch_02
       - switch.sonoff_switch_03
       - switch.sonoff_switch_04
       - switch.sonoff_switch_05
@@ -723,6 +761,8 @@
   - delay: "00:00:30"
   - variables:
       heating_switches:
+      - switch.sonoff_switch_01
+      - switch.sonoff_switch_02
       - switch.sonoff_switch_03
       - switch.sonoff_switch_04
       - switch.sonoff_switch_05
