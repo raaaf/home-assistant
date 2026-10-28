@@ -486,8 +486,8 @@
     sun and neighbours while the screed cools, so short regular pulses keep the floor warm where
     air-gated blocks left it cold. A circuit skips a slot while its air is above its cap (24 °C, Bad
     26 °C, Flur 21 °C because it gets heat from the neighbouring rooms) or its window is open; no
-    reading means it heats. Away for more than 24 h: 10 min per slot
-    while the outdoor temperature is below 15 °C. A slot is skipped while the manual boost timer runs,
+    reading means it heats. Away for more than 24 h: off, except a room whose air drops below 16 °C
+    gets 10 min per slot (frost and moisture guard); the normal cycle resumes at the next slot. A slot is skipped while the manual boost timer runs,
     and a slot ending during a boost leaves the boost circuits on. Unavailable switches get one retry
     after 1 min.
   triggers:
@@ -531,7 +531,8 @@
         {% for r in rooms %}
           {% set t = states(r.sensor) | float(none) %}
           {% set window_open = r.get('windows', []) | select('is_state', 'on') | list | length > 0 %}
-          {% if (t is none or t <= r.cap) and not window_open %}
+          {% set heats = (t is not none and t < 16) if away else ((t is none or t <= r.cap) and not window_open) %}
+          {% if heats %}
             {% set ns.l = ns.l + [r.switch] %}
           {% endif %}
         {% endfor %}
