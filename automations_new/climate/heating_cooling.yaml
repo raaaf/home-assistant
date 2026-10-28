@@ -482,16 +482,15 @@
     Floor heating boost at fixed times for a slow system (1-2 h warmup). 06:30 uses the current
     outdoor temperature, 14:30 the daily forecast high: below 0 °C 3 h, below 5 °C 2 h, below 10 °C
     1.5 h. A sunny afternoon (forecast cloud cover 35 % or less) drops the outdoor boost.
-    Morning base load (since 2026-10-26): when the outdoor boost applies, the air reading no longer
-    decides whether a circuit heats, only how long. A room below the top of its band (or with an
-    open or recently closed window, or without a reading) gets the full outdoor boost, a room up to
-    2 °C above the top gets 1 h, only a room more than 2 °C above the top is skipped (Schlafzimmer
-    only above 25 °C: it is the workroom, so it gets at least 1 h up to there). Reason: the air
-    sensors read warm from sun and appliances while the screed cools, so air-gated heating left the
-    floors cold. Bad and Flur take part in the morning run only.
-    Afternoon, and mornings at 10 °C or more outside: only rooms below the top of their band are
-    heated with the outdoor boost; a room below the bottom of its band gets 1 h even when it is
-    mild outside. Controls Kinderzimmer, Schlafzimmer, Wohnzimmer (both runs), Bad and Flur (morning).
+    Base load (morning since 2026-10-26, afternoon since 2026-10-28): the air reading no longer
+    decides whether a circuit heats, only how long. Reason: the air sensors read warm from sun and
+    appliances while the screed cools, so air-gated heating left the floors cold. The base load
+    applies at 06:30 when the outdoor boost applies (below 10 °C), at 14:30 when the current outdoor
+    temperature is below 15 °C (the sun rule does not cancel it). A room below the top of its band
+    (or, mornings, with an open or recently closed window, or without a reading) gets the full
+    outdoor boost; any other room gets 1 h; only a room whose air is above its cap (25 °C, Bad 26 °C)
+    is skipped. Without base load (mornings at 10 °C or more, afternoons at 15 °C or more) a room
+    below the bottom of its band still gets 1 h. All five circuits take part in both runs.
   triggers:
   - at: "06:30:00"
     id: morning-boost
@@ -512,22 +511,14 @@
   - variables:
       # Day comfort bands, keep in sync with TBAND in DESIGN.md (Comfort bands)
       # switch_04 heats both the bedroom and Alex' office, so it reads the group mean of both rooms
-      # morning_only: circuits that are otherwise switched by hand (Bad, Flur)
-      # no_skip: at least the 1 h morning base load up to 25 °C air (Schlafzimmer: Rafael and Alex work there)
-      all_rooms:
-      - {name: Kinderzimmer, switch: switch.sonoff_switch_03, sensor: sensor.aqara_climate_03_temperature, low: 19, high: 20}
+      # cap: above this air reading the base load skips the room
+      rooms:
+      - {name: Kinderzimmer, switch: switch.sonoff_switch_03, sensor: sensor.aqara_climate_03_temperature, low: 19, high: 20, cap: 25}
       - {name: Schlafzimmer, switch: switch.sonoff_switch_04, sensor: sensor.arbeitszimmer_temperatur, low: 20, high: 21,
-         windows: [binary_sensor.aqara_contact_01, binary_sensor.aqara_contact_07], no_skip: true}
-      - {name: Wohnzimmer, switch: switch.sonoff_switch_05, sensor: sensor.wohnzimmer_temperatur, low: 20, high: 22}
-      - {name: Badezimmer, switch: switch.sonoff_switch_01, sensor: sensor.aqara_climate_02_temperature, low: 22, high: 24,
-         morning_only: true}
-      - {name: Flur, switch: switch.sonoff_switch_02, sensor: sensor.philips_motion_01_motion_1_temperature, low: 18, high: 20,
-         morning_only: true}
-      rooms: >-
-        {{ all_rooms if trigger.id == 'morning-boost'
-           else all_rooms | rejectattr('morning_only', 'defined') | list }}
-      # Air reading more than this above the band top skips the morning base load
-      hard_margin: 2
+         windows: [binary_sensor.aqara_contact_01, binary_sensor.aqara_contact_07], cap: 25}
+      - {name: Wohnzimmer, switch: switch.sonoff_switch_05, sensor: sensor.wohnzimmer_temperatur, low: 20, high: 22, cap: 25}
+      - {name: Badezimmer, switch: switch.sonoff_switch_01, sensor: sensor.aqara_climate_02_temperature, low: 22, high: 24, cap: 26}
+      - {name: Flur, switch: switch.sonoff_switch_02, sensor: sensor.philips_motion_01_motion_1_temperature, low: 18, high: 20, cap: 25}
       base_seconds: 3600
       forecast: >-
         {% set f = state_attr('sensor.fuerth_daily', 'forecast') %}
@@ -548,6 +539,9 @@
         {% elif t < 10 %}5400
         {% else %}0
         {% endif %}
+      base_load: >-
+        {{ (trigger.id == 'morning-boost' and outdoor_seconds | int > 0) or
+           (trigger.id == 'afternoon-boost' and state_attr('weather.fuerth_bayern', 'temperature') | float(10) < 15) }}
       window_rooms: >-
         {% set ns = namespace(l=[]) %}
         {% if trigger.id == 'morning-boost' %}
@@ -567,12 +561,12 @@
         {% for r in rooms %}
           {% set t = states(r.sensor) | float(none) %}
           {% set below_top = t is none or t < r.high or r.name in window_rooms %}
-          {% if trigger.id == 'morning-boost' and od > 0 %}
-            {% if below_top %}{% set s = od %}
-            {% elif t <= r.high + hard_margin or (r.get('no_skip') and t <= 25) %}{% set s = [base_seconds, od] | min %}
-            {% else %}{% set s = 0 %}{% endif %}
+          {% if od > 0 and below_top %}
+            {% set s = od %}
+          {% elif base_load %}
+            {% set s = base_seconds if (t is none or t <= r.cap) else 0 %}
           {% elif od > 0 %}
-            {% set s = od if below_top else 0 %}
+            {% set s = 0 %}
           {% else %}
             {% set s = base_seconds if (t is not none and t < r.low) else 0 %}
           {% endif %}
