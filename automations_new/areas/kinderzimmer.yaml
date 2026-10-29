@@ -14,7 +14,9 @@
       light_switch:
         entity_id: light.alle_kinderzimmer_lichter
       include_ambient: ambient_enabled
-      ambient_light_sensor: sensor.kinderzimmer_illuminance_safe
+      # Balkon statt Raumsensor: der Melder sitzt neben der Buecherlampe und mass
+      # nach dem Einschalten ueber 2000 lx, die Blueprint schaltete sofort wieder aus.
+      ambient_light_sensor: sensor.balkon_motion_illuminance_safe
       include_night_lights: night_lights_enabled
       night_lights:
         entity_id: light.alle_kinderzimmer_nachtlichter
