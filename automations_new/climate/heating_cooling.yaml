@@ -481,11 +481,12 @@
   description: >-
     Duty cycle for the floor heating (since 2026-10-28, replaces the fixed 06:30/14:30 blocks): every
     hour from 05:30 to 20:30 all five circuits open for a number of minutes set by the current
-    outdoor temperature (weather.fuerth_bayern): below 0 °C 35 min, below 5 °C 25 min, below 10 °C
-    15 min, below 15 °C 10 min, otherwise nothing. Night off. Reason: the air sensors read warm from
+    outdoor temperature (weather.fuerth_bayern): below 0 °C 25 min, below 5 °C 15 min, below 15 °C
+    10 min (shorter is pointless, the valve actuators need 3 to 5 min to open), otherwise nothing. Night off. Reason: the air sensors read warm from
     sun and neighbours while the screed cools, so short regular pulses keep the floor warm where
-    air-gated blocks left it cold. A circuit skips a slot while its air is above its cap (24 °C, Bad
-    26 °C, Flur 21 °C because it gets heat from the neighbouring rooms) or its window is open; no
+    air-gated blocks left it cold. A circuit skips a slot while its air is above its cap (Kinderzimmer 21 °C,
+    Schlafzimmer 22 °C, Wohnzimmer 23 °C, Bad 24 °C, Flur 21 °C; set 2026-10-29 after the first day
+    overheated the rooms, the floor answers with a 1 to 2 h lag) or its window is open; no
     reading means it heats. Away for more than 24 h: off, except a room whose air drops below 16 °C
     gets 10 min per slot (frost and moisture guard); the normal cycle resumes at the next slot. A slot is skipped while the manual boost timer runs,
     and a slot ending during a boost leaves the boost circuits on. Unavailable switches get one retry
@@ -505,11 +506,11 @@
       # switch_04 heats both the bedroom and Alex' office, so it reads the group mean of both rooms
       # cap: above this air reading the circuit skips the slot
       rooms:
-      - {name: Kinderzimmer, switch: switch.sonoff_switch_03, sensor: sensor.aqara_climate_03_temperature, cap: 24}
-      - {name: Schlafzimmer, switch: switch.sonoff_switch_04, sensor: sensor.arbeitszimmer_temperatur, cap: 24,
+      - {name: Kinderzimmer, switch: switch.sonoff_switch_03, sensor: sensor.aqara_climate_03_temperature, cap: 21}
+      - {name: Schlafzimmer, switch: switch.sonoff_switch_04, sensor: sensor.arbeitszimmer_temperatur, cap: 22,
          windows: [binary_sensor.aqara_contact_01, binary_sensor.aqara_contact_07]}
-      - {name: Wohnzimmer, switch: switch.sonoff_switch_05, sensor: sensor.wohnzimmer_temperatur, cap: 24}
-      - {name: Badezimmer, switch: switch.sonoff_switch_01, sensor: sensor.aqara_climate_02_temperature, cap: 26}
+      - {name: Wohnzimmer, switch: switch.sonoff_switch_05, sensor: sensor.wohnzimmer_temperatur, cap: 23}
+      - {name: Badezimmer, switch: switch.sonoff_switch_01, sensor: sensor.aqara_climate_02_temperature, cap: 24}
       - {name: Flur, switch: switch.sonoff_switch_02, sensor: sensor.philips_motion_01_motion_1_temperature, cap: 21}
       # Circuits the manual boost (script.heizung_boost) switches
       boost_switches: [switch.sonoff_switch_03, switch.sonoff_switch_04, switch.sonoff_switch_05]
@@ -521,9 +522,8 @@
         {% set t = outdoor | float %}
         {% if t >= 15 %}0
         {% elif away %}10
-        {% elif t < 0 %}35
-        {% elif t < 5 %}25
-        {% elif t < 10 %}15
+        {% elif t < 0 %}25
+        {% elif t < 5 %}15
         {% else %}10
         {% endif %}
       plan: >-
