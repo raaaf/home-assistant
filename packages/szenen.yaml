@@ -135,6 +135,17 @@ template:
               Kein Konflikt
             {% endif %}
 
+      # Alex' own work signal. input_boolean.arbeit is shared with Rafael, so it must not
+      # gate Alex' office. 10 min delay_off matches the Arbeit debounce (screensaver, idle).
+      # No availability on purpose: an unavailable MacBook must read as off, otherwise the
+      # motion bypass (wants 'off') would block the office light.
+      - name: "Alex arbeitet"
+        unique_id: alex_arbeitet
+        icon: mdi:laptop-account
+        state: "{{ is_state('binary_sensor.macbook_pro_2_active', 'on') }}"
+        delay_off:
+          minutes: 10
+
 input_boolean:
   gaming:
     name: "Gaming Mode"

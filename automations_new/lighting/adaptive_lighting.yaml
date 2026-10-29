@@ -88,7 +88,7 @@
             'schlafzimmer': is_state('input_boolean.arbeit', 'on') or is_state('input_boolean.gaming', 'on'),
             'wohnzimmer': is_state('input_boolean.party_wohnzimmer', 'on'),
             'kuche': is_state('input_boolean.party_wohnzimmer', 'on'),
-            'arbeitszimmer_alex': is_state('input_boolean.arbeit', 'on'),
+            'arbeitszimmer_alex': is_state('binary_sensor.alex_arbeitet', 'on'),
             'badezimmer_gross': is_state('input_boolean.sauna', 'on') or is_state('input_boolean.baden', 'on')
           } %}
           {# Global party effect lights span all rooms #}
