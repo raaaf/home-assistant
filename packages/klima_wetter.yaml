@@ -197,22 +197,6 @@ template:
             {{ 2000 if state_attr('sun.sun', 'elevation') | float(-90) > 3 else 5 }}
           {% endif %}
 
-      - name: "Kinderzimmer Illuminance (Safe)"
-        unique_id: kinderzimmer_illuminance_safe
-        unit_of_measurement: "lx"
-        device_class: illuminance
-        icon: mdi:brightness-6
-        state: >-
-          {% set src = states.sensor.tuya_motion_02_illuminance %}
-          {% set fresh = src is not none
-                         and src.state not in ['unknown', 'unavailable']
-                         and (now() - src.last_updated).total_seconds() < 21600 %}
-          {% if fresh and src.state | float(-1) >= 0 %}
-            {{ src.state | float(0) | round(0) }}
-          {% else %}
-            {{ 2000 if state_attr('sun.sun', 'elevation') | float(-90) > 3 else 5 }}
-          {% endif %}
-
   - binary_sensor:
       # Night comfort band for the bedroom and Alex's office (one air volume via the sliding door).
       # Schlafenszeit already starts at the children's bedtime (19-21), so the adults' night band
