@@ -2,8 +2,8 @@
 # reload automation, script and input_boolean, and everything is gone.
 # The show ends only through input_boolean.halloween_show. The 18:00 start is date-guarded.
 # Existing automations are only switched at runtime (automation.turn_off/on), never edited.
-# HomePods: media_player.arbeitszimmer is the bedroom speaker, media_player.schlafzimmer stays
-# unused (second half of the Kinderzimmer pair), media_player.homepod_wohnzimmer plays music only.
+# HomePods: media_player.arbeitszimmer is the big bedroom speaker; it and media_player.homepod_wohnzimmer
+# play music only. media_player.schlafzimmer stays unused (second half of the Kinderzimmer pair).
 
 input_boolean:
   halloween_show:
@@ -48,6 +48,17 @@ script:
         - automation.helper_workday_musik
         - automation.helper_homepod_watchdog
         - automation.lighting_nachtlicht_ein_22_00_uhr
+        - automation.arbeitszimmer_licht_und_vent_an_arbeit_2
+        - automation.licht_schlafzimmer_tv_ambilight
+        - automation.scene_gaming
+        - automation.helper_kinderzimmer_motion_bei_schlafenszeit
+        - automation.licht_kinderzimmer_nachtlichter_bei_schlafenszeit
+        - automation.licht_yeelight_nach_steckdose_aus
+        - automation.licht_nachtmodus_manueller_angleich
+        - automation.adaptive_lighting_fade_over_30_minutes_when_schlafenszeit_starts
+        - automation.motion_schlafzimmer
+        - automation.arbeitszimmer_motion
+        - automation.kinderzimmer_motion
         - automation.motion_kuche_2
         - automation.motion_esstisch
         - automation.motion_spieletisch
@@ -181,6 +192,20 @@ script:
     sequence:
     - action: light.turn_on
       target:
+        entity_id:
+        - light.ikea_light_13
+        - light.ikea_light_03
+        - light.ikea_light_16_1
+        - light.ikea_light_17_2
+      data:
+        color_temp_kelvin: 2700
+        brightness_pct: 25
+    # No parameters on purpose: the projector loads the star scene set in the Govee app.
+    - action: light.turn_on
+      target:
+        entity_id: light.h60b0
+    - action: light.turn_on
+      target:
         entity_id: light.philips_light_12_unten
       data:
         color_temp_kelvin: 2700
@@ -248,6 +273,16 @@ script:
       - light.philips_light_09_2
       - light.philips_light_06_schrank
       - light.aqara_hub_lightbulb
+      gruppe_c:
+      - light.philips_light_10_bucher
+      - light.philips_light_01_pc_1
+      - light.philips_light_16_tv
+      - light.ikea_light_04
+      - light.kinderzimmer_kinderzimmer_nachtlicht
+      gruppe_d:
+      - light.philips_light_02_pc_2
+      - light.philips_light_15_bett
+      - light.yeelight_cubematrix_0xdc5475bbc814
       # Flur and Bad stay plain colours so the door and ghost snapshots restore them exactly.
       wz_schrank:
       - light.philips_light_21_schrank_1
@@ -262,6 +297,11 @@ script:
       - light.philips_light_13_schrank_1
       - light.philips_light_14_schrank_2
       alle_fx:
+      - light.philips_light_10_bucher
+      - light.philips_light_01_pc_1
+      - light.philips_light_02_pc_2
+      - light.philips_light_15_bett
+      - light.philips_light_16_tv
       - light.philips_light_21_schrank_1
       - light.philips_light_22_schrank_2
       - light.philips_light_23_schrank_3
@@ -288,7 +328,7 @@ script:
     sequence:
     - action: light.turn_on
       target:
-        entity_id: "{{ alle_fx }}"
+        entity_id: "{{ alle_fx + ['light.ikea_light_04'] }}"
       data:
         effect: stop_effect
     - delay:
@@ -309,6 +349,24 @@ script:
         rgb_color: "{{ tabelle[stimmung]['b'] }}"
         brightness_pct: "{{ tabelle[stimmung]['hell'] }}"
         transition: 4
+    - delay:
+        seconds: 2
+    - action: light.turn_on
+      target:
+        entity_id: "{{ gruppe_c }}"
+      data:
+        rgb_color: "{{ tabelle[stimmung]['a'] }}"
+        brightness_pct: "{{ tabelle[stimmung]['hell'] }}"
+        transition: 4
+    - delay:
+        seconds: 2
+    - action: light.turn_on
+      target:
+        entity_id: "{{ gruppe_d }}"
+      data:
+        rgb_color: "{{ tabelle[stimmung]['b'] }}"
+        brightness_pct: "{{ tabelle[stimmung]['hell'] }}"
+        transition: 4
     - if:
       - condition: template
         value_template: "{{ tabelle[stimmung]['fx'] != '' }}"
@@ -320,6 +378,16 @@ script:
           entity_id: "{{ fx_lichter }}"
         data:
           effect: "{{ tabelle[stimmung]['fx'] }}"
+      # The IKEA floor lamp knows colorloop but none of the Hue effects.
+      - if:
+        - condition: template
+          value_template: "{{ tabelle[stimmung]['fx'] == 'colorloop' }}"
+        then:
+        - action: light.turn_on
+          target:
+            entity_id: light.ikea_light_04
+          data:
+            effect: colorloop
 
   halloween_sound:
     alias: Halloween » Sound
@@ -349,15 +417,20 @@ script:
       continue_on_error: true
 
   halloween_musik:
-    alias: Halloween » Musik Wohnzimmer
-    mode: restart
+    alias: Halloween » Musik
+    # One run per big HomePod. HA cannot group them, so they start separately and may drift.
+    mode: parallel
+    max: 2
+    fields:
+      player:
+        example: media_player.homepod_wohnzimmer
     sequence:
     - condition: state
       entity_id: input_boolean.halloween_musik
       state: 'on'
     - action: media_player.volume_set
       target:
-        entity_id: media_player.homepod_wohnzimmer
+        entity_id: "{{ player }}"
       data:
         volume_level: 0.3
       continue_on_error: true
@@ -372,7 +445,7 @@ script:
           state: 'on'
         - action: media_player.play_media
           target:
-            entity_id: media_player.homepod_wohnzimmer
+            entity_id: "{{ player }}"
           data:
             media_content_id: "http://192.168.178.74:8123/local/halloween/musik_{{ ['danse_macabre', 'berghalle', 'gespenst_ouvertuere', 'danse_macabre_kurz'][(repeat.index - 1) % 4] }}.mp3"
             media_content_type: music
@@ -534,6 +607,9 @@ automation:
       - flur
       - waschzimmer
       - balkon
+      - kinderzimmer
+      - arbeitszimmer
+      - schlafzimmer
       sequence:
       - action: script.scene_disable_adaptive_lighting
         data:
@@ -562,6 +638,15 @@ automation:
   - action: script.turn_on
     target:
       entity_id: script.halloween_musik
+    data:
+      variables:
+        player: media_player.homepod_wohnzimmer
+  - action: script.turn_on
+    target:
+      entity_id: script.halloween_musik
+    data:
+      variables:
+        player: media_player.arbeitszimmer
   mode: restart
 
 - id: halloween_show_aus
@@ -602,14 +687,15 @@ automation:
     then:
     - action: media_player.media_stop
       target:
-        entity_id: media_player.homepod_wohnzimmer
+        entity_id:
+        - media_player.homepod_wohnzimmer
+        - media_player.arbeitszimmer
       continue_on_error: true
   - action: media_player.media_stop
     target:
       entity_id:
       - media_player.homepod_badezimmer
       - media_player.homepod_kinderzimmer
-      - media_player.arbeitszimmer
     continue_on_error: true
   - action: media_player.media_stop
     target:
@@ -678,9 +764,43 @@ automation:
       - light.philips_light_28
   - delay:
       seconds: 4
+  - action: script.scene_stop_rgb_effect
+    data:
+      rgb_lights:
+      - light.philips_light_10_bucher
+      - light.philips_light_01_pc_1
+      - light.philips_light_02_pc_2
+      - light.philips_light_15_bett
+      - light.philips_light_16_tv
+      - light.ikea_light_04
+      off_lights:
+      - light.philips_light_10_bucher
+      - light.philips_light_01_pc_1
+      - light.philips_light_02_pc_2
+      - light.philips_light_15_bett
+      - light.philips_light_16_tv
+      - light.ikea_light_04
+      - light.ikea_light_13
+      - light.ikea_light_03
+      - light.ikea_light_16_1
+      - light.ikea_light_17_2
+      - light.h60b0
+      - light.kinderzimmer_kinderzimmer_nachtlicht
+      - light.yeelight_cubematrix_0xdc5475bbc814
+  - delay:
+      seconds: 4
   - action: light.turn_off
     target:
       entity_id:
+      - light.philips_light_10_bucher
+      - light.philips_light_01_pc_1
+      - light.philips_light_02_pc_2
+      - light.philips_light_15_bett
+      - light.philips_light_16_tv
+      - light.ikea_light_04
+      - light.h60b0
+      - light.kinderzimmer_kinderzimmer_nachtlicht
+      - light.yeelight_cubematrix_0xdc5475bbc814
       - light.philips_light_21_schrank_1
       - light.philips_light_22_schrank_2
       - light.philips_light_23_schrank_3
@@ -736,6 +856,14 @@ automation:
       - automation.helper_workday_musik
       - automation.helper_homepod_watchdog
       - automation.lighting_nachtlicht_ein_22_00_uhr
+      - automation.arbeitszimmer_licht_und_vent_an_arbeit_2
+      - automation.licht_schlafzimmer_tv_ambilight
+      - automation.scene_gaming
+      - automation.helper_kinderzimmer_motion_bei_schlafenszeit
+      - automation.licht_kinderzimmer_nachtlichter_bei_schlafenszeit
+      - automation.licht_yeelight_nach_steckdose_aus
+      - automation.licht_nachtmodus_manueller_angleich
+      - automation.adaptive_lighting_fade_over_30_minutes_when_schlafenszeit_starts
       - automation.motion_waschzimmer
       - automation.motion_balkon
   - action: automation.trigger
@@ -855,12 +983,23 @@ automation:
           entity_id: script.halloween_musik
       - action: media_player.media_stop
         target:
-          entity_id: media_player.homepod_wohnzimmer
+          entity_id:
+          - media_player.homepod_wohnzimmer
+          - media_player.arbeitszimmer
         continue_on_error: true
     default:
     - action: script.turn_on
       target:
         entity_id: script.halloween_musik
+      data:
+        variables:
+          player: media_player.homepod_wohnzimmer
+    - action: script.turn_on
+      target:
+        entity_id: script.halloween_musik
+      data:
+        variables:
+          player: media_player.arbeitszimmer
   mode: single
 
 - id: halloween_stimmung_wechsel
@@ -926,7 +1065,7 @@ automation:
     data:
       variables:
         player: >-
-          {{ (['media_player.homepod_badezimmer', 'media_player.homepod_kinderzimmer', 'media_player.arbeitszimmer']
+          {{ (['media_player.homepod_badezimmer', 'media_player.homepod_kinderzimmer']
              + (['media_player.kuche'] if is_state('input_boolean.halloween_willkommen_aktiv', 'off') and states('media_player.kuche') in ['idle', 'playing', 'paused', 'on', 'off', 'standby'] else [])) | random }}
         lautstaerke: 0.3
         datei: "{{ ['hexe_lacht_echt', 'gespenst_huuu', 'gespenst_kicher', 'katze_siam', 'katze_usa', 'eule_echt', 'wolf_echt', 'rabe', 'tuer_knarzt_gross', 'tuer_quietscht', 'scharnier', 'glocke_echt', 'jingle', 'donner_rollend', 'donner_fern', 'blubbern'] | random }}"
