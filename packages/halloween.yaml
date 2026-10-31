@@ -1,6 +1,6 @@
 # Halloween light show, 2026-10-31. Self-contained: delete this file and www/halloween/,
 # reload automation, script and input_boolean, and everything is gone.
-# All timed triggers carry a date guard, so nothing here fires after tonight.
+# The show ends only through input_boolean.halloween_show. The 18:00 start is date-guarded.
 # Existing automations are only switched at runtime (automation.turn_off/on), never edited.
 # HomePods: media_player.arbeitszimmer is the bedroom speaker, media_player.schlafzimmer stays
 # unused (second half of the Kinderzimmer pair), media_player.homepod_wohnzimmer plays music only.
@@ -11,6 +11,44 @@ input_boolean:
     icon: mdi:halloween
 
 script:
+  halloween_pausieren:
+    alias: Halloween » Automationen pausieren
+    mode: single
+    sequence:
+    - action: automation.turn_off
+      target:
+        entity_id:
+        - automation.helper_motion_al_sollzustand
+        - automation.adaptive_lightning_sleep_off
+        - automation.helper_alle_sind_weg
+        - automation.film_an
+        - automation.helper_tv_auto_off_ende
+        - automation.scenen_party
+        - automation.scenen_party_wohnzimmer
+        - automation.party_weisslicht_wachter
+        - automation.scenen_kuche
+        - automation.scenen_essen
+        - automation.scenen_abwaschen
+        - automation.scenen_leselicht
+        - automation.scenen_baden
+        - automation.saunatime
+        - automation.wohnzimmer_muckenlampe
+        - automation.licht_tageshelligkeit_nach_aussenlicht
+        - automation.scenen_homepod_lautstarke
+        - automation.helper_workday_musik
+        - automation.helper_homepod_watchdog
+        - automation.lighting_nachtlicht_ein_22_00_uhr
+        - automation.motion_kuche_2
+        - automation.motion_esstisch
+        - automation.motion_spieletisch
+        - automation.motion_flur_wohnung
+        - automation.motion_haustur_flur
+        - automation.motion_badezimmer_gross
+        - automation.motion_waschzimmer
+        - automation.motion_balkon
+      data:
+        stop_actions: false
+
   halloween_grundlicht:
     alias: Halloween » Grundlicht
     mode: restart
@@ -59,7 +97,7 @@ script:
     mode: restart
     fields:
       stimmung:
-        description: kuerbis, hexenkueche, geisterstunde, kerzenschein, regenbogen, unterwasser, ausklang
+        description: kuerbis, hexenkueche, geisterstunde, kerzenschein, regenbogen, unterwasser
         example: kuerbis
     variables:
       gruppe_a:
@@ -120,7 +158,6 @@ script:
         kerzenschein: {a: [255, 120, 20], b: [255, 70, 1], fx: candle, ziel: alle_fx, hell: 80}
         regenbogen: {a: [130, 1, 255], b: [255, 60, 160], fx: colorloop, ziel: alle_fx, hell: 90}
         unterwasser: {a: [1, 120, 255], b: [1, 220, 180], fx: underwater, ziel: alle_fx, hell: 80}
-        ausklang: {a: [255, 110, 20], b: [255, 80, 10], fx: '', ziel: alle_fx, hell: 35}
       fx_lichter: "{{ {'wz_schrank': wz_schrank, 'spielematte': spielematte, 'kueche_schrank': kueche_schrank, 'alle_fx': alle_fx}[tabelle[stimmung]['ziel']] }}"
     sequence:
     - action: light.turn_on
@@ -205,7 +242,7 @@ script:
           target:
             entity_id: media_player.homepod_wohnzimmer
           data:
-            media_content_id: "http://192.168.178.74:8123/local/halloween/musik_{{ ['1_spukschloss', '2_geisterwalzer', '3_hexentanz'][(repeat.index - 1) % 3] }}.mp3"
+            media_content_id: "http://192.168.178.74:8123/local/halloween/musik_{{ ['danse_macabre', 'berghalle', 'gespenst_ouvertuere', 'danse_macabre_kurz'][(repeat.index - 1) % 4] }}.mp3"
             media_content_type: music
           continue_on_error: true
         - delay:
@@ -249,7 +286,7 @@ script:
         variables:
           player: "{{ player }}"
           lautstaerke: 0.4
-          datei: "{{ ['hexe_lacht', 'gespenst_huuu', 'gespenst_kicher', 'katze', 'eule', 'wolf', 'tuer_knarzt', 'glocke', 'jingle', 'donner'] | random }}"
+          datei: "{{ ['hexe_lacht_echt', 'gespenst_huuu', 'gespenst_kicher', 'katze_siam', 'katze_usa', 'eule_echt', 'wolf_echt', 'rabe', 'tuer_knarzt_gross', 'tuer_quietscht', 'scharnier', 'glocke_echt', 'jingle', 'donner_rollend', 'donner_fern'] | random }}"
     - action: light.turn_on
       target:
         entity_id: light.flur_decke
@@ -352,45 +389,6 @@ automation:
       entity_id: input_boolean.halloween_show
   mode: single
 
-# Leaving at 17:00 must not end the show. Only the flag setter pauses; nothing is replayed afterwards.
-- id: halloween_abwesenheit_pause
-  alias: Halloween » Abwesenheit pausieren
-  triggers:
-  - trigger: time
-    at: '17:00:00'
-    id: pause
-  - trigger: time
-    at: '22:00:00'
-    id: weiter
-  conditions:
-  - condition: template
-    value_template: "{{ now().date() | string == '2026-10-31' }}"
-  actions:
-  - action: "automation.turn_{{ 'off' if trigger.id == 'pause' else 'on' }}"
-    target:
-      entity_id: automation.helper_alle_sind_weg
-  mode: single
-
-- id: halloween_ende_automatisch
-  alias: Halloween » Ende automatisch
-  triggers:
-  - trigger: time
-    at: '22:00:00'
-  - trigger: state
-    entity_id: input_boolean.halloween_show
-    to: 'on'
-    for:
-      hours: 4
-  conditions:
-  - condition: state
-    entity_id: input_boolean.halloween_show
-    state: 'on'
-  actions:
-  - action: input_boolean.turn_off
-    target:
-      entity_id: input_boolean.halloween_show
-  mode: single
-
 - id: halloween_show_an
   alias: Halloween » Show an
   triggers:
@@ -400,30 +398,7 @@ automation:
     to: 'on'
   actions:
   # The reconciler would switch AL and motion back on at :07 and on every scene change.
-  - action: automation.turn_off
-    target:
-      entity_id:
-      - automation.helper_motion_al_sollzustand
-      - automation.adaptive_lightning_sleep_off
-      - automation.helper_alle_sind_weg
-      - automation.film_an
-      - automation.helper_tv_auto_off_ende
-      - automation.scenen_party
-      - automation.scenen_party_wohnzimmer
-      - automation.party_weisslicht_wachter
-      - automation.scenen_kuche
-      - automation.scenen_essen
-      - automation.scenen_abwaschen
-      - automation.scenen_leselicht
-      - automation.scenen_baden
-      - automation.saunatime
-      - automation.wohnzimmer_muckenlampe
-      - automation.licht_tageshelligkeit_nach_aussenlicht
-      - automation.scenen_homepod_lautstarke
-      - automation.helper_workday_musik
-      - automation.helper_homepod_watchdog
-    data:
-      stop_actions: false
+  - action: script.halloween_pausieren
   - repeat:
       for_each:
       - wohnzimmer
@@ -618,6 +593,7 @@ automation:
       - automation.scenen_homepod_lautstarke
       - automation.helper_workday_musik
       - automation.helper_homepod_watchdog
+      - automation.lighting_nachtlicht_ein_22_00_uhr
       - automation.motion_waschzimmer
       - automation.motion_balkon
   - action: automation.trigger
@@ -664,12 +640,18 @@ automation:
     data:
       volume_level: 0.35
     continue_on_error: true
+  - action: media_player.volume_set
+    target:
+      entity_id: media_player.kuche
+    data:
+      volume_level: 0.4
+    continue_on_error: true
   # automation.trigger on State » Tag/Nacht does nothing: its branches all need a trigger id.
   # Setting the boolean is what its einschlafzeit branch does.
   - if:
     - condition: time
       after: '19:00:00'
-      before: '23:00:00'
+      before: '07:00:00'
     - condition: state
       entity_id: input_boolean.alle_sind_weg
       state: 'off'
@@ -677,6 +659,30 @@ automation:
     - action: input_boolean.turn_on
       target:
         entity_id: input_boolean.schlafenszeit
+  # The 23:00 branches of State » Tag/Nacht and the night light were paused, so catch them up.
+  - if:
+    - condition: time
+      after: '23:00:00'
+      before: '07:00:00'
+    - condition: state
+      entity_id: input_boolean.alle_sind_weg
+      state: 'off'
+    then:
+    - action: switch.turn_on
+      target:
+        entity_id:
+        - switch.adaptive_lighting_sleep_mode_badezimmer
+        - switch.adaptive_lighting_sleep_mode_balkon
+        - switch.adaptive_lighting_sleep_mode_flur
+        - switch.adaptive_lighting_sleep_mode_kueche
+        - switch.adaptive_lighting_sleep_mode_waschzimmer
+        - switch.adaptive_lighting_sleep_mode_wohnzimmer
+        - switch.adaptive_lighting_sleep_mode_kinderzimmer
+        - switch.adaptive_lighting_sleep_mode_arbeitszimmer
+        - switch.adaptive_lighting_sleep_mode_schlafzimmer
+    - action: input_boolean.turn_on
+      target:
+        entity_id: input_boolean.nachtlicht
   mode: single
 
 - id: halloween_stimmung_wechsel
@@ -695,9 +701,8 @@ automation:
     data:
       variables:
         stimmung: >-
-          {% if now().hour == 21 and now().minute >= 30 %}ausklang
-          {%- else %}{{ ['kuerbis', 'hexenkueche', 'geisterstunde', 'kerzenschein', 'regenbogen', 'unterwasser']
-             [(now().hour * 4 + now().minute // 15) % 6] }}{% endif %}
+          {{ ['kuerbis', 'hexenkueche', 'geisterstunde', 'kerzenschein', 'regenbogen', 'unterwasser']
+             [(now().hour * 4 + now().minute // 15) % 6] }}
   mode: single
 
 - id: halloween_wand_flackern
@@ -743,9 +748,10 @@ automation:
     data:
       variables:
         player: >-
-          {{ ['media_player.homepod_badezimmer', 'media_player.homepod_kinderzimmer', 'media_player.arbeitszimmer'] | random }}
+          {{ (['media_player.homepod_badezimmer', 'media_player.homepod_kinderzimmer', 'media_player.arbeitszimmer']
+             + (['media_player.kuche'] if states('media_player.kuche') in ['idle', 'playing', 'paused', 'on', 'off', 'standby'] else [])) | random }}
         lautstaerke: 0.3
-        datei: "{{ ['hexe_lacht', 'gespenst_huuu', 'gespenst_kicher', 'katze', 'eule', 'wolf', 'tuer_knarzt', 'kessel', 'glocke', 'jingle', 'donner'] | random }}"
+        datei: "{{ ['hexe_lacht_echt', 'gespenst_huuu', 'gespenst_kicher', 'katze_siam', 'katze_usa', 'eule_echt', 'wolf_echt', 'rabe', 'tuer_knarzt_gross', 'tuer_quietscht', 'scharnier', 'glocke_echt', 'jingle', 'donner_rollend', 'donner_fern', 'blubbern'] | random }}"
   mode: single
 
 - id: halloween_ambient
@@ -767,7 +773,7 @@ automation:
       variables:
         player: media_player.kuche
         lautstaerke: 0.2
-        datei: "{{ ['wind', 'kessel'] | random }}"
+        datei: "{{ ['wind_unheimlich', 'wind_sturm', 'geisterwind', 'blubbern', 'regen_donner'] | random }}"
   mode: single
 
 - id: halloween_tuer
