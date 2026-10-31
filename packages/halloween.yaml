@@ -1076,7 +1076,7 @@ automation:
       - light.ikea_light_13
     data:
       color_temp_kelvin: 2700
-      brightness_pct: "{{ range(1, 5) | random }}"
+      brightness_pct: "{{ range(1, 9) | random }}"
       transition: 3
   mode: single
 
