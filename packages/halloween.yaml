@@ -1,0 +1,780 @@
+# Halloween light show, 2026-10-31. Self-contained: delete this file and www/halloween/,
+# reload automation, script and input_boolean, and everything is gone.
+# All timed triggers carry a date guard, so nothing here fires after tonight.
+# Existing automations are only switched at runtime (automation.turn_off/on), never edited.
+# HomePods: media_player.arbeitszimmer is the bedroom speaker, media_player.schlafzimmer stays
+# unused (second half of the Kinderzimmer pair), media_player.homepod_wohnzimmer plays music only.
+
+input_boolean:
+  halloween_show:
+    name: Halloween
+    icon: mdi:halloween
+
+script:
+  halloween_grundlicht:
+    alias: Halloween » Grundlicht
+    mode: restart
+    sequence:
+    - action: light.turn_on
+      target:
+        entity_id: light.philips_light_12_unten
+      data:
+        color_temp_kelvin: 2700
+        brightness_pct: 70
+    - action: light.turn_on
+      target:
+        entity_id:
+        - light.ikea_light_14_decke_1
+        - light.ikea_light_15_decke_2
+      data:
+        color_temp_kelvin: 2700
+        brightness_pct: 40
+    - action: light.turn_on
+      target:
+        entity_id: light.flur_decke
+      data:
+        color_temp_kelvin: 2700
+        brightness_pct: 30
+    - action: light.turn_on
+      target:
+        entity_id:
+        - light.wohnzimmer_wand
+        - light.ikea_light_24
+        - light.ikea_light_25
+      data:
+        color_temp_kelvin: 2700
+        brightness_pct: 30
+    - action: light.turn_on
+      target:
+        entity_id:
+        - light.philips_light_03
+        - light.philips_light_04_2
+        - light.philips_light_28
+      data:
+        effect: candle
+        brightness_pct: 60
+
+  halloween_stimmung:
+    alias: Halloween » Stimmung
+    mode: restart
+    fields:
+      stimmung:
+        description: kuerbis, hexenkueche, geisterstunde, kerzenschein, regenbogen, unterwasser, ausklang
+        example: kuerbis
+    variables:
+      gruppe_a:
+      - light.philips_light_21_schrank_1
+      - light.philips_light_22_schrank_2
+      - light.philips_light_23_schrank_3
+      - light.philips_light_18_1
+      - light.philips_light_19_2
+      - light.philips_light_20_3
+      - light.philips_light_11_oben
+      - light.philips_light_08_schrank_1
+      - light.philips_light_05_fenster
+      - light.philips_light_07_blumen
+      - light.stahltraeger
+      gruppe_b:
+      - light.philips_light_24
+      - light.philips_light_25_spielematte_2
+      - light.philips_light_26_spielematte_3
+      - light.philips_light_27_spielematte_4
+      - light.philips_light_13_schrank_1
+      - light.philips_light_14_schrank_2
+      - light.philips_light_09_2
+      - light.philips_light_06_schrank
+      - light.aqara_hub_lightbulb
+      # Flur and Bad stay plain colours so the door and ghost snapshots restore them exactly.
+      wz_schrank:
+      - light.philips_light_21_schrank_1
+      - light.philips_light_22_schrank_2
+      - light.philips_light_23_schrank_3
+      spielematte:
+      - light.philips_light_24
+      - light.philips_light_25_spielematte_2
+      - light.philips_light_26_spielematte_3
+      - light.philips_light_27_spielematte_4
+      kueche_schrank:
+      - light.philips_light_13_schrank_1
+      - light.philips_light_14_schrank_2
+      alle_fx:
+      - light.philips_light_21_schrank_1
+      - light.philips_light_22_schrank_2
+      - light.philips_light_23_schrank_3
+      - light.philips_light_18_1
+      - light.philips_light_19_2
+      - light.philips_light_20_3
+      - light.philips_light_24
+      - light.philips_light_25_spielematte_2
+      - light.philips_light_26_spielematte_3
+      - light.philips_light_27_spielematte_4
+      - light.philips_light_11_oben
+      - light.philips_light_13_schrank_1
+      - light.philips_light_14_schrank_2
+      - light.philips_light_07_blumen
+      # Rendering dropped a trailing 0 from these lists (rgb_color became [255, 90]), so no value is 0.
+      tabelle:
+        kuerbis: {a: [255, 90, 1], b: [130, 1, 255], fx: fireplace, ziel: wz_schrank, hell: 85}
+        hexenkueche: {a: [40, 255, 40], b: [130, 1, 255], fx: sparkle, ziel: spielematte, hell: 85}
+        geisterstunde: {a: [40, 80, 255], b: [1, 200, 220], fx: sparkle, ziel: kueche_schrank, hell: 75}
+        kerzenschein: {a: [255, 120, 20], b: [255, 70, 1], fx: candle, ziel: alle_fx, hell: 80}
+        regenbogen: {a: [130, 1, 255], b: [255, 60, 160], fx: colorloop, ziel: alle_fx, hell: 90}
+        unterwasser: {a: [1, 120, 255], b: [1, 220, 180], fx: underwater, ziel: alle_fx, hell: 80}
+        ausklang: {a: [255, 110, 20], b: [255, 80, 10], fx: '', ziel: alle_fx, hell: 35}
+      fx_lichter: "{{ {'wz_schrank': wz_schrank, 'spielematte': spielematte, 'kueche_schrank': kueche_schrank, 'alle_fx': alle_fx}[tabelle[stimmung]['ziel']] }}"
+    sequence:
+    - action: light.turn_on
+      target:
+        entity_id: "{{ alle_fx }}"
+      data:
+        effect: stop_effect
+    - delay:
+        seconds: 1
+    - action: light.turn_on
+      target:
+        entity_id: "{{ gruppe_a }}"
+      data:
+        rgb_color: "{{ tabelle[stimmung]['a'] }}"
+        brightness_pct: "{{ tabelle[stimmung]['hell'] }}"
+        transition: 4
+    - delay:
+        seconds: 2
+    - action: light.turn_on
+      target:
+        entity_id: "{{ gruppe_b }}"
+      data:
+        rgb_color: "{{ tabelle[stimmung]['b'] }}"
+        brightness_pct: "{{ tabelle[stimmung]['hell'] }}"
+        transition: 4
+    - if:
+      - condition: template
+        value_template: "{{ tabelle[stimmung]['fx'] != '' }}"
+      then:
+      - delay:
+          seconds: 5
+      - action: light.turn_on
+        target:
+          entity_id: "{{ fx_lichter }}"
+        data:
+          effect: "{{ tabelle[stimmung]['fx'] }}"
+
+  halloween_sound:
+    alias: Halloween » Sound
+    # play_media over apple_tv blocks until the clip has ended, so always start via script.turn_on.
+    mode: parallel
+    max: 6
+    fields:
+      player:
+        example: media_player.homepod_badezimmer
+      lautstaerke:
+        example: 0.3
+      datei:
+        example: katze
+    sequence:
+    - action: media_player.volume_set
+      target:
+        entity_id: "{{ player }}"
+      data:
+        volume_level: "{{ lautstaerke }}"
+      continue_on_error: true
+    - action: media_player.play_media
+      target:
+        entity_id: "{{ player }}"
+      data:
+        media_content_id: "http://192.168.178.74:8123/local/halloween/{{ datei }}.mp3"
+        media_content_type: music
+      continue_on_error: true
+
+  halloween_musik:
+    alias: Halloween » Musik Wohnzimmer
+    mode: restart
+    sequence:
+    - action: media_player.volume_set
+      target:
+        entity_id: media_player.homepod_wohnzimmer
+      data:
+        volume_level: 0.3
+      continue_on_error: true
+    - repeat:
+        count: 200
+        sequence:
+        - condition: state
+          entity_id: input_boolean.halloween_show
+          state: 'on'
+        - action: media_player.play_media
+          target:
+            entity_id: media_player.homepod_wohnzimmer
+          data:
+            media_content_id: "http://192.168.178.74:8123/local/halloween/musik_{{ ['1_spukschloss', '2_geisterwalzer', '3_hexentanz'][(repeat.index - 1) % 3] }}.mp3"
+            media_content_type: music
+          continue_on_error: true
+        - delay:
+            seconds: 2
+
+  halloween_tuer_effekt:
+    alias: Halloween » Tür-Effekt
+    mode: single
+    variables:
+      farbe:
+      - light.philips_light_08_schrank_1
+      - light.philips_light_09_2
+      - light.stahltraeger
+      - light.aqara_hub_lightbulb
+      hue:
+      - light.philips_light_08_schrank_1
+      - light.philips_light_09_2
+      # The mini is media_player.kuche; while it is offline the bathroom plays the door sound.
+      player: >-
+        {{ 'media_player.kuche' if states('media_player.kuche') in ['idle', 'playing', 'paused', 'on', 'off', 'standby']
+           else 'media_player.homepod_badezimmer' }}
+    sequence:
+    - action: scene.create
+      data:
+        scene_id: halloween_flur_vorher
+        snapshot_entities:
+        - light.ikea_light_07_decke_1
+        - light.ikea_light_08_decke_2
+        - light.ikea_light_09_decke_3
+        - light.ikea_light_10_decke_4
+        - light.ikea_light_11_decke_5
+        - light.ikea_light_12_decke_6
+        - light.philips_light_08_schrank_1
+        - light.philips_light_09_2
+        - light.stahltraeger
+        - light.aqara_hub_lightbulb
+    - action: script.turn_on
+      target:
+        entity_id: script.halloween_sound
+      data:
+        variables:
+          player: "{{ player }}"
+          lautstaerke: 0.4
+          datei: "{{ ['hexe_lacht', 'gespenst_huuu', 'gespenst_kicher', 'katze', 'eule', 'wolf', 'tuer_knarzt', 'glocke', 'jingle', 'donner'] | random }}"
+    - action: light.turn_on
+      target:
+        entity_id: light.flur_decke
+      data:
+        effect: breathe
+    - action: light.turn_on
+      target:
+        entity_id: "{{ farbe }}"
+      data:
+        rgb_color: [255, 90, 0]
+        brightness_pct: 100
+    - delay:
+        milliseconds: 1500
+    - action: light.turn_on
+      target:
+        entity_id: "{{ hue }}"
+      data:
+        effect: blink
+    - delay:
+        milliseconds: 1500
+    - action: light.turn_on
+      target:
+        entity_id: "{{ farbe }}"
+      data:
+        rgb_color: [130, 0, 255]
+        brightness_pct: 100
+    - delay:
+        milliseconds: 1500
+    - action: light.turn_on
+      target:
+        entity_id: "{{ hue }}"
+      data:
+        effect: blink
+    - delay:
+        seconds: 1
+    - action: light.turn_on
+      target:
+        entity_id: light.flur_decke
+      data:
+        effect: stop_effect
+    - delay:
+        milliseconds: 500
+    - action: scene.turn_on
+      target:
+        entity_id: scene.halloween_flur_vorher
+
+  halloween_geisterbad:
+    alias: Halloween » Geisterbad
+    mode: single
+    sequence:
+    - action: scene.create
+      data:
+        scene_id: halloween_bad_vorher
+        snapshot_entities:
+        - light.philips_light_05_fenster
+        - light.philips_light_06_schrank
+    - action: script.turn_on
+      target:
+        entity_id: script.halloween_sound
+      data:
+        variables:
+          player: media_player.homepod_badezimmer
+          lautstaerke: 0.3
+          datei: "{{ ['fluestern_1', 'fluestern_2', 'fluestern_3'] | random }}"
+    - action: light.turn_on
+      target:
+        entity_id:
+        - light.philips_light_05_fenster
+        - light.philips_light_06_schrank
+      data:
+        rgb_color: [40, 255, 40]
+        brightness_pct: 90
+    - delay:
+        seconds: 1
+    - action: light.turn_on
+      target:
+        entity_id:
+        - light.philips_light_05_fenster
+        - light.philips_light_06_schrank
+      data:
+        effect: blink
+    - delay:
+        seconds: 4
+    - action: scene.turn_on
+      target:
+        entity_id: scene.halloween_bad_vorher
+
+automation:
+- id: halloween_start_18_uhr
+  alias: Halloween » Start 18 Uhr
+  triggers:
+  - trigger: time
+    at: '18:00:00'
+  conditions:
+  - condition: template
+    value_template: "{{ now().date() | string == '2026-10-31' }}"
+  actions:
+  - action: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.halloween_show
+  mode: single
+
+# Leaving at 17:00 must not end the show. Only the flag setter pauses; nothing is replayed afterwards.
+- id: halloween_abwesenheit_pause
+  alias: Halloween » Abwesenheit pausieren
+  triggers:
+  - trigger: time
+    at: '17:00:00'
+    id: pause
+  - trigger: time
+    at: '22:00:00'
+    id: weiter
+  conditions:
+  - condition: template
+    value_template: "{{ now().date() | string == '2026-10-31' }}"
+  actions:
+  - action: "automation.turn_{{ 'off' if trigger.id == 'pause' else 'on' }}"
+    target:
+      entity_id: automation.helper_alle_sind_weg
+  mode: single
+
+- id: halloween_ende_automatisch
+  alias: Halloween » Ende automatisch
+  triggers:
+  - trigger: time
+    at: '22:00:00'
+  - trigger: state
+    entity_id: input_boolean.halloween_show
+    to: 'on'
+    for:
+      hours: 4
+  conditions:
+  - condition: state
+    entity_id: input_boolean.halloween_show
+    state: 'on'
+  actions:
+  - action: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.halloween_show
+  mode: single
+
+- id: halloween_show_an
+  alias: Halloween » Show an
+  triggers:
+  - trigger: state
+    entity_id: input_boolean.halloween_show
+    from: 'off'
+    to: 'on'
+  actions:
+  # The reconciler would switch AL and motion back on at :07 and on every scene change.
+  - action: automation.turn_off
+    target:
+      entity_id:
+      - automation.helper_motion_al_sollzustand
+      - automation.adaptive_lightning_sleep_off
+      - automation.helper_alle_sind_weg
+      - automation.film_an
+      - automation.helper_tv_auto_off_ende
+      - automation.scenen_party
+      - automation.scenen_party_wohnzimmer
+      - automation.party_weisslicht_wachter
+      - automation.scenen_kuche
+      - automation.scenen_essen
+      - automation.scenen_abwaschen
+      - automation.scenen_leselicht
+      - automation.scenen_baden
+      - automation.saunatime
+      - automation.wohnzimmer_muckenlampe
+      - automation.licht_tageshelligkeit_nach_aussenlicht
+      - automation.scenen_homepod_lautstarke
+      - automation.helper_workday_musik
+      - automation.helper_homepod_watchdog
+    data:
+      stop_actions: false
+  - repeat:
+      for_each:
+      - wohnzimmer
+      - kueche
+      - badezimmer
+      - flur
+      - waschzimmer
+      - balkon
+      sequence:
+      - action: script.scene_disable_adaptive_lighting
+        data:
+          room: "{{ repeat.item }}"
+  - action: script.scene_disable_motion_automations
+    data:
+      automations: >-
+        automation.motion_kuche_2,automation.motion_esstisch,automation.motion_spieletisch,automation.motion_flur_wohnung,automation.motion_haustur_flur,automation.motion_badezimmer_gross,automation.motion_waschzimmer,automation.motion_balkon
+  - action: media_player.media_stop
+    target:
+      entity_id:
+      - media_player.homepod_wohnzimmer
+      - media_player.homepod_badezimmer
+    continue_on_error: true
+  - action: script.halloween_grundlicht
+  - delay:
+      seconds: 2
+  - action: script.turn_on
+    target:
+      entity_id: script.halloween_stimmung
+    data:
+      variables:
+        stimmung: >-
+          {{ ['kuerbis', 'hexenkueche', 'geisterstunde', 'kerzenschein', 'regenbogen', 'unterwasser']
+             [(now().hour * 4 + now().minute // 15) % 6] }}
+  - action: script.turn_on
+    target:
+      entity_id: script.halloween_musik
+  mode: restart
+
+- id: halloween_show_aus
+  alias: Halloween » Show aus
+  triggers:
+  - trigger: state
+    entity_id: input_boolean.halloween_show
+    from: 'on'
+    to: 'off'
+  actions:
+  - action: script.turn_off
+    target:
+      entity_id:
+      - script.halloween_musik
+      - script.halloween_stimmung
+      - script.halloween_tuer_effekt
+      - script.halloween_geisterbad
+      - script.halloween_sound
+  - action: automation.turn_off
+    target:
+      entity_id: automation.halloween_show_an
+    data:
+      stop_actions: true
+  - action: automation.turn_on
+    target:
+      entity_id: automation.halloween_show_an
+  - action: media_player.media_stop
+    target:
+      entity_id:
+      - media_player.homepod_wohnzimmer
+      - media_player.homepod_badezimmer
+      - media_player.homepod_kinderzimmer
+      - media_player.arbeitszimmer
+    continue_on_error: true
+  - action: media_player.media_stop
+    target:
+      entity_id: media_player.kuche
+    continue_on_error: true
+  # White base lights stay on and go back to AL; only effect and colour lights end here.
+  # Reset in chunks with pauses: all lamps at once lost commands on Z2M in the test run.
+  - action: script.scene_stop_rgb_effect
+    data:
+      rgb_lights:
+      - light.philips_light_21_schrank_1
+      - light.philips_light_22_schrank_2
+      - light.philips_light_23_schrank_3
+      - light.philips_light_18_1
+      - light.philips_light_19_2
+      - light.philips_light_20_3
+      - light.philips_light_24
+      - light.philips_light_25_spielematte_2
+      - light.philips_light_26_spielematte_3
+      - light.philips_light_27_spielematte_4
+      off_lights:
+      - light.philips_light_21_schrank_1
+      - light.philips_light_22_schrank_2
+      - light.philips_light_23_schrank_3
+      - light.philips_light_18_1
+      - light.philips_light_19_2
+      - light.philips_light_20_3
+      - light.philips_light_24
+      - light.philips_light_25_spielematte_2
+      - light.philips_light_26_spielematte_3
+      - light.philips_light_27_spielematte_4
+  - delay:
+      seconds: 4
+  - action: script.scene_stop_rgb_effect
+    data:
+      rgb_lights:
+      - light.philips_light_11_oben
+      - light.philips_light_13_schrank_1
+      - light.philips_light_14_schrank_2
+      - light.philips_light_12_unten
+      off_lights:
+      - light.philips_light_11_oben
+      - light.philips_light_13_schrank_1
+      - light.philips_light_14_schrank_2
+  - delay:
+      seconds: 4
+  - action: script.scene_stop_rgb_effect
+    data:
+      rgb_lights:
+      - light.philips_light_08_schrank_1
+      - light.philips_light_09_2
+      - light.philips_light_05_fenster
+      - light.philips_light_06_schrank
+      - light.philips_light_07_blumen
+      - light.philips_light_03
+      - light.philips_light_04_2
+      - light.philips_light_28
+      off_lights:
+      - light.philips_light_08_schrank_1
+      - light.philips_light_09_2
+      - light.philips_light_05_fenster
+      - light.philips_light_06_schrank
+      - light.philips_light_07_blumen
+      - light.philips_light_03
+      - light.philips_light_04_2
+      - light.philips_light_28
+  - delay:
+      seconds: 4
+  - action: light.turn_off
+    target:
+      entity_id:
+      - light.philips_light_21_schrank_1
+      - light.philips_light_22_schrank_2
+      - light.philips_light_23_schrank_3
+      - light.philips_light_18_1
+      - light.philips_light_19_2
+      - light.philips_light_20_3
+      - light.philips_light_24
+      - light.philips_light_25_spielematte_2
+      - light.philips_light_26_spielematte_3
+      - light.philips_light_27_spielematte_4
+      - light.philips_light_11_oben
+      - light.philips_light_13_schrank_1
+      - light.philips_light_14_schrank_2
+      - light.philips_light_08_schrank_1
+      - light.philips_light_09_2
+      - light.philips_light_05_fenster
+      - light.philips_light_06_schrank
+      - light.philips_light_07_blumen
+      - light.philips_light_03
+      - light.philips_light_04_2
+      - light.philips_light_28
+      - light.stahltraeger
+      - light.aqara_hub_lightbulb
+  - delay:
+      seconds: 3
+  # The kitchen island went to 1 % in the reset above; give it back a normal level for AL.
+  - action: light.turn_on
+    target:
+      entity_id: light.philips_light_12_unten
+    data:
+      color_temp_kelvin: 2700
+      brightness_pct: 70
+  - action: automation.turn_on
+    target:
+      entity_id:
+      - automation.helper_motion_al_sollzustand
+      - automation.adaptive_lightning_sleep_off
+      - automation.helper_alle_sind_weg
+      - automation.film_an
+      - automation.helper_tv_auto_off_ende
+      - automation.scenen_party
+      - automation.scenen_party_wohnzimmer
+      - automation.party_weisslicht_wachter
+      - automation.scenen_kuche
+      - automation.scenen_essen
+      - automation.scenen_abwaschen
+      - automation.scenen_leselicht
+      - automation.scenen_baden
+      - automation.saunatime
+      - automation.wohnzimmer_muckenlampe
+      - automation.licht_tageshelligkeit_nach_aussenlicht
+      - automation.scenen_homepod_lautstarke
+      - automation.helper_workday_musik
+      - automation.helper_homepod_watchdog
+      - automation.motion_waschzimmer
+      - automation.motion_balkon
+  - action: automation.trigger
+    target:
+      entity_id: automation.helper_motion_al_sollzustand
+    data:
+      skip_condition: true
+  - delay:
+      seconds: 5
+  - action: script.al_set_manual_control
+    data:
+      rooms:
+      - wohnzimmer
+      - kueche
+      - flur
+      manual_control: false
+  - action: script.turn_on
+    target:
+      entity_id: script.homepod_volume_apply
+  # automation.trigger on State » Tag/Nacht does nothing: its branches all need a trigger id.
+  # Setting the boolean is what its einschlafzeit branch does.
+  - if:
+    - condition: time
+      after: '19:00:00'
+      before: '23:00:00'
+    - condition: state
+      entity_id: input_boolean.alle_sind_weg
+      state: 'off'
+    then:
+    - action: input_boolean.turn_on
+      target:
+        entity_id: input_boolean.schlafenszeit
+  mode: single
+
+- id: halloween_stimmung_wechsel
+  alias: Halloween » Stimmung wechseln
+  triggers:
+  - trigger: time_pattern
+    minutes: /15
+  conditions:
+  - condition: state
+    entity_id: input_boolean.halloween_show
+    state: 'on'
+  actions:
+  - action: script.turn_on
+    target:
+      entity_id: script.halloween_stimmung
+    data:
+      variables:
+        stimmung: >-
+          {% if now().hour == 21 and now().minute >= 30 %}ausklang
+          {%- else %}{{ ['kuerbis', 'hexenkueche', 'geisterstunde', 'kerzenschein', 'regenbogen', 'unterwasser']
+             [(now().hour * 4 + now().minute // 15) % 6] }}{% endif %}
+  mode: single
+
+- id: halloween_wand_flackern
+  alias: Halloween » Wand flackern
+  triggers:
+  - trigger: time_pattern
+    seconds: /30
+  conditions:
+  - condition: state
+    entity_id: input_boolean.halloween_show
+    state: 'on'
+  actions:
+  - action: light.turn_on
+    target:
+      entity_id:
+      - light.wohnzimmer_wand
+      - light.ikea_light_24
+      - light.ikea_light_25
+    data:
+      color_temp_kelvin: 2700
+      brightness_pct: "{{ range(20, 36) | random }}"
+      transition: 3
+  mode: single
+
+- id: halloween_spuk_sounds
+  alias: Halloween » Spuk-Sounds
+  triggers:
+  - trigger: time_pattern
+    minutes: /7
+  conditions:
+  - condition: state
+    entity_id: input_boolean.halloween_show
+    state: 'on'
+  actions:
+  - delay:
+      seconds: "{{ range(0, 120) | random }}"
+  - condition: state
+    entity_id: input_boolean.halloween_show
+    state: 'on'
+  - action: script.turn_on
+    target:
+      entity_id: script.halloween_sound
+    data:
+      variables:
+        player: >-
+          {{ ['media_player.homepod_badezimmer', 'media_player.homepod_kinderzimmer', 'media_player.arbeitszimmer'] | random }}
+        lautstaerke: 0.3
+        datei: "{{ ['hexe_lacht', 'gespenst_huuu', 'gespenst_kicher', 'katze', 'eule', 'wolf', 'tuer_knarzt', 'kessel', 'glocke', 'jingle', 'donner'] | random }}"
+  mode: single
+
+- id: halloween_ambient
+  alias: Halloween » Ambient
+  triggers:
+  - trigger: time_pattern
+    minutes: /4
+  conditions:
+  - condition: state
+    entity_id: input_boolean.halloween_show
+    state: 'on'
+  - condition: template
+    value_template: "{{ states('media_player.kuche') in ['idle', 'playing', 'paused', 'on', 'off', 'standby'] }}"
+  actions:
+  - action: script.turn_on
+    target:
+      entity_id: script.halloween_sound
+    data:
+      variables:
+        player: media_player.kuche
+        lautstaerke: 0.2
+        datei: "{{ ['wind', 'kessel'] | random }}"
+  mode: single
+
+- id: halloween_tuer
+  alias: Halloween » Wohnungstür
+  triggers:
+  - trigger: state
+    entity_id: binary_sensor.aqara_contact_04
+    from: 'off'
+    to: 'on'
+  conditions:
+  - condition: state
+    entity_id: input_boolean.halloween_show
+    state: 'on'
+  actions:
+  - action: script.halloween_tuer_effekt
+  - delay:
+      seconds: 60
+  mode: single
+  max_exceeded: silent
+
+- id: halloween_geisterbad
+  alias: Halloween » Geisterbad
+  triggers:
+  - trigger: state
+    entity_id: binary_sensor.badezimmer_motion_all
+    from: 'off'
+    to: 'on'
+  conditions:
+  - condition: state
+    entity_id: input_boolean.halloween_show
+    state: 'on'
+  actions:
+  - action: script.halloween_geisterbad
+  - delay:
+      minutes: 3
+  mode: single
+  max_exceeded: silent
