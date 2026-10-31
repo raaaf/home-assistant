@@ -1049,6 +1049,31 @@ automation:
       transition: 3
   mode: single
 
+# Runs at :15 and :45 so it never hits Z2M together with the Wohnzimmer wall command.
+- id: halloween_decken_flackern
+  alias: Halloween » Decken flackern
+  triggers:
+  - trigger: time_pattern
+    seconds: 15
+  - trigger: time_pattern
+    seconds: 45
+  conditions:
+  - condition: state
+    entity_id: input_boolean.halloween_show
+    state: 'on'
+  actions:
+  - action: light.turn_on
+    target:
+      entity_id:
+      - light.ikea_light_16_1
+      - light.ikea_light_17_2
+      - light.ikea_light_13
+    data:
+      color_temp_kelvin: 2700
+      brightness_pct: "{{ range(15, 36) | random }}"
+      transition: 3
+  mode: single
+
 - id: halloween_spuk_sounds
   alias: Halloween » Spuk-Sounds
   triggers:
