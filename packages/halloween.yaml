@@ -9,6 +9,12 @@ input_boolean:
   halloween_show:
     name: Halloween
     icon: mdi:halloween
+  halloween_willkommen_aktiv:
+    name: Halloween Willkommen aktiv
+    icon: mdi:door-open
+  halloween_willkommen_erledigt:
+    name: Halloween Willkommen erledigt
+    icon: mdi:door-closed
 
 script:
   halloween_pausieren:
@@ -48,6 +54,122 @@ script:
         - automation.motion_balkon
       data:
         stop_actions: false
+
+  halloween_tuer_sound:
+    alias: Halloween » Tür-Sound
+    # A second stream on a busy speaker fails, so end what is playing on the mini first.
+    mode: single
+    variables:
+      player: >-
+        {{ 'media_player.kuche' if states('media_player.kuche') in ['idle', 'playing', 'paused', 'on', 'off', 'standby']
+           else 'media_player.homepod_badezimmer' }}
+    sequence:
+    - action: media_player.media_stop
+      target:
+        entity_id: "{{ player }}"
+      continue_on_error: true
+    - delay:
+        seconds: 1
+    - action: script.turn_on
+      target:
+        entity_id: script.halloween_sound
+      data:
+        variables:
+          player: "{{ player }}"
+          lautstaerke: 0.4
+          datei: "{{ datei | default(['hexe_lacht_echt', 'gespenst_huuu', 'gespenst_kicher', 'katze_siam', 'katze_usa', 'eule_echt', 'wolf_echt', 'rabe', 'tuer_knarzt_gross', 'tuer_quietscht', 'scharnier', 'glocke_echt', 'jingle', 'donner_rollend', 'donner_fern'] | random) }}"
+
+  halloween_willkommen:
+    alias: Halloween » Willkommen
+    mode: single
+    variables:
+      ende: "{{ now().timestamp() + 600 }}"
+    sequence:
+    - action: light.turn_on
+      target:
+        entity_id: light.flur_decke
+      data:
+        color_temp_kelvin: 2700
+        brightness_pct: 50
+        transition: 3
+    - parallel:
+      - repeat:
+          while:
+          - condition: template
+            value_template: "{{ now().timestamp() < ende }}"
+          sequence:
+          - action: light.turn_on
+            target:
+              entity_id:
+              - light.philips_light_08_schrank_1
+              - light.aqara_hub_lightbulb
+            data:
+              rgb_color: [255, 90, 1]
+              brightness_pct: 100
+              transition: 3
+          - action: light.turn_on
+            target:
+              entity_id:
+              - light.philips_light_09_2
+              - light.stahltraeger
+            data:
+              rgb_color: [130, 1, 255]
+              brightness_pct: 100
+              transition: 3
+          - delay:
+              seconds: 15
+          - action: light.turn_on
+            target:
+              entity_id:
+              - light.philips_light_08_schrank_1
+              - light.aqara_hub_lightbulb
+            data:
+              rgb_color: [130, 1, 255]
+              brightness_pct: 100
+              transition: 3
+          - action: light.turn_on
+            target:
+              entity_id:
+              - light.philips_light_09_2
+              - light.stahltraeger
+            data:
+              rgb_color: [255, 90, 1]
+              brightness_pct: 100
+              transition: 3
+          - delay:
+              seconds: 15
+      - sequence:
+        - action: script.halloween_tuer_sound
+          data:
+            datei: jingle
+        - repeat:
+            while:
+            - condition: template
+              value_template: "{{ now().timestamp() < ende - 60 }}"
+            sequence:
+            - delay:
+                seconds: "{{ range(60, 91) | random }}"
+            - action: script.turn_on
+              target:
+                entity_id: script.halloween_tuer_sound
+    - action: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.halloween_willkommen_aktiv
+    - action: light.turn_on
+      target:
+        entity_id: light.flur_decke
+      data:
+        color_temp_kelvin: 2700
+        brightness_pct: 30
+        transition: 3
+    - action: script.turn_on
+      target:
+        entity_id: script.halloween_stimmung
+      data:
+        variables:
+          stimmung: >-
+            {{ ['kuerbis', 'hexenkueche', 'geisterstunde', 'kerzenschein', 'regenbogen', 'unterwasser']
+               [(now().hour * 4 + now().minute // 15) % 6] }}
 
   halloween_grundlicht:
     alias: Halloween » Grundlicht
@@ -281,12 +403,7 @@ script:
         - light.aqara_hub_lightbulb
     - action: script.turn_on
       target:
-        entity_id: script.halloween_sound
-      data:
-        variables:
-          player: "{{ player }}"
-          lautstaerke: 0.4
-          datei: "{{ ['hexe_lacht_echt', 'gespenst_huuu', 'gespenst_kicher', 'katze_siam', 'katze_usa', 'eule_echt', 'wolf_echt', 'rabe', 'tuer_knarzt_gross', 'tuer_quietscht', 'scharnier', 'glocke_echt', 'jingle', 'donner_rollend', 'donner_fern'] | random }}"
+        entity_id: script.halloween_tuer_sound
     - action: light.turn_on
       target:
         entity_id: light.flur_decke
@@ -451,8 +568,15 @@ automation:
       - script.halloween_musik
       - script.halloween_stimmung
       - script.halloween_tuer_effekt
+      - script.halloween_tuer_sound
+      - script.halloween_willkommen
       - script.halloween_geisterbad
       - script.halloween_sound
+  - action: input_boolean.turn_off
+    target:
+      entity_id:
+      - input_boolean.halloween_willkommen_aktiv
+      - input_boolean.halloween_willkommen_erledigt
   - action: automation.turn_off
     target:
       entity_id: automation.halloween_show_an
@@ -749,7 +873,7 @@ automation:
       variables:
         player: >-
           {{ (['media_player.homepod_badezimmer', 'media_player.homepod_kinderzimmer', 'media_player.arbeitszimmer']
-             + (['media_player.kuche'] if states('media_player.kuche') in ['idle', 'playing', 'paused', 'on', 'off', 'standby'] else [])) | random }}
+             + (['media_player.kuche'] if is_state('input_boolean.halloween_willkommen_aktiv', 'off') and states('media_player.kuche') in ['idle', 'playing', 'paused', 'on', 'off', 'standby'] else [])) | random }}
         lautstaerke: 0.3
         datei: "{{ ['hexe_lacht_echt', 'gespenst_huuu', 'gespenst_kicher', 'katze_siam', 'katze_usa', 'eule_echt', 'wolf_echt', 'rabe', 'tuer_knarzt_gross', 'tuer_quietscht', 'scharnier', 'glocke_echt', 'jingle', 'donner_rollend', 'donner_fern', 'blubbern'] | random }}"
   mode: single
@@ -765,6 +889,9 @@ automation:
     state: 'on'
   - condition: template
     value_template: "{{ states('media_player.kuche') in ['idle', 'playing', 'paused', 'on', 'off', 'standby'] }}"
+  - condition: state
+    entity_id: input_boolean.halloween_willkommen_aktiv
+    state: 'off'
   actions:
   - action: script.turn_on
     target:
@@ -778,6 +905,7 @@ automation:
 
 - id: halloween_tuer
   alias: Halloween » Wohnungstür
+  description: First opening from 18:00 starts the welcome mode, then short sounds, then the normal effect.
   triggers:
   - trigger: state
     entity_id: binary_sensor.aqara_contact_04
@@ -787,10 +915,40 @@ automation:
   - condition: state
     entity_id: input_boolean.halloween_show
     state: 'on'
+  - condition: time
+    after: '18:00:00'
+    before: '07:00:00'
   actions:
-  - action: script.halloween_tuer_effekt
-  - delay:
-      seconds: 60
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: input_boolean.halloween_willkommen_erledigt
+        state: 'off'
+      sequence:
+      - action: input_boolean.turn_on
+        target:
+          entity_id:
+          - input_boolean.halloween_willkommen_erledigt
+          - input_boolean.halloween_willkommen_aktiv
+      - action: script.turn_on
+        target:
+          entity_id: script.halloween_willkommen
+      - delay:
+          seconds: 20
+    - conditions:
+      - condition: state
+        entity_id: input_boolean.halloween_willkommen_aktiv
+        state: 'on'
+      sequence:
+      - action: script.turn_on
+        target:
+          entity_id: script.halloween_tuer_sound
+      - delay:
+          seconds: 20
+    default:
+    - action: script.halloween_tuer_effekt
+    - delay:
+        seconds: 60
   mode: single
   max_exceeded: silent
 
