@@ -197,15 +197,6 @@ script:
       data:
         color_temp_kelvin: 2700
         brightness_pct: 25
-    - action: light.turn_on
-      target:
-        entity_id:
-        - light.ikea_light_13
-        - light.ikea_light_16_1
-        - light.ikea_light_17_2
-      data:
-        color_temp_kelvin: 2700
-        brightness_pct: 1
     # No parameters on purpose: the projector loads the star scene set in the Govee app.
     - action: light.turn_on
       target:
@@ -1056,8 +1047,8 @@ automation:
   mode: single
 
 # Runs at :15 and :45 so it never hits Z2M together with the Wohnzimmer wall command.
-- id: halloween_decken_flackern
-  alias: Halloween » Decken flackern
+- id: halloween_flur_flackern
+  alias: Halloween » Flur flackern
   triggers:
   - trigger: time_pattern
     seconds: 15
@@ -1067,16 +1058,16 @@ automation:
   - condition: state
     entity_id: input_boolean.halloween_show
     state: 'on'
+  - condition: state
+    entity_id: input_boolean.halloween_willkommen_aktiv
+    state: 'off'
   actions:
   - action: light.turn_on
     target:
-      entity_id:
-      - light.ikea_light_16_1
-      - light.ikea_light_17_2
-      - light.ikea_light_13
+      entity_id: light.flur_decke
     data:
       color_temp_kelvin: 2700
-      brightness_pct: "{{ range(1, 9) | random }}"
+      brightness_pct: "{{ range(20, 41) | random }}"
       transition: 3
   mode: single
 
