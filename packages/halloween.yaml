@@ -193,13 +193,19 @@ script:
     - action: light.turn_on
       target:
         entity_id:
-        - light.ikea_light_13
         - light.ikea_light_03
+      data:
+        color_temp_kelvin: 2700
+        brightness_pct: 25
+    - action: light.turn_on
+      target:
+        entity_id:
+        - light.ikea_light_13
         - light.ikea_light_16_1
         - light.ikea_light_17_2
       data:
         color_temp_kelvin: 2700
-        brightness_pct: 25
+        brightness_pct: 1
     # No parameters on purpose: the projector loads the star scene set in the Govee app.
     - action: light.turn_on
       target:
@@ -1070,7 +1076,7 @@ automation:
       - light.ikea_light_13
     data:
       color_temp_kelvin: 2700
-      brightness_pct: "{{ range(15, 36) | random }}"
+      brightness_pct: "{{ range(1, 5) | random }}"
       transition: 3
   mode: single
 
