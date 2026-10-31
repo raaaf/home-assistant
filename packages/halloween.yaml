@@ -780,11 +780,6 @@ automation:
       - light.philips_light_15_bett
       - light.philips_light_16_tv
       - light.ikea_light_04
-      - light.ikea_light_13
-      - light.ikea_light_03
-      - light.ikea_light_16_1
-      - light.ikea_light_17_2
-      - light.h60b0
       - light.kinderzimmer_kinderzimmer_nachtlicht
       - light.yeelight_cubematrix_0xdc5475bbc814
   - delay:
@@ -798,7 +793,6 @@ automation:
       - light.philips_light_15_bett
       - light.philips_light_16_tv
       - light.ikea_light_04
-      - light.h60b0
       - light.kinderzimmer_kinderzimmer_nachtlicht
       - light.yeelight_cubematrix_0xdc5475bbc814
       - light.philips_light_21_schrank_1
@@ -826,6 +820,15 @@ automation:
       - light.aqara_hub_lightbulb
   - delay:
       seconds: 3
+  # Ceiling lights stay on for AL. The projector stays on at night for the bedtime routine.
+  - if:
+    - condition: time
+      after: '07:00:00'
+      before: '19:00:00'
+    then:
+    - action: light.turn_off
+      target:
+        entity_id: light.h60b0
   # The kitchen island went to 1 % in the reset above; give it back a normal level for AL.
   - action: light.turn_on
     target:
@@ -879,6 +882,8 @@ automation:
       - wohnzimmer
       - kueche
       - flur
+      - kinderzimmer
+      - schlafzimmer
       manual_control: false
   - action: script.turn_on
     target:
