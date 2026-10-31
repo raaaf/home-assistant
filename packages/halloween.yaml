@@ -79,6 +79,9 @@ script:
         {{ 'media_player.kuche' if states('media_player.kuche') in ['idle', 'playing', 'paused', 'on', 'off', 'standby']
            else 'media_player.homepod_badezimmer' }}
     sequence:
+    - condition: state
+      entity_id: input_boolean.halloween_musik
+      state: 'on'
     - action: media_player.media_stop
       target:
         entity_id: "{{ player }}"
@@ -399,6 +402,10 @@ script:
       datei:
         example: katze
     sequence:
+    # Switch off means the owner plays music on every HomePod, and a stream would cut it.
+    - condition: state
+      entity_id: input_boolean.halloween_musik
+      state: 'on'
     - action: media_player.volume_set
       target:
         entity_id: "{{ player }}"
@@ -688,16 +695,21 @@ automation:
         - media_player.homepod_wohnzimmer
         - media_player.arbeitszimmer
       continue_on_error: true
-  - action: media_player.media_stop
-    target:
-      entity_id:
-      - media_player.homepod_badezimmer
-      - media_player.homepod_kinderzimmer
-    continue_on_error: true
-  - action: media_player.media_stop
-    target:
-      entity_id: media_player.kuche
-    continue_on_error: true
+  - if:
+    - condition: state
+      entity_id: input_boolean.halloween_musik
+      state: 'on'
+    then:
+    - action: media_player.media_stop
+      target:
+        entity_id:
+        - media_player.homepod_badezimmer
+        - media_player.homepod_kinderzimmer
+      continue_on_error: true
+    - action: media_player.media_stop
+      target:
+        entity_id: media_player.kuche
+      continue_on_error: true
   # White base lights stay on and go back to AL; only effect and colour lights end here.
   # Reset in chunks with pauses: all lamps at once lost commands on Z2M in the test run.
   - action: script.scene_stop_rgb_effect
