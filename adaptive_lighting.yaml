@@ -49,7 +49,7 @@
     # Kindertisch / Werkbank (2 lights)
     - light.ikea_light_24
     - light.ikea_light_25
-  interval: 300  # 5 min - smooth sunrise/sunset transitions without excessive Zigbee traffic
+  interval: 900  # 15 min - test since 2026-11-01 to reduce Zigbee traffic, other rooms stay at 5 min
   transition: 10  # Short transitions prevent IKEA lockups
   initial_transition: 2  # Smooth fade-in on turn_on (intercepted by AL)
   min_brightness: 20

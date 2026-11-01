@@ -745,7 +745,7 @@ AL reads its config from **Config Entries**, which the YAML seeds once and then 
 **Exception, `max_brightness`:** that field belongs to `Licht » Tageshelligkeit nach Aussenlicht` (eight rooms with daylight, driven by the balcony lux sensor via `input_number.al_tagesmax_helligkeit`) and to fixed values for Flur and Ankleide in the startup automation. Do not set it anywhere else. That automation now writes to AL only when the level changes or after a restart, the end of Schlafenszeit, or the end of a scene, because every `change_switch_settings` call restarts AL's own interval listener and forces an adaptation with `initial_transition` instead of `transition`.
 
 **Interval & Reset**:
-- 5-minute update interval (smooth sunrise/sunset transitions)
+- 5-minute update interval (smooth sunrise/sunset transitions); Wohnzimmer 15 minutes since 2026-11-01 as a Zigbee traffic test
 - 1-hour autoreset for main rooms
 - 2-hour autoreset for utility/transition areas
 
