@@ -1736,7 +1736,7 @@ views:
         state: 'on'
     - type: tile
       entity: binary_sensor.aqara_contact_07
-      name: Büro Alex
+      name: Schlafzimmer
       icon: mdi:window-open-variant
       grid_options:
         columns: 6
@@ -1747,7 +1747,7 @@ views:
         state: 'on'
     - type: tile
       entity: binary_sensor.aqara_contact_01
-      name: Schlafzimmer
+      name: Büro Alex
       icon: mdi:window-open-variant
       grid_options:
         columns: 6

@@ -313,6 +313,48 @@
       domain: automation
   mode: queued
   max: 10
+- id: 'fensterkontakt_ausgefallen'
+  alias: Notification » Fensterkontakt ausgefallen
+  description: >-
+    Benachrichtigt wenn ein Fensterkontakt länger als 30 Minuten nicht verfügbar ist. Zigbee2MQTT
+    setzt batteriebetriebene Geräte nach 24 h ohne Meldung auf offline. Nur unavailable: Kontakte
+    stehen nach jedem HA-Neustart bis zur nächsten Meldung auf unknown, oft 30 bis 50 Minuten.
+    Grund: Am 2026-11-01 war eine Batterie leer, obwohl der Sensor 82 % zeigte, und die Heizung
+    behandelte das Fenster still als geschlossen.
+  triggers:
+  - entity_id:
+    - binary_sensor.aqara_contact_01
+    - binary_sensor.aqara_contact_02
+    - binary_sensor.aqara_contact_05
+    - binary_sensor.aqara_contact_06
+    - binary_sensor.aqara_contact_07
+    - binary_sensor.aqara_contact_08
+    to: unavailable
+    for:
+      minutes: 30
+    trigger: state
+  conditions: []
+  actions:
+  - variables:
+      sensor_name: '{{ trigger.to_state.name }}'
+      sensor_id: '{{ trigger.entity_id }}'
+  - parallel:
+    - action: notify.admin_only
+      data:
+        title: "Fensterkontakt ausgefallen"
+        message: "{{ sensor_name }} meldet sich nicht mehr ({{ sensor_id }}). Batterie prüfen, die Anzeige kann trotz leerer Batterie hoch sein."
+        data:
+          push:
+            interruption-level: active
+          tag: window_contact_failure
+          group: system_alerts
+    - action: persistent_notification.create
+      data:
+        title: "Fensterkontakt ausgefallen, {{ sensor_name }}"
+        message: "{{ sensor_name }} ({{ sensor_id }}) meldet sich nicht mehr. Batterie prüfen, die Anzeige kann trotz leerer Batterie hoch sein."
+        notification_id: "window_contact_{{ sensor_id | replace('.', '_') }}"
+  mode: queued
+  max: 10
 - id: '1754557053146'
   alias: Helper » Bewegungsmelder-Recovery nach Neustart
   description: Meldet kritische Bewegungsmelder, die beim Start oder Reconcile länger als 30 Minuten nicht verfügbar sind
