@@ -139,15 +139,25 @@
         action: script.scene_disable_motion_automations
         data:
           automations: "automation.motion_badezimmer_gross"
-      - alias: "Start Hue effect: sunset (Baden)"
+      # Static amber, tested live 2026-11-02: effects were invisible (sunset), too wild (candle)
+      # or left the lamps in different colors (opal). A brightness sent with an effect is ignored.
+      - alias: "Amber Decke"
         action: light.turn_on
         target:
           entity_id:
-          - light.alle_badezimmer_lichter
-          - light.alle_badezimmer_nachtlichter
+          - light.philips_light_03
+          - light.philips_light_04_2
         data:
-          effect: sunset
-          brightness_pct: 100
+          rgb_color: [255, 187, 83]
+          brightness_pct: 40
+          transition: 10
+      - alias: "Amber Schrank und Fenster"
+        action: light.turn_on
+        target:
+          entity_id: light.alle_badezimmer_nachtlichter
+        data:
+          rgb_color: [255, 187, 83]
+          brightness_pct: 25
           transition: 10
     - conditions:
       - condition: trigger
